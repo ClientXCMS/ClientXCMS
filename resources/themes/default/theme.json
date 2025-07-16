@@ -1,0 +1,11 @@
+{
+    "uuid": "default",
+    "name": "Défaut",
+    "description": "Thème par défaut pour ClientXCMS basé sur TailwindCSS",
+    "version": "1.0",
+    "author": {
+        "name": "ClientXCMS",
+        "email": "contact@clientxcms.com"
+    },
+    "demo": "https://demo.clientxcms.com"
+}

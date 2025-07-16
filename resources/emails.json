@@ -1,0 +1,394 @@
+{
+    "customer_banned": {
+        "fr_FR": {
+            "subject": "Votre compte a été banni",
+            "button": "Contacter le support",
+            "body": "Votre compte a été banni pour la raison {{ $reason }}. Veuillez contacter le support pour plus d'informations."
+        },
+        "en_GB": {
+            "subject": "Your account has been banned",
+            "button": "Contact support",
+            "body": "Your account has been banned for the reason {{ $reason }}. Please contact support for more information."
+        },
+        "es_ES": {
+            "subject": "Su cuenta ha sido suspendida",
+            "button": "Contactar soporte",
+            "body": "Su cuenta ha sido suspendida por la razón {{ $reason }}. Por favor, póngase en contacto con el soporte para obtener más información."
+        }
+    },
+    "customer_suspended": {
+        "fr_FR": {
+            "subject": "Votre compte a été suspendu",
+            "button": "Contacter le support",
+            "body": "Votre compte a été suspendu pour la raison {{ $reason }}. Veuillez contacter le support pour plus d'informations."
+        },
+        "en_GB": {
+            "subject": "Your account has been suspended",
+            "button": "Contact support",
+            "body": "Your account has been suspended for the reason {{ $reason }}. Please contact support for more information."
+        },
+        "es_ES": {
+            "subject": "Su cuenta ha sido suspendida",
+            "button": "Contactar soporte",
+            "body": "Su cuenta ha sido suspendida por la razón {{ $reason }}. Por favor, póngase en contacto con el soporte para obtener más información."
+        }
+    },
+
+    "customer_reactivated": {
+        "fr_FR": {
+            "subject": "Votre compte a été réactivé",
+            "button": "Connexion",
+            "body": "Votre compte a été réactivé. Vous pouvez vous connecter à votre compte en cliquant sur le bouton ci-dessous."
+        },
+        "en_GB": {
+            "subject": "Your account has been reactivated",
+            "button": "Login",
+            "body": "Your account has been reactivated. You can login to your account by clicking on the button below."
+        },
+        "es_ES": {
+            "subject": "Su cuenta ha sido reactivada",
+            "button": "Iniciar sesión",
+            "body": "Su cuenta ha sido reactivada. Puede iniciar sesión en su cuenta haciendo clic en el botón de abajo."
+        }
+    },
+    "invoice_paid": {
+        "fr_FR": {
+            "subject": "Votre facture a été payée",
+            "button": "Voir la facture",
+            "body": "Veuillez cliquer sur le bouton ci-dessous pour afficher votre facture.<br/>\n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Nom</strong> : {{ $item->name }} <br/>\n<strong>Prix </strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach"
+        },
+        "en_GB": {
+            "subject": "Your invoice has been paid",
+            "button": "View invoice",
+            "body": "Please click on the button below to view your invoice.<br/>\n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Name</strong> : {{ $item->name }} <br/>\n<strong>Price </strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach"
+        },
+        "es_ES": {
+            "subject": "Su factura ha sido pagada",
+            "button": "Ver factura",
+            "body": "Por favor, haga clic en el botón de abajo para ver su factura.<br/>\n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Nombre</strong> : {{ $item->name }} <br/>\n<strong>Precio</strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach"
+        }
+    },
+    "notify_subscription_failed": {
+        "fr_FR": {
+            "subject": "Échec du paiement de votre abonnement",
+            "button": "Voir mes méthodes de paiement",
+            "body": "Le paiement de votre abonnement a échoué avec la source {{ $source }} pour payer la facture {{ $invoice->id}}. Veuillez cliquer sur le bouton ci-dessous pour vérifier vos méthodes de paiement. \n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Nom</strong> : {{ $item->name }} <br/>\n<strong>Prix </strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach\n \n@if($retry) Le paiement sera réessayé dans 24 heures. @else Ceci est une notification, veuillez régler le paiement pour éviter la suspension de votre service. @endif"
+        },
+        "en_GB": {
+            "subject": "Failed to pay your subscription",
+            "button": "View payment methods",
+            "body": "The payment of your subscription failed with the source {{ $source }} to pay the invoice {{ $invoice->id}}. Please click on the button below to check your payment methods. \n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Name</strong> : {{ $item->name }} <br/>\n<strong>Price </strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach\n \n@if($retry) The payment will be retried in 24 hours. @else This is a notification, please settle the payment to avoid the suspension of your service. @endif"
+        },
+        "es_ES": {
+            "subject": "Error en el pago de su suscripción",
+            "button": "Ver métodos de pago",
+            "body": "El pago de su suscripción falló con la fuente {{ $source }} para pagar la factura {{ $invoice->id }}. Por favor, haga clic en el botón de abajo para verificar sus métodos de pago. \n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Nombre</strong> : {{ $item->name }} <br/>\n<strong>Precio</strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach\n@if($retry) El pago se volverá a intentar en 24 horas. @else Esta es una notificación, por favor, realice el pago para evitar la suspensión de su servicio. @endif"
+        }
+    },
+    "notify_expiration": {
+        "fr_FR": {
+            "subject": "Votre service expire bientôt",
+            "button": "Renouveler le service",
+            "body": "Votre service {{ $service->name }} expire dans {{ $days }} jours. Veuillez cliquer sur le bouton ci-dessous pour renouveler votre service."
+        },
+        "en_GB": {
+            "subject": "Your service is about to expire",
+            "button": "Renew service",
+            "body": "Your service {{ $service->name }} is about to expire in {{ $days }} days. Please click on the button below to renew your service."
+        },
+        "es_ES": {
+            "subject": "Su servicio está a punto de expirar",
+            "button": "Renovar servicio",
+            "body": "Su servicio {{ $service->name }} está a punto de expirar en {{ $days }} días. Por favor, haga clic en el botón de abajo para renovar su servicio."
+        }
+    },
+    "wisp": {
+        "fr_FR": {
+            "subject": "Votre serveur est prêt",
+            "button": "Connexion au panel",
+            "body": "Votre serveur est prêt à être utilisé. Vous pouvez vous connecter à votre serveur en utilisant les informations ci-dessous.<br/>\n <br/><strong>Adresse IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n<strong>Connexion</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a> @if ($can_reset_password) Vous pouvez demander une réinitialisation de mot de passe en cliquant sur le lien suivant : <a href=\"{{ $reset_password_url }}\">Réinitialiser le mot de passe</a> @endif"
+        },
+        "en_GB": {
+            "subject": "Your server is ready",
+            "button": "Panel login",
+            "body": "Your server is ready to be used. You can connect to your server using the information below. <br/>\n<strong>IP Address</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n<strong>Login</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a> @if ($can_reset_password) You can request a password reset by clicking on the following link : <a href=\"{{ $reset_password_url }}\">Reset password</a> @endif"
+        },
+        "es_ES": {
+            "subject": "Su servidor está listo",
+            "button": "Inicio de sesión en el panel",
+            "body": "Su servidor está listo para ser utilizado. Puede conectarse a su servidor utilizando la información a continuación. <br/>\n<strong>Dirección IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n<strong>Conexión</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a> @if ($can_reset_password) Puede solicitar un restablecimiento de contraseña haciendo clic en el siguiente enlace: <a href=\"{{ $reset_password_url }}\">Restablecer contraseña</a> @endif"
+        }
+    },
+    "custom": {
+        "fr_FR": {
+            "subject": "",
+            "button": "",
+            "body": ""
+        },
+        "en_GB": {
+            "subject": "",
+            "button": "",
+            "body": ""
+        },
+        "es_ES": {
+            "subject": "",
+            "button": "",
+            "body": ""
+        }
+    },
+    "pterodactyl": {
+        "fr_FR": {
+            "subject": "Votre serveur est prêt",
+            "button": "Connexion au panel",
+            "body": "Votre serveur est prêt à être utilisé. Vous pouvez vous connecter à votre serveur en utilisant les informations ci-dessous.<br/>\n <br/><strong>Adresse IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n<strong>Connexion</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a> @if ($can_reset_password) Vous pouvez demander une réinitialisation de mot de passe en cliquant sur le lien suivant : <a href=\"{{ $reset_password_url }}\">Réinitialiser le mot de passe</a> @endif"
+        },
+        "en_GB": {
+            "subject": "Your server is ready",
+            "button": "Panel login",
+            "body": "Your server is ready to be used. You can connect to your server using the information below. <br/>\n<strong>IP Address</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n<strong>Login</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a> @if ($can_reset_password) You can request a password reset by clicking on the following link : <a href=\"{{ $reset_password_url }}\">Reset password</a> @endif"
+        },
+        "es_ES": {
+            "subject": "Su servidor está listo",
+            "button": "Inicio de sesión en el panel",
+            "body": "Su servidor está listo para ser utilizado. Puede conectarse a su servidor utilizando la información a continuación. <br/>\n<strong>Dirección IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n<strong>Conexión</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a> @if ($can_reset_password) Puede solicitar un restablecimiento de contraseña haciendo clic en el siguiente enlace: <a href=\"{{ $reset_password_url }}\">Restablecer contraseña</a> @endif"
+        }
+    },
+    "virtualizor_vps": {
+        "fr_FR": {
+            "subject": "Votre VPS est prêt",
+            "button": "Connexion au panel",
+            "body": "Votre VPS est prêt à être utilisé. Vous pouvez vous connecter à votre serveur en utilisant les informations ci-dessous.<br/>\n <br/><strong>Adresse IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n"
+        },
+        "en_GB": {
+            "subject": "Your VPS is ready",
+            "button": "Panel login",
+            "body": "Your VPS is ready to be used. You can connect to your server using the information below. <br/>\n<strong>IP Address</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n"
+        },
+        "es_ES": {
+            "subject": "Su VPS está listo",
+            "button": "Inicio de sesión en el panel",
+            "body": "Su VPS está listo para ser utilizado. Puede conectarse a su servidor utilizando la información a continuación. <br/>\n<strong>Dirección IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n"
+        }
+    },
+    "virtualizor_cloud_vps": {
+        "fr_FR": {
+            "subject": "Votre VPS est prêt",
+            "button": "Connexion au panel",
+            "body": "Votre VPS est prêt à être utilisé. Vous pouvez vous connecter à votre serveur en utilisant les informations ci-dessous.<br/>\n <br/><strong>Adresse IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/><br/>\n<strong>URL Virtualizor</strong> : {{ $virtualizor_url }} <br/>\n<strong>E-mail</strong> : {{ $email }} <br/>\n<strong>Mot de passe</strong> : {{ $vs_password }} \n"
+        },
+        "en_GB": {
+            "subject": "Your VPS is ready",
+            "button": "Panel login",
+            "body": "Your VPS is ready to be used. You can connect to your server using the information below. <br/>\n<strong>IP Address</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/><br/>\n<strong>Virtualizor URL</strong> : {{ $virtualizor_url }} <br/>\n<strong>Email</strong> : {{ $email }} <br/>\n<strong>Password</strong> : {{ $vs_password }} \n"
+        },
+        "es_ES": {
+            "subject": "Su VPS está listo",
+            "button": "Inicio de sesión en el panel",
+            "body": "Su VPS está listo para ser utilizado. Puede conectarse a su servidor utilizando la información a continuación. <br/>\n<strong>Dirección IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/><br/>\n<strong>URL de Virtualizor</strong> : {{ $virtualizor_url }} <br/>\n<strong>Correo electrónico</strong> : {{ $email }} <br/>\n<strong>Contraseña</strong> : {{ $vs_password }} \n"
+        }
+    },
+    "virtualizor_cloud": {
+        "fr_FR": {
+            "subject": "Votre revendeur cloud est prêt",
+            "button": "Connexion au panel",
+            "body": "Votre revendeur cloud est prêt à être utilisé. Vous pouvez vous connecter à votre serveur en utilisant les informations ci-dessous.<br/>\n <br/>\n<strong>URL Virtualizor</strong> : {{ $virtualizor_url }} <br/>\n<strong>E-mail</strong> : {{ $email }} <br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n"
+        },
+        "en_GB": {
+            "subject": "Your cloud reseller is ready",
+            "button": "Panel login",
+            "body": "Your cloud reseller is ready to be used. You can connect to your server using the information below. <br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>Email</strong> : {{ $email }} <br/>\n"
+        },
+        "es_ES": {
+            "subject": "Su revendedor de nube está listo",
+            "button": "Inicio de sesión en el panel",
+            "body": "Su revendedor de nube está listo para ser utilizado. Puede conectarse a su servidor utilizando la información a continuación. <br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Correo electrónico</strong> : {{ $email }} <br/>\n"
+        }
+    },
+    "pterobox": {
+        "fr_FR": {
+            "subject": "Votre box est prête",
+            "button": "Connexion au panel",
+            "body": "Votre box est prête à être utilisée. Vous pouvez créer vos serveurs depuis notre espace client et administrer avec votre compte en utilisant les informations ci-dessous.<br/>\n <br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n<strong>Connexion</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a>"
+        },
+        "en_GB": {
+            "subject": "Your box is ready",
+            "button": "Panel login",
+            "body": "Your box is ready to be used. You can create your servers from our client area and administer with your account using the information below. <br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n<strong>Login</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a>"
+        },
+        "es_ES": {
+            "subject": "Su box está listo",
+            "button": "Inicio de sesión en el panel",
+            "body": "Su box está listo para ser utilizado. Puede crear sus servidores desde nuestra área de cliente y administrar con su cuenta utilizando la información a continuación. <br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n<strong>Conexión</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a>"
+        }
+    },
+    "service_suspended": {
+        "fr_FR": {
+            "subject": "Votre service a été suspendu",
+            "button": "Voir le service",
+            "body": "Votre service {{ $service->name }} a été suspendu. @if($reason != null) Pour le motif suivant : {{ $reason }}@else Veuillez contacter le support pour plus d'informations. @endif"
+        },
+        "en_GB": {
+            "subject": "Your service has been suspended",
+            "button": "View service",
+            "body": "Your service {{ $service->name }} has been suspended. @if($reason != null) For the following reason : {{ $reason }}@else Please contact support for more information. @endif"
+        },
+        "es_ES": {
+            "subject": "Su servicio ha sido suspendido",
+            "button": "Ver servicio",
+            "body": "Su servicio {{ $service->name }} ha sido suspendido. @if($reason != null) Por la siguiente razón : {{ $reason }}@else Por favor, póngase en contacto con el soporte para obtener más información. @endif"
+        }
+    },
+    "invoice_created": {
+        "fr_FR": {
+            "subject": "Nouvelle facture disponible",
+            "button": "Voir la facture",
+            "body": "Veuillez cliquer sur le bouton ci-dessous pour afficher votre facture.<br/>\n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Nom</strong> : {{ $item->name }} <br/>\n<strong>Prix </strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach"
+        },
+        "en_GB": {
+            "subject": "Your invoice has been created",
+            "button": "View invoice",
+            "body": "Please click on the button below to view your invoice.<br/>\n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Name</strong> : {{ $item->name }} <br/>\n<strong>Price </strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach"
+        },
+        "es_ES": {
+            "subject": "Su factura ha sido creada",
+            "button": "Ver factura",
+            "body": "Por favor, haga clic en el botón de abajo para ver su factura.<br/>\n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Nombre</strong> : {{ $item->name }} <br/>\n<strong>Precio</strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach"
+        }
+    },
+    "reset": {
+        "fr_FR": {
+            "subject": "Réinitialisation du mot de passe",
+            "button": "Réinitialiser le mot de passe",
+            "body": "Vous recevez cet e-mail car nous avons reçu une demande de réinitialisation de mot de passe pour votre compte.\nSi vous n'avez pas demandé de réinitialisation de mot de passe, aucune autre action n'est requise."
+        },
+        "en_GB": {
+            "subject": "Password reset",
+            "button": "Reset password",
+            "body": "You are receiving this email because we received a password reset request for your account.\nIf you did not request a password reset, no further action is required."
+        },
+        "es_ES": {
+            "subject": "Restablecimiento de contraseña",
+            "button": "Restablecer contraseña",
+            "body": "Está recibiendo este correo electrónico porque hemos recibido una solicitud de restablecimiento de contraseña para su cuenta.\nSi no solicitó un restablecimiento de contraseña, no es necesario realizar ninguna otra acción."
+        }
+    },
+    "verify": {
+        "fr_FR": {
+            "subject": "Vérification de l'adresse e-mail",
+            "button": "Vérifier l'adresse e-mail",
+            "body": "Vous recevez cet e-mail car nous avons reçu une demande de vérification de votre adresse e-mail.\nSi vous n'avez pas demandé de vérification de votre adresse e-mail, aucune autre action n'est requise."
+        },
+        "en_GB": {
+            "subject": "Email address verification",
+            "button": "Verify email address",
+            "body": "You are receiving this email because we received a request to verify your email address.\nIf you did not request to verify your email address, no further action is required."
+        },
+        "es_ES": {
+            "subject": "Verificación de la dirección de correo electrónico",
+            "button": "Verificar dirección de correo electrónico",
+            "body": "Está recibiendo este correo electrónico porque hemos recibido una solicitud para verificar su dirección de correo electrónico.\nSi no solicitó verificar su dirección de correo electrónico, no es necesario realizar ninguna otra acción."
+        }
+    },
+    "plesk_hosting": {
+        "fr_FR": {
+            "subject": "Votre hébergement est prêt",
+            "button": "Accès au panel",
+            "body": "Votre hébergement est prêt à être utilisé. Vous pouvez vous connecter à votre interface plesk en utilisant les informations ci-dessous.<br/>\n <br/><strong>Domaine</strong> : {{ $domain }} <br/>\n<strong>URL du plesk</strong> : {{ $plesk_url }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n"
+        },
+        "en_GB": {
+            "subject": "Your hosting is ready",
+            "button": "Panel access",
+            "body": "Your hosting is ready to be used. You can connect to your plesk interface using the information below. <br/>\n<strong>Domain</strong> : {{ $domain }} <br/>\n<strong>Plesk URL</strong> : {{ $plesk_url }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n"
+        },
+        "es_ES": {
+            "subject": "Su alojamiento está listo",
+            "button": "Inicio de sesión en el panel",
+            "body": "Su alojamiento está listo para ser utilizado. Puede conectarse a su interfaz de plesk utilizando la información a continuación. <br/>\n<strong>Dominio</strong> : {{ $domain }} <br/>\n<strong>URL de plesk</strong> : {{ $plesk_url }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n"
+        }
+    },
+    "plesk_reseller": {
+        "fr_FR": {
+            "subject": "Votre revendeur plesk est prêt",
+            "button": "Accès au panel",
+            "body": "Votre revendeur plesk est prêt à être utilisé. Vous pouvez vous connecter à votre interface plesk en utilisant les informatio<strong>URL du plesk</strong> : {{ $plesk_url }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n"
+        },
+        "en_GB": {
+            "subject": "Your plesk reseller is ready",
+            "button": "Panel access",
+            "body": "Your plesk reseller is ready to be used. You can connect to your plesk interface using the information below. <br/>\n<strong>Plesk URL</strong> : {{ $plesk_url }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n"
+        },
+        "es_ES": {
+            "subject": "Su revendedor de plesk está listo",
+            "button": "Inicio de sesión en el panel",
+            "body": "Su revendedor de plesk está listo para ser utilizado. Puede conectarse a su interfaz de plesk utilizando la información a continuación. <br/>\n<strong>URL de plesk</strong> : {{ $plesk_url }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n"
+        }
+    },
+    "proxmox": {
+        "fr_FR": {
+            "subject": "Votre VPS est prêt",
+            "button": "Accès au panel",
+            "body": "Votre VPS est prêt à être utilisé. Vous pouvez vous connecter à votre serveur en utilisant les informations ci-dessous.<br/>\n <br/><strong>Adresse IP</strong> : {{ $ips }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n"
+        },
+        "en_GB": {
+            "subject": "Your VPS is ready",
+            "button": "Panel access",
+            "body": "Your VPS is ready to be used. You can connect to your server using the information below. <br/>\n<strong>IP Address</strong> : {{ $ips }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n"
+        },
+        "es_ES": {
+            "subject": "Su VPS está listo",
+            "button": "Inicio de sesión en el panel",
+            "body": "Su VPS está listo para ser utilizado. Puede conectarse a su servidor utilizando la información a continuación. <br/>\n<strong>Dirección IP</strong> : {{ $ips }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n"
+        }
+    },
+    "support_admin_ticket_created": {
+        "fr_FR": {
+            "subject": "Nouveau ticket de support",
+            "button": "Voir le ticket",
+            "body": "Un nouveau ticket de support a été créé dans un département où vous êtes attachés. Veuillez cliquer sur le bouton ci-dessous pour afficher le ticket.<br/>\n<strong>Sujet</strong>: {{ $ticket->subject }} <br/>\n<strong>Créé par</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Département</strong>: {{ $ticket->department->trans('name') }} <br/>\n<strong>Contenu</strong>: {{ $message }}"
+        },
+        "en_GB": {
+            "subject": "New support ticket",
+            "button": "View ticket",
+            "body": "A new support ticket has been created in a department where you are attached. Please click on the button below to view the ticket.<br/>\n<strong>Subject</strong>: {{ $ticket->subject }} <br/>\n<strong>Created by</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Department</strong>: {{ $ticket->department->trans('name') }} <br/>\n<strong>Content</strong>: {{ $message }}"
+        },
+        "es_ES": {
+            "subject": "Nuevo ticket de soporte",
+            "button": "Ver ticket",
+            "body": "Se ha creado un nuevo ticket de soporte en un departamento al que está adjunto. Por favor, haga clic en el botón de abajo para ver el ticket.<br/>\n<strong>Asunto</strong>: {{ $ticket->subject }} <br/>\n<strong>Creado por</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Departamento</strong>: {{ $ticket->department->trans('name') }} <br/>\n<strong>Contenido</strong>: {{ $message }}"
+        }
+    },
+    "support_admin_ticket_reply": {
+        "fr_FR": {
+            "subject": "Nouvelle réponse à un ticket de support",
+            "button": "Voir le ticket",
+            "body": "Une nouvelle réponse a été apportée à un ticket de support dans un département où vous êtes attachés. Veuillez cliquer sur le bouton ci-dessous pour afficher le ticket.<br/>\n<strong>Sujet</strong>: {{ $ticket->subject }} <br/>\n<strong>Créé par</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Département</strong>: {{ $ticket->department->trans('name') }} <br/>\n<strong>Contenu</strong>: {{ $message }}"
+        },
+        "en_GB": {
+            "subject": "New reply to a support ticket",
+            "button": "View ticket",
+            "body": "A new reply has been made to a support ticket in a department where you are attached. Please click on the button below to view the ticket.<br/>\n<strong>Subject</strong>: {{ $ticket->subject }} <br/>\n<strong>Created by</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Department</strong>: {{ $ticket->department->trans('name') }} <br/>\n<strong>Content</strong>: {{ $message }}"
+        },
+        "es_ES": {
+            "subject": "Nueva respuesta a un ticket de soporte",
+            "button": "Ver ticket",
+            "body": "Se ha realizado una nueva respuesta a un ticket de soporte en un departamento al que está adjunto. Por favor, haga clic en el botón de abajo para ver el ticket.<br/>\n<strong>Asunto</strong>: {{ $ticket->subject }} <br/>\n<strong>Creado por</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Departamento</strong>: {{ $ticket->department->trans('name') }} <br/>\n<strong>Contenido</strong>: {{ $message }}"
+        }
+    },
+    "support_customer_ticket_reply": {
+        "fr_FR": {
+            "subject": "Nouvelle réponse à votre ticket de support",
+            "button": "Voir le ticket",
+            "body": "Une nouvelle réponse a été apportée à votre ticket de support. Veuillez cliquer sur le bouton ci-dessous pour afficher le ticket.<br/>\n<strong>Sujet</strong>: {{ $ticket->subject }} <br/>\n<strong>Créé par</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Département</strong>: {{ $ticket->department->trans('name') }} <br/>\n"
+        },
+        "en_GB": {
+            "subject": "New reply to your support ticket",
+            "button": "View ticket",
+            "body": "A new reply has been made to your support ticket. Please click on the button below to view the ticket.<br/>\n<strong>Subject</strong>: {{ $ticket->subject }} <br/>\n<strong>Created by</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Department</strong>: {{ $ticket->department->trans('name') }} <br/>\n"
+        },
+        "es_ES": {
+            "subject": "Nueva respuesta a su ticket de soporte",
+            "button": "Ver ticket",
+            "body": "Se ha realizado una nueva respuesta a su ticket de soporte. Por favor, haga clic en el botón de abajo para ver el ticket.<br/>\n<strong>Asunto</strong>: {{ $ticket->subject }} <br/>\n<strong>Creado por</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Departamento</strong>: {{ $ticket->department->trans('name') }} <br/>\n"
+        }
+    }
+}

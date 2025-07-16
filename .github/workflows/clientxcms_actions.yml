@@ -1,0 +1,97 @@
+name: ClientXCMS Actions
+
+on:
+  pull_request:
+    branches:
+      - preprod
+      - main
+
+jobs:
+  unit-test:
+    name: Unit testing
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: user
+          MYSQL_PASSWORD: password
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: json, zip, sodium, pcntl, bcmath, pdo_mysql
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: /tmp/composer-cache
+          key: ${{ runner.os }}-${{ hashFiles('composer.lock') }}
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -u root -proot --silent; then
+              echo "MySQL is up!"
+              break
+            fi
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+
+      - name: Create installed flag
+        run: mkdir -p storage && touch storage/installed
+      - name: Set up environment
+        run: cp .env.testing .env
+      - name: Generate application key
+        run: php artisan key:generate
+      - name: Run migrations
+        run: php artisan migrate --force --no-interaction --no-ansi --seed
+      - name: Build assets
+        run: npm install && npm run build
+      - name: Export translations
+        run: php artisan translations:export
+      - name: Checkout ctx-translations repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ vars.CTX_TRANSLATIONS_REPO }}
+          token: ${{ secrets.CTX_TRANSLATIONS_PAT }}
+          path: translations
+          fetch-depth: 0
+
+      - name: Copy translations to translations
+        run: |
+          mkdir -p translations/translations
+          cp storage/fr.json translations/translations/fr.json
+
+      - name: Commit and push translations
+        run: |
+          cd translations
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No changes in translations, skipping commit."
+          else
+            git add translations/fr.json
+            git commit -m "Update translations"
+            git push origin main
+          fi
+      - name: Run PHPUnit
+        run: ./vendor/bin/phpunit --configuration phpunit_github.xml -d date.timezone=Europe/Paris

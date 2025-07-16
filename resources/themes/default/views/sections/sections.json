@@ -1,0 +1,55 @@
+[
+    {
+        "thumbnail": "https://api-nextgen.clientxcms.com/assets/2efe449a-a399-4f2c-8b1a-627b0a712c82",
+        "path": "sections.store_groups",
+        "uuid": "store_groups",
+        "default": true,
+        "default_url": "/",
+        "section_type": 5
+    },
+    {
+        "thumbnail": "https://api-nextgen.clientxcms.com/assets/ba9cd6e7-ba20-4e46-abce-c3a38c7a5663",
+        "path": "sections.partners",
+        "uuid": "partners",
+        "default": true,
+        "default_url": "/",
+        "section_type": 7
+    },
+    {
+        "thumbnail": "https://api-nextgen.clientxcms.com/assets/f7a09df8-684b-45bd-a7b2-d65728b83363",
+        "path": "sections.icons_tab",
+        "uuid": "icons_tab",
+        "default": true,
+        "default_url": "/",
+        "section_type": 2
+    },
+    {
+        "thumbnail": "https://api-nextgen.clientxcms.com/assets/22a4302f-f2fd-49a8-bcc6-80e539efa688",
+        "path": "sections.card_contact_us",
+        "uuid": "card_contact_us",
+        "default": true,
+        "default_url": "/store/basket",
+        "section_type": 6
+    },
+    {
+        "thumbnail": "https://api-nextgen.clientxcms.com/assets/3ae849db-7556-4fe6-9b46-7994e6204726",
+        "path": "sections.statistics1_manual",
+        "uuid": "statistics1_manual",
+        "default": false,
+        "section_type": 4
+    },
+    {
+        "thumbnail": "https://api-nextgen.clientxcms.com/assets/dd8c320c-529d-4a83-913f-70fdcc9c257b",
+        "path": "sections.partners2",
+        "uuid": "partners2",
+        "default": false,
+        "section_type": 7
+    },
+    {
+        "thumbnail": "https://api-nextgen.clientxcms.com/assets/dd8c320c-529d-4a83-913f-70fdcc9c257b",
+        "path": "sections.icons_tab2",
+        "uuid": "icons_tab2",
+        "default": false,
+        "section_type": 2
+    }
+]

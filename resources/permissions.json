@@ -1,0 +1,179 @@
+[
+    {
+        "name": "admin.earn_page",
+        "label": "permissions.earn_page",
+        "group": "permissions.store"
+    },
+    {
+        "name": "admin.dashboard_last_login",
+        "label": "permissions.dashboard_last_login",
+        "group": "permissions.customers"
+    },
+    {
+        "name": "admin.manage_license",
+        "label": "permissions.manage_license",
+        "group": "permissions.admin"
+    },
+
+    {
+        "name": "admin.manage_database",
+        "label": "permissions.manage_database",
+        "group": "permissions.technical"
+    },
+
+    {
+        "name": "admin.manage_gateways",
+        "label": "permissions.manage_gateways",
+        "group": "permissions.admin"
+    },
+    {
+        "name": "admin.manage_roles",
+        "label": "permissions.manage_roles",
+        "group": "permissions.admin"
+    },
+    {
+        "name": "admin.show_emails",
+        "label": "permissions.show_email_messages",
+        "group": "permissions.customers"
+    },
+    {
+        "name": "admin.send_emails",
+        "label": "permissions.send_email_messages",
+        "group": "permissions.customers"
+    },
+    {
+        "name": "admin.show_logs",
+        "label": "permissions.show_logs",
+        "group": "permissions.technical"
+    },
+    {
+        "name": "admin.show_customers",
+        "label": "permissions.show_customers",
+        "group": "permissions.customers"
+    },
+    {
+        "name": "admin.manage_customers",
+        "label": "permissions.manage_customers",
+        "group": "permissions.customers"
+    },
+    {
+        "name": "admin.manage_staff",
+        "label": "permissions.manage_staff",
+        "group": "permissions.admin"
+    },
+    {
+        "name": "admin.manage_staff_profile",
+        "label": "permissions.manage_staff_profile",
+        "group": "permissions.admin"
+    },
+    {
+        "name": "admin.autologin_customer",
+        "label": "permissions.autologin_customer",
+        "group": "permissions.customers"
+    },
+    {
+        "name": "admin.manage_metadata",
+        "label": "permissions.manage_metadata",
+        "group": "permissions.metadata"
+    },
+    {
+        "name": "admin.show_metadata",
+        "label": "permissions.show_metadata",
+        "group": "permissions.metadata"
+    },
+    {
+        "name": "admin.manage_invoices",
+        "label": "permissions.manage_invoices",
+        "group": "permissions.billing"
+    },
+    {
+        "name": "admin.show_invoices",
+        "label": "permissions.show_invoices",
+        "group": "permissions.billing"
+    },
+    {
+        "name": "admin.create_invoices",
+        "label": "permissions.create_invoices",
+        "group": "permissions.billing"
+    },
+    {
+        "name": "admin.show_services",
+        "label": "permissions.show_services",
+        "group": "permissions.services"
+    },
+    {
+        "name": "admin.deliver_services",
+        "label": "permissions.deliver_services",
+        "group": "permissions.services"
+    },
+    {
+        "name": "admin.manage_services",
+        "label": "permissions.manage_services",
+        "group": "permissions.services"
+    },
+    {
+        "name": "admin.show_helpdesk_analytics",
+        "label": "permissions.show_helpdesk_analytics",
+        "group": "permissions.helpdesk"
+    },
+    {
+        "name": "admin.close_tickets",
+        "label": "permissions.close_tickets",
+        "group": "permissions.helpdesk"
+    },
+    {
+        "name": "admin.manage_tickets",
+        "label": "permissions.manage_tickets",
+        "group": "permissions.helpdesk"
+    },
+    {
+        "name": "admin.manage_departments",
+        "label": "permissions.manage_departments",
+        "group": "permissions.helpdesk"
+    },
+    {
+        "name": "admin.manage_products",
+        "label": "permissions.manage_products",
+        "group": "permissions.store"
+    },
+    {
+        "name": "admin.manage_configoptions",
+        "label": "permissions.manage_configoptions",
+        "group": "permissions.store"
+    },
+    {
+        "name": "admin.manage_groups",
+        "label": "permissions.manage_groups",
+        "group": "permissions.store"
+    },
+    {
+        "name": "admin.manage_coupons",
+        "label": "permissions.manage_coupons",
+        "group": "permissions.store"
+    },
+    {
+        "name": "admin.manage_servers",
+        "label": "permissions.manage_servers",
+        "group": "permissions.technical"
+    },
+    {
+        "name": "admin.manage_personalization",
+        "label": "permissions.manage_personalization",
+        "group": "permissions.technical"
+    },
+    {
+        "name": "admin.manage_extensions",
+        "label": "permissions.manage_extensions",
+        "group": "permissions.technical"
+    },
+    {
+        "name": "admin.show_payment_methods",
+        "label": "permissions.show_payment_methods",
+        "group": "permissions.billing"
+    },
+    {
+        "name": "admin.manage_api_keys",
+        "label": "permissions.manage_api_keys",
+        "group": "permissions.technical"
+    }
+]

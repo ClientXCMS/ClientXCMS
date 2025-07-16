@@ -1,0 +1,36 @@
+<?php
+/*
+ * This file is part of the CLIENTXCMS project.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Year: 2025
+ */
+namespace App\Events\Core;
+
+use App\Models\Billing\Invoice;
+use App\Models\Store\Basket\Basket;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+
+class CheckoutCompletedEvent
+{
+    use Dispatchable, InteractsWithSockets, SerializesModels;
+
+    public Basket $basket;
+
+    public Invoice $invoice;
+
+    public function __construct(Basket $basket, Invoice $invoice)
+    {
+        $this->basket = $basket;
+        $this->invoice = $invoice;
+    }
+}

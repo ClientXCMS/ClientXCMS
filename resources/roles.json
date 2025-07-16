@@ -1,0 +1,60 @@
+[
+    {
+        "name": "Administrateur",
+        "is_default": true,
+        "is_admin": true,
+        "level": 100,
+        "permissions": []
+    },
+    {
+        "name": "Support technique",
+        "level": 50,
+        "is_default": false,
+        "is_admin": false,
+        "permissions": [
+            "admin.manage_customers",
+            "admin.show_email_messages",
+            "admin.show_invoices",
+            "admin.show_customers",
+            "admin.show_services",
+            "admin.deliver_services",
+            "admin.show_tickets",
+            "admin.manage_services",
+            "admin.manage_tickets",
+            "admin.reply_tickets",
+            "admin.close_tickets",
+            "admin.manage_staff_profile"
+        ]
+    },
+    {
+        "name": "Commercial",
+        "level": 50,
+        "is_default": false,
+        "is_admin": false,
+        "permissions": [
+            "admin.manage_coupons",
+            "admin.show_email_messages",
+            "admin.show_invoices",
+            "admin.show_services",
+            "admin.show_customers",
+            "admin.manage_services",
+            "admin.manage_invoices",
+            "admin.manage_staff_profile"
+        ]
+    },
+    {
+        "name": "Technicien",
+        "level": 50,
+        "is_default": false,
+        "is_admin": false,
+        "permissions": [
+            "admin.manage_tickets",
+            "admin.reply_tickets",
+            "admin.close_tickets",
+            "admin_manage_services",
+            "admin.manage_servers",
+            "admin.show_metadata",
+            "admin.manage_staff_profile"
+        ]
+    }
+]

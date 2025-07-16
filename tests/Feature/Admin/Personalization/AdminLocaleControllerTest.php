@@ -1,0 +1,50 @@
+<?php
+/*
+ * This file is part of the CLIENTXCMS project.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Year: 2025
+ */
+namespace Admin\Personalization;
+
+class AdminLocaleControllerTest extends \Tests\TestCase
+{
+    public function test_admin_locale_index(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $admin = \App\Models\Admin\Admin::first();
+        $response = $this->actingAs($admin, 'admin')->get(route('admin.locales.index'));
+        $response->assertStatus(200);
+    }
+
+    public function test_admin_locale_update(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $admin = \App\Models\Admin\Admin::first();
+        $response = $this->actingAs($admin, 'admin')->post(route('admin.locales.download', ['locale' => 'es_ES']));
+        $response->assertStatus(302);
+    }
+
+    public function test_admin_locale_toggle(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $admin = \App\Models\Admin\Admin::first();
+        $response = $this->actingAs($admin, 'admin')->post(route('admin.locales.toggle', ['locale' => 'es_ES']));
+        $response->assertStatus(302);
+    }
+
+    public function test_admin_locale_toggle_not_downloaded(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $admin = \App\Models\Admin\Admin::first();
+        $response = $this->actingAs($admin, 'admin')->post(route('admin.locales.toggle', ['locale' => 'aaa']));
+        $response->assertNotFound();
+    }
+}

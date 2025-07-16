@@ -1,0 +1,22 @@
+{
+    "fr_FR": {
+        "key": "fr",
+        "name": "Fran\u00e7ais",
+        "flag": "https:\/\/flagsapi.com\/FR\/flat\/64.png"
+    },
+    "en_GB": {
+        "key": "en",
+        "name": "English",
+        "flag": "https:\/\/flagsapi.com\/GB\/flat\/64.png"
+    },
+    "es_ES": {
+        "key": "es",
+        "name": "Espa\u00f1ol",
+        "flag": "https:\/\/flagsapi.com\/ES\/flat\/64.png"
+    },
+    "de_DE": {
+        "key": "de",
+        "name": "Deutsch",
+        "flag": "https:\/\/flagsapi.com\/DE\/flat\/64.png"
+    }
+}

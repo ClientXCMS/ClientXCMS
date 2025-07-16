@@ -1,0 +1,96 @@
+<?php
+/*
+ * This file is part of the CLIENTXCMS project.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Year: 2025
+ */
+namespace Tests\Feature\Admin\Helpdesk;
+
+use App\Models\Helpdesk\SupportDepartment;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+class DepartmentControllerTest extends \Tests\TestCase
+{
+    const API_URL = 'admin/helpdesk/departments';
+
+    use RefreshDatabase;
+
+    public function test_admin_department_index(): void
+    {
+        $id = SupportDepartment::create([
+            'name' => 'Test Department',
+            'description' => 'Test Department Description',
+            'icon' => 'bi bi-hdd',
+        ])->id;
+        $response = $this->performAdminAction('get', self::API_URL);
+        $response->assertStatus(200);
+    }
+
+    public function test_admin_department_index_without_permission(): void
+    {
+        $response = $this->performAdminAction('get', self::API_URL, [], ['admin.manage_products']);
+        $response->assertStatus(403);
+    }
+
+    public function test_admin_department_get(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $id = SupportDepartment::create([
+            'name' => 'Test Department',
+            'description' => 'Test Department Description',
+            'icon' => 'bi bi-hdd',
+        ])->id;
+        $response = $this->performAdminAction('get', self::API_URL.'/'.$id);
+        $response->assertStatus(200);
+    }
+
+    public function test_admin_department_update(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $id = SupportDepartment::create([
+            'name' => 'Test Department',
+            'description' => 'Test Department Description',
+            'icon' => 'bi bi-hdd',
+        ])->id;
+        $response = $this->performAdminAction('put', self::API_URL.'/'.$id, [
+            'name' => 'Test Department',
+            'description' => 'Test Department Description',
+            'icon' => 'bi bi-hdd',
+        ]);
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+    }
+
+    public function test_admin_department_store(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $response = $this->performAdminAction('post', self::API_URL, [
+            'name' => 'Test Department',
+            'description' => 'Test Department Description',
+            'icon' => 'bi bi-hdd',
+        ]);
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+    }
+
+    public function test_admin_department_delete(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $id = SupportDepartment::create([
+            'name' => 'Test Department',
+            'description' => 'Test Department Description',
+            'icon' => 'bi bi-hdd',
+        ])->id;
+        $response = $this->performAdminAction('delete', self::API_URL.'/'.$id);
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+    }
+}

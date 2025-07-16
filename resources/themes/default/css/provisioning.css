@@ -1,0 +1,70 @@
+/*
+    * Provisioning
+    * --------------------------------------------------
+    * This file contains all theme related provisioning
+    * tab styles on services details.
+    *
+    * --------------------------------------------------
+ */
+.provisioning-tab-disabled {
+    @apply inline-flex items-center gap-x-3.5 py-3 px-4 text-sm font-medium border rounded-xl border-gray-200 text-gray-400 -mt-px
+}
+.provisioning-tab-disabled:hover {
+    @apply cursor-not-allowed text-indigo-600
+}
+.provisioning-tab-disabled:focus {
+    @apply z-10 outline-none ring-2 ring-gray-200
+}
+.provisioning-tab-disabled:disabled {
+    @apply opacity-50 pointer-events-none
+}
+.provisioning-tab-active {
+    @apply inline-flex items-center gap-x-3.5 py-3 px-4 text-sm font-medium border border-gray-200 text-indigo-600 -mt-px
+}
+.provisioning-tab-active:focus {
+    @apply z-10 outline-none ring-2 ring-indigo-600
+}
+.provisioning-tab {
+    @apply inline-flex items-center gap-x-3.5 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px
+}
+.provisioning-tab-first {
+    @apply rounded;
+}
+.provisioning-tab-last {
+    @apply rounded;
+}
+.provisioning-tab:focus {
+    @apply z-10 outline-none ring-2 ring-gray-200
+}
+.provisioning-tab:hover {
+    @apply text-indigo-600
+}
+/*
+DarkMode
+ */
+.dark .provisioning-tab-active {
+    @apply border-gray-700 text-gray-400
+}
+.dark .provisioning-tab-active:focus {
+    @apply ring-offset-gray-800
+}
+
+.dark .provisioning-tab-disabled {
+    @apply border-gray-700 text-gray-400
+}
+.dark .provisioning-tab-disabled:focus {
+    @apply outline-none ring-offset-gray-800 ring-1
+}
+.dark .provisioning-tab-disabled:hover {
+    @apply text-indigo-500
+}
+
+.dark .provisioning-tab {
+    @apply bg-slate-900 border-gray-700 text-white
+}
+.dark .provisioning-tab:hover {
+    @apply text-indigo-600
+}
+.dark .provisioning-tab:focus {
+    @apply outline-none ring-offset-gray-800 ring-1
+}

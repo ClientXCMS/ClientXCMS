@@ -1,0 +1,1337 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "CLIENTXCMS New Gen API",
+        "description": "This is the API documentation for the CLIENTXCMS New Gen API",
+        "contact": {
+            "email": "contact@clientxcms.com"
+        },
+        "version": "1.0.2"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000/api",
+            "description": "Endpoint"
+        }
+    ],
+    "paths": {
+        "/api": {},
+        "/application/discordlink/search/{discord_id}": {
+            "get": {
+                "tags": [
+                    "Discordlink"
+                ],
+                "summary": "Search data from discord id",
+                "description": "Returns customer data from discord id",
+                "operationId": "searchDiscordId",
+                "parameters": [
+                    {
+                        "name": "discord_id",
+                        "in": "path",
+                        "description": "discord user identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns customer data from discord id"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/application/discordlink/getlinkedcustomers": {
+            "get": {
+                "tags": [
+                    "Discordlink"
+                ],
+                "summary": "Find customers should have role in discord",
+                "description": "Return customers should have role in discord server",
+                "operationId": "getLinkedCustomers",
+                "responses": {
+                    "200": {
+                        "description": "Return customers should have role in discord server"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            }
+        },
+        "/application/health": {
+            "get": {
+                "tags": [
+                    "Core"
+                ],
+                "summary": "get heath status",
+                "description": "Return health status",
+                "operationId": "heatlth",
+                "responses": {
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            }
+        },
+        "/application/license": {
+            "get": {
+                "tags": [
+                    "Core"
+                ],
+                "summary": "get license",
+                "description": "Return license",
+                "operationId": "License",
+                "responses": {
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            }
+        },
+        "/application/statistics": {
+            "get": {
+                "tags": [
+                    "Core"
+                ],
+                "summary": "get statistics",
+                "description": "Return some services and customers statistics",
+                "operationId": "statistics",
+                "responses": {
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            }
+        },
+        "/application/customers": {
+            "get": {
+                "tags": [
+                    "Customers"
+                ],
+                "summary": "Get list of customers",
+                "description": "Returns list of customers",
+                "operationId": "getCustomersList",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search from emails customers",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "examples": {
+                            "string": {
+                                "summary": "search from emails customers",
+                                "value": "admin@clientxcms.com"
+                            }
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of customers per page",
+                        "schema": {
+                            "type": "number",
+                            "format": "int64",
+                            "default": 12
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Show customers list"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Customers"
+                ],
+                "summary": "Create new customer",
+                "description": "Returns new customer",
+                "operationId": "getCustomersStore",
+                "responses": {
+                    "200": {
+                        "description": "Show recently created customer"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            }
+        },
+        "/application/customers/{id}": {
+            "get": {
+                "tags": [
+                    "Customers"
+                ],
+                "summary": "Get customer information",
+                "description": "Returns customer data",
+                "operationId": "getCustomerById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "customer id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Customer"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    },
+                    "404": {
+                        "description": "customer not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Customers"
+                ],
+                "summary": "Create new customer",
+                "description": "Returns new customer",
+                "operationId": "updateCustomerById",
+                "responses": {
+                    "200": {
+                        "description": "Show recently updated customer"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Customers"
+                ],
+                "summary": "Delete customer information",
+                "description": "Delete customer data",
+                "operationId": "deleteCustomerById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "customer id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Customer"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    },
+                    "404": {
+                        "description": "customer not found"
+                    }
+                }
+            }
+        },
+        "/customer/me": {
+            "get": {
+                "tags": [
+                    "Client API"
+                ],
+                "summary": "Display the current customer details",
+                "operationId": "customerMe",
+                "responses": {
+                    "403": {
+                        "description": "Invalid token"
+                    },
+                    "200": {
+                        "description": "Display the current customer details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Customer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/application/services": {
+            "get": {
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Get list of service",
+                "description": "Returns list of service",
+                "operationId": "getServicesList",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of pricings per page",
+                        "schema": {
+                            "type": "number",
+                            "format": "int64",
+                            "default": 12
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Show pricings list"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            }
+        },
+        "/application/services/{id}": {
+            "get": {
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Get service information",
+                "description": "Returns service data",
+                "operationId": "getServiceById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "service id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProvisioningService"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    },
+                    "404": {
+                        "description": "service not found"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Delete service information",
+                "description": "Delete service data",
+                "operationId": "deleteServiceById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "service id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProvisioningService"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    },
+                    "404": {
+                        "description": "service not found"
+                    }
+                }
+            }
+        },
+        "/application/groups": {
+            "get": {
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Get list of groups",
+                "description": "Returns list of groups",
+                "operationId": "getGroupList",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search from names groups",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "examples": {
+                            "string": {
+                                "summary": "search from names groups",
+                                "value": "group"
+                            }
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of groups per page",
+                        "schema": {
+                            "type": "number",
+                            "format": "int64",
+                            "default": 12
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Show groups list"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Create new group",
+                "description": "Returns new group",
+                "operationId": "getGroupStore",
+                "responses": {
+                    "200": {
+                        "description": "Show recently created group"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            }
+        },
+        "/application/groups/{id}": {
+            "get": {
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Get group information",
+                "description": "Returns group data",
+                "operationId": "getGroupById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Group id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ShopGroup"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    },
+                    "404": {
+                        "description": "group not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Update group information",
+                "description": "Returns updated group data",
+                "operationId": "updateGroupById",
+                "responses": {
+                    "200": {
+                        "description": "Show recently updated group"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Delete group information",
+                "description": "Delete group data",
+                "operationId": "deleteGroupById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "group id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ShopGroup"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    },
+                    "404": {
+                        "description": "group not found"
+                    }
+                }
+            }
+        },
+        "/application/pricings": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Get list of pricing",
+                "description": "Returns list of pricing",
+                "operationId": "getPriceList",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of pricings per page",
+                        "schema": {
+                            "type": "number",
+                            "format": "int64",
+                            "default": 12
+                        }
+                    },
+                    {
+                        "name": "product",
+                        "in": "query",
+                        "description": "fetch only pricing for product with id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "examples": {
+                            "string": {
+                                "summary": "fetch only pricings for product with id 1",
+                                "value": "1"
+                            }
+                        }
+                    },
+                    {
+                        "name": "currency",
+                        "in": "query",
+                        "description": "fetch only pricing for product with currency",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "examples": {
+                            "string": {
+                                "summary": "fetch only pricings for product with curency EUR",
+                                "value": "EUR"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Show pricings list"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Create new pricing for product",
+                "description": "Returns a new pricing",
+                "operationId": "getPricingStore",
+                "responses": {
+                    "200": {
+                        "description": "Show recently created pricing"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            }
+        },
+        "/application/pricings/{id}": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Get pricing information",
+                "description": "Returns pricing data",
+                "operationId": "getPricingById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "pricing id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ShopPricing"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    },
+                    "404": {
+                        "description": "pricing not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Update pricing",
+                "description": "Returns updated pricing",
+                "operationId": "updatePricingById",
+                "responses": {
+                    "200": {
+                        "description": "Show recently updated product"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Delete pricing information",
+                "description": "Delete pricing data",
+                "operationId": "deletePricingById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "pricing id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ShopPricing"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    },
+                    "404": {
+                        "description": "pricing not found"
+                    }
+                }
+            }
+        },
+        "/application/products": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Get list of products",
+                "description": "Returns list of products",
+                "operationId": "getproductsList",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search from names products",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "examples": {
+                            "string": {
+                                "summary": "search from names products",
+                                "value": "product"
+                            }
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of products per page",
+                        "schema": {
+                            "type": "number",
+                            "format": "int64",
+                            "default": 12
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Show products list"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Create new product",
+                "description": "Returns new product",
+                "operationId": "getProductStore",
+                "responses": {
+                    "200": {
+                        "description": "Show recently created product"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            }
+        },
+        "/application/products/{id}": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Get product information",
+                "description": "Returns product data",
+                "operationId": "getProductById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "product id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ShopProduct"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    },
+                    "404": {
+                        "description": "product not found"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Update product",
+                "description": "Returns updated product",
+                "operationId": "updateProductById",
+                "responses": {
+                    "200": {
+                        "description": "Show recently updated product"
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Delete product information",
+                "description": "Delete product data",
+                "operationId": "deleteProductById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "product id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ShopProduct"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Key is invalid"
+                    },
+                    "404": {
+                        "description": "product not found"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Customer": {
+                "title": "Customer",
+                "description": "Customer model",
+                "properties": {
+                    "email": {
+                        "description": "Customer email",
+                        "type": "string"
+                    },
+                    "password": {
+                        "description": "Customer password",
+                        "type": "string"
+                    },
+                    "firstname": {
+                        "description": "Customer firstname",
+                        "type": "string"
+                    },
+                    "lastname": {
+                        "description": "Customer lastname",
+                        "type": "string"
+                    },
+                    "phone": {
+                        "description": "Customer phone",
+                        "type": "string"
+                    },
+                    "address": {
+                        "description": "Customer address",
+                        "type": "string"
+                    },
+                    "address2": {
+                        "description": "Customer address line 2",
+                        "type": "string"
+                    },
+                    "city": {
+                        "description": "Customer city",
+                        "type": "string"
+                    },
+                    "country": {
+                        "description": "Customer country",
+                        "type": "string"
+                    },
+                    "region": {
+                        "description": "Customer region",
+                        "type": "string"
+                    },
+                    "zipcode": {
+                        "description": "Customer zipcode",
+                        "type": "string"
+                    },
+                    "email_verified_at": {
+                        "description": "Customer email verification timestamp",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "is_confirmed": {
+                        "description": "Customer confirmation status",
+                        "type": "boolean"
+                    },
+                    "is_deleted": {
+                        "description": "Customer deletion status",
+                        "type": "boolean"
+                    },
+                    "dark_mode": {
+                        "description": "Customer theme mode",
+                        "type": "boolean"
+                    },
+                    "last_login": {
+                        "description": "Last login timestamp",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "last_ip": {
+                        "description": "Last login IP address",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ProvisioningService": {
+                "title": "Shop pricing",
+                "description": "Shop pricing model",
+                "properties": {
+                    "customer_id": {
+                        "description": "The ID of the associated customer",
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "name": {
+                        "description": "The name of the service",
+                        "type": "string",
+                        "example": "Service name"
+                    },
+                    "type": {
+                        "description": "The type of the service",
+                        "type": "string",
+                        "example": "proxmox"
+                    },
+                    "price": {
+                        "description": "The price of the service",
+                        "type": "number",
+                        "format": "float",
+                        "example": 9.99
+                    },
+                    "billing": {
+                        "description": "The billing of the service",
+                        "type": "string",
+                        "example": "monthly"
+                    },
+                    "initial_price": {
+                        "description": "The initial price of the service",
+                        "type": "number",
+                        "format": "float",
+                        "example": 9.99
+                    },
+                    "server_id": {
+                        "description": "The ID of the associated server",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "product_id": {
+                        "description": "The ID of the associated product (nullable)",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "invoice_id": {
+                        "description": "The ID of the associated invoice for renewal (nullable)",
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "status": {
+                        "description": "The status of the service",
+                        "type": "string",
+                        "example": "active"
+                    },
+                    "expires_at": {
+                        "description": "The expiration date of the service",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2021-01-01 00:00:00"
+                    },
+                    "suspended_at": {
+                        "description": "The suspension date of the service",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2021-01-01 00:00:00"
+                    },
+                    "cancelled_at": {
+                        "description": "The cancellation date of the service",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2021-01-01 00:00:00"
+                    },
+                    "cancelled_reason": {
+                        "description": "The cancellation reason of the service",
+                        "type": "string",
+                        "example": "Service cancelled"
+                    },
+                    "notes": {
+                        "description": "The notes of the service",
+                        "type": "string",
+                        "example": "Service notes"
+                    },
+                    "delivery_errors": {
+                        "description": "The delivery errors of the service",
+                        "type": "STRING",
+                        "example": "Delivery errors"
+                    },
+                    "delivery_attempts": {
+                        "description": "The delivery attempts of the service",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "renewals": {
+                        "description": "The renewals of the service",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "trial_ends_at": {
+                        "description": "The trial end date of the service",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2021-01-01 00:00:00"
+                    },
+                    "max_renewals": {
+                        "description": "The maximum renewals of the service",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "data": {
+                        "description": "The data of the service",
+                        "type": "json",
+                        "example": {
+                            "key": "value"
+                        }
+                    },
+                    "currency": {
+                        "description": "The currency of the service",
+                        "type": "string",
+                        "example": "USD"
+                    },
+                    "suspend_reason": {
+                        "description": "The suspension reason of the service",
+                        "type": "string",
+                        "example": "Service suspended"
+                    }
+                },
+                "type": "object"
+            },
+            "ShopGroup": {
+                "title": "Shop group",
+                "description": "Shop group model",
+                "properties": {
+                    "id": {
+                        "description": "The id of the item",
+                        "type": "integer",
+                        "example": "10"
+                    },
+                    "name": {
+                        "description": "The name of the item",
+                        "type": "string",
+                        "example": "Sample Item"
+                    },
+                    "slug": {
+                        "description": "The URL-friendly slug for the item",
+                        "type": "string",
+                        "example": "sample-item"
+                    },
+                    "status": {
+                        "description": "The status of the item (e.g., active, inactive)",
+                        "type": "string",
+                        "example": "active"
+                    },
+                    "description": {
+                        "description": "A description or details about the item",
+                        "type": "string",
+                        "example": "This is a sample item description."
+                    },
+                    "sort_order": {
+                        "description": "The order in which the item should be sorted",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "group_id": {
+                        "description": "The id of the group to which the item belongs",
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "pinned": {
+                        "description": "Whether the item is pinned or not",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "image": {
+                        "description": "The URL or path to the item's image",
+                        "type": "string",
+                        "example": "https://example.com/images/sample.jpg"
+                    }
+                },
+                "type": "object"
+            },
+            "ShopPricing": {
+                "title": "Shop pricing",
+                "description": "Shop pricing model",
+                "properties": {
+                    "product_id": {
+                        "description": "The ID of the associated product",
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "currency": {
+                        "description": "The currency for pricing",
+                        "type": "string",
+                        "example": "USD"
+                    },
+                    "onetime": {
+                        "description": "One-time payment amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 99.99,
+                        "nullable": true
+                    },
+                    "monthly": {
+                        "description": "Monthly payment amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 9.99,
+                        "nullable": true
+                    },
+                    "quarterly": {
+                        "description": "Quarterly payment amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 24.99,
+                        "nullable": true
+                    },
+                    "semiannually": {
+                        "description": "Semi-annual payment amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 49.99,
+                        "nullable": true
+                    },
+                    "annually": {
+                        "description": "Annual payment amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 99.99,
+                        "nullable": true
+                    },
+                    "biennially": {
+                        "description": "Biennial payment amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 199.99,
+                        "nullable": true
+                    },
+                    "triennially": {
+                        "description": "Triennial payment amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 299.99,
+                        "nullable": true
+                    },
+                    "setup_onetime": {
+                        "description": "One-time setup fee amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 19.99,
+                        "nullable": true
+                    },
+                    "setup_monthly": {
+                        "description": "Monthly setup fee amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 4.99,
+                        "nullable": true
+                    },
+                    "setup_quarterly": {
+                        "description": "Quarterly setup fee amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 9.99,
+                        "nullable": true
+                    },
+                    "setup_semiannually": {
+                        "description": "Semi-annual setup fee amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 14.99,
+                        "nullable": true
+                    },
+                    "setup_annually": {
+                        "description": "Annual setup fee amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 29.99,
+                        "nullable": true
+                    },
+                    "setup_biennially": {
+                        "description": "Biennial setup fee amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 49.99,
+                        "nullable": true
+                    },
+                    "setup_triennially": {
+                        "description": "Triennial setup fee amount",
+                        "type": "number",
+                        "format": "float",
+                        "example": 69.99,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ShopProduct": {
+                "title": "Shop product",
+                "description": "Shop product model",
+                "properties": {
+                    "id": {
+                        "description": "The id of the item",
+                        "type": "integer",
+                        "example": "10"
+                    },
+                    "name": {
+                        "description": "The name of the item",
+                        "type": "string",
+                        "example": "Sample Item"
+                    },
+                    "status": {
+                        "description": "The status of the item (e.g., Active, Hidden, Unreferenced)",
+                        "type": "string",
+                        "example": "active"
+                    },
+                    "description": {
+                        "description": "A description or details about the item",
+                        "type": "string",
+                        "example": "This is a sample item description."
+                    },
+                    "sort_order": {
+                        "description": "The order in which the item should be sorted",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "group_id": {
+                        "description": "The ID of the group to which the item belongs",
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "stock": {
+                        "description": "The stock quantity of the item",
+                        "type": "integer",
+                        "example": 50
+                    },
+                    "type": {
+                        "description": "The type of the product",
+                        "type": "string",
+                        "example": "pterodactyl"
+                    },
+                    "pinned": {
+                        "description": "Whether the item is pinned or not",
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "apiKey",
+                "description": "Enter token in format (Bearer <token>)",
+                "name": "Authorization",
+                "in": "header"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Client API",
+            "description": "API Endpoints for customer account"
+        },
+        {
+            "name": "Products",
+            "description": "API Endpoints for store products"
+        },
+        {
+            "name": "Groups",
+            "description": "API Endpoints for store groups"
+        },
+        {
+            "name": "Core",
+            "description": "API Endpoints for core"
+        },
+        {
+            "name": "Services",
+            "description": "API Endpoints for services"
+        },
+        {
+            "name": "Customers",
+            "description": "API Endpoints for customers"
+        }
+    ],
+    "security": [
+        {
+            "sanctum": []
+        }
+    ]
+}
