@@ -90,6 +90,10 @@ php artisan key:generate || {
     echo "ERROR: Key generation failed"
     exit 1
 }
+php artisan translations:import $DEFAULT_LOCALE || {
+    echo "ERROR: Key generation failed"
+    exit 1
+}
 
 echo "Starting cron jobs..."
 crond -L /var/log/crond -l 5

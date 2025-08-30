@@ -11,6 +11,7 @@ Les fichiers de langues sont téléchargés automatiquement lors de l’installa
 php artisan translations:import <locale>
 ```
 
+avec <locale> comme fr_FR, en_US, es_ES, etc.
 📂 Les langues disponibles sont listées ici : [ctx-translations/locales.json](https://github.com/ClientXCMS/ctx-translations/blob/main/locales.json)
 
 ### Comment aider à traduire ou améliorer les fichiers ?
@@ -33,6 +34,8 @@ Language files are automatically downloaded when installing **CLIENTXCMS** or by
 php artisan translations:import <locale>
 ```
 
+with <locale> as fr_FR, en_US, es_ES, etc.
+
 📂 Available languages are listed here: [ctx-translations/locales.json](https://github.com/ClientXCMS/ctx-translations/blob/main/locales.json)
 
 ### How to help translate or improve the files?
@@ -54,7 +57,7 @@ Los archivos de idiomas se descargan automáticamente al instalar **CLIENTXCMS**
 ```bash
 php artisan translations:import <locale>
 ```
-
+con <locale> como fr_FR, en_US, es_ES, etc.
 📂 Los idiomas disponibles están listados aquí: [ctx-translations/locales.json](https://github.com/ClientXCMS/ctx-translations/blob/main/locales.json)
 
 ### ¿Cómo ayudar a traducir o mejorar los archivos?
