@@ -10,12 +10,12 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
-<!-- ====== Services Section Start -->
 <section class="pt-20 pb-12 lg:pt-[120px] lg:pb-[90px] dark:bg-dark">
     <div class="container mx-auto">
         <div class="-mx-4 flex flex-wrap">

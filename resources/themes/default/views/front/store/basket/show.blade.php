@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('layouts/front')
 @section('title', __('store.basket.title'))
 @section('scripts')
@@ -24,8 +26,10 @@
 
     <div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
         @include("shared.alerts")
+        @if (theme_metadata('enable_pagetitle', 'false') == 'false')
 
         <h1 class="text-2xl font-semibold mb-4 dark:text-white">{{ __('store.basket.title') }}</h1>
+        @endif
                 <div class="flex flex-col md:flex-row gap-4">
                     <div class="md:w-3/4">
                         <div class="card">
@@ -58,8 +62,8 @@
                                     @endif
                                 @foreach($basket->items()->get() as $row)
                                     @php($pricing = $row->product->getPriceByCurrency($row->currency, $row->billing))
-                                    <tr>
-                                    <td class="py-4">
+                                    <tr class="dark:text-gray-500">
+                                    <td class="py-4 ">
                                         <div class="flex items-center">
                                             <form method="POST" action="{{ route('front.store.basket.remove', ['product' => $row->product]) }}">
                                                 @csrf

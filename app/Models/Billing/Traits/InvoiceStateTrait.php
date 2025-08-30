@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Billing\Traits;
 
 use App\Events\Core\CheckoutCompletedEvent;
@@ -53,15 +58,13 @@ trait InvoiceStateTrait
         }
         $this->paid_at = now();
         $this->status = self::STATUS_PAID;
-        $this->items->map(function (InvoiceItem $item) {
-            $item->cancelled_at = null;
-            $item->save();
-        });
         $this->save();
         $this->items->map(function (InvoiceItem $item) {
             $item->uncancel();
         });
+
         $this->clearBasket($clearBasket);
+        $this->generatePdf();
         event(new InvoiceCompleted($this));
     }
 

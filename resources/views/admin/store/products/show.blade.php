@@ -10,15 +10,18 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title',  __($translatePrefix . '.show.title', ['name' => $item->name]))
 @section('styles')
     <link rel="stylesheet" href="{{ Vite::asset('resources/global/css/editor.scss') }}">
+    <link rel="stylesheet" href="{{ Vite::asset('resources/global/css/monaco-editor.main.css') }}">
 @endsection
 @section('scripts')
     <script src="{{ Vite::asset('resources/global/js/editor.js') }}" type="module"></script>

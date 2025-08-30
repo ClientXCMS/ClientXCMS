@@ -10,9 +10,11 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
-?>
 ?>
 @php($fees = isset($fees) ? $fees : true)
 <div class="p-1.5 min-w-full inline-block align-middle">
@@ -42,7 +44,7 @@
                 @foreach ($recurrings as $k => $recurring)
 
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200 {{ $recurring['additional'] ?? false ? 'hidden' : '' }}">
-                        @include('admin.shared.input', ['name' => 'pricing['. $k .'][price]','type' => 'number','step' => '0.01','min' => 0, 'value' => old('recurrings_' . $k . '_price', $pricing->{$k}), 'attributes' => ['data-months' => $recurring['months']]])
+                        @include('admin.shared.input', ['name' => ($pricing_key ?? 'pricing') . '['. $k .'][price]','type' => 'number','step' => '0.01','min' => 0, 'value' => old('recurrings_' . $k . '_price', $pricing->{$k}), 'attributes' => ['data-months' => $recurring['months']]])
                     </td>
                 @endforeach
             </tr>
@@ -54,7 +56,7 @@
                 @foreach ($recurrings as $k => $recurring)
 
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200 {{ $recurring['additional'] ?? false ? 'hidden' : '' }}">
-                        @include('admin.shared.input', ['name' => 'pricing['. $k .'][setup]', 'step' => '0.01','min' => 0, 'value' => old('recurrings_' . $k . '_setup', $pricing->{"setup_". $k}), 'attributes' => ['data-months' => $recurring['months']]])
+                        @include('admin.shared.input', ['name' => ($pricing_key ?? 'pricing') . '['. $k .'][setup]', 'step' => '0.01','min' => 0, 'value' => old('recurrings_' . $k . '_setup', $pricing->{"setup_". $k}), 'attributes' => ['data-months' => $recurring['months']]])
                     </td>
 
                 @endforeach
@@ -64,9 +66,9 @@
             </tbody>
         </table>
     </div>
-    @if ($errors->has('pricing'))
+    @if ($errors->has(($pricing_key ?? 'pricing')))
         <p class="text-red-500 text-xs italic mt-2">
-            {{ $errors->first('pricing') }}
+            {{ $errors->first(($pricing_key ?? 'pricing')) }}
         </p>
     @endif
 </div>

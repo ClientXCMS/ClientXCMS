@@ -10,13 +10,18 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Store;
 
-use App\DTO\Admin\Invoice\AddCouponToInvoiceItemDTO;
 use App\Models\Account\Customer;
 use App\Models\Billing\Invoice;
+use App\Models\Provisioning\Service;
 use App\Models\Store\Basket\Basket;
 use App\Models\Store\Basket\BasketRow;
 use App\Models\Traits\HasMetadata;
@@ -165,19 +170,24 @@ class Coupon extends Model
         return $this->hasMany(Pricing::class, 'related_id')->where('related_type', 'coupon');
     }
 
-    public function apply(Basket $basket)
+    public function isValidForServiceRenewal(Service $service)
     {
-        if ($this->type == self::TYPE_FIXED) {
-            $discount = $this->free_setup ? $basket->setup_fee : $this->amount;
+        if ($this->applied_month == Coupon::APPLIED_MONTH_FIRST && $service->renewals > 0) {
+            return false;
+        } elseif ($this->applied_month != Coupon::APPLIED_MONTH_UNLIMITED) {
+            if ($service->renewals >= $this->applied_month) {
+                return false;
+            }
+            if ($this->getPricingRecurring($service->billing, BasketRow::PRICE) <= 0) {
+                return false;
+            }
+            return true;
         } else {
-            $discount = $basket->total() * $this->amount / 100;
+            if ($this->getPricingRecurring($service->billing, BasketRow::PRICE) <= 0) {
+                return false;
+            }
+            return true;
         }
-        $basket->save();
-        $this->usages()->create([
-            'customer_id' => $basket->user_id,
-            'used_at' => now(),
-            'amount' => $discount,
-        ]);
     }
 
     public function isValid(Basket $basket, bool $flash = true)
@@ -313,21 +323,19 @@ class Coupon extends Model
         return $can;
     }
 
-    public function discountArray(AddCouponToInvoiceItemDTO $dto)
+    public function discountArray(float $unit_price_ht, float $unit_setup_ht, string $billing)
     {
-        $billing = $dto->billing;
-
         return [
             'code' => $this->code,
             'type' => $this->type,
             'id' => $this->id,
             'applied_month' => $this->applied_month,
             'free_setup' => $this->free_setup,
-            'sub_price' => number_format($dto->unit_price_ht - $this->applyAmount($dto->unit_price_ht, $billing, BasketRow::PRICE), 2),
-            'sub_setup' => number_format($dto->unit_setup_ht - $this->applyAmount($dto->unit_setup_ht, $billing, BasketRow::SETUP_FEES), 2),
+            'sub_price' => number_format($unit_price_ht - $this->applyAmount($unit_price_ht, $billing, BasketRow::PRICE), 2),
+            'sub_setup' => number_format($unit_setup_ht - $this->applyAmount($unit_setup_ht, $billing, BasketRow::SETUP_FEES), 2),
             'value_price' => (float) $this->getPricingRecurring($billing, BasketRow::PRICE) ?? 0,
             'value_setup' => (float) $this->getPricingRecurring($billing, BasketRow::SETUP_FEES) ?? 0,
-        ];
+        ];   
     }
 
     protected static function newFactory()

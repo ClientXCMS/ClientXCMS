@@ -10,13 +10,14 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
-@php($container = 'max-w-lg')
 
+@php($container = 'max-w-lg')
 
 @extends('layouts/auth')
 @section('title', __('auth.verified.heading'))

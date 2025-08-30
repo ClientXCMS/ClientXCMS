@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Providers;
 
 use App\Events\Core\CheckoutCompletedEvent;
@@ -69,6 +74,7 @@ class EventServiceProvider extends ServiceProvider
             CreateServiceListener::class,
             RenewServiceListerner::class,
             SendInvoiceNotification::class,
+            CouponUsageListener::class,
         ],
         ServiceRenewed::class => [
             WebhookNotification::class,
@@ -84,7 +90,6 @@ class EventServiceProvider extends ServiceProvider
         ],
         CheckoutCompletedEvent::class => [
             WebhookNotification::class,
-            CouponUsageListener::class,
         ],
         ScheduledTaskStarting::class => [
             LastCronRunSaved::class,

@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Provisioning;
 
 use App\DTO\Admin\MassActionDTO;
@@ -32,6 +37,7 @@ use App\Models\Provisioning\Service;
 use App\Models\Provisioning\ServiceRenewals;
 use App\Models\Store\Pricing;
 use App\Models\Store\Product;
+use App\Rules\isValidBillingDayRule;
 use App\Services\Billing\InvoiceService;
 use App\Services\Provisioning\ServiceService;
 use App\Services\Store\PricingService;
@@ -131,12 +137,12 @@ class ServiceController extends AbstractCrudController
         $params['panel_html'] = ProvisioningTabDTO::renderPanel($service, true);
         $params['renewals'] = $service->serviceRenewals()->whereRaw('(renewed_at IS NOT NULL OR first_period = 1)')->orderBy('created_at', 'desc')->get();
         $params['products'] = $this->getProductsList();
-        $params['invoices'] = $service->customer->getPendingInvoices()->mapWithKeys(function (Invoice $invoice) {
+        $params['invoices'] = $service->customer ? $service->customer->getPendingInvoices()->mapWithKeys(function (Invoice $invoice) {
             return [$invoice->id => __('global.invoice').' - '.$invoice->invoice_number];
-        })->put('none', __('global.none'));
+        })->put('none', __('global.none')) : collect()->put('none', __('global.none'));
         $params['servers'] = $this->getServersList($service->type);
         $params['types'] = $this->getProductTypes();
-        $params['paymentmethods'] = $service->customer->getPaymentMethodsArray();
+        $params['paymentmethods'] = $service->customer ? $service->customer->getPaymentMethodsArray() : collect();
         $params['pricing'] = $service->getPricing();
         $params['recurrings'] = app(RecurringService::class)->getRecurrings();
         $params['upgrade_products'] = $service->product ? collect($service->product->getUpgradeProducts())->mapWithKeys(function (Product $product) use ($service) {
@@ -163,7 +169,6 @@ class ServiceController extends AbstractCrudController
                 \Session::flash('info', __('client.alerts.service_cancelled_and_not_expired'));
             }
         }
-
         return $this->showView($params);
     }
 
@@ -178,15 +183,20 @@ class ServiceController extends AbstractCrudController
 
             return back()->with('success', __('client.services.subscription.cancelled', ['date' => $service->expires_at->format('d/m')]));
         }
-        $paymentmethods = $service->customer->getPaymentMethodsArray(true)->join(',');
+        $paymentmethods = $service->customer->getPaymentMethodsArray(true)->keys()->join(',');
+
         $validated = $request->validate([
             'paymentmethod' => "in:$paymentmethods",
+            'billing_day' => ['nullable', "between:1,28", new isValidBillingDayRule($service)]
         ]);
         $paymentmethod = $validated['paymentmethod'];
-        Subscription::createOrUpdateForService($service, $paymentmethod);
-        $days = setting('service_days_before_subscription_renewal');
-
-        return redirect()->route($this->routePath.'.show', [$service])->with('success', __('client.services.subscription.success', ['date' => $service->expires_at->subDays($days)->format('d/m')]));
+        $subscription = Subscription::createOrUpdateForService($service, $paymentmethod);
+        if ($request->has('billing_day')){
+            $billingDay = $request->get('billing_day');
+            $subscription->setBillingDay($billingDay);
+            return back()->with('success', __('client.services.subscription.billing_day_updated', ['date' => $subscription->getNextPaymentDate()]));
+        }
+        return redirect()->route($this->routePath.'.show', [$service])->with('success', __('client.services.subscription.success', ['date' => $subscription->getNextPaymentDate()->format('d/m')]));
     }
 
     public function upgrade(UpgradeServiceRequest $request, Service $service)
@@ -270,7 +280,9 @@ class ServiceController extends AbstractCrudController
                 return [$product->key => ['pricing' => $product->getPricingArray(), 'key' => $product->key, 'type' => $product->type, 'step' => $product->step, 'unit' => $product->unit, 'title' => $product->name]];
             });
             $params['customer_id'] = $request->get('customer_id');
+            $params['item']->customer_id = $request->get('customer_id');
         } else {
+            $params['item'] = (new Service([]));
             $params['products'] = $this->getProductsList();
             $params['types'] = $this->getProductTypes();
             $params['product_id'] = current($params['products']->keys());
@@ -278,6 +290,7 @@ class ServiceController extends AbstractCrudController
             $params['dataHTML'] = null;
             $params['productTypes'] = Product::getAvailable(true)->pluck('type', 'id');
             $params['defaultCustomer'] = request()->query('customer_id');
+            $params['item']->customer_id = $request->get('customer_id');
         }
 
         return $this->createView($params);
@@ -303,6 +316,9 @@ class ServiceController extends AbstractCrudController
             return redirect()->route('admin.services.show', ['service' => $service]);
         }
         $current_tab = $panel->getTab($service, $tab);
+        if (! $current_tab) {
+            return redirect()->route('admin.services.show', ['service' => $service])->with('error', __('provisioning.admin.services.tab_not_found'));
+        }
         $tab_html = $current_tab->renderTab($service, true);
         if ($tab_html instanceof \Illuminate\Http\Response || $tab_html instanceof \Illuminate\Http\RedirectResponse) {
             return $tab_html;
@@ -340,10 +356,6 @@ class ServiceController extends AbstractCrudController
     public function renew(Request $request, Service $service)
     {
         $this->checkPermission('create_invoices', $service);
-        $gateway = \App\Models\Billing\Gateway::getAvailable()->first();
-        if (! $gateway) {
-            return back()->with('error', __('provisioning.admin.services.no_gateway'));
-        }
         if ($service->invoice_id != null) {
             ServiceRenewals::where('invoice_id', $service->invoice_id)->delete();
             $service->invoice->cancel();
@@ -369,7 +381,7 @@ class ServiceController extends AbstractCrudController
     public function changeStatus(Request $request, Service $service, string $status)
     {
         $this->checkPermission('update', $service);
-        if (! in_array($status, ['suspend', 'unsuspend', 'expire', 'cancel'])) {
+        if (! in_array($status, ['suspend', 'unsuspend', 'expire', 'cancel', 'cancel_delivery'])) {
             return back()->with('error', __('provisioning.admin.services.invalid_status'));
         }
         if ($status == 'suspend') {
@@ -388,8 +400,12 @@ class ServiceController extends AbstractCrudController
     public function update(UpdateServiceRequest $request, Service $service)
     {
         $this->checkPermission('update', $service);
-        $service->fill($request->validated());
-        $service->save();
+        try {
+            $service->fill($request->validated());
+            $service->save();
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
         if ($request->validated('resync') && $service->product_id != null) {
             Pricing::where('related_id', $service->id)->where('related_type', 'service')->delete();
             PricingService::forgot();
@@ -401,13 +417,14 @@ class ServiceController extends AbstractCrudController
         } else {
             Pricing::createOrUpdateFromArray($request->validated(), $service->id, 'service');
         }
+        PricingService::forgot();
 
         return $this->updateRedirect($service);
     }
 
     public function delivery(Service $service)
     {
-        $this->checkPermission('deliver_services', $service);
+        staff_aborts_permission('admin.deliver_services');
         if ($service->isPending()) {
             try {
                 $result = $service->deliver();
@@ -426,7 +443,7 @@ class ServiceController extends AbstractCrudController
 
     public function reinstall(Service $service): \Illuminate\Http\RedirectResponse
     {
-        $this->checkPermission('deliver_services', $service);
+        staff_aborts_permission('admin.deliver_services');
         if ($service->isPending()) {
             try {
                 $result = $service->expire(true);

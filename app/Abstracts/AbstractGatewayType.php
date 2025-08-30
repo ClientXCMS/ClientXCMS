@@ -10,8 +10,12 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
 namespace App\Abstracts;
 
 use App\Contracts\Store\GatewayTypeInterface;
@@ -20,7 +24,6 @@ use App\DTO\Core\Gateway\GatewayUriDTO;
 use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
-use App\Models\Billing\Subscription;
 use App\Services\Store\GatewayService;
 use Illuminate\Http\Request;
 
@@ -84,22 +87,15 @@ abstract class AbstractGatewayType implements GatewayTypeInterface
 
     abstract public function processPayment(Invoice $invoice, Gateway $gateway, Request $request, GatewayUriDTO $dto);
 
-    public function createSubscription(Invoice $invoice, Gateway $gateway, Request $request, GatewayUriDTO $dto): ?Subscription
-    {
-        return null;
+    public function sourceReturn(Request $request){
+        return '';
     }
-
-    public function cancelSubscription(Subscription $subscription): ?Subscription
-    {
-        return null;
-    }
-
     public function minimalAmount(): float
     {
         return collect(GatewayService::getAvailable())->where('uuid', $this->uuid)->first()->minimal_amount ?? 0;
     }
 
-    public function addSource(Request $request): ?PaymentMethodSourceDTO
+    public function addSource(Request $request)
     {
         return null;
     }

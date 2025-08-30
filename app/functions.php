@@ -10,8 +10,12 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
 use App\Services\SettingsService;
 use App\Services\Store\CurrencyService;
 
@@ -104,6 +108,20 @@ if (! function_exists('is_darkmode')) {
         return \Illuminate\Support\Facades\Session::get('dark_mode', setting('theme_switch_mode', $defaultMode) == 'dark');
     }
 }
+
+if (! function_exists('is_gdpr_compliment')) {
+    function is_gdpr_compliment(): bool
+    {
+        if (auth('web')->check()) {
+            return auth('web')->user()->gdpr_compliment;
+        }
+        if (\Illuminate\Support\Facades\Session::get('gdpr_compliment', false)) {
+            return true;
+        }
+
+        return false;
+    }
+}
 if (! function_exists('is_lightmode')) {
     function is_lightmode(bool $admin = false): bool
     {
@@ -188,8 +206,15 @@ if (! function_exists('is_subroute')) {
         if (is_array($route)) {
             return in_array(request()->path(), $route);
         }
+        if ($route instanceof \App\Models\Personalization\MenuLink){
+            $route = $route->trans('url');
+        }
         if ($route == '/') {
             return request()->path() == '/';
+        }
+        // remove domain from the route
+        if (Str::startsWith($route, 'http://') || Str::startsWith($route, 'https://')) {
+            $route = parse_url($route, PHP_URL_PATH);
         }
 
         return Str::startsWith('/'.request()->path(), $route);
@@ -314,5 +339,16 @@ if (! function_exists('theme_asset')) {
     function theme_asset(string $path): string
     {
         return asset('themes/'.app('theme')->getTheme()->uuid.'/'.$path);
+    }
+}
+
+if (! function_exists('generate_uuid')) {
+    function generate_uuid(string $class): string
+    {
+        $uuid = (string) substr(\Illuminate\Support\Str::uuid(), 0, 8);
+        if ($class::where('uuid', $uuid)->exists()) {
+            return generate_uuid($class);
+        }
+        return $uuid;
     }
 }

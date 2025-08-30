@@ -10,8 +10,12 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
 use App\Http\Controllers\InstallController;
 
 Route::get('/settings', [InstallController::class, 'showSettings'])->name('settings');

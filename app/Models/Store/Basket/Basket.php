@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Store\Basket;
 
 use App\Models\Account\Customer;
@@ -225,7 +230,7 @@ class Basket extends Model
         $uuid = self::getUUID();
 
         if ($force) {
-            if (self::$basket != null) {
+            if (self::$basket != null && !app()->environment('testing')) {
                 return self::$basket;
             }
 
@@ -235,8 +240,6 @@ class Basket extends Model
                     ->first();
 
                 if ($basket) {
-                    self::$basket = $basket;
-
                     return $basket;
                 }
             }

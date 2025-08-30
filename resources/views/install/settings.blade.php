@@ -10,17 +10,19 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('install.layout')
 @section('title', __('install.settings.title'))
 @section('content')
     <form method="POST" action="{{ route('install.settings') }}">
         @csrf
-    @include('shared.alerts')
+        @include('shared.alerts')
         <div class="mt-2">
             @include('shared.input', ['name' => 'app_name', 'value' => env('APP_NAME'), 'label' => __('install.settings.hosting_name')])
         </div>
@@ -30,6 +32,14 @@
         <div class="mt-2">
             @include('shared.input', ['name' => 'client_secret', 'value' => old('client_id'), 'label' => __('install.settings.client_secret')])
         </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">{!! __('install.settings.infolicense', ['link' => 'https://clientxcms.com/']) !!}</p>
+
+        <div class="mt-2">
+            @include('shared.search-select-multiple', ['name' => 'locales[]', 'value' => ['en_GB'], 'label' => __('install.settings.locales'), 'options' => $locales])
+        </div>
+        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            {{ __('install.settings.eula') }}
+        </p>
         <button type="submit" class="mt-4 btn btn-primary w-full" {{ !$isMigrated ? 'disabled' : '' }}>
             {{ __('install.settings.connect') }}
         </button>

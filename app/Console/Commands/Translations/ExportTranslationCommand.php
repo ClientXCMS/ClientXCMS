@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Console\Commands\Translations;
 
 use Illuminate\Console\Command;
@@ -30,9 +35,7 @@ class ExportTranslationCommand extends Command
     public function handle(): void
     {
         $directories = [
-            base_path('addons'),  // Pour les traductions dans /addons/{module}/lang/{locale}
-            base_path('modules'), // Pour les traductions dans /modules/{module}/lang/{locale}
-            base_path('lang'),     // Pour les traductions globales dans /lang/{locale}
+            base_path('lang'),
         ];
 
         $translationsByLocale = [];

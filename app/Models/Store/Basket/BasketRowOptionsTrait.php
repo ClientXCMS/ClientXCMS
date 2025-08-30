@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Store\Basket;
 
 use App\DTO\Store\ConfigOptionDTO;
@@ -34,7 +39,7 @@ trait BasketRowOptionsTrait
                 return;
             }
             $billing = $model->billing;
-            foreach ($model->options as $key => $value) {
+            foreach ($model->options ?? [] as $key => $value) {
                 /** @var ConfigOption $option */
                 $option = $configoptions->where('key', $key)->first();
                 if (! $option) {

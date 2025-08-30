@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('layouts/front')
 @section('title', __('store.checkout.title'))
 @section('scripts')
@@ -23,11 +25,13 @@
 @section('content')
 
     <main class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+        @if (theme_metadata('enable_pagetitle', 'false') == 'false')
                 <h1 class="text-2xl font-semibold mb-4 dark:text-white">{{ __('store.checkout.title') }}</h1>
+        @endif
         @include("shared.alerts")
         <div class="flex flex-col md:flex-row gap-4">
                     <div class="md:w-3/4">
-                        <div class="rounded-lg shadow-md p-6 mb-4 bg-white dark:bg-gray-800" id="checkout-form">
+                        <div class="card card-body" id="checkout-form">
                             @if (Auth::check())
                                 <div class="flex justify-between mb-2 text-gray-400">
                                     <span>{{ __('auth.signed_in_as') }}</span>
@@ -113,12 +117,17 @@
                                         @csrf
 
                                 <div class="mt-5 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6">
-                                    <div class="sm:col-span-3">
+                                    <div class="sm:col-span-2">
                                         @include("shared.input", ["name" => "firstname", "label" => __('global.firstname'), "value" => auth('web')->user()->firstname ?? old("firstname")])
                                     </div>
 
-                                    <div class="sm:col-span-3">
+
+                                    <div class="sm:col-span-2">
                                         @include("shared.input", ["name" => "lastname", "label" => __('global.lastname'), "value" => auth('web')->user()->lastname ?? old("lastname")])
+                                    </div>
+
+                                    <div class="sm:col-span-2">
+                                        @include("shared.input", ["name" => "company_name", "label" => __('global.company_name'), "value" => auth('web')->user()->company_name ?? old("company_name")])
                                     </div>
 
                                     <div class="sm:col-span-3">
@@ -152,6 +161,10 @@
                                     <div class="sm:col-span-2">
                                         @include("shared.input", ["name" => "region", "label" => __('global.region'), "value" => auth('web')->user()->region ?? old("region")])
                                     </div>
+
+                                    <div class="sm:col-span-6">
+                                        @include("shared/textarea", ["name" => "billing_details", "label" => __('global.billing_details'), "value" => auth('web')->user()->billing_details ?? old("billing_details"), "help" => __('global.billing_details_help')])
+                                    </div>
                                 </div>
 
                                         @if (setting('checkout.toslink'))
@@ -170,10 +183,22 @@
                                 <div class="col-span-3">
                                     <h2 class="text-lg font-semibold mb-4 mt-2 dark:text-white">{{ __('store.checkout.choose_payment') }}</h2>
                                 </div>
-                                <div class="grid grid-cols-3 gap-4">
+                                        @if (auth('web')->user()->paymentMethods()->isNotEmpty())
+                                            <div class="mb-3">
+                                            <h3 class="font-semibold mt-2 dark:text-white">{{ __('store.checkout.choose_payment_method') }}</h3>
+                                                <p class="text-gray-500 dark:text-gray-400 mb-2">{{ __('store.checkout.choose_payment_method_description') }}</p>
+
+                                                @include('shared/select', [
+                                                            'name' => 'paymentmethod',
+                                                            'options' => auth('web')->user()->getPaymentMethodsArray()->merge(['none' => __('store.checkout.not_use_payment_method')]),
+                                                            'value' => 'none'
+                                                        ])
+                                            </div>
+                                            @endif
+                                <div class="grid grid-cols-3 gap-4 gateway-container">
 
                                 @foreach ($gateways as $gateway)
-                                        <label for="gateway-{{ $gateway->uuid }}"  class="{{ $loop->last ? 'gateway-selected' : '' }} flex flex-col group bg-white border shadow-sm rounded-xl overflow-hidden hover:shadow-lg transition dark:shadow-slate-700/[.7] dark:bg-gray-700 dark:text-white dark:text-gray-400 border-b border-gray-900/10">
+                                        <label for="gateway-{{ $gateway->uuid }}" class="{{ $loop->last ? 'gateway-selected' : '' }} flex flex-col group bg-white border shadow-sm rounded-xl overflow-hidden hover:shadow-lg transition dark:shadow-slate-700/[.7] dark:bg-gray-700 dark:text-white dark:text-gray-400 border-b border-gray-900/10">
                                             <input type="radio" name="gateway" value="{{ $gateway->uuid }}" {{ $loop->last ? 'checked' : '' }} class="gateway-input hidden shrink-0 ms-auto mt-0.5 border-gray-200 rounded-full text-indigo-600 focus:ring-indigo-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-indigo-500 dark:checked:border-indigo-500 dark:focus:ring-offset-gray-800" id="gateway-{{ $gateway->uuid }}">
 
                                             <div class="relative rounded-t-xl overflow-hidden">

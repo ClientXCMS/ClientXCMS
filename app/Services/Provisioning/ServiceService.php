@@ -10,6 +10,9 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 namespace App\Services\Provisioning;
@@ -35,6 +38,13 @@ class ServiceService
         } elseif ($status == 'expire') {
             $result = $service->expire(true);
             $status = 'terminate';
+        } elseif ($status == 'cancel_delivery'){
+            $invoice = $service->serviceRenewals->first();
+            if ($invoice) {
+                $invoice->invoice->cancel();
+            }
+            $result = $service->cancel('Cancelled by delivery', new \DateTime, true);
+            $status = 'cancel';
         } elseif ($status == 'cancel') {
             if ($service->cancelled_at != null) {
                 $result = $service->uncancel();

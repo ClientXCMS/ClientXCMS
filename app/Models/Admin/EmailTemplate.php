@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Admin;
 
 use App\Contracts\Notifications\NotifiablePlaceholderInterface;
@@ -24,7 +29,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\HtmlString;
 
 /**
- *
+ * 
  *
  * @property int $id
  * @property string $name

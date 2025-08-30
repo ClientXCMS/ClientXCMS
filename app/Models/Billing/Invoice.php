@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Billing;
 
 use App\Abstracts\SupportRelateItemTrait;
@@ -19,6 +24,7 @@ use App\Contracts\Helpdesk\SupportRelateItemInterface;
 use App\Core\Gateway\NoneGatewayType;
 use App\DTO\Admin\Invoice\AddProductToInvoiceDTO;
 use App\Exceptions\WrongPaymentException;
+use App\Helpers\Countries;
 use App\Mail\Invoice\InvoiceCreatedEmail;
 use App\Models\Account\Customer;
 use App\Models\Billing\Traits\InvoiceStateTrait;
@@ -29,25 +35,29 @@ use App\Models\Traits\Loggable;
 use App\Services\Billing\InvoiceService;
 use App\Services\Store\TaxesService;
 use App\Theme\ThemeManager;
+use Barryvdh\DomPDF\PDF;
 use Database\Factories\Core\InvoiceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
- *
+ * 
  *
  * @OA\Schema (
  *     schema="Invoice",
  *     title="Invoice",
  *     description="A billing invoice issued to a customer",
  *     required={"customer_id", "total", "currency", "status"},
- *
+ * 
  *     @OA\Property(property="id", type="integer", example=1001),
  *     @OA\Property(property="uuid", type="string", example="123e4567-e89b-12d3-a456-426614174000"),
  *     @OA\Property(property="customer_id", type="integer", example=5),
+ *     @OA\Property(property="billing_address", type="json", example=""),
  *     @OA\Property(property="due_date", type="string", format="date-time", example="2024-05-15T00:00:00Z"),
  *     @OA\Property(property="total", type="number", format="float", example=99.99),
  *     @OA\Property(property="subtotal", type="number", format="float", example=83.33),
@@ -61,15 +71,17 @@ use Illuminate\Support\Str;
  *     @OA\Property(property="fees", type="number", format="float", example=2.50),
  *     @OA\Property(property="invoice_number", type="string", example="CTX-2024-05-0001"),
  *     @OA\Property(property="paid_at", type="string", format="date-time", nullable=true, example="2024-05-10T08:00:00Z"),
+ *     @OA\Property(property="payment_method_id", type="string", nullable=true, example="pm_1J2Y3Z4A5B6C7D8E9F0G"),
+ *     @OA\Property(property="balance", type="number", format="float", example=0.00),
  *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-05-01T12:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-05-10T09:00:00Z"),
  *     @OA\Property(
  *         property="items",
  *         type="array",
- *
+ * 
  *         @OA\Items(ref="#/components/schemas/InvoiceItem")
  *     ),
- *
+ * 
  *     @OA\Property(
  *         property="customer",
  *         ref="#/components/schemas/Customer"
@@ -163,6 +175,7 @@ class Invoice extends Model implements SupportRelateItemInterface
 
     protected $fillable = [
         'customer_id',
+        'billing_address',
         'due_date',
         'total',
         'subtotal',
@@ -177,6 +190,8 @@ class Invoice extends Model implements SupportRelateItemInterface
         'invoice_number',
         'paid_at',
         'uuid',
+        'payment_method_id',
+        'balance',
     ];
 
     protected $casts = [
@@ -184,6 +199,7 @@ class Invoice extends Model implements SupportRelateItemInterface
         'due_date' => 'datetime',
         'created_at' => 'datetime',
         'paid_at' => 'datetime',
+        'billing_address' => 'array',
     ];
 
     protected $attributes = [
@@ -192,7 +208,8 @@ class Invoice extends Model implements SupportRelateItemInterface
         'setupfees' => 0,
         'total' => 0,
         'subtotal' => 0,
-        'tax' => 0
+        'tax' => 0,
+        'balance' => 0,
     ];
 
     public static function boot()
@@ -277,53 +294,83 @@ class Invoice extends Model implements SupportRelateItemInterface
 
     public function canPay()
     {
-        return $this->status == self::STATUS_PENDING;
+        return $this->status == self::STATUS_PENDING ||
+            $this->status == self::STATUS_FAILED;
     }
 
-    public function download()
+    public function canDelete()
     {
-        $domain = request()->getSchemeAndHttpHost();
-        if (str_contains($domain, 'localhost')) {
-            $logoSrc = '/'.setting('app_logo_text');
-        } else {
-            $logoSrc = request()->getSchemeAndHttpHost().setting('app_logo_text');
+        return $this->status == self::STATUS_DRAFT || $this->status == self::STATUS_CANCELLED || $this->status == self::STATUS_PENDING;
+    }
+
+    public function download(): Response
+    {
+        if (Storage::disk('local')->exists($this->getPdfPath())) {
+            return Storage::disk('local')->download($this->getPdfPath(), $this->identifier().'.pdf');
         }
 
-        $primaryColor = ThemeManager::getColorsArray()['600'];
-        $color = ThemeManager::getContrastColor($primaryColor);
-        $pdf = \PDF::loadView('front.billing.invoices.pdf', ['color' => $color, 'invoice' => $this, 'customer' => $this->customer, 'countries' => \App\Helpers\Countries::names(), 'logoSrc' => $logoSrc, 'primaryColor' => $primaryColor]);
-
+        $pdf = $this->generatePdf();
         return $pdf->download($this->identifier().'.pdf');
     }
 
-    public function invoiceOutput()
+    public function invoiceOutput(): string
     {
-        $domain = request()->getSchemeAndHttpHost();
-        if (str_contains($domain, 'localhost')) {
-            $logoSrc = '/'.setting('app_logo_text');
-        } else {
-            $logoSrc = request()->getSchemeAndHttpHost().setting('app_logo_text');
+        if (Storage::disk('local')->exists($this->getPdfPath())) {
+            return Storage::disk('local')->get($this->getPdfPath());
         }
-        $primaryColor = ThemeManager::getColorsArray()['600'];
-        $color = ThemeManager::getContrastColor($primaryColor);
-        $pdf = \PDF::loadView('front.billing.invoices.pdf', ['invoice' => $this, 'customer' => $this->customer, 'color' => $color, 'countries' => \App\Helpers\Countries::names(), 'logoSrc' => $logoSrc, 'primaryColor' => $primaryColor]);
 
+        $pdf = $this->generatePdf();
         return $pdf->output();
     }
 
-    public function pdf()
+    public function pdf(): Response
     {
+        if (Storage::disk('local')->exists($this->getPdfPath())) {
+            $fullPath = Storage::disk('local')->path($this->getPdfPath());
+            return response()->file($fullPath, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$this->identifier().'.pdf"',
+            ]);
+        }
+        $pdf = $this->generatePdf();
+        return $pdf->stream($this->identifier().'.pdf');
+    }
+
+    public function getPdfPath(): string
+    {
+        return 'invoices/' . $this->getPdfName();
+    }
+
+    public function getPdfName(): string
+    {
+        $date = $this->created_at ? $this->created_at : now();
+        return $date->format('Y') . '/' . $date->format('m') . '/' . $this->invoice_number . '.pdf';
+    }
+
+    public function generatePdf(): PDF
+    {
+        $filename = 'invoices/' . $this->getPdfName();
         $domain = request()->getSchemeAndHttpHost();
         if (str_contains($domain, 'localhost')) {
-            $logoSrc = '/'.setting('app_logo_text');
+            $logoSrc = '/' . setting('app_logo_text');
         } else {
-            $logoSrc = request()->getSchemeAndHttpHost().setting('app_logo_text');
+            $logoSrc = setting('app_logo_text');
         }
+
         $primaryColor = ThemeManager::getColorsArray()['600'];
         $color = ThemeManager::getContrastColor($primaryColor);
-        $pdf = \PDF::loadView('front.billing.invoices.pdf', ['invoice' => $this, 'customer' => $this->customer, 'color' => $color, 'countries' => \App\Helpers\Countries::names(), 'logoSrc' => $logoSrc, 'primaryColor' => $primaryColor]);
 
-        return $pdf->stream($this->identifier().'.pdf');
+        $pdf = \PDF::loadView('front.billing.invoices.pdf', [
+            'invoice' => $this,
+            'customer' => $this->customer,
+            'color' => $color,
+            'address' => $this->billing_address,
+            'logoSrc' => $logoSrc,
+            'primaryColor' => $primaryColor,
+        ]);
+        Storage::put($filename, $pdf->output());
+
+        return $pdf;
     }
 
     public function clearServiceAssociation()
@@ -362,14 +409,16 @@ class Invoice extends Model implements SupportRelateItemInterface
         return InvoiceFactory::new();
     }
 
-    public function recalculate(bool $coupon = false)
+    public function recalculate()
     {
         $subtotal = 0;
         $setupfees = 0;
+        /** @var InvoiceItem $item */
         foreach ($this->items as $item) {
             $subtotal += $item->price() - $item->discountTotal();
-            $setupfees += $item->unit_setupfees * $item->quantity;
+            $setupfees += $item->unit_setup_ht * $item->quantity;
         }
+        $subtotal = $subtotal - $this->balance;
         $vat = TaxesService::getTaxAmount($subtotal, tax_percent());
         $this->total = $subtotal + $vat;
         $this->subtotal = $subtotal;
@@ -427,15 +476,68 @@ class Invoice extends Model implements SupportRelateItemInterface
 
     public function resolveRouteBinding($value, $field = null)
     {
-        if (Str::isUuid($value)) {
-            return $this->where('uuid', $value)->firstOrFail();
+        $model = $this->where('uuid', $value)->first();
+        if (! $model) {
+            $model = $this->where('id', $value)->first();
         }
-
-        return $this->where('id', $value)->firstOrFail();
+        return $model ?? abort(404);
     }
 
     public function getRouteKeyName()
     {
         return 'uuid';
+    }
+
+    public function addBalance(float $amount)
+    {
+        if ($amount <= 0 || !$this->canPay()) {
+            return;
+        }
+        if ($amount > ($this->total - $this->balance)) {
+            $amount = $this->total - $this->balance;
+            $this->customer->addFund(-$amount, 'Invoice payment for '.$this->id);
+            $this->update(['paymethod' => 'balance']);
+            $this->complete();
+            return;
+        }
+        $this->customer->addFund(-$amount, 'Invoice payment for '.$this->id);
+        $this->balance = $amount;
+        $this->save();
+        $this->recalculate();
+    }
+
+    public function getBillingAddressAttribute(): array
+    {
+        $address = $this->getBillingAddressArray();
+        $lines = [];
+        if ($address['company_name'] != null && $address['company_name'] != '') {
+            $lines[] = $address['company_name'];
+        } else {
+            if (!empty($address['firstname']) && !empty($address['lastname'])) {
+                $lines[] = $address['firstname'] . ' ' . $address['lastname'];
+            }
+        }
+        $lines[] = $address['email'];
+        $lines[] = $address['address'] . ' ' . ($address['address2'] != null ? $address['address2'] : '');
+        $lines[] = $address['region'] . ' ' . $address['city'] . ' ' . $address['zipcode'];
+        $lines[] = Countries::names()[$address['country']] ?? $address['country'];
+        if (!empty($address['billing_details'])) {
+            $lines = array_merge($lines, explode(PHP_EOL, $address['billing_details']));
+        }
+        return $lines;
+    }
+
+    public function getBillingAddressArray(): array
+    {
+        if (empty($this->attributes['billing_address'])) {
+            $address = $this->customer->generateBillingAddress();
+            $this->save(['billing_address' => $address]);
+        }
+        $address = json_decode($this->attributes['billing_address'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $address = $this->customer->generateBillingAddress();
+            $this->save(['billing_address' => $address]);
+        }
+        return $address;
     }
 }

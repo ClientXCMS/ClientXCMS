@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Provisioning;
 
 use App\Models\Traits\ModelStatutTrait;
@@ -20,7 +25,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
+ *
  *
  * @property int $id
  * @property string $reason
@@ -56,8 +61,11 @@ class CancellationReason extends Model
         return \App\Models\Provisioning\CancellationReason::getAvailable(false)->pluck('reason', 'id');
     }
 
-    public static function getCancellationMode()
+    public static function getCancellationMode(Service $service)
     {
+        if ($service->billing == 'onetime') {
+            return ['now' => __('client.services.cancel.expiration_now')];
+        }
         return [
             'end_of_period' => __('client.services.cancel.expiration_end'),
             'now' => __('client.services.cancel.expiration_now'),

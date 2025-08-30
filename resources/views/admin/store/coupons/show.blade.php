@@ -10,17 +10,25 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 
 @extends('admin/layouts/admin')
 @section('title',  __($translatePrefix . '.show.title', ['name' => $item->name]))
 @section('scripts')
     <script src="{{ Vite::asset('resources/global/js/flatpickr.js') }}" type="module"></script>
     <script src="{{ Vite::asset('resources/global/js/admin/productshow.js') }}" type="module"></script>
+    <script src="{{ Vite::asset('resources/global/js/admin/tomselect.js') }}" type="module"></script>
+    <script src="{{ Vite::asset('resources/global/js/admin/pricing.js') }}" type="module"></script>
+
+@endsection
+@section('styles')
+    <link rel="stylesheet" href="{{ Vite::asset('resources/global/css/tomselect.scss') }}">
 @endsection
 @section('content')
     <div class="container mx-auto">
@@ -92,6 +100,9 @@
                                     </div>
                                     <div>
                                         @include('admin/shared/search-select-multiple', ['name' => 'required_products[]', 'label' => __($translatePrefix . '.required_products'), 'value' => $requiredProductSelected, 'options' => $requiredProducts])
+                                    </div>
+                                    <div>
+                                        @include('admin/shared/search-field', ['name' => 'customer_id', 'label' => __($translatePrefix . '.allowed_customer'), 'apiUrl' => route('admin.customers.search'), 'options' => $item->customer ? [$item->customer_id => $item->customer->excerptFullName()] : [], 'value' => $item->customer_id])
                                     </div>
 
                                     <div>
@@ -236,9 +247,13 @@
                                                     <td class="h-px w-px whitespace-nowrap">
                     <span class="block px-6 py-2">
                       <span class="text-sm text-gray-600 dark:text-gray-400">
+                          @if ($usage->customer)
                           <a href="{{ route('admin.customers.show', ['customer' => $usage->customer]) }}">
-                          {{ $usage->customer->excerptFullName() }}</span>
+                          {{ $usage->customer->excerptFullName() }}
                         </a>
+                            @else
+                            {{ __('global.deleted') }}
+                            @endif
                     </span>
                                                     </td>
 

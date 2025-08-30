@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\DTO\Core\Extensions;
 
 use App\Exceptions\ThemeInvalidException;
@@ -115,15 +120,13 @@ class ExtensionThemeDTO
         $dto = new self;
         $dto->json = $theme;
         $dto->api = $theme;
+        $dto->path = dirname('resources/themes/'.$theme['uuid']);
         $dto->uuid = $theme['uuid'];
         $dto->name = $dto->getTranslates()['name'];
         $dto->description = $dto->getTranslates()['description'];
-        $dto->version = $theme['current_version'] ?? 'v1.0';
-        $dto->author = [
-            'name' => 'ClientXCMS',
-            'email' => 'contact@clientxcms.com',
-        ];
-        $dto->demo = $theme['demo'] ?? null;
+        $dto->version = $theme['version'] ?? 'v1.0';
+        $dto->author = $theme['author'];
+        $dto->demo = $theme['demonstration'] ?? null;
         $dto->hasConfig = false;
 
         return $dto;
@@ -191,7 +194,7 @@ class ExtensionThemeDTO
     public function screenshotUrl(): string
     {
         if ($this->api['thumbnail'] ?? false) {
-            return "https://api-nextgen.clientxcms.com/assets/{$this->api['thumbnail']}";
+            return $this->api['thumbnail'];
         }
 
         return Vite::asset('resources/themes/'.$this->uuid.'/screenshot.png');
@@ -249,21 +252,17 @@ class ExtensionThemeDTO
     private function getTranslates()
     {
         $locale = app()->getLocale();
-        if (! array_key_exists('translates', $this->api)) {
+        if (! array_key_exists('translations', $this->api)) {
             return [
                 'name' => $this->uuid,
                 'description' => $this->uuid,
             ];
         }
-        $get = collect($this->api['translates'])->first(fn ($translate) => $translate['locale'] === $locale);
-        if ($get == null) {
-            return [
-                'name' => $this->uuid,
-                'description' => $this->uuid,
-            ];
-        }
-
-        return $get;
+        $translations = $this->api['translations'];
+        return [
+            'name' => $translations['name'][$locale] ?? ($this->api['name'] ?? $this->uuid),
+            'description' => $translations['short_description'][$locale] ?? ($this->api['short_description'] ?? $this->uuid),
+        ];
     }
 
     /**
@@ -276,6 +275,6 @@ class ExtensionThemeDTO
 
     public function toDto(): ExtensionDTO
     {
-        return new ExtensionDTO($this->uuid, 'themes', false, $this->enabled, $this->api);
+        return new ExtensionDTO($this->uuid, 'themes', $this->enabled, $this->api);
     }
 }

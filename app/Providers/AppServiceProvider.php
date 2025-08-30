@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Providers;
 
 use App\Core\License\LicenseGateway;
@@ -26,7 +31,7 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    const VERSION = '2.14.7';
+    const VERSION = '2.14.8';
 
     /**
      * Register any application services.

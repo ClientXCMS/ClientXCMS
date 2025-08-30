@@ -1,4 +1,4 @@
-name: ClientXCMS Actions
+name: ClientX CMS Actions
 
 on:
   pull_request:
@@ -33,7 +33,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.2'
           extensions: json, zip, sodium, pcntl, bcmath, pdo_mysql
 
       - name: Cache Composer dependencies

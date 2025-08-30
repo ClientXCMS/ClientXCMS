@@ -10,10 +10,16 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Observers;
 
+use App\Models\Billing\Subscription;
 use App\Models\Provisioning\Service;
 
 class ServiceObserver
@@ -27,7 +33,7 @@ class ServiceObserver
 
     public function creating(Service $model)
     {
-        $model->uuid = \Str::uuid();
+        $model->uuid = generate_uuid(Service::class);
     }
 
     public function created(Service $model)
@@ -87,6 +93,9 @@ class ServiceObserver
         if ($model->status == 'cancelled' && $model->isDirty('status') && $model->cancelled_at == null) {
             $model->cancelled_at = now();
             $model->save();
+            if (Subscription::where('service_id', $model->id)->whereNull('cancelled_at')->exists()) {
+                Subscription::where('service_id', $model->id)->cancel();
+            }
         }
         if ($model->wasChanged('billing') && $model->billing == 'onetime' && $model->expires_at != null) {
             $model->expires_at = null;
@@ -108,5 +117,8 @@ class ServiceObserver
         }
         $model->configoptions()->delete();
         $model->serviceRenewals()->delete();
+        if (Subscription::where('service_id', $model->id)->whereNull('cancelled_at')->exists()) {
+            Subscription::where('service_id', $model->id)->cancel();
+        }
     }
 }

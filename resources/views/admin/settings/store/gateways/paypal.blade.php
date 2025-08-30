@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 <div class="grid md:grid-cols-2 gap-4 grid-cols-1">
 <div>
         @include('admin/shared/input', ['name' => 'paypal_email', 'label' => __('admin.settings.store.gateways.fields.paypal_email'), 'value' => env('PAYPAL_EMAIL')])

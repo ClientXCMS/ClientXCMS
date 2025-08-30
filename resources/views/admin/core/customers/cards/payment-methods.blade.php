@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 <div class="card">
     <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
 
@@ -63,26 +65,26 @@
             @endif
             @foreach($paymentmethods as $source)
                 <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
-                    <td class="h-px w-px whitespace-nowrap">
-                    <span class="block px-6 py-2">
-                      <span class="text-sm text-gray-600 dark:text-gray-400">
-                                                <span class="block text-sm font-medium text-gray-800 dark:text-neutral-200">•••• {{ $source->last4 }}</span>
-                          </span>
-                    </span>
-                    </td>
+                    @if ($source->gateway_uuid == 'paypal_express_checkout')
+                        <td class="h-px w-px whitespace-nowrap">
+            <span class="block px-6 py-2">
+                <span class="block text-sm font-medium text-gray-800 dark:text-neutral-200">
+                    <i class="bi bi-paypal"></i> {{ $source->email }}
+                </span>
+            </span>
+                        </td>
+                    @else
+                        <td class="h-px w-px whitespace-nowrap">
+            <span class="block px-6 py-2">
+                <span class="block text-sm font-medium text-gray-800 dark:text-neutral-200">
+                    •••• {{ $source->last4 ?? $source->email }}
+                </span>
+            </span>
+                        </td>
+                    @endif
 
                     <td class="h-px w-px whitespace-nowrap">
-                        @if ($source->isDefault($item))
-                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-teal-100 text-teal-800 rounded-full dark:bg-teal-500/10 dark:text-teal-500">
-  <svg class="flex-shrink-0 w-3 h-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
-  {{ __('global.yes') }}
-</span>
-                        @else
-                            <span class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-500/10 dark:text-red-500">
-  <svg class="flex-shrink-0 w-3 h-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
-  {{ __('global.no') }}
-</span>
-                        @endif
+                        <x-badge-state state="{{ $source->isDefault($item) ? 'yes' : 'no' }}"></x-badge-state>
                     </td>
 
 

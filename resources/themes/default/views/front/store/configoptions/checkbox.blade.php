@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 <div class="mt-2">
     @include('shared/checkbox', ['type' => 'checkbox', 'name' => 'options[' . $option->key . ']', 'value' => $value, 'label' => $option->name, 'checked' => $value == 'true'])
 </div>

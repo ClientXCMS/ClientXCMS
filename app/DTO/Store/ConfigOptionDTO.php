@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\DTO\Store;
 
 use App\Models\Billing\ConfigOption;
@@ -119,9 +124,8 @@ class ConfigOptionDTO
             }
         }
         if ($this->option->type == ConfigOption::TYPE_SLIDER) {
-            return ($this->option->getPriceByCurrency($currency, $recurring)->recurringPayment() / $this->option->step) * $quantity;
+            return (round($this->option->getPriceByCurrency($currency, $recurring)->recurringPayment(), 2) / $this->option->step) * $quantity;
         }
-
         return $this->option->getPriceByCurrency($currency, $recurring)->recurringPayment() * $quantity;
     }
 

@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Personalization;
 
 use App\DTO\Core\Extensions\ThemeSectionDTO;
@@ -81,7 +86,7 @@ class SectionController extends AbstractCrudController
     public function update(Request $request, Section $section)
     {
         $validated = $request->validate([
-            'content' => 'required',
+            'content' => ['nullable', 'string', new \App\Rules\ValidHtmlWithoutBlade()],
             'url' => 'required',
             'theme_uuid' => 'required',
         ]);

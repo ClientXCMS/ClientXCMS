@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('install.layout')
 @section('title', __('install.summary.title'))
 @section('content')
@@ -37,35 +39,27 @@
 
         <li class="inline-flex items-center gap-x-2 py-3 px-4 text-sm border text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg dark:border-gray-700 dark:text-gray-200">
             <div class="flex items-center justify-between w-full">
-                <span>{{ __('global.email') }}</span>
+                <span>{{ __('install.email') }}</span>
                 <span>{{ $email }}</span>
             </div>
         </li>
 
         <li class="inline-flex items-center gap-x-2 py-3 px-4 text-sm border text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg dark:border-gray-700 dark:text-gray-200">
             <div class="flex items-center justify-between w-full">
-                <span>{{ __('global.password') }}</span>
+                <span>{{ __('install.password') }}</span>
                 <span>XXXX (encrypted)</span>
             </div>
         </li>
 
         <li class="inline-flex items-center gap-x-2 py-3 px-4 text-sm border text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg dark:border-gray-700 dark:text-gray-200">
             <div class="flex items-center justify-between w-full">
-                <span>{{ __('extensions.title') }}</span>
+                <span>{{ __('install.extensions') }}</span>
                 <span>{{ $modules }}</span>
             </div>
         </li>
-
         <li class="inline-flex items-center gap-x-2 py-3 px-4 text-sm border text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg dark:border-gray-700 dark:text-gray-200">
             <div class="flex items-center justify-between w-full">
-                <span>{{ __('personalization.theme.themename') }}</span>
-                <span>{{ $theme }}</span>
-            </div>
-        </li>
-
-        <li class="inline-flex items-center gap-x-2 py-3 px-4 text-sm border text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg dark:border-gray-700 dark:text-gray-200">
-            <div class="flex items-center justify-between w-full">
-                <span>{{ __('auth.authentication') }}</span>
+                <span>{{ __('install.authentication') }}</span>
                 <span>{{ route('admin.login') }}</span>
             </div>
         </li>

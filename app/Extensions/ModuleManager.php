@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Extensions;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
@@ -84,31 +89,5 @@ class ModuleManager implements ExtensionInterface
         }
 
         return $modules;
-    }
-
-    public function onInstall(string $uuid): void
-    {
-
-        // TODO: Implement onInstall() method.
-    }
-
-    public function onUninstall(string $uuid): void
-    {
-        // TODO: Implement onUninstall() method.
-    }
-
-    public function onEnable(string $uuid): void
-    {
-        // TODO: Implement onEnable() method.
-    }
-
-    public function onDisable(string $uuid): void
-    {
-        // TODO: Implement onDisable() method.
-    }
-
-    public function download(string $uuid): ExtensionInstallDTO
-    {
-        // TODO: Implement download() method.
     }
 }

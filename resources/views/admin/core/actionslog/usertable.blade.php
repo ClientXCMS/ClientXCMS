@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 <div class="border rounded-lg overflow-hidden dark:border-gray-700">
 
 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 <div>
     @include("admin/shared/textarea", ["name" => "bank_transfert_details", "rows" => 5, "value" => setting("bank_transfert_details"), "label" => __('client.invoices.banktransfer.setting_fielddescription')])
 </div>

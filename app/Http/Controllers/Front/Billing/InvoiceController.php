@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Front\Billing;
 
 use App\Exceptions\WrongPaymentException;
@@ -48,13 +53,13 @@ class InvoiceController extends Controller
         abort_if($invoice->customer_id != auth()->id(), 404);
 
         $customer = $invoice->customer;
-        $countries = Countries::names();
-        $gateways = GatewayService::getAvailable($invoice->total);
+        $address = $invoice->billing_address;
+        $gateways = GatewayService::getAvailable();
         if ($invoice->isDraft()) {
             return abort(404);
         }
 
-        return view('front.billing.invoices.show', compact('invoice', 'customer', 'countries', 'gateways'));
+        return view('front.billing.invoices.show', compact('invoice', 'address', 'customer', 'gateways'));
     }
 
     public function pay(Invoice $invoice, string $gateway)
@@ -89,5 +94,26 @@ class InvoiceController extends Controller
         abort_if($invoice->customer_id != auth()->id(), 404);
 
         return $invoice->download();
+    }
+
+    public function pdf(Invoice $invoice)
+    {
+        abort_if($invoice->customer_id != auth()->id(), 404);
+
+        return $invoice->pdf();
+    }
+
+    public function balance(Request $request, Invoice $invoice)
+    {
+        abort_if($invoice->customer_id != auth()->id(), 404);
+        abort_if(!setting('allow_add_balance_to_invoices'), 404);
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0',
+        ]);
+        if ($validated['amount'] >= auth('web')->user()->balance && $invoice->balance + $validated['amount'] > $invoice->total) {
+            return redirect()->route('front.invoices.show', $request->invoice)->with('error', __('client.invoices.balance.balance_not_enough'));
+        }
+        $invoice->addBalance($validated['amount']);
+        return redirect()->route('front.invoices.show', $invoice)->with('success', __('client.invoices.balance.success'));
     }
 }

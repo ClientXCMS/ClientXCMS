@@ -1,17 +1,5 @@
 <?php
-/*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
- *
- * Personal and non-commercial use of this source code is permitted.
- * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
- *
- * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
- *
- * Year: 2025
- */
+
 namespace Database\Seeders;
 
 use App\Models\Personalization\MenuLink;
@@ -43,10 +31,39 @@ class ThemeSeeder extends Seeder
         if (MenuLink::where('type', 'front')->count() == 0) {
             MenuLink::newFrontMenu();
         }
+        $this->seedMenus();
         // if (Section::count() == 0) {
         Section::scanSections();
         // }
         ThemeManager::clearCache();
+
+    }
+
+    private function seedMenus()
+    {
+        $themes = app('theme')->getThemes();
+        foreach ($themes as $theme) {
+            $path = $theme->path.'/menus.json';
+            if (file_exists($path)) {
+                $menus = json_decode(file_get_contents($path), true);
+                if (is_array($menus)) {
+                    foreach ($menus as $type => $menuList) {
+                        foreach ($menuList as $menu) {
+                            if (MenuLink::where('type', $type)->where('name', $menu['name'])->exists()) {
+                                continue;
+                            }
+                            MenuLink::create([
+                                'name' => $menu['name'],
+                                'url' => $menu['url'] ?? "#",
+                                'icon' => $menu['icon'] ?? null,
+                                'type' => $type,
+                                'position' => $menu['position'] ?? 0,
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private function createSocialNetwork(string $icon, string $name, string $url): void

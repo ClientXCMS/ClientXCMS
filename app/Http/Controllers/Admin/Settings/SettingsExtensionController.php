@@ -10,44 +10,45 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
 use App\Models\ActionLog;
 use App\Models\Admin\Permission;
-use Illuminate\Filesystem\Filesystem;
 
 class SettingsExtensionController
 {
     public function showExtensions()
     {
-        $extensions = app('extension')->getAllExtensions(false);
-
-        return view('admin.settings.extensions.index', ['extensions' => $extensions]);
+        $groups = app('extension')->getGroupsWithExtensions();
+        return view('admin.settings.extensions.index', ['groups' => $groups]);
     }
 
     public function enable(string $type, string $extension)
     {
         staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
 
-        if (! in_array($type, ['modules', 'addons', 'themes'])) {
+        if (! in_array($type, ['modules', 'addons', 'themes', 'email_templates', 'invoice_templates'])) {
             abort(404);
         }
         if (app('extension')->extensionIsEnabled($extension)) {
             return redirect()->back()->with('error', __('extensions.flash.already_enabled'));
         }
-        $composerFile = base_path($type.'/'.$extension.'/composer.json');
-        if (! file_exists($composerFile)) {
-            return redirect()->back()->with('error', __('extensions.flash.composer_not_found'));
+        try {
+            $extensiondto = app('extension')->getExtension($type, $extension);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
-        $composerJson = json_decode((new Filesystem)->get($composerFile), true);
-        $prerequisites = app('extension')->checkPrerequisites($composerJson);
         if (! empty($prerequisites)) {
             return redirect()->back()->with('error', implode(', ', $prerequisites));
         }
-        app(substr($type, 0, strlen($type) - 1))->onEnable($extension);
         try {
             $extensiondto = app('extension')->getExtension($type, $extension);
             if (! $extensiondto->isActivable()) {
@@ -60,24 +61,27 @@ class SettingsExtensionController
         \Artisan::call('cache:clear');
         \Artisan::call('view:clear');
         \Artisan::call('config:clear');
-        \Artisan::call('migrate', ['--force' => true, '--path' => $type.'/'.$extension.'/database/migrations']);
         \Artisan::call('db:seed', ['--force' => true]);
-        ActionLog::log(ActionLog::EXTENSION_ENABLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
-
-        return redirect()->back();
+        if ($type == 'themes') {
+            \App\Theme\ThemeManager::clearCache();
+            ActionLog::log(ActionLog::THEME_CHANGED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
+        } else {
+            \Artisan::call('migrate', ['--force' => true, '--path' => $type.'/'.$extension.'/database/migrations']);
+            ActionLog::log(ActionLog::EXTENSION_ENABLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
+        }
+        return redirect()->back()->with('success', __('extensions.flash.enabled'));
     }
 
     public function disable(string $type, string $extension)
     {
         staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
-        if (! in_array($type, ['modules', 'addons', 'themes'])) {
+        if (! in_array($type, ['modules', 'addons', 'themes', 'email_templates', 'invoice_templates'])) {
             abort(404);
         }
-        app(substr($type, 0, strlen($type) - 1))->onDisable($extension);
         app('extension')->disable($type, $extension);
         ActionLog::log(ActionLog::EXTENSION_DISABLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
 
-        return redirect()->back();
+        return redirect()->back()->with('success', __('extensions.flash.disabled'));
     }
 
     public function clear()
@@ -86,5 +90,21 @@ class SettingsExtensionController
         \Artisan::call('cache:clear');
 
         return redirect()->back()->with('success', __('extensions.flash.cache_cleared'));
+    }
+
+    public function update(string $type, string $extension)
+    {
+        staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
+        if (! in_array($type, ['modules', 'addons', 'themes', 'email_templates', 'invoice_templates'])) {
+            abort(404);
+        }
+        try {
+            app('extension')->update($type, $extension);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
+        ActionLog::log(ActionLog::EXTENSION_UPDATED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
+
+        return response()->json(['success' => __('extensions.flash.updated')]);
     }
 }

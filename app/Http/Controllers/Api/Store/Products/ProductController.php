@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Api\Store\Products;
 
 use App\Http\Controllers\Api\AbstractApiController;
@@ -54,6 +59,12 @@ class ProductController extends AbstractApiController
         'stock',
         'type',
         'pinned',
+    ];
+
+    protected array $relations = [
+        'metadata',
+        'pricing',
+        'group',
     ];
 
     /**
@@ -169,7 +180,7 @@ class ProductController extends AbstractApiController
         return new ProductCollection($query);
     }
 
-/**
+    /**
      * @OA\Post(
      *     path="/application/products",
      *     operationId="storeProduct",
@@ -245,9 +256,9 @@ class ProductController extends AbstractApiController
      *      ),
      * )
      */
-    public function show(Product $product)
+    public function show(int $product)
     {
-        return response()->json($this->queryShow($product->id), 200);
+        return response()->json($this->queryShow($product), 200);
     }
 
     /**
@@ -266,7 +277,7 @@ class ProductController extends AbstractApiController
      *
      *         @OA\Schema(type="integer")
      *     ),
-     *     requestBody=@OA\RequestBody(
+     *     @OA\RequestBody(
      *         required=true,
      *
      *         @OA\JsonContent(ref="#/components/schemas/ShopProductRequest")

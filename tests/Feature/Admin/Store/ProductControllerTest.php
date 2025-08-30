@@ -1,22 +1,12 @@
 <?php
-/*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
- *
- * Personal and non-commercial use of this source code is permitted.
- * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
- *
- * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
- *
- * Year: 2025
- */
+
 namespace Tests\Feature\Admin\Store;
 
 use App\Models\Provisioning\Server;
+use App\Models\Store\Group;
 use App\Modules\Pterodactyl\Models\PterodactylConfig;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ProductControllerTest extends TestCase
@@ -329,5 +319,14 @@ class ProductControllerTest extends TestCase
             'stock' => $product->stock,
             'group_id' => $product->group_id,
         ]);
+    }
+
+    public function beforeRefreshingDatabase()
+    {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Group::truncate();
+        \App\Models\Store\Product::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
     }
 }

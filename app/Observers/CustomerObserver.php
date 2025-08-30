@@ -10,14 +10,27 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 namespace App\Observers;
 
 use App\Models\Account\Customer;
+use App\Models\ActionLog;
 
 class CustomerObserver
 {
+
+    public function updated(Customer $customer)
+    {
+        if ($customer->isDirty('balance')) {
+            $old = $customer->getOriginal('balance');
+            $reason = strtolower(__('global.by')) . ' ' . auth('admin')->user()->username;
+            ActionLog::log(ActionLog::BALANCE_CHANGED, Customer::class, $customer->id, auth('admin')->id(), $customer->id, ['old' => formatted_price($old), 'new' => formatted_price($customer->balance), 'reason' => $reason], ['balance' => $old], ['balance' => $customer->balance]);
+        }
+    }
     public function deleting(Customer $customer)
     {
         $customer->services()->delete();

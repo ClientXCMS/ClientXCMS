@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\Helpers\Countries;
@@ -36,6 +41,7 @@ class SettingsBillingController extends Controller
             InvoiceService::PRO_FORMA => __('billing.admin.settings.fields.billing_modes.proforma'),
         ];
         $options = [TaxesService::PRICE_TTC => __('billing.admin.settings.fields.display_product_price.included'), TaxesService::PRICE_HT => __('billing.admin.settings.fields.display_product_price.excluded')];
+        $options2 = [TaxesService::PRICE_TTC => __('billing.admin.settings.fields.store_mode_tax.included'), TaxesService::PRICE_HT => __('billing.admin.settings.fields.store_mode_tax.excluded')];
         $keys = [
             'checkout_toslink' => 'input',
             'app_address' => 'textarea',
@@ -50,7 +56,7 @@ class SettingsBillingController extends Controller
             TaxesService::VAT_RATE_FIXED => __('billing.admin.settings.fields.rates.vat_rate_fixed'),
         ];
 
-        return view('admin/settings/billing/billing', compact('countries', 'billing_modes', 'options', 'currencies', 'keys', 'rates'));
+        return view('admin/settings/billing/billing', compact('countries', 'billing_modes', 'options', 'currencies', 'keys', 'rates', 'options2'));
     }
 
     public function saveBilling(Request $request)
@@ -63,7 +69,7 @@ class SettingsBillingController extends Controller
             'store_vat_enabled' => 'in:true,false',
             'store_currency' => ['required'],
             'invoice_terms' => 'string|max:1000',
-            'app_address' => 'required|string|max:255',
+            'app_address' => ['required', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags()],
             'billing_invoice_prefix' => 'required|string|max:10',
             'billing_mode' => 'required|in:invoice,proforma',
             'remove_pending_invoice' => 'required|integer|min:0',
@@ -73,8 +79,10 @@ class SettingsBillingController extends Controller
             'add_setupfee_on_upgrade' => 'in:true,false',
             'minimum_days_to_force_renewal_with_upgrade' => 'required|integer|min:0',
             'vat_default_country' => 'required_if:store_vat_rate,'.TaxesService::VAT_RATE_BY_COUNTRY.'|nullable',
+            'allow_add_balance_to_invoices' => 'in:true,false',
         ]);
         $validated['store_vat_enabled'] = $validated['store_vat_enabled'] ?? 'false';
+        $validated['allow_add_balance_to_invoices'] = $validated['allow_add_balance_to_invoices'] ?? 'false';
         $validated['checkout_customermustbeconfirmed'] = $validated['checkout_customermustbeconfirmed'] ?? 'false';
         $validated['add_setupfee_on_upgrade'] = $validated['add_setupfee_on_upgrade'] ?? 'false';
         if (\setting('billing_invoice_prefix') !== $validated['billing_invoice_prefix']) {

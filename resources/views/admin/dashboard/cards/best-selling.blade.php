@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400 mb-2">{{ __('admin.dashboard.widgets.best_selling.title') }}</h3>
 
 <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

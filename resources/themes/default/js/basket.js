@@ -22,7 +22,7 @@ class OptionItem {
         }).format(price);
     }
 
-    getFirstPrice(currency, recurring) {
+    getFirstPrice(currency, recurring, value) {
         let globalPricing = [];
         if (this.type === 'dropdown' || this.type === 'radio') {
             for (const [key, pricing] of Object.entries(this.pricing)) {
@@ -60,8 +60,18 @@ class OptionItem {
         } else {
             globalPricing = Object.entries(this.pricing);
         }
-
-        const calculateTax = (taxPercent, price) => price * taxPercent / 100;
+        const calculateTax = (taxPercent, price) => Number.parseFloat(price * taxPercent / 100);
+        const calculatePrice = (price) => {
+            if (price <= 0) {
+                return 0;
+            }
+            const type = window.taxType;
+            if (type === 'excluded') {
+                return (price);
+            } else {
+                return (price / (1 + window.taxPercent / 100));
+            }
+        }
         for (const [key, pricing] of globalPricing) {
             if (!pricing) continue;
             if (pricing.currency === currency || currency === undefined) {
@@ -69,43 +79,44 @@ class OptionItem {
                 const recurringPayment = recurring === 'onetime' ? 0 : pricing[recurring] ?? null;
                 const setup = pricing[recurringSetupKey] ?? null;
                 if (recurringPayment === null && recurring !== 'onetime') {
-                    return this.getFirstPrice(currency, recurring);
+                    return this.getFirstPrice(currency, recurring, value);
                 }
                 return {
-                    setup: setup / this.step,
-                    recurringPayment: recurringPayment / this.step,
-                    tax: calculateTax(window.taxPercent, (setup + recurringPayment + pricing.onetime ?? 0)),
-                    onetimePayment: (pricing.onetime ?? 0) / this.step,
-                };
+                    setup_ht: Number((calculatePrice(setup / this.step)).toFixed(2)),
+                    recurringPayment_ht: Number((calculatePrice(recurringPayment / this.step)).toFixed(2)),
+                    tax: Number((calculateTax(window.taxPercent, calculatePrice(setup + recurringPayment + (pricing.onetime ?? 0)))).toFixed(2)),
+                    onetimePayment_ht: Number((calculatePrice(pricing.onetime ?? 0) / this.step).toFixed(2)),
+                    subtotal: Number((calculatePrice(setup + recurringPayment + (pricing.onetime ?? 0)) / this.step).toFixed(2)),
+                }
             }
         }
-        return { setup: 0, recurringPayment: 0, tax: 0, onetimePayment: 0, onetimeSetup: 0 };
+        return { setup_ht: 0, recurringPayment_ht: 0, tax: 0, onetimePayment_ht: 0, onetimeSetup_ht: 0, subtotal: 0 };
     }
 
     updateTitleElement(element, pricing, currency) {
-        const price = this.getPrice(pricing.recurring, currency, element.getAttribute('data-radio-id') || element.getAttribute('data-dropdown-id'));
+        const price = this.getPrice(pricing.recurring, currency, element.value);
         let priceMessage = '';
         let title = this.title;
 
-        if (price.setup > 0) {
+        if (price.setup_ht > 0) {
             if (this.type === 'slider' && this.step !== 1) {
-                priceMessage += `- ${window.translations.setupfee}: ${this.formatPrice(price.setup * this.step, currency)} ${window.per} ${this.step} ${this.unit}`;
+                priceMessage += `- ${window.translations.setupfee}: ${this.formatPrice(price.setup_ht * this.step, currency)} ${window.per} ${this.step} ${this.unit}`;
             } else {
-                priceMessage += `- ${window.translations.setupfee}: ${this.formatPrice(price.setup, currency)}`;
+                priceMessage += `- ${window.translations.setupfee}: ${this.formatPrice(price.setup_ht, currency)}`;
             }
         }
-        if (price.recurringPayment > 0) {
+        if (price.recurringPayment_ht > 0) {
             if (this.type === 'slider' && this.step !== 1) {
-                priceMessage += `- ${window.translations.recurring}: ${this.formatPrice(price.recurringPayment * this.step, currency)} ${window.per} ${this.step} ${this.unit}`;
+                priceMessage += `- ${window.translations.recurring}: ${this.formatPrice(price.recurringPayment_ht * this.step, currency)} ${window.per} ${this.step} ${this.unit}`;
             } else {
-                priceMessage += ` - ${window.translations.recurring}: ${this.formatPrice(price.recurringPayment, currency)}`;
+                priceMessage += ` - ${window.translations.recurring}: ${this.formatPrice(price.recurringPayment_ht, currency)}`;
             }
         }
-        if (price.onetimePayment > 0) {
+        if (price.onetimePayment_ht > 0) {
             if (this.type === 'slider' && this.step !== 1) {
-                priceMessage += `- ${window.translations.onetime}: ${this.formatPrice(price.onetimePayment * this.step, currency)} ${window.per} ${this.step} ${this.unit}`;
+                priceMessage += `- ${window.translations.onetime}: ${this.formatPrice(price.onetimePayment_ht * this.step, currency)} ${window.per} ${this.step} ${this.unit}`;
             } else {
-                priceMessage += ` - ${window.translations.onetime}: ${this.formatPrice(price.onetimePayment, currency)}`;
+                priceMessage += ` - ${window.translations.onetime}: ${this.formatPrice(price.onetimePayment_ht, currency)}`;
             }
         }
 
@@ -116,7 +127,6 @@ class OptionItem {
             }
         } else if (this.type === 'dropdown') {
             title = element.dataset.title;
-
             element.innerText = `${title} ${priceMessage}`;
         }
     }
@@ -211,11 +221,11 @@ class OptionsManager {
     }
 
     recalculateSummary(summary, price) {
-        summary.setup += price.setup;
-        summary.recurringPayment += price.recurringPayment;
+        summary.setup_ht += price.setup_ht;
+        summary.recurringPayment += price.recurringPayment_ht;
         summary.tax += price.tax;
-        summary.onetimePayment = price.onetimePayment;
-        summary.subtotal += price.setup + price.recurringPayment + price.onetimePayment;
+        summary.onetimePayment = price.onetimePayment_ht;
+        summary.subtotal += price.subtotal;
         return summary
     }
 
@@ -230,7 +240,7 @@ class OptionsManager {
                     if (element && element.checked) {
                         price = option.getPrice(this.pricing.recurring, this.pricing.currency);
                         summary = this.recalculateSummary(summary, price);
-                        this.updateSummaryItem(`options_price[${option.id}]`, price.setup + price.recurringPayment + price.onetimePayment);
+                        this.updateSummaryItem(`options_price[${option.id}]`, price.subtotal);
                     } else {
                         this.updateSummaryItem(`options_price[${option.id}]`, 0);
                     }
@@ -244,7 +254,7 @@ class OptionsManager {
                         if (element && element.value !== '') {
                             price = option.getPrice(this.pricing.recurring, this.pricing.currency);
                             summary = this.recalculateSummary(summary, price);
-                            this.updateSummaryItem(`options_price[${option.id}]`, price.setup + price.recurringPayment + price.onetimePayment);
+                            this.updateSummaryItem(`options_price[${option.id}]`, price.subtotal);
                             option.setValue(element.value);
                         } else {
                             this.updateSummaryItem(`options_price[${option.id}]`, 0);
@@ -255,14 +265,15 @@ class OptionsManager {
                         if (element) {
                             price = option.getPrice(this.pricing.recurring, this.pricing.currency, element.value);
                             price = {
-                                setup: price.setup * element.value,
-                                recurringPayment: price.recurringPayment * element.value,
-                                onetimePayment: price.onetimePayment * element.value,
-                                tax: price.tax * (element.value / option.step)
+                                setup_ht: price.setup_ht * element.value,
+                                recurringPayment_ht: price.recurringPayment_ht * element.value,
+                                onetimePayment_ht: price.onetimePayment_ht * element.value,
+                                tax: price.tax * (element.value / option.step),
                             }
+                            price.subtotal = price.setup_ht + price.recurringPayment_ht + price.onetimePayment_ht;
                             summary = this.recalculateSummary(summary, price);
 
-                            this.updateSummaryItem(`options_price[${option.id}]`, price.setup + price.recurringPayment + price.onetimePayment);
+                            this.updateSummaryItem(`options_price[${option.id}]`, price.subtotal);
                             option.setValue(element.value);
                             const label = element.name.replace('options[', 'options_name[');
                             const labelElement = document.getElementById(label);
@@ -276,7 +287,7 @@ class OptionsManager {
                             if (radio.checked) {
                                 price = option.getPrice(this.pricing.recurring, this.pricing.currency, radio.value);
                                 summary = this.recalculateSummary(summary, price);
-                                this.updateSummaryItem(`options_price[${option.id}]`, price.setup + price.recurringPayment + price.onetimePayment);
+                                this.updateSummaryItem(`options_price[${option.id}]`, price.subtotal);
                             }
                             option.setValue(radio.value);
                         });
@@ -285,9 +296,8 @@ class OptionsManager {
                         element = document.querySelector(`select[name="options[${option.id}]"]`);
                         if (element) {
                             price = option.getPrice(this.pricing.recurring, this.pricing.currency, element.value);
-                            console.log(price)
                             summary = this.recalculateSummary(summary, price);
-                            this.updateSummaryItem(`options_price[${option.id}]`, price.setup + price.recurringPayment + price.onetimePayment);
+                            this.updateSummaryItem(`options_price[${option.id}]`, price.subtotal);
                             option.setValue(element.value);
                         }
                         break;
@@ -296,7 +306,7 @@ class OptionsManager {
             }
         });
         this.updateSummaryItem('subtotal', summary.subtotal);
-        this.updateSummaryItem('fees', summary.setup);
+        this.updateSummaryItem('fees', summary.setup_ht);
         this.updateSummaryItem('taxes', summary.tax);
         this.updateSummaryItem('total', summary.subtotal + summary.tax);
         this.updateSummaryItem('onetime', summary.onetimePayment);

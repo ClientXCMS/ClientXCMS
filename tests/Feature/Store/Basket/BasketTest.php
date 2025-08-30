@@ -1,17 +1,5 @@
 <?php
-/*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
- *
- * Personal and non-commercial use of this source code is permitted.
- * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
- *
- * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
- *
- * Year: 2025
- */
+
 namespace Tests\Feature\Stores\Basket;
 
 use App\Models\Account\Customer;
@@ -34,7 +22,7 @@ class BasketTest extends TestCase
         session()->start();
 
         Basket::$basket = null;
-        $uuid = Str::uuid();
+        $uuid = 'aaaa-aaaa-aaaa-aaaa';
         session()->put('basket_uuid', $uuid);
         $basket = Basket::create([
             'user_id' => null,
@@ -244,7 +232,7 @@ class BasketTest extends TestCase
     {
         $product = $this->createProductModel();
         $product2 = $this->createProductModel();
-        $uuid = Uuid::uuid4();
+        $uuid = 'aaaa-aaaa-aaaa-aaaa';
         session()->put('basket_uuid', $uuid);
         // On crée un premier basket offline
         Basket::create([
@@ -264,7 +252,7 @@ class BasketTest extends TestCase
         ]);
         // on crée un customer
         $user = Customer::factory()->create();
-        $uuid2 = Uuid::uuid4();
+        $uuid2 = 'aaaa-aaaa-aaaa-aaab';
         // on crée un basket pour le customer
         $basket = Basket::create([
             'user_id' => $user->id,
@@ -282,7 +270,7 @@ class BasketTest extends TestCase
             'currency' => 'USD',
             'options' => '{}',
         ]);
-        $this->assertDatabaseCount('baskets', 1);
+        $this->assertDatabaseCount('baskets', 3);
         $basket->mergeBasket($user);
         $this->assertDatabaseCount('baskets', 2);
         $this->assertCount(2, $basket->rows);

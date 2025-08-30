@@ -10,13 +10,21 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers;
 
 use App\Exceptions\LicenseInvalidException;
+use App\Helpers\EnvEditor;
 use App\Models\Admin\Admin;
 use App\Models\Admin\Role;
+use App\Models\Admin\Setting;
+use App\Services\Core\LocaleService;
 use App\Services\TelemetryService;
 use Illuminate\Http\Request;
 
@@ -24,13 +32,15 @@ class InstallController extends Controller
 {
     public function showSettings()
     {
-        \Session::flash('info', __('install.settings.detecteddomain', ['domain' => request()->getHttpHost()]));
         $isMigrated = app('installer')->isMigrated();
         if (! $isMigrated) {
             \Session::flash('error', __('install.settings.migrationwarning'));
         }
-
-        return view('install.settings', ['step' => 1, 'isMigrated' => $isMigrated])->with('info', __('install.settings.infotext'));
+        \Session::flash('info', __('install.settings.detecteddomain', ['domain' => request()->getHttpHost()]));
+        $locales = collect(LocaleService::getLocales(false, false))->mapWithKeys(function ($item, $key) {
+            return [$key => $item['name']];
+        })->toArray();
+        return view('install.settings', ['step' => 1, 'isMigrated' => $isMigrated, 'locales' => $locales]);
     }
 
     public function storeSettings(Request $request)
@@ -39,6 +49,8 @@ class InstallController extends Controller
             'app_name' => 'required|string|max:255',
             'client_id' => 'required|integer',
             'client_secret' => 'required|string',
+            'locales' => 'required|array',
+            'locales.*' => 'string|size:5',
         ]);
         app('installer')->updateEnv([
             'APP_NAME' => $request->input('app_name'),
@@ -46,6 +58,10 @@ class InstallController extends Controller
             'OAUTH_CLIENT_SECRET' => $request->input('client_secret'),
         ]);
 
+        foreach ($request->input('locales') as $locale) {
+            LocaleService::downloadFiles($locale);
+        }
+        Setting::updateSettings(['app_default_locale' => $request->input('locales')[0] ?? 'en_GB']);
         return redirect()->to(app('license')->getAuthorizationUrl());
     }
 
@@ -73,9 +89,11 @@ class InstallController extends Controller
         $data['role_id'] = Role::first()->id;
         $data['email'] = strtolower($data['email']);
         Admin::insert($data);
-        if ($data['send_telemetry'] ?? false) {
+        $data['send_telemetry'] = array_key_exists('send_telemetry', $data) ? true : false;
+        if ($data['send_telemetry']) {
             app(TelemetryService::class)->sendTelemetry();
         }
+        EnvEditor::updateEnv(['TELEMETRY_DISABLED' => $data['send_telemetry'] ? 'false' : 'true']);
 
         return redirect()->to(route('install.summary'));
     }

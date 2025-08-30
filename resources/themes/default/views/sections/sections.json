@@ -5,7 +5,8 @@
         "uuid": "store_groups",
         "default": true,
         "default_url": "/",
-        "section_type": 5
+        "section_type": 5,
+        "protected": true
     },
     {
         "thumbnail": "https://api-nextgen.clientxcms.com/assets/ba9cd6e7-ba20-4e46-abce-c3a38c7a5663",

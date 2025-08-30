@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Billing;
 
 use App\Addons\Freetrial\DTO\FreetrialDTO;
@@ -154,7 +159,6 @@ class InvoiceItem extends Model
     protected $casts = [
         'data' => 'array',
         'discount' => JsonToObject::class,
-        'unit_price' => 'float',
         'unit_price_ttc' => 'float',
         'unit_price_ht' => 'float',
         'unit_setup_ttc' => 'float',
@@ -296,7 +300,6 @@ class InvoiceItem extends Model
             if ($force) {
                 return $default;
             }
-
             return null;
         }
         if (is_object($this->discount)) {
@@ -304,10 +307,8 @@ class InvoiceItem extends Model
                 if ($force) {
                     return $default;
                 }
-
                 return null;
             }
-
             return $this->discount;
         }
         $decoded = json_decode($this->discount);
@@ -315,7 +316,6 @@ class InvoiceItem extends Model
             if ($force) {
                 return $default;
             }
-
             return null;
         }
         if (property_exists($decoded, 'value_price')) {
@@ -368,7 +368,7 @@ class InvoiceItem extends Model
     public function tryDeliver()
     {
         if ($this->type == 'add_fund') {
-            $this->invoice->customer->addFund($this->unit_price_ht);
+            $this->invoice->customer->addFund($this->unit_price_ht, 'Add funds from invoice #'.$this->invoice->id);
             $this->delivered_at = now();
             $this->save();
             return true;

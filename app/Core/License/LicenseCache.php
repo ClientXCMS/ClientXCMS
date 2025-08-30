@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Core\License;
 
 use Illuminate\Filesystem\Filesystem;
@@ -75,13 +80,13 @@ class LicenseCache
             if (is_array($content)) {
                 $license = new License(
                     $content['expire'],
-                    $content['clients'],
-                    $content['domains'],
-                    $content['max'],
+                    $content['support_expiration'] ?? null,
                     $content['lastchecked'],
                     $content['nextCheck'],
                     $content['server'] ?? null,
                     $content['extensions'] ?? [],
+                    $content['type'] ?? 'community',
+                    $content['version_type'] ?? 'self_hosted',
                     $content['data'] ?? [],
                 );
                 $this->license = $license;

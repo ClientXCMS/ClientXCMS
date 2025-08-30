@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin.settings.sidebar')
 @section('title', __('billing.admin.settings.title'))
 @section('script')
@@ -65,6 +67,10 @@
                 </div>
                 <div>
                     @include('admin/shared/select', ['label' => __('billing.admin.settings.fields.billing_mode'), 'name' => 'billing_mode', 'value' => setting('billing_mode'), 'options' => $billing_modes])
+                    <div class="mt-2">
+
+                    @include('admin/shared/checkbox', ['label' => __('billing.admin.settings.fields.allow_add_balance_to_invoices'), 'name' => 'allow_add_balance_to_invoices', 'value' => setting('allow_add_balance_to_invoices', 'true')])
+                    </div>
                 </div>
 
                 <div>
@@ -99,7 +105,8 @@
                 </div>
 
                 <div>
-                    @include('admin/shared/select', ['label' => __('billing.admin.settings.fields.display_product_price.title'), 'name' => 'display_product_price', 'options' => $options, 'value' => setting('store_mode_tax')])
+                    @include('admin/shared/select', ['label' => __('billing.admin.settings.fields.display_product_price.title'), 'name' => 'display_product_price', 'options' => $options, 'value' => setting('display_product_price')])
+                    @include('admin/shared/select', ['label' => __('billing.admin.settings.fields.store_mode_tax.title'), 'name' => 'store_mode_tax', 'options' => $options, 'value' => setting('store_mode_tax')])
                 </div>
                 <div>
                     @include('admin/shared/select', ['label' => __('billing.admin.settings.fields.rates.title'), 'name' => 'store_vat_rate', 'value' => setting('store_vat_rate'), 'options' => $rates])
@@ -138,7 +145,7 @@
                 <div class="col-span-2">
 
                 <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('billing.admin.upgrades.title') }}</h3>
-                @include('admin/shared/checkbox', ['label' => __('billing.admin.settings.fields.add_setupfee_on_upgrade'), 'name' => 'add_setupfee_on_upgrade', 'value' => setting('add_setupfee_on_upgrade', 'true'), 'help' => __('provisioning.admin.settings.services.fields.add_setupfee_on_upgrade_help')])
+                @include('admin/shared/checkbox', ['label' => __('billing.admin.settings.fields.add_setupfee_on_upgrade'), 'name' => 'add_setupfee_on_upgrade', 'value' => setting('add_setupfee_on_upgrade', 'true')])
                 @include('admin/shared/input', ['label' => __('billing.admin.settings.fields.minimum_days_to_force_renewal_with_upgrade'), 'name' => 'minimum_days_to_force_renewal_with_upgrade', 'value' => setting('minimum_days_to_force_renewal_with_upgrade', 3), 'type' => 'number', 'min' => 0, 'max' => 365, 'step' => 1])
                 </div>
             </div>

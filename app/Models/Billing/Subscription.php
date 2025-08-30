@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Billing;
 
 use App\Abstracts\PaymentMethodSourceDTO;
@@ -19,8 +24,10 @@ use App\Contracts\Store\GatewayTypeInterface;
 use App\Mail\Invoice\SubscriptionFailedEmail;
 use App\Models\Account\Customer;
 use App\Models\Provisioning\Service;
+use App\Services\Billing\InvoiceService;
 use App\Services\Core\PaymentTypeService;
 use App\Services\Store\RecurringService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -58,6 +65,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription withoutTrashed()
+ * @property int $billing_day
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereBillingDay($value)
  * @mixin \Eloquent
  */
 class Subscription extends Model
@@ -74,11 +83,13 @@ class Subscription extends Model
         'payment_method_id',
         'cycles',
         'last_payment_at',
+        'billing_day',
     ];
 
     protected $attributes = [
         'state' => 'disabled',
         'cycles' => 0,
+        'billing_day' => 5,
     ];
 
     protected $casts = [
@@ -122,6 +133,7 @@ class Subscription extends Model
         $subscription->customer_id = $service->customer_id;
         $subscription->payment_method_id = $paymentMethodId;
         $subscription->state = 'active';
+        $subscription->billing_day = $subscription->getFirstBillingDay();
         $subscription->save();
 
         return $subscription;
@@ -143,18 +155,12 @@ class Subscription extends Model
     {
         $service = $this->service;
         $invoice = $service->invoice;
+        if (! $invoice) {
+            $invoice = InvoiceService::createInvoiceFromService($service);
+            $service->update(['invoice_id' => $invoice->id]);
+        }
         if ($invoice->status == 'pending') {
-            if ($this->payment_method_id == self::DEFAULT_PAYMENT_METHOD) {
-                $source = $service->customer->getDefaultPaymentMethod();
-                if ($source != null) {
-                    $source = $service->customer->paymentMethods()->where('id', $source)->first();
-                }
-            } else {
-                $source = $service->customer->paymentMethods()->where('id', $this->payment_method_id)->first();
-            }
-            if (! $source) {
-                throw new \Exception('No payment method found for service '.$service->id);
-            }
+            $source = $invoice->customer->getSourceById($this->payment_method_id);
             /** @var GatewayTypeInterface $gateway */
             $gateway = app(PaymentTypeService::class)->get($source->gateway_uuid);
             if (! $gateway) {
@@ -175,6 +181,7 @@ class Subscription extends Model
                     'end_date' => app(RecurringService::class)->addFrom($service->expires_at, $service->billing),
                 ]);
                 $result->invoice->attachMetadata('subscription_id', $this->id);
+                $result->invoice->update(['payment_method_id' => $this->payment_method_id, 'paymethod' => $source->gateway_uuid]);
                 $this->last_payment_at = now();
                 $this->cycles++;
                 $this->save();
@@ -200,4 +207,66 @@ class Subscription extends Model
         $retry = $service->getMetadata('renewal_tries', 0) >= setting('max_subscription_tries') && setting('max_subscription_tries') > 0;
         $service->customer->notify(new SubscriptionFailedEmail($service->invoice, $this, $sourceDTO, $retry));
     }
+    public function getNextPaymentDate(): ?string {
+        if ($this->service && $this->service->expires_at instanceof Carbon) {
+            $billingDay = $this->billing_day ?? 5;
+
+            $now = Carbon::now();
+            $expiration = $this->service->expires_at;
+            $billingDate = $expiration->copy()->day(min($billingDay, $expiration->daysInMonth));
+            if ($billingDate->lessThanOrEqualTo($now)) {
+                $billingDate->addMonth();
+            }
+            if ($billingDate->greaterThan($expiration)) {
+                return null;
+            }
+            return $billingDate->format('d/j');
+        }
+
+        return null;
+    }
+
+    public function setBillingDay(int $day): void
+    {
+        if ($day < 1 || $day > 28) {
+            throw new \InvalidArgumentException('Billing day must be between 1 and 28.');
+        }
+        $this->billing_day = $day;
+        $this->save();
+    }
+
+    public function isValidBillingDay(int $day): bool
+    {
+        if ($this->service && $this->service->expires_at instanceof Carbon) {
+            // check if next $day of the month or next month if is pasted is valid between service expires_at
+            $now = Carbon::now();
+            $billingDate = $this->service->expires_at->copy()->day(min($day, $this->service->expires_at->daysInMonth));
+            if ($billingDate->lessThanOrEqualTo($now)) {
+                $billingDate->addMonth();
+            }
+            if ($billingDate->greaterThan($this->service->expires_at)) {
+                return false;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    public function getFirstBillingDay(): int
+    {
+        if ($this->service && $this->service->expires_at instanceof Carbon) {
+            $now = Carbon::now();
+            $billingDay = $this->billing_day ?? 5;
+            while ($now->day < $billingDay || $now->day > $now->daysInMonth) {
+                $billingDay--;
+                if ($billingDay < 1) {
+                    return 1;
+                }
+            }
+            return $billingDay;
+        }
+        return 5;
+    }
+
 }

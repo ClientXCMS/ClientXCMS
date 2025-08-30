@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 <label for="range-{{ $option->key }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">{{ $option->name }}</label>
 <input type="range" min="{{ $option->min_value }}" step="{{ $option->step }}" max="{{ $option->max_value }}" value="{{ $value }}" name="options[{{ $option->key }}]" class="mt-2 w-full bg-transparent cursor-pointer appearance-none disabled:opacity-50 disabled:pointer-events-none focus:outline-none
   [&::-webkit-slider-thumb]:w-2.5

@@ -10,8 +10,14 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
+use App\Http\Controllers\Api\Billing\InvoiceController;
 use App\Http\Controllers\Api\Customers\CustomerController;
 use App\Http\Controllers\Api\Provisioning\ServiceController;
 use App\Http\Controllers\Api\Store\Groups\GroupController;
@@ -67,3 +73,14 @@ Route::middleware(['ability:services:delete,*'])->delete('/services/{service}', 
 Route::middleware(['ability:services:expire,*'])->post('/services/{service}/expire', [ServiceController::class, 'expire'])->name('services.expire');
 Route::middleware(['ability:services:unsuspend,*'])->post('/services/{service}/unsuspend', [ServiceController::class, 'unsuspend'])->name('services.unsuspend');
 Route::middleware(['ability:services:suspend,*'])->post('/services/{service}/suspend', [ServiceController::class, 'suspend'])->name('services.suspend');
+
+Route::middleware(['ability:invoices:index,*'])->get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+Route::middleware(['ability:invoices:store,*'])->post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+Route::middleware(['ability:invoices:show,*'])->get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+Route::middleware(['ability:invoices:update,*'])->post('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
+Route::middleware(['ability:invoices:delete,*'])->delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.delete');
+Route::middleware(['ability:invoices:update,*'])->get('/invoices/{invoice}/notify', [InvoiceController::class, 'notify'])->name('invoices.notify');
+Route::middleware(['ability:invoices:show,*'])->get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
+Route::middleware(['ability:invoices:index,*'])->post('/invoices/{invoice}/export', [InvoiceController::class, 'excel'])->name('invoices.export');
+Route::middleware(['ability:invoices:update,*'])->post('/invoices/{invoice}/validate', [InvoiceController::class, 'validate'])->name('invoices.validate');
+Route::middleware(['ability:invoices:update,*'])->post('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');

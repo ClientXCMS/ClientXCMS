@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Requests\Store;
 
 use App\Models\Store\Group;
@@ -46,6 +51,7 @@ class CouponRequest extends \Illuminate\Foundation\Http\FormRequest
             'products.*' => ['integer', 'exists:products,id'],
             'minimum_order_amount' => ['required', 'numeric', 'min:0'],
             'is_global' => ['required', 'boolean'],
+            'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
         ], $this->pricingRules());
     }
 

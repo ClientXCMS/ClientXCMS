@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @if(isset($label))
     <label for="{{ $name }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400">{{ $label }}</label>
 @endif

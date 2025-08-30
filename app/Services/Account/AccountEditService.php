@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Services\Account;
 
 use App\Helpers\Countries;
@@ -30,10 +35,12 @@ class AccountEditService
             'address' => ['required', 'string', 'max:250'],
             'address2' => ['nullable', 'string', 'max:250'],
             'city' => ['required', 'string', 'max:250'],
-            'phone' => ['nullable', Countries::rule(), 'max:30', (new Phone)->country($country), Rule::unique('customers', 'phone')->ignore($except)],
+            'phone' => ['nullable', Countries::rule(), 'max:30', (new Phone), Rule::unique('customers', 'phone')->ignore($except)],
             'zipcode' => ['required', 'string', 'max:255', new ZipCode($country)],
             'region' => ['required', 'string', 'max:250'],
             'country' => ['required', 'string', 'max:255', Rule::in(array_keys(Countries::names()))],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'billing_details' => ['nullable', 'string', 'max:255'],
         ];
         if ($email) {
             $rules['email'] = ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('customers')->ignore($except),
@@ -62,6 +69,8 @@ class AccountEditService
             'phone' => $all['phone'],
             'region' => $all['region'],
             'country' => $all['country'],
+            'company_name' => $all['company_name'] ?? null,
+            'billing_details' => $all['billing_details'] ?? null,
         ];
         if (isset($all['locale']) && LocaleService::isValideLocale($all['locale'])) {
             $filtred['locale'] = $all['locale'];

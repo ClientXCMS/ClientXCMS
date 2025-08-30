@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('layouts/client')
 @section('title', __('client.profile.index'))
 @section('scripts')
@@ -42,11 +44,15 @@
                         @csrf
                         <div class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6">
 
-                        <div class="sm:col-span-3">
+                        <div class="sm:col-span-2">
                                 @include("shared.input", ["name" => "firstname", "label" => __('global.firstname'), "value" => auth('web')->user()->firstname ?? old("firstname")])
                             </div>
-                            <div class="sm:col-span-3">
+                            <div class="sm:col-span-2">
                                 @include("shared.input", ["name" => "lastname", "label" => __('global.lastname'), "value" => auth('web')->user()->lastname ?? old("lastname")])
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                @include("shared/input", ["name" => "company_name", "label" => __('global.company_name') . ' (' . __('global.optional') . ')', "value" => auth('web')->user()->company_name ?? old("company_name")])
                             </div>
                             <div class="sm:col-span-3">
                                 @include("shared.input", ["name" => "address", "label" => __('global.address'), "value" => auth('web')->user()->address ?? old("address")])
@@ -75,6 +81,9 @@
                             <div class="sm:col-span-2">
                                 @include("shared/select", ["name" => "locale", "label" => __('global.locale'), "options" => $locales, "value" => auth('web')->user()->locale ?? old("locale")] )
                             </div>
+                            <div class="sm:col-span-4">
+                                @include("shared/textarea", ["name" => "billing_details", "label" => __('global.billing_details'), "value" => auth('web')->user()->billing_details ?? old("billing_details"), "help" => __('global.billing_details_help')])
+                            </div>
                             </div>
                         <button class="btn btn-primary mt-4">{{ __('global.save') }}</button>
                     </form>
@@ -99,22 +108,22 @@
                         <div class="grid">
 
                             <div>
+                                @include("shared/password", ["name" => "currentpassword", "label" => __('client.profile.security.currentpassword')])
+                            </div>
+                            <div>
                                 @include("shared/password", ["name" => "password", "label" => __('client.profile.security.newpassword')])
                             </div>
                             <div>
                                 @include("shared/password", ["name" => "password_confirmation", "label" => __('global.password_confirmation')])
                             </div>
 
-                            <div>
-                                @include("shared/password", ["name" => "currentpassword", "label" => __('client.profile.security.currentpassword')])
-                            </div>
                             @if (auth('web')->user()->twoFactorEnabled())
                                 <div>
                                     @include("shared/input", ["name" => "2fa", "label" => __('client.profile.2fa.code')])
                                 </div>
                             @endif
                         </div>
-                        <button class="btn bg-primary text-white mt-4">{{ __('global.save') }}</button>
+                        <button class="btn btn-primary mt-4">{{ __('global.save') }}</button>
 
                     </form>
 
@@ -140,7 +149,7 @@
                         @else
                             @include("shared/input", ["name" => "2fa", "label" => __('client.profile.2fa.code')])
                         @endif
-                            <button class="btn {{ auth('web')->user()->twoFactorEnabled() ? 'bg-red-600 text-white' : 'bg-primary' }} mt-4">{{ __(auth('web')->user()->twoFactorEnabled() ? 'global.delete' : 'global.save') }}</button>
+                            <button class="btn {{ auth('web')->user()->twoFactorEnabled() ? 'bg-red-600 text-white' : 'btn-primary' }} mt-4">{{ __(auth('web')->user()->twoFactorEnabled() ? 'global.delete' : 'global.save') }}</button>
                     </form>
                 </div>
 

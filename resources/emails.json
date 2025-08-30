@@ -102,23 +102,6 @@
             "body": "Su servicio {{ $service->name }} está a punto de expirar en {{ $days }} días. Por favor, haga clic en el botón de abajo para renovar su servicio."
         }
     },
-    "wisp": {
-        "fr_FR": {
-            "subject": "Votre serveur est prêt",
-            "button": "Connexion au panel",
-            "body": "Votre serveur est prêt à être utilisé. Vous pouvez vous connecter à votre serveur en utilisant les informations ci-dessous.<br/>\n <br/><strong>Adresse IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n<strong>Connexion</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a> @if ($can_reset_password) Vous pouvez demander une réinitialisation de mot de passe en cliquant sur le lien suivant : <a href=\"{{ $reset_password_url }}\">Réinitialiser le mot de passe</a> @endif"
-        },
-        "en_GB": {
-            "subject": "Your server is ready",
-            "button": "Panel login",
-            "body": "Your server is ready to be used. You can connect to your server using the information below. <br/>\n<strong>IP Address</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n<strong>Login</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a> @if ($can_reset_password) You can request a password reset by clicking on the following link : <a href=\"{{ $reset_password_url }}\">Reset password</a> @endif"
-        },
-        "es_ES": {
-            "subject": "Su servidor está listo",
-            "button": "Inicio de sesión en el panel",
-            "body": "Su servidor está listo para ser utilizado. Puede conectarse a su servidor utilizando la información a continuación. <br/>\n<strong>Dirección IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n<strong>Conexión</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a> @if ($can_reset_password) Puede solicitar un restablecimiento de contraseña haciendo clic en el siguiente enlace: <a href=\"{{ $reset_password_url }}\">Restablecer contraseña</a> @endif"
-        }
-    },
     "custom": {
         "fr_FR": {
             "subject": "",
@@ -136,91 +119,7 @@
             "body": ""
         }
     },
-    "pterodactyl": {
-        "fr_FR": {
-            "subject": "Votre serveur est prêt",
-            "button": "Connexion au panel",
-            "body": "Votre serveur est prêt à être utilisé. Vous pouvez vous connecter à votre serveur en utilisant les informations ci-dessous.<br/>\n <br/><strong>Adresse IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n<strong>Connexion</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a> @if ($can_reset_password) Vous pouvez demander une réinitialisation de mot de passe en cliquant sur le lien suivant : <a href=\"{{ $reset_password_url }}\">Réinitialiser le mot de passe</a> @endif"
-        },
-        "en_GB": {
-            "subject": "Your server is ready",
-            "button": "Panel login",
-            "body": "Your server is ready to be used. You can connect to your server using the information below. <br/>\n<strong>IP Address</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n<strong>Login</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a> @if ($can_reset_password) You can request a password reset by clicking on the following link : <a href=\"{{ $reset_password_url }}\">Reset password</a> @endif"
-        },
-        "es_ES": {
-            "subject": "Su servidor está listo",
-            "button": "Inicio de sesión en el panel",
-            "body": "Su servidor está listo para ser utilizado. Puede conectarse a su servidor utilizando la información a continuación. <br/>\n<strong>Dirección IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n<strong>Conexión</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a> @if ($can_reset_password) Puede solicitar un restablecimiento de contraseña haciendo clic en el siguiente enlace: <a href=\"{{ $reset_password_url }}\">Restablecer contraseña</a> @endif"
-        }
-    },
-    "virtualizor_vps": {
-        "fr_FR": {
-            "subject": "Votre VPS est prêt",
-            "button": "Connexion au panel",
-            "body": "Votre VPS est prêt à être utilisé. Vous pouvez vous connecter à votre serveur en utilisant les informations ci-dessous.<br/>\n <br/><strong>Adresse IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n"
-        },
-        "en_GB": {
-            "subject": "Your VPS is ready",
-            "button": "Panel login",
-            "body": "Your VPS is ready to be used. You can connect to your server using the information below. <br/>\n<strong>IP Address</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n"
-        },
-        "es_ES": {
-            "subject": "Su VPS está listo",
-            "button": "Inicio de sesión en el panel",
-            "body": "Su VPS está listo para ser utilizado. Puede conectarse a su servidor utilizando la información a continuación. <br/>\n<strong>Dirección IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n"
-        }
-    },
-    "virtualizor_cloud_vps": {
-        "fr_FR": {
-            "subject": "Votre VPS est prêt",
-            "button": "Connexion au panel",
-            "body": "Votre VPS est prêt à être utilisé. Vous pouvez vous connecter à votre serveur en utilisant les informations ci-dessous.<br/>\n <br/><strong>Adresse IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/><br/>\n<strong>URL Virtualizor</strong> : {{ $virtualizor_url }} <br/>\n<strong>E-mail</strong> : {{ $email }} <br/>\n<strong>Mot de passe</strong> : {{ $vs_password }} \n"
-        },
-        "en_GB": {
-            "subject": "Your VPS is ready",
-            "button": "Panel login",
-            "body": "Your VPS is ready to be used. You can connect to your server using the information below. <br/>\n<strong>IP Address</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/><br/>\n<strong>Virtualizor URL</strong> : {{ $virtualizor_url }} <br/>\n<strong>Email</strong> : {{ $email }} <br/>\n<strong>Password</strong> : {{ $vs_password }} \n"
-        },
-        "es_ES": {
-            "subject": "Su VPS está listo",
-            "button": "Inicio de sesión en el panel",
-            "body": "Su VPS está listo para ser utilizado. Puede conectarse a su servidor utilizando la información a continuación. <br/>\n<strong>Dirección IP</strong> : {{ $ip }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/><br/>\n<strong>URL de Virtualizor</strong> : {{ $virtualizor_url }} <br/>\n<strong>Correo electrónico</strong> : {{ $email }} <br/>\n<strong>Contraseña</strong> : {{ $vs_password }} \n"
-        }
-    },
-    "virtualizor_cloud": {
-        "fr_FR": {
-            "subject": "Votre revendeur cloud est prêt",
-            "button": "Connexion au panel",
-            "body": "Votre revendeur cloud est prêt à être utilisé. Vous pouvez vous connecter à votre serveur en utilisant les informations ci-dessous.<br/>\n <br/>\n<strong>URL Virtualizor</strong> : {{ $virtualizor_url }} <br/>\n<strong>E-mail</strong> : {{ $email }} <br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n"
-        },
-        "en_GB": {
-            "subject": "Your cloud reseller is ready",
-            "button": "Panel login",
-            "body": "Your cloud reseller is ready to be used. You can connect to your server using the information below. <br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>Email</strong> : {{ $email }} <br/>\n"
-        },
-        "es_ES": {
-            "subject": "Su revendedor de nube está listo",
-            "button": "Inicio de sesión en el panel",
-            "body": "Su revendedor de nube está listo para ser utilizado. Puede conectarse a su servidor utilizando la información a continuación. <br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Correo electrónico</strong> : {{ $email }} <br/>\n"
-        }
-    },
-    "pterobox": {
-        "fr_FR": {
-            "subject": "Votre box est prête",
-            "button": "Connexion au panel",
-            "body": "Votre box est prête à être utilisée. Vous pouvez créer vos serveurs depuis notre espace client et administrer avec votre compte en utilisant les informations ci-dessous.<br/>\n <br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n<strong>Connexion</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a>"
-        },
-        "en_GB": {
-            "subject": "Your box is ready",
-            "button": "Panel login",
-            "body": "Your box is ready to be used. You can create your servers from our client area and administer with your account using the information below. <br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n<strong>Login</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a>"
-        },
-        "es_ES": {
-            "subject": "Su box está listo",
-            "button": "Inicio de sesión en el panel",
-            "body": "Su box está listo para ser utilizado. Puede crear sus servidores desde nuestra área de cliente y administrar con su cuenta utilizando la información a continuación. <br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n<strong>Conexión</strong> : <a href=\"{{ $panel_url }}\">{{ $panel_url }}</a>"
-        }
-    },
+
     "service_suspended": {
         "fr_FR": {
             "subject": "Votre service a été suspendu",
@@ -287,57 +186,6 @@
             "subject": "Verificación de la dirección de correo electrónico",
             "button": "Verificar dirección de correo electrónico",
             "body": "Está recibiendo este correo electrónico porque hemos recibido una solicitud para verificar su dirección de correo electrónico.\nSi no solicitó verificar su dirección de correo electrónico, no es necesario realizar ninguna otra acción."
-        }
-    },
-    "plesk_hosting": {
-        "fr_FR": {
-            "subject": "Votre hébergement est prêt",
-            "button": "Accès au panel",
-            "body": "Votre hébergement est prêt à être utilisé. Vous pouvez vous connecter à votre interface plesk en utilisant les informations ci-dessous.<br/>\n <br/><strong>Domaine</strong> : {{ $domain }} <br/>\n<strong>URL du plesk</strong> : {{ $plesk_url }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n"
-        },
-        "en_GB": {
-            "subject": "Your hosting is ready",
-            "button": "Panel access",
-            "body": "Your hosting is ready to be used. You can connect to your plesk interface using the information below. <br/>\n<strong>Domain</strong> : {{ $domain }} <br/>\n<strong>Plesk URL</strong> : {{ $plesk_url }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n"
-        },
-        "es_ES": {
-            "subject": "Su alojamiento está listo",
-            "button": "Inicio de sesión en el panel",
-            "body": "Su alojamiento está listo para ser utilizado. Puede conectarse a su interfaz de plesk utilizando la información a continuación. <br/>\n<strong>Dominio</strong> : {{ $domain }} <br/>\n<strong>URL de plesk</strong> : {{ $plesk_url }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n"
-        }
-    },
-    "plesk_reseller": {
-        "fr_FR": {
-            "subject": "Votre revendeur plesk est prêt",
-            "button": "Accès au panel",
-            "body": "Votre revendeur plesk est prêt à être utilisé. Vous pouvez vous connecter à votre interface plesk en utilisant les informatio<strong>URL du plesk</strong> : {{ $plesk_url }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n"
-        },
-        "en_GB": {
-            "subject": "Your plesk reseller is ready",
-            "button": "Panel access",
-            "body": "Your plesk reseller is ready to be used. You can connect to your plesk interface using the information below. <br/>\n<strong>Plesk URL</strong> : {{ $plesk_url }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n"
-        },
-        "es_ES": {
-            "subject": "Su revendedor de plesk está listo",
-            "button": "Inicio de sesión en el panel",
-            "body": "Su revendedor de plesk está listo para ser utilizado. Puede conectarse a su interfaz de plesk utilizando la información a continuación. <br/>\n<strong>URL de plesk</strong> : {{ $plesk_url }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n"
-        }
-    },
-    "proxmox": {
-        "fr_FR": {
-            "subject": "Votre VPS est prêt",
-            "button": "Accès au panel",
-            "body": "Votre VPS est prêt à être utilisé. Vous pouvez vous connecter à votre serveur en utilisant les informations ci-dessous.<br/>\n <br/><strong>Adresse IP</strong> : {{ $ips }} <br/>\n<br/>\n<strong>Mot de passe</strong> : {{ $password }} <br/>\n<strong>Utilisateur</strong> : {{ $username }} <br/>\n"
-        },
-        "en_GB": {
-            "subject": "Your VPS is ready",
-            "button": "Panel access",
-            "body": "Your VPS is ready to be used. You can connect to your server using the information below. <br/>\n<strong>IP Address</strong> : {{ $ips }} <br/>\n<br/>\n<strong>Password</strong> : {{ $password }} <br/>\n<strong>User</strong> : {{ $username }} <br/>\n"
-        },
-        "es_ES": {
-            "subject": "Su VPS está listo",
-            "button": "Inicio de sesión en el panel",
-            "body": "Su VPS está listo para ser utilizado. Puede conectarse a su servidor utilizando la información a continuación. <br/>\n<strong>Dirección IP</strong> : {{ $ips }} <br/>\n<br/>\n<strong>Contraseña</strong> : {{ $password }} <br/>\n<strong>Usuario</strong> : {{ $username }} <br/>\n"
         }
     },
     "support_admin_ticket_created": {

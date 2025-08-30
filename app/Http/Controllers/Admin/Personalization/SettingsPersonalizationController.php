@@ -10,10 +10,16 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Personalization;
 
+use App\Exceptions\LicenseInvalidException;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Permission;
 use App\Models\Admin\Setting;
@@ -32,6 +38,21 @@ class SettingsPersonalizationController extends Controller
         ]);
     }
 
+    public function showCustomMenu(string $type)
+    {
+        $menus = MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get();
+
+        $card = app('settings')->getCards()->firstWhere('uuid', 'personalization');
+        if (! $card) {
+            abort(404);
+        }
+        return view('admin.personalization.settings.custom', [
+            'menus' => $menus,
+            'type' => $type,
+            'current_card' => $card,
+        ]);
+    }
+
     public function showBottomMenu()
     {
         $menus = MenuLink::where('type', 'bottom')->whereNull('parent_id')->orderBy('position')->get();
@@ -45,8 +66,8 @@ class SettingsPersonalizationController extends Controller
     {
         staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $this->validate($request, [
-            'theme_footer_description' => 'required|string|max:1000',
-            'theme_footer_topheberg' => 'nullable|string|max:1000',
+            'theme_footer_description' => ['required', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags()],
+            'theme_footer_topheberg' => ['nullable', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags()],
         ]);
         Setting::updateSettings([
             'theme_footer_description' => $request->get('theme_footer_description'),
@@ -73,7 +94,7 @@ class SettingsPersonalizationController extends Controller
         \Cache::delete('seo_head');
         \Cache::delete('seo_footer');
 
-        return redirect()->back()->with('success', __('personnlization.seo.success'));
+        return redirect()->back()->with('success', __('personalization.seo.success'));
     }
 
     public function showSeoSettings()
@@ -155,7 +176,11 @@ class SettingsPersonalizationController extends Controller
             'theme_switch_mode' => $request->get('theme_switch_mode'),
             'theme_header_logo' => $request->get('theme_header_logo') ?? 'false',
         ]);
-        app('license')->restartNPM();
+        try {
+            app('license')->restartNPM();
+        } catch (LicenseInvalidException $e) {
+            \Session::flash('error', "Error in restart NPM : " . $e->getMessage());
+        }
 
         return redirect()->back()->with('success', __('personalization.config.success'));
     }

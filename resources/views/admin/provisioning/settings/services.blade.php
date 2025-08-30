@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin.settings.sidebar')
 @section('title', __('provisioning.admin.settings.services.title'))
 @section('setting')
@@ -40,11 +42,7 @@
                 </div>
             </div>
             <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('provisioning.admin.settings.services.subscription') }}</h3>
-            <div class="grid md:grid-cols-2 gap-4">
-            <div>
-                    @include('admin/shared/input', ['label' => __('provisioning.admin.settings.services.fields.service_days_before_subscription_renewal'), 'name' => 'service_days_before_subscription_renewal', 'value' => setting('service_days_before_subscription_renewal'), 'help' => __('provisioning.admin.settings.services.fields.service_days_before_subscription_renewal_help'),  'type' => 'number', 'min' => 0, 'max' => 365, 'step' => 1])
-                </div>
-
+            <div class="grid md:grid-cols-1 gap-4">
                 <div>
                     @include('admin/shared/input', ['label' => __('provisioning.admin.settings.services.fields.max_subscription_tries'), 'name' => 'max_subscription_tries', 'value' => setting('max_subscription_tries'), 'help' => __('provisioning.admin.settings.services.fields.max_subscription_tries_help'),  'type' => 'number', 'min' => 0, 'max' => 365, 'step' => 1])
                 </div>

@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Front\Store;
 
 use App\Http\Controllers\Controller;
@@ -24,7 +29,7 @@ class StoreController extends Controller
 {
     public function index()
     {
-        $groups = Group::getAvailable()->whereNull('parent_id')->orderBy('sort_order')->with('products')->orderBy('pinned')->get();
+        $groups = Group::getAvailable()->whereNull('parent_id')->orderBy('sort_order')->with('products')->get();
         $subtitle = trans('store.subtitle');
         $title = trans('store.title');
         $products = collect();
@@ -36,10 +41,10 @@ class StoreController extends Controller
     {
         $group = $this->findGroup($group);
         $this->checkGroup($group);
-        $groups = Group::getAvailable()->orderBy('sort_order')->orderBy('pinned')->with('products')->where('parent_id', $group->id)->get();
+        $groups = Group::getAvailable()->orderBy('sort_order')->with('products')->where('parent_id', $group->id)->get();
         $subtitle = $group->trans('description');
         $title = $group->trans('name');
-        $products = $group->products()->orderBy('sort_order')->get();
+        $products = $group->products()->with('metadata')->orderBy('sort_order')->get();
         $products = collect($products)->filter(function (Product $product) {
             return $product->isValid();
         });
@@ -63,14 +68,14 @@ class StoreController extends Controller
         $title = $subgroup->trans('name');
         $this->checkGroup($subgroup);
         $this->checkGroup($group);
-        $products = Product::getAvailable()->orderBy('sort_order')->orderBy('pinned')->where('group_id', $subgroup->id)->get();
-        $groups = Group::getAvailable()->orderBy('sort_order')->orderBy('pinned')->where('parent_id', $subgroup->id)->get();
+        $products = Product::getAvailable()->orderBy('sort_order')->where('group_id', $subgroup->id)->get();
+        $groups = Group::getAvailable()->orderBy('sort_order')->where('parent_id', $subgroup->id)->get();
         if ($products->count() == 0 && $groups->count() == 0) {
             \Session::flash('info', __('store.product.noproduct'));
         }
         \View::share('meta_append', '<meta name="description" content="'.$subtitle.'">');
 
-        return view('front.store.group', compact('group', 'title', 'subtitle', 'products', 'groups'));
+        return view('front.store.group', compact('group', 'title', 'subtitle', 'products', 'groups', 'subgroup'));
     }
 
     private function checkGroup(Group $group)

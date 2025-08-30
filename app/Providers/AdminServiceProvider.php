@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Providers;
 
 use App\Core\Admin\Dashboard\AdminCardWidget;
@@ -74,8 +79,8 @@ class AdminServiceProvider extends ServiceProvider
             $fields = [
                 'id' => 'User ID',
                 'email' => __('global.email'),
-                'first_name' => __('global.firstname'),
-                'last_name' => __('global.lastname'),
+                'firstname' => __('global.firstname'),
+                'lastname' => __('global.lastname'),
                 'phone' => __('global.phone'),
                 'service_id' => 'Service ID',
                 'invoice_id' => 'Invoice ID',

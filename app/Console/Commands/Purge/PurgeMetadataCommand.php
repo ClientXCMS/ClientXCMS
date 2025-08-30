@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Console\Commands\Purge;
 
 use App\Models\Account\Customer;
@@ -42,29 +47,8 @@ class PurgeMetadataCommand extends Command
     {
         $this->info('Fixing special characters in the database...');
 
-        $this->fixSpecialChars();
-
         $this->purgeMetadata();
-
         $this->info('Special characters fixed successfully.');
-    }
-
-    private function fixSpecialChars()
-    {
-        $customers = Customer::all();
-        /** @var Customer $customer */
-        foreach ($customers as $customer) {
-            $customer->firstname = htmlspecialchars($customer->firstname, ENT_QUOTES);
-            $customer->lastname = htmlspecialchars($customer->lastname, ENT_QUOTES);
-            $customer->email = htmlspecialchars($customer->email, ENT_QUOTES);
-            $customer->address = htmlspecialchars($customer->address, ENT_QUOTES);
-            $customer->city = htmlspecialchars($customer->city, ENT_QUOTES);
-            $customer->region = htmlspecialchars($customer->region, ENT_QUOTES);
-            $customer->zipcode = htmlspecialchars($customer->zipcode, ENT_QUOTES);
-            $customer->country = htmlspecialchars($customer->country, ENT_QUOTES);
-            $customer->phone = htmlspecialchars($customer->phone, ENT_QUOTES);
-            $customer->save();
-        }
     }
 
     private function purgeMetadata()

@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @if (Session::has('success') || Session::has('error') || Session::has('warning') || Session::has('info'))
 <div class="mb-2">
     @if($success = Session::get('success'))
@@ -37,7 +39,7 @@
         </div>
     @endif
         @if($info = Session::get('info'))
-        <div class="alert bg-primary text-dark dark:text-white mt-2" role="alert">
+        <div class="alert bg-primary text-white dark:text-white mt-2" role="alert">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
             {!! $info !!}
         </div>

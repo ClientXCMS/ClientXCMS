@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Listeners\Core;
 
 use App\DTO\Core\WebhookDTO;
@@ -246,7 +251,7 @@ class WebhookNotification
                         'fields' => [
                             [
                                 'name' => __('global.name'),
-                                'value' => '[`🧾`] [%servicename%] (%__url%)',
+                                'value' => '[`🧾`] [%servicename%](%__url%)',
                                 'inline' => true,
                             ],
                             [
@@ -293,7 +298,7 @@ class WebhookNotification
                 '%currency%' => currency_symbol($event->service->currency),
                 '%customeremail%' => $event->service->customer->email,
                 '%invoiceurl%' => route('admin.invoices.show', ['invoice' => $invoiceId]),
-                '%price%' => $event->service->getBillingPrice()->price,
+                '%price%' => $event->service->getBillingPrice()->displayPrice(),
             ];
         }, setting('webhook_renewal_url'));
 
@@ -420,8 +425,8 @@ class WebhookNotification
                 '%customername%' => $customer->excerptFullName(),
                 '%customeremail%' => $customer->email,
                 '%customer_url%' => route('admin.customers.show', $customer->id),
-                '%old_product%' => $upgrade->old->name,
-                '%new_product%' => $upgrade->new->name,
+                '%old_product%' => $event->old->name,
+                '%new_product%' => $event->new->name,
                 '%service_name%' => $service->name,
                 '%service_url%' => route('admin.services.show', $service->id),
                 '%invoice_url%' => $upgrade->invoice ? route('admin.invoices.show', $upgrade->invoice->id) : __('global.none'),

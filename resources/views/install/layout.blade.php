@@ -10,13 +10,15 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 <!doctype html>
-<html class="h-full" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html class="h-full{{is_darkmode(true) ? ' dark' : '' }}" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     {{-- ... --}}
     <title>@yield('title') - {{ config('app.name') }}</title>
@@ -25,15 +27,32 @@
     @vite('resources/themes/default/css/app.scss')
 </head>
 <body class="dark:bg-slate-900 bg-gray-100 flex h-full items-center py-16">
-<main class="w-full {{ Route::current()->getName() == 'register' ? 'max-w-6xl' : 'max-w-md' }} mx-auto p-6">
+<main class="w-full max-w-2xl mx-auto p-6">
     <div class="mt-7 p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-800 dark:border-gray-700">
 <div data-hs-stepper>
 
-    <a class="flex-none text-xl font-semibold dark:text-white" href="#" aria-label="CLIENTXCMS">
-        <img src="{{ Vite::asset('resources/global/clientxcms_text.png') }}" class="mb-3">
+    <a class="flex-none text-xl font-semibold dark:text-white" href="https://clientxcms.com" aria-label="CLIENTXCMS">
+        <img src="{{ Vite::asset('resources/global/clientxcms_text.png') }}" class="p-3">
     </a>
+    
     <!-- Stepper Nav -->
     <ul class="relative flex flex-row gap-x-2">
+
+        <button id="dark-mode-btn"  data-url="{{ route('darkmode.switch') }}"
+            class="mr-auto bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-full p-2 hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ml-auto">
+        <svg class="@if (!is_darkmode()) hidden @endif flex-shrink-0 w-4 h-4" id="dark-mode-sun"
+             xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <path
+                d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>
+        </svg>
+        <svg class="@if (is_darkmode()) hidden @endif flex-shrink-0 w-4 h-4" id="dark-mode-moon"
+             xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
         @foreach (['settings', 'register', 'summary'] as $index => $_step)
         <li class="flex items-center gap-x-2 shrink basis-0 flex-1 group">
       <span class="min-w-[28px] min-h-[28px] group inline-flex items-center text-xs align-middle">
@@ -54,6 +73,7 @@
             <div class="w-full h-px flex-1 bg-gray-200 group-last:hidden hs-stepper-success:bg-blue-600 hs-stepper-completed:bg-teal-600"></div>
         </li>
 @endforeach
+
     </ul>
 
     <div class="mt-5 sm:mt-8">

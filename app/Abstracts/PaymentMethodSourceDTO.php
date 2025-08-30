@@ -10,8 +10,12 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
 namespace App\Abstracts;
 
 use App\Models\Account\Customer;
@@ -32,7 +36,9 @@ class PaymentMethodSourceDTO
 
     public string $gateway_uuid;
 
-    public function __construct(string $id, string $brand, string $last4, string $exp_month, string $exp_year, int $customerId, string $gateway_uuid)
+    public ?string $email;
+
+    public function __construct(string $id, string $brand, string $last4, string $exp_month, string $exp_year, int $customerId, string $gateway_uuid, ?string $email = null)
     {
         $this->id = $id;
         $this->brand = $brand;
@@ -41,6 +47,7 @@ class PaymentMethodSourceDTO
         $this->exp_year = $exp_year;
         $this->customerId = $customerId;
         $this->gateway_uuid = $gateway_uuid;
+        $this->email = $email;
     }
 
     public function isDefault(?Customer $customer = null): bool
@@ -55,6 +62,9 @@ class PaymentMethodSourceDTO
 
     public function title()
     {
+        if ($this->gateway_uuid == 'paypal_express_checkout'){
+            return "PayPal (".$this->email.")" . ($this->isDefault() ? ' - '.__('client.payment-methods.default') : '');
+        }
         return $this->brand.' **** **** **** '.$this->last4.' ('.$this->exp_month.'/'.$this->exp_year.')'.($this->isDefault() ? ' - '.__('client.payment-methods.default') : '');
     }
 }

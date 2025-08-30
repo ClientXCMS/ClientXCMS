@@ -16,6 +16,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const index = (location.href.split('#')[1] ?? '') === 'login' ? 0 : 1 ;
         HSCollapse.show(toggle[index]);
     }, 400);
+    const paymentMethodSelect = document.querySelector('select[name="paymentmethod"]');
+    const gatewayContainer = document.querySelector('.gateway-container');
+
+    if (paymentMethodSelect && gatewayContainer) {
+        paymentMethodSelect.addEventListener('change', function () {
+            if (this.value !== 'none') {
+                gatewayContainer.style.display = 'none';
+            } else {
+                gatewayContainer.style.display = '';
+            }
+        });
+        if (paymentMethodSelect.value !== 'none') {
+            gatewayContainer.style.display = 'none';
+        }
+    }
 });
 gatewayInputs.forEach(function (el) {
   el.addEventListener('change', function (e) {

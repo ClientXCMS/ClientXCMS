@@ -1,17 +1,5 @@
 <?php
-/*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
- *
- * Personal and non-commercial use of this source code is permitted.
- * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
- *
- * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
- *
- * Year: 2025
- */
+
 namespace Client;
 
 use App\Models\Helpdesk\SupportDepartment;
@@ -178,10 +166,10 @@ class SupportControllerTest extends TestCase
 
     public function test_client_support_reopen_with_expired_delay()
     {
-        $ticket = $this->createTicketModel();
+        $user = $this->createCustomerModel();
+        $ticket = $this->createTicketModel($user->id);
         $ticket->closed_at = now()->subDays(10);
         $ticket->save();
-        $user = $this->createCustomerModel();
         $this->actingAs($user)->post(route('front.support.reopen', $ticket))->assertSessionHas('error', __('helpdesk.support.ticket_reopen_days', ['days' => 7]));
     }
 

@@ -10,13 +10,20 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Front\Billing;
 
 use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
+use App\Models\Billing\Invoice;
 use App\Services\Store\GatewayService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Psr\SimpleCache\InvalidArgumentException;
@@ -25,7 +32,7 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
 {
     public function index()
     {
-        $gateways = GatewayService::getAvailable(-1);
+        $gateways = GatewayService::getAvailable();
         $customer = auth()->user();
         $gatewaysOptions = collect($gateways)->filter(function ($gateway) {
             return $gateway->uuid != 'balance';
@@ -38,8 +45,11 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
         $gateways = collect($gateways)->filter(function ($gateway) {
             return ! empty($gateway->paymentType()->sourceForm());
         });
-
-        return view('front.billing.payment-methods.index', compact('gateways', 'sources', 'gatewaysOptions'));
+        $subscribableServices = $customer->services->filter(function ($service) {
+            return $service->canSubscribe();
+        });
+        $paidInvoicesWithPaymentMethod = $customer->invoices()->where('status', 'paid')->whereNotNull('payment_method_id')->get();
+        return view('front.billing.payment-methods.index', compact('paidInvoicesWithPaymentMethod','subscribableServices', 'gateways', 'sources', 'gatewaysOptions'));
     }
 
     public function add(Gateway $gateway, Request $request)
@@ -48,7 +58,10 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
             return back()->with('error', __('client.payment-methods.errors.not_supported'));
         }
         try {
-            $gateway->paymentType()->addSource($request);
+            $add = $gateway->paymentType()->addSource($request);
+            if ($add instanceof RedirectResponse){
+                return $add;
+            }
             Cache::delete('payment_methods_'.auth()->user()->id);
 
             return back()->with('success', __('client.payment-methods.success'));
@@ -61,17 +74,19 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
     {
         if ($request->has('customer_id')) {
             if (staff_has_permission('admin.show_payment_methods')) {
+                /** @var Customer $customer */
                 $customer = Customer::find($request->get('customer_id'));
             } else {
                 abort(404);
             }
         } else {
+            /** @var Customer $customer */
             $customer = auth()->user();
             if ($customer == null) {
                 abort(404);
             }
         }
-        $gateways = GatewayService::getAvailable(-1);
+        $gateways = GatewayService::getAvailable();
         $gateway = collect($gateways)->first(function ($gateway) use ($source, $customer) {
             return $gateway->paymentType()->getSource($customer, $source);
         });
@@ -87,11 +102,13 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
     {
         if ($request->has('customer_id')) {
             if (staff_has_permission('admin.show_payment_methods')) {
+                /** @var Customer $customer */
                 $customer = Customer::find($request->get('customer_id'));
             } else {
                 abort(404);
             }
         } else {
+            /** @var Customer $customer */
             $customer = auth()->user();
         }
         $source = $customer->paymentMethods()->where('id', $source)->first();
@@ -109,5 +126,22 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
         }
 
         return back()->with('success', __('client.payment-methods.deleted'));
+    }
+
+    public function pay(Request $request, Invoice $invoice)
+    {
+        $source = $request->get('paymentmethod', '');
+        try {
+            $source = $invoice->customer->getSourceById($source);
+            $result = $invoice->customer->payInvoiceWithPaymentMethod($invoice, $source);
+            if ($result->success) {
+                $result->invoice->update(['paymethod' => $source->gateway_uuid, 'payment_method_id' => $source->id]);
+                return back()->with('success', __('admin.invoices.paidsuccess'));
+            } else {
+                return back()->with('error', $result->message);
+            }
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 }

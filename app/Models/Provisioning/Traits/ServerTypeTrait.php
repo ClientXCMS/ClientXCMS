@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Provisioning\Traits;
 
 use App\Core\NoneServerType;
@@ -117,7 +122,7 @@ trait ServerTypeTrait
                 $result = $server->expireAccount($this);
                 if ($result->success) {
                     $this->status = self::STATUS_EXPIRED;
-                    if ($this->invoice_id != null) {
+                    if ($this->invoice_id != null && $this->invoice) {
                         $this->invoice->cancel();
                     }
                     if ($this->expires_at && $this->expires_at->isFuture()) {
@@ -253,6 +258,9 @@ trait ServerTypeTrait
         if ($changeState) {
             $this->status = self::STATUS_CANCELLED;
             ActionLog::log(ActionLog::SERVICE_CANCELLED, get_class($this), $this->id, auth('admin')->id(), auth('web')->id(), ['reason' => $reason, 'date' => $date->format('Y-m-d H:i:s')]);
+        }
+        if ($this->invoice != null) {
+            $this->invoice->cancel();
         }
         $this->save();
 

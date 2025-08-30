@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Providers;
 
 use App\Core\Admin\Dashboard\AdminCardWidget;
@@ -69,7 +74,7 @@ class ProvisioningServiceProvider extends ServiceProvider
         $setting->addCard('provisioning', 'provisioning.admin.title', 'provisioning.admin.subheading', 2);
         $setting->addCardItem('provisioning', 'services', 'provisioning.admin.settings.services.title', 'provisioning.admin.settings.services.description', 'bi bi-box2', [SettingsProvisioningController::class, 'showServicesSettings'], Permission::MANAGE_SETTINGS);
         $setting->addCardItem('provisioning', 'servers', 'provisioning.admin.servers.title', 'provisioning.admin.servers.subheading', 'bi bi-hdd-rack', route('admin.servers.index'), 'admin.manage_servers');
-        $setting->addCardItem('provisioning', 'subdomains_hosts', 'provisioning.admin.subdomains_hosts.title', 'provisioning.admin.subdomains_hosts.subheading', 'bi bi-list-stars', route('admin.subdomains_hosts.index'), true);
+        $setting->addCardItem('provisioning', 'subdomains_hosts', 'provisioning.admin.subdomains_hosts.title', 'provisioning.admin.subdomains_hosts.subheading', 'bi bi-list-stars', route('admin.subdomains_hosts.index'), 'admin.manage_subdomains_hosts');
         $setting->addCardItem('provisioning', 'configoptions_services', 'provisioning.admin.configoptions_services.title', 'provisioning.admin.configoptions_services.subheading', 'bi bi-boxes', route('admin.configoptions_services.index'), true);
         $setting->addCardItem('provisioning', 'configoptions', 'provisioning.admin.configoptions.title', 'provisioning.admin.configoptions.subheading', 'bi bi-cart-plus', route('admin.configoptions.index'), true);
         \View::share('store_groups', \Cache::remember('store_groups', 3600 * 24 * 7, function () {

@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @php ($hasCustomer = \App\Models\Account\Customer::first() != null)
 @extends('admin/layouts/admin')
 @section('title',  __($translatePrefix . '.create.title'))
@@ -117,7 +119,7 @@
                                 @include('admin/shared/select', ['name' => 'product_id', 'label' => __('global.product'), 'options' => $products, 'value' => old('product_id', $product_id)])
                             </div>
                         <div class="flex flex-col">
-                            @include('admin/shared/search-field', ['name' => 'customer_id', 'label' => __('global.customer'), 'apiUrl' => route('admin.customers.search'), 'value' => $defaultCustomer ])
+                            @include('admin/shared/search-field', ['name' => 'customer_id', 'label' => __('global.customer'), 'apiUrl' => route('admin.customers.search'), 'options' => $item->customer ? [$item->customer_id => $item->customer->excerptFullName()] : [], 'value' => $item->customer_id ])
                         </div>
 
                             <div class="flex flex-col">

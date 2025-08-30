@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Services\Store;
 
 class TaxesService
@@ -58,6 +63,7 @@ class TaxesService
         return round($price, 2);
     }
 
+
     public static function getVatPrice(float $ht, ?string $iso = null): float
     {
         return $ht * (self::getVatPercent($iso) / 100);
@@ -66,6 +72,11 @@ class TaxesService
     public static function getPriceWithVat(float $ht, ?string $iso = null)
     {
         return $ht + self::getVatPrice($ht, $iso);
+    }
+
+    public static function getPriceWithoutVat(float $ttc, ?string $iso = null)
+    {
+        return $ttc / (1 + (self::getVatPercent($iso) / 100));
     }
 
     public static function getVatPercent(?string $iso = null)

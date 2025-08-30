@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Settings;
 
 use Illuminate\Http\Request;
@@ -47,6 +52,9 @@ class SettingsController
             return redirect()->intended($item->action);
         }
         if (is_array($item->action)) {
+            if (count($item->action) != 2 || ! class_exists($item->action[0]) || ! method_exists($item->action[0], $item->action[1])) {
+                abort(404);
+            }
             return app($item->action[0])->{$item->action[1]}($request);
         }
         abort(404);

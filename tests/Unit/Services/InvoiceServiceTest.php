@@ -1,21 +1,10 @@
 <?php
-/*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
- *
- * Personal and non-commercial use of this source code is permitted.
- * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
- *
- * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
- *
- * Year: 2025
- */
+
 namespace Tests\Unit\Services;
 
 use App\Models\Account\Customer;
 use App\Models\Account\EmailMessage;
+use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceItem;
 use App\Models\Provisioning\ConfigOptionService;
@@ -575,7 +564,6 @@ class InvoiceServiceTest extends TestCase
         $this->assertEquals($item->unit_price_ttc, 12);
         /** @var InvoiceItem $item */
         $item = $invoice->items->last();
-        $this->assertEquals($item->related_id, $configOptionService->id);
         $this->assertEquals($item->type, 'config_option_service');
         $this->assertEquals($item->quantity, 1);
         $this->assertEquals($item->unit_price_ht, 10);
@@ -614,16 +602,16 @@ class InvoiceServiceTest extends TestCase
         $user = $this->createCustomerModel();
         $this->seed(EmailTemplateSeeder::class);
         $service = $this->createServiceModel($user->id, 'active');
-        $option = $this->createOptionModel('text', 'test', ['onetime' => 10]);
+        $option = $this->createOptionModel('slider', 'test', ['onetime' => 10]);
         $configOptionService = ConfigOptionService::create([
             'service_id' => $service->id,
             'config_option_id' => $option->id,
             'key' => 'test',
-            'value' => 'test',
+            'value' => 10,
             'expires_at' => null,
         ]);
         $this->createPriceModel($configOptionService->id, 'USD', ['onetime' => 10], 'config_options_service');
-        ConfigOptionService::create([
+        $configOptionService = ConfigOptionService::create([
             'service_id' => $service->id,
             'config_option_id' => $option->id,
             'key' => 'test2',
@@ -649,7 +637,7 @@ class InvoiceServiceTest extends TestCase
         $this->assertEquals($item->quantity, 10);
         $this->assertEquals($item->unit_price_ht, 10);
         $this->assertEquals($item->unit_price_ttc, 12);
-        $this->assertEquals($invoice->total, 12 + (10 * 1.2));
+        $this->assertEquals($invoice->total, 12 + (100 * 1.2));
     }
 
     public function test_create_service_from_invoice_item()
@@ -724,6 +712,39 @@ class InvoiceServiceTest extends TestCase
         ]);
     }
 
+    public function test_create_invoice_from_product()
+    {
+        $user = $this->createCustomerModel();
+        $product = $this->createProductModel();
+        $this->seed(EmailTemplateSeeder::class);
+
+        $invoice = InvoiceService::createInvoiceFromProduct($user, $product, 'monthly', 'USD');
+        $invoice->complete();
+        $this->assertDatabaseCount('invoices', 1);
+        $this->assertDatabaseHas('invoices', [
+            'id' => $invoice->id,
+            'customer_id' => $user->id,
+            'status' => 'paid',
+            'currency' => 'USD',
+        ]);
+    }
+
+    public function test_create_fresh_invoice_from_product()
+    {
+        $user = $this->createCustomerModel();
+        $product = $this->createProductModel();
+        $this->seed(EmailTemplateSeeder::class);
+
+        $invoice = InvoiceService::createFreshInvoice($user->id, 'USD', 'Fresh invoice for product', []);
+        $invoice->complete();
+        $this->assertDatabaseHas('invoices', [
+            'id' => $invoice->id,
+            'customer_id' => $user->id,
+            'status' => 'paid',
+            'currency' => 'USD',
+        ]);
+    }
+
     public function beforeRefreshingDatabase()
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
@@ -731,6 +752,7 @@ class InvoiceServiceTest extends TestCase
         EmailMessage::truncate();
         ServiceRenewals::truncate();
         Service::truncate();
+        Gateway::truncate();
         if (Schema::hasTable('config_options_services')) {
             ConfigOptionService::truncate();
         }

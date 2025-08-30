@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Store;
 
 use App\Http\Controllers\Admin\AbstractCrudController;
@@ -42,6 +47,7 @@ class CouponController extends AbstractCrudController
 
     public function show(Coupon $coupon)
     {
+        $this->checkPermission('show');
         $params['item'] = $coupon;
         $params['types'] = $this->types();
         $params['pricing'] = Pricing::where('related_id', $coupon->id)->where('related_type', 'coupon')->first();
@@ -64,9 +70,10 @@ class CouponController extends AbstractCrudController
 
     public function store(CouponRequest $request)
     {
+        $this->checkPermission('create');
         $coupon = new Coupon;
         $coupon->products_required = $request->input('required_products', []);
-        $coupon->fill($request->only(['code', 'type', 'applied_month', 'free_setup', 'start_at', 'end_at', 'first_order_only', 'max_uses', 'max_uses_per_customer', 'usages', 'required_products', 'minimum_order_amount', 'is_global']));
+        $coupon->fill($request->only(['code', 'customer_id', 'type', 'applied_month', 'free_setup', 'start_at', 'end_at', 'first_order_only', 'max_uses', 'max_uses_per_customer', 'usages', 'required_products', 'minimum_order_amount', 'is_global']));
         $coupon->save();
         $pricing = new Pricing;
         $pricing->related_id = $coupon->id;
@@ -94,7 +101,8 @@ class CouponController extends AbstractCrudController
 
     public function update(CouponRequest $request, Coupon $coupon)
     {
-        $keys = ['code', 'type', 'applied_month', 'free_setup', 'start_at', 'end_at', 'first_order_only', 'max_uses', 'max_uses_per_customer', 'usages', 'required_products', 'minimum_order_amount', 'is_global'];
+        $this->checkPermission('update');
+        $keys = ['code', 'type', 'applied_month','customer_id', 'free_setup', 'start_at', 'end_at', 'first_order_only', 'max_uses', 'max_uses_per_customer', 'usages', 'required_products', 'minimum_order_amount', 'is_global'];
         $coupon->products_required = $request->input('required_products', []);
         $coupon->save();
         $coupon->update($request->only($keys));
@@ -157,6 +165,7 @@ class CouponController extends AbstractCrudController
 
     public function deleteusage(CouponUsage $couponUsage)
     {
+        $this->checkPermission('update');
         $couponUsage->delete();
 
         return redirect()->back()->with('success', __($this->flashs['deleted']));
@@ -164,6 +173,7 @@ class CouponController extends AbstractCrudController
 
     public function destroy(Coupon $coupon)
     {
+        $this->checkPermission('delete');
         $coupon->pricing()->delete();
         $coupon->products()->detach();
         $coupon->usages()->delete();

@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Core;
 
 use App\Http\Controllers\Controller;
@@ -35,11 +40,8 @@ class AdminLocalesController extends Controller
 
     public function download(string $locale)
     {
-        if ($locale == 'fr_FR' && app()->environment() == 'local') {
-            return back()->with('error', __('admin.locales.download_error'));
-        }
-        $locale2 = LocaleService::getLocales(false)[$locale] ?? null;
-        if (! $locale2) {
+        $existing = LocaleService::getLocales(false)[$locale] ?? null;
+        if (! $existing) {
             abort(404);
         }
         try {
@@ -53,8 +55,8 @@ class AdminLocalesController extends Controller
 
     public function toggle(string $locale)
     {
-        $locale2 = LocaleService::getLocales(false)[$locale] ?? null;
-        if (! $locale2) {
+        $existing = LocaleService::getLocales(false)[$locale] ?? null;
+        if (! $existing) {
             abort(404);
         }
         LocaleService::toggleLocale($locale);

@@ -10,11 +10,19 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Traits;
 
 use App\Abstracts\PaymentMethodSourceDTO;
+use App\Exceptions\WrongPaymentException;
+use App\Models\Billing\Gateway;
+use App\Models\Billing\Invoice;
 use App\Services\Store\GatewayService;
 use Illuminate\Support\Facades\Cache;
 
@@ -38,7 +46,7 @@ trait HasPaymentMethods
     {
         return Cache::rememberForever('payment_methods_'.$this->id, function () {
             /** @var \App\Models\Billing\Gateway[] $gateways */
-            $gateways = GatewayService::getAvailable(-1);
+            $gateways = GatewayService::getAvailable();
 
             return collect($gateways)->map(function ($gateway) {
                 return $gateway->paymentType()->getSources($this);
@@ -56,5 +64,32 @@ trait HasPaymentMethods
         }
 
         return $paymentmethods;
+    }
+
+    public function payInvoiceWithPaymentMethod(Invoice $invoice, PaymentMethodSourceDTO $sourceDTO)
+    {
+        $gateway = Gateway::getAvailable()->where('uuid', $sourceDTO->gateway_uuid)->first();
+
+        if ($gateway === null) {
+            throw new WrongPaymentException(__('store.checkout.gateway_not_found'));
+        }
+        $paymentType = $gateway->paymentType();
+        if ($paymentType === null) {
+            throw new WrongPaymentException(__('store.checkout.gateway_not_found'));
+        }
+        return $paymentType->payInvoice($invoice, $sourceDTO);
+    }
+
+    public function getSourceById(string $id): PaymentMethodSourceDTO
+    {
+        if ($id === 'default') {
+            $id = $this->getDefaultPaymentMethod();
+        }
+        $source = $this->paymentMethods()->where('id', $id)->first();
+        if ($source === null) {
+            throw new WrongPaymentException(__('store.checkout.payment_method_not_found'));
+        }
+        return $source;
+
     }
 }

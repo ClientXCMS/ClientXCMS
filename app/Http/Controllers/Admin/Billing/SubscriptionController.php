@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Billing;
 
 use App\Abstracts\PaymentMethodSourceDTO;
@@ -72,7 +77,7 @@ class SubscriptionController extends AbstractCrudController
         return $paymentmethods;
     }
 
-    public function delete(Subscription $subscription)
+    public function destroy(Subscription $subscription)
     {
         $subscription->logs()->delete();
         $subscription->delete();

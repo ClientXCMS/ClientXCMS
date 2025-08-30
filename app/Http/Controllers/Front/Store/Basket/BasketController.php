@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Front\Store\Basket;
 
 use App\DTO\Store\ProductDataDTO;
@@ -196,9 +201,18 @@ class BasketController extends \App\Http\Controllers\Controller
             return redirect()->route('front.store.basket.checkout')->with('error', __('store.checkout.minimal_amount', ['amount' => formatted_price($gateway->minimal_amount)]));
         }
         AccountEditService::saveCurrentCustomer($request->validated());
-
         $invoice = InvoiceService::createInvoiceFromBasket($basket, $gateway);
         try {
+            if ($request->has('paymentmethod') && $request->paymentmethod != null) {
+                $source = auth('web')->user()->getSourceById($request->paymentmethod);
+                $result = auth('web')->user()->payInvoiceWithPaymentMethod($invoice, $source);
+                if (! $result->success) {
+                    return redirect()->route('front.store.basket.checkout')->with('error', __('client.alerts.invoice_payment_failed'));
+                } else {
+                    $invoice->update(['payment_method_id' => $source->id, 'paymethod' => $source->gateway_uuid]);
+                    return redirect()->route('front.invoices.show', $invoice)->with('success', __('admin.invoices.paidsuccess'));
+                }
+            }
             return $invoice->pay($gateway, $request);
         } catch (WrongPaymentException $e) {
             logger()->error($e->getMessage());

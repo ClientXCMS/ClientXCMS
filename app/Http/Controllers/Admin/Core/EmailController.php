@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Core;
 
 use App\Contracts\Store\ProductTypeInterface;
@@ -137,6 +142,7 @@ class EmailController extends AbstractCrudController
     private function getConditions(Collection $servers, Collection $products): array
     {
         $conditions = [
+            'none' => __('global.none'),
             'all_customers' => __('admin.emails.all_customers'),
             'all_registered_customers' => __('admin.emails.all_registered_customers'),
             'customers_has_active_services' => __('admin.emails.customers_has_active_services'),

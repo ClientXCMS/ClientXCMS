@@ -10,36 +10,26 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title', __('personalization.sections.show.title'))
 @section('styles')
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.37.1/min/vs/editor/editor.main.css">
+    <link rel="stylesheet" href="{{ Vite::asset('resources/global/css/monaco-editor.main.css') }}">
 @endsection
 @section('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.37.1/min/vs/loader.js"></script>
-    <script>
-        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.37.1/min/vs' }});
-        require(['vs/editor/editor.main'], function () {
-            const editor = monaco.editor.create(document.getElementById('monaco-editor'), {
-                value: @json(old('content', $content)),
-                language: 'html',
-                theme: {!! is_darkmode(true) ? "'vs-dark'" : "'vs'" !!},
-                automaticLayout: true,
-                minimap: { enabled: false },
-                wordWrap: 'on',
-                lineNumbers: 'on'
-            });
-
-            document.getElementById("section-form").addEventListener("submit", function (event) {
-                document.querySelector("input[name='content']").value = editor.getValue();
-            });
-        });
-    </script>
+<script src="{{ Vite::asset('resources/global/js/admin/sections.js') }}" type="module"></script>
+<script>
+    window.sections = {
+        value: @json(old('content', $content)),
+        theme: {!! !is_darkmode(true) ? "'vs'" : "'vs-dark'" !!}
+    }
+</script>
 @endsection
 @section('content')
     <div class="container mx-auto">
@@ -89,10 +79,25 @@
                                         'options' => $pages
                                     ])
                                 </div>
+                                @if (!$item->toDTO()->isProtected())
                                 <div>
                                     <input type="hidden" name="content" value="{{ old('content', $content) }}">
                                     <div id="monaco-editor" style="height: 400px;"></div>
                                 </div>
+                                    @error('content')
+                                    <div class="bg-red-100 dark:bg-red-900/30 p-4 rounded">
+                                        <p class="text-red-600 dark:text-red-400">
+                                            {{ $message }}
+                                        </p>
+                                    </div>
+                                    @enderror
+                                @else
+                                    <div class="bg-red-100 dark:bg-red-900/30 p-4 rounded">
+                                        <p class="text-red-600 dark:text-red-400">
+                                            {{ __('personalization.sections.show.protected_content') }}
+                                        </p>
+                                    </div>
+                                @endif
                                 <div>
                                     @include('admin/shared/checkbox', [
                                         'label' => __('personalization.sections.fields.active'),

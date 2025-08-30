@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('layouts/front')
 @section('title', $product->name)
 @section('scripts')
@@ -25,6 +27,7 @@
         window.per = '{{ __('store.per') }}';
         window.currency = '{{ currency() }}';
         window.recurrings = @json(app(\App\Services\Store\RecurringService::class)->getRecurringTypes());
+        window.taxType = '{{ is_tax_excluded() ? 'excluded' : 'included' }}';
     </script>
     <script src="{{ Vite::asset('resources/themes/default/js/basket.js') }}" type="module"></script>
 @endsection
@@ -41,7 +44,7 @@
                     @php($pricings = $product->pricingAvailable(currency()))
                     <div class="grid sm:grid-cols-3 gap-2 card" id="basket-billing-section">
                         <div class="col-span-3">
-                            <h2 class="text-lg font-semibold mb-4">{{ __('store.config.billing') }}</h2>
+                            <h2 class="text-lg font-semibold mb-4 dark:text-white/50">{{ __('store.config.billing') }}</h2>
                         </div>
                         @foreach ($pricings as $pricing)
                             <label for="billing-{{ $pricing->recurring }}-{{ $pricing->currency }}" class="col-span-3 md:col-span-1 p-3 block w-full bg-white border border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400">

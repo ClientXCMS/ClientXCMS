@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Core\Gateway;
 
 use App\Abstracts\AbstractGatewayType;
@@ -49,33 +54,24 @@ class StripeType extends AbstractGatewayType
 
     public function createPayment(Invoice $invoice, Gateway $gateway, Request $request, GatewayUriDTO $dto)
     {
-        $rate = $invoice->tax != 0 ? [$this->getStripeRate($invoice->customer)] : null;
-        $items = $invoice->items->map(function (InvoiceItem $item) use ($invoice, $rate) {
-            $price = $item->unit_price_ttc + $item->unit_setup_ttc;
-            $discount = 0;
-            if ($item->hasDiscount()) {
-                $discount = ($item->getDiscount()->sub_price) / $item->quantity + ($item->getDiscount()->sub_setup / $item->quantity);
-            }
-
-            return [
-                'price_data' => [
-                    'currency' => $invoice->currency,
-                    'unit_amount' => (int) (($price - $discount) * 100),
-                    'product_data' => [
-                        'name' => $item->name,
-                    ],
-                ],
-                'tax_rates' => $rate,
-                'quantity' => $item->quantity,
-            ];
-        })->toArray();
         $this->initStripe();
+        $rate = $invoice->tax != 0 ? [$this->getStripeRate($invoice->customer)] : null;
         $customer = $this->getCustomerStripe($invoice->customer);
         try {
             $session = \Stripe\Checkout\Session::create([
                 'customer' => $customer->id,
                 'payment_method_types' => $this->getPaymentMethodTypes(),
-                'line_items' => $items,
+                'line_items' => [[
+                    'quantity' => 1,
+                    'tax_rates' => $rate,
+                    'price_data' => [
+                        'currency' => $invoice->currency,
+                        'unit_amount' => (int) ($invoice->total * 100),
+                        'product_data' => [
+                            'name' => __('global.invoice').' #'.$invoice->id,
+                        ],
+                    ],
+                ]],
                 'mode' => 'payment',
                 'metadata' => [
                     'invoice_id' => $invoice->id,
@@ -321,6 +317,7 @@ class StripeType extends AbstractGatewayType
                 'amount' => (int) ($invoice->total * 100),
                 'currency' => $invoice->currency,
                 'customer' => $customerId,
+                'description' => __('global.invoice').' #'.$invoice->id,
                 'payment_method' => $sourceDTO->id,
                 'automatic_payment_methods' => ['enabled' => true, 'allow_redirects' => 'never'],
                 'confirm' => true,

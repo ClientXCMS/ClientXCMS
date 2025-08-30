@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Core\License;
 
 use App\Exceptions\LicenseInvalidException;
@@ -38,7 +43,7 @@ class LicenseGateway
     {
         $this->authorizationUrl = self::getDomain().'/oauth2/authorize';
         $this->accessTokenUrl = self::getDomain().'/oauth2/access_token';
-        $this->apiBaseUrl = self::getDomain().'/oauth2/v1';
+        $this->apiBaseUrl = self::getDomain().'/oauth2/v2';
         $this->refreshTokenUrl = self::getDomain().'/oauth2/access_token';
         $this->httpClient = new Client(['timeout' => 10, 'headers' => ['Accept' => 'application/json']]);
     }
@@ -114,21 +119,23 @@ class LicenseGateway
         }
     }
 
-    public function download($accessToken, $endpoint, $params, $resource, string $method = 'POST')
+    public function download(string $uuid, $resource)
     {
-        $url = $this->apiBaseUrl.$endpoint;
+        $license = $this->getLicense(setting('app.license.access_token'), true);
+        $token = $this->refreshAccessToken(setting('app.license.refresh_token'), $license);
+        $url = $this->apiBaseUrl."/update";
 
         $headers = [
-            'Authorization' => 'Bearer '.$accessToken,
+            'Authorization' => 'Bearer '.$token,
+            'ctx-uuid' => $uuid,
         ];
 
         $options = [
             'headers' => $headers,
-            'form_params' => $params,
             'sink' => $resource,
         ];
 
-        return $this->httpClient->request($method, $url, $options);
+        return $this->httpClient->request("POST", $url, $options);
     }
 
     public function refreshAccessToken(string $refreshToken, ?License $license = null)
@@ -176,24 +183,22 @@ class LicenseGateway
     public function restartNPM()
     {
         $license = $this->getLicense(setting('app.license.access_token'), true);
-        $token = $this->refreshAccessToken(setting('app.license.refresh_token'), $license);
-        $this->apiBaseUrl = self::getDomain().'/oauth2/v2';
-        $this->callAPI($token, '/restarnpm');
-        $this->apiBaseUrl = self::getDomain().'/oauth2/v1';
+        $token = $this->refreshAccessToken(setting('apzp.license.refresh_token'), $license);
+        $this->callAPI($token, '/restartnpm');
     }
 
     public function getLicense(?string $token = null, bool $force = false): License
     {
         if (app()->runningUnitTests()) {
             return new License(
-                '31-12-49',
-                0,
-                [],
-                0,
+                '31-12-2024',
+                '31-12-2024',
                 time(),
-                time(),
-                1,
+                now()->addDays()->format('u'),
+                null,
                 [],
+                'community',
+                'self_hosted',
                 [],
             );
         }
@@ -206,17 +211,7 @@ class LicenseGateway
             if (setting('app.license.refresh_token') == null && $token == null) {
                 throw new LicenseInvalidException('No refresh token found');
             }
-            $response = $this->callAPI($token, '/checker', [
-                'ctx-version' => ctx_version(),
-                'ctx-php-version' => phpversion(),
-                'ctx-themename' => app('theme')->getTheme()->uuid,
-                'ctx-max-customers' => $license?->get('max'),
-                'ctx-issued-by' => $license ? $license->get('issuedby') : 'CLIENTXCMS-001',
-                'ctx-expire-at' => $license ? $license->get('expire') : '31-12-49',
-                'ctx-customers' => Service::countCustomers(),
-                'ctx-domain' => \URL::getRequest()->getHttpHost(),
-                'ctx-extension' => implode(',', app('extension')->fetchEnabledExtensions()),
-            ]);
+            $response = $this->callAPI($token, '/checker');
             if ($response == null) {
                 throw new LicenseInvalidException('Internal error please contact support');
             }
@@ -229,13 +224,13 @@ class LicenseGateway
             }
             $license = new License(
                 $license['expire_at'],
-                $license['currentcustomers'],
-                $license['domains'],
-                $license['customers'],
+                $license['support_expires_at'] ?? null,
                 time(),
                 $cache->getNextCheck(),
-                $license['server'],
+                $license['server'] ?? null,
                 $response['extensions'] ?? [],
+                $license['type'],
+                $license['version_type'],
                 $response['downloads']['data'] ?? [],
             );
             $cache->persist($license);

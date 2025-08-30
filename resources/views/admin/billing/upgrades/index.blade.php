@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title', __($translatePrefix .'.title'))
 @section('content')
@@ -109,7 +111,7 @@
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             @if (count($items) == 0)
                                 <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
-                                    <td colspan="3" class="px-6 py-4 whitespace-nowrap text-center">
+                                    <td colspan="8" class="px-6 py-4 whitespace-nowrap text-center">
                                         <div class="flex flex-auto flex-col justify-center items-center p-2 md:p-3">
                                             <p class="text-sm text-gray-800 dark:text-gray-400">
                                                 {{ __('global.no_results') }}

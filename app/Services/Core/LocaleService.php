@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Services\Core;
 
 use App\Models\Admin\Setting;
@@ -21,9 +26,9 @@ use Illuminate\Support\Facades\Cookie;
 
 class LocaleService
 {
-    const DOWNLOAD_ENDPOINT = 'https://api.github.com/repos/DarkIncognito85/ctx-translations/contents/';
+    const DOWNLOAD_ENDPOINT = 'https://api.github.com/repos/ClientXCMS/ctx-translations/contents/';
 
-    const DEFAULT_ENABLED_LOCALES = '["fr_FR"]';
+    const DEFAULT_ENABLED_LOCALES = '["en_GB"]';
 
     public static ?string $currentLocale = null;
 

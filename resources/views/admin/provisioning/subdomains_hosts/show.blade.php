@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/settings/sidebar')
 @section('title',  __($translatePrefix . '.show.title', ['name' => $item->name]))
 @section('setting')
@@ -33,6 +35,13 @@
                             </div>
 
                             <div class="mt-4 flex items-center space-x-4 sm:mt-0">
+
+                                @if (staff_has_permission('admin.manage_metadata'))
+                                    <button class="btn btn-secondary text-left" type="button" data-hs-overlay="#metadata-overlay">
+                                        <i class="bi bi-database mr-2"></i>
+                                        {{ __('admin.metadata.title') }}
+                                    </button>
+                                @endif
                                 <button class="btn btn-primary">
                                     {{ __('admin.updatedetails') }}
                                 </button>
@@ -43,4 +52,6 @@
                             @include('admin/shared/input', ['name' => 'domain', 'label' => __($translatePrefix . '.subdomain'), 'value' => $item->domain])
                     </form>
                 </div>
+    @include('admin/metadata/overlay', ['item' => $item])
+
 @endsection

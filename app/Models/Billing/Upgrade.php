@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Billing;
 
 use App\DTO\Provisioning\ServiceStateChangeDTO;
@@ -23,14 +28,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
+ *
  *
  * @OA\Schema (
  *     schema="Upgrade",
  *     title="Upgrade",
  *     description="An upgrade operation applied to a service",
  *     required={"customer_id", "service_id", "old_product_id", "new_product_id"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=42),
  *     @OA\Property(property="customer_id", type="integer", example=1),
  *     @OA\Property(property="service_id", type="integer", example=2),

@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Personalization;
 
 use App\Events\Resources\ResourceCreatedEvent;
@@ -45,17 +50,16 @@ class MenuLinkController extends AbstractCrudController
     public function create(Request $request)
     {
         $type = $request->type;
-        abort_if(! in_array($type, ['front', 'bottom']), 404);
         $data = $this->getArray($type);
         $data['type'] = $type;
 
+        $menus = MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get();
         return $this->createView($data);
     }
 
     public function store(MenuLinkRequest $request)
     {
         $type = $request->type;
-        abort_if(! in_array($type, ['front', 'bottom']), 404);
         $this->checkPermission('create');
         $validated = $request->validated();
         $validated['position'] = MenuLink::where('type', $type)->count();
@@ -69,10 +73,6 @@ class MenuLinkController extends AbstractCrudController
     public function sort(Request $request, string $type)
     {
         $this->checkPermission('update');
-        if (! in_array($type, ['front', 'bottom'])) {
-            return new Response(404);
-        }
-
         $menuLinks = $request->items;
         $i = 0;
         foreach ($menuLinks as $menuLink) {
@@ -108,7 +108,6 @@ class MenuLinkController extends AbstractCrudController
     public function show(Request $request, MenuLink $menulink)
     {
         $this->checkPermission('show');
-        abort_if(! in_array($menulink->type, ['front', 'bottom']), 404);
         $data = $this->getArray($menulink->type, $menulink->id, $menulink->parent_id);
 
         return $this->showView($data + ['item' => $menulink]);

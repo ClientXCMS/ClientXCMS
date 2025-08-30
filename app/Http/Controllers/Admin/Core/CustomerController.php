@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Core;
 
 use App\Helpers\Countries;
@@ -221,7 +226,7 @@ class CustomerController extends AbstractCrudController
     public function search(Request $request)
     {
         if (in_array('field', array_keys($request->all()))) {
-            if (in_array($request->get('field'), ['id', 'email', 'first_name', 'last_name', 'phone'])) {
+            if (in_array($request->get('field'), ['id', 'email', 'firstname', 'lastname', 'phone'])) {
                 $this->searchField = $request->get('field');
                 if ($request->get('field') == 'id') {
                     $customer = Customer::find($request->get('q'));
@@ -252,7 +257,7 @@ class CustomerController extends AbstractCrudController
 
     public function customSearch(Request $request)
     {
-        $this->checkPermission('index');
+        $this->checkPermission('showAny');
         $q = $request->get('q');
         if (empty($q)) {
             $customers = Customer::selectRaw("CONCAT(firstname, ' ', lastname, ' - ', email) as title, CONCAT(phone, ' - #', id) as description, id")

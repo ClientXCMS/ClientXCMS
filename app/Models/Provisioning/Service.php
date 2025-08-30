@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Provisioning;
 
 use App\Abstracts\SupportRelateItemTrait;
@@ -24,6 +29,7 @@ use App\Models\Account\Customer;
 use App\Models\Billing\ConfigOption;
 use App\Models\Billing\Traits\PricingInteractTrait;
 use App\Models\Billing\Upgrade;
+use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Coupon;
 use App\Models\Store\Pricing;
 use App\Models\Store\Product;
@@ -42,8 +48,8 @@ use Illuminate\Support\Str;
  *
  * @OA\Schema (
  *      schema="ProvisioningService",
- *     title="Shop pricing",
- *     description="Shop pricing model"
+ *     title="Service",
+ *     description="service model"
  * )
  * @property int $id
  * @property int $customer_id
@@ -352,6 +358,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
             self::STATUS_CANCELLED => __('global.states.cancelled'),
             self::STATUS_PENDING => __('global.states.pending'),
             self::STATUS_EXPIRED => __('global.states.expired'),
+            self::STATUS_HIDDEN => __('global.states.hidden'),
         ];
     }
 
@@ -387,13 +394,12 @@ class Service extends Model implements HasNotifiableVariablesInterface
     {
         return Service::where('status', 'active')
             ->select('services.*')
-            ->whereRaw('NOW() >= DATE_SUB(expires_at, INTERVAL ? DAY)', [setting('service_days_before_subscription_renewal')])
-            // ->whereRaw('expires_at >= DATE_ADD(NOW(), INTERVAL ? DAY)', [setting('days_before_subscription_renewal')])
             ->leftJoin('subscriptions', 'services.id', '=', 'subscriptions.service_id')
             ->whereNotNull('subscriptions.id')
             ->whereNull('subscriptions.cancelled_at')
             ->whereNotNull('invoice_id')
             ->where('subscriptions.state', 'active')
+            ->whereRaw('subscriptions.billing_day = DAY(CURDATE());')
             ->get();
     }
 
@@ -573,6 +579,9 @@ class Service extends Model implements HasNotifiableVariablesInterface
         return $this->hasMany(ConfigOptionService::class);
     }
 
+    /**
+     * @return Pricing[]
+     */
     public function getConfigOptionsPrices(): array
     {
         $configOptions = $this->configoptions->where('expired_at', '>', now());
@@ -609,6 +618,9 @@ class Service extends Model implements HasNotifiableVariablesInterface
             return false;
         }
         if ($this->billing == 'free' || $this->billing == 'onetime') {
+            return false;
+        }
+        if ($this->getMetadata('free_trial_type', null) == 'simple') {
             return false;
         }
         if (! is_null($this->max_renewals)) {
@@ -675,53 +687,45 @@ class Service extends Model implements HasNotifiableVariablesInterface
         return "{$this->product->trans('name')} ({$current} - {$expiresAt->format('d/m/y')})";
     }
 
-    public function getDiscountOnRecurring(string $recurring, ?float $price = null)
+    public function getBillableAmount(string $billing, bool $setup = false): float
     {
-        if (! $this->hasMetadata('discount')) {
-            return 0;
+        $price = $this->getBillingPrice($billing)->base_price;
+        if ($setup) {
+            $price += $this->getBillingPrice($billing)->base_setup;
         }
-        $discount = json_decode($this->getMetadata('discount'));
-        if ($discount->applied_month == Coupon::APPLIED_MONTH_FIRST) {
-            return 0;
-        } elseif ($discount->applied_month != Coupon::APPLIED_MONTH_UNLIMITED) {
-            if ($this->renewals >= $discount->applied_month) {
-                return 0;
-            }
-            $pricings = $discount->pricing;
-            if (! property_exists($pricings, $recurring)) {
-                return 0;
-            }
-            if ($discount->type == Coupon::TYPE_FIXED) {
-                return $pricings->$recurring;
-            } else {
-                return $pricings->$recurring * ($price ?? $this->price) / 100;
-            }
-        } else {
-            $pricings = $discount->pricing ?? new \stdClass();
-            if (!property_exists($pricings, $recurring)){
-                return 0;
-            }
-            if ($discount->type == Coupon::TYPE_FIXED) {
-                return $pricings->$recurring;
-            } else {
-                return $pricings->$recurring * ($price ?? $this->price) / 100;
+        /** @var ProductPriceDTO $configOptionPrice */
+        foreach ($this->getConfigOptionsPrices() as $configOptionPrice) {
+            $price += $configOptionPrice->base_price;
+            if ($setup) {
+                $price += $configOptionPrice->base_setup;
             }
         }
+        return $price;
     }
 
-    public function getDiscountRenewal()
+    public function discountArray()
     {
-        if (! $this->hasMetadata('discount')) {
+        if (!$this->couponId())
+            return null;
+        /** @var Coupon $coupon */
+        $coupon = Coupon::find($this->couponId());
+        if ($coupon == null || ! $coupon->isValidForServiceRenewal($this)) {
             return null;
         }
-        if ($this->getDiscountOnRecurring($this->billing) == 0) {
-            return null;
-        }
-        $discount = json_decode($this->getMetadata('discount'));
-        $discount->sub_price = $this->getDiscountOnRecurring($this->billing);
-        $discount->sub_setup = 0;
+        return $coupon->discountArray($this->getBillingPrice()->price_ht, 0, $this->billing);
+    }
 
-        return (array) $discount;
+    public function discountAmount()
+    {
+        if (!$this->couponId()) {
+            return 0;
+        }
+        /** @var Coupon $coupon */
+        $coupon = Coupon::find($this->couponId());
+        if ($coupon == null || ! $coupon->isValidForServiceRenewal($this)) {
+            return 0;
+        }
+        return $coupon->applyAmount($this->getBillingPrice()->price_ht, $this->billing, BasketRow::PRICE);
     }
 
     public function relatedName(): string
@@ -838,15 +842,29 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public function resolveRouteBinding($value, $field = null)
     {
-        if (Str::isUuid($value)) {
-            return $this->where('uuid', $value)->firstOrFail();
+        $model = $this->where('uuid', $value)->first();
+        if (! $model) {
+            $model = $this->where('id', $value)->first();
         }
-
-        return $this->where('id', $value)->firstOrFail();
+        return $model ?? abort(404);
     }
 
     public function getRouteKeyName()
     {
         return 'uuid';
+    }
+
+    private function couponId()
+    {
+        if ($this->hasMetadata('coupon_id')) {
+            return $this->getMetadata('coupon_id');
+        }
+        if ($this->hasMetadata('discount')) {
+            $discount = json_decode($this->getMetadata('discount'));
+            if (property_exists($discount, 'id')) {
+                return $discount->id;
+            }
+        }
+        return null;
     }
 }

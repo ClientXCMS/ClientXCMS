@@ -10,20 +10,26 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Core\Gateway;
 
 use App\Abstracts\AbstractGatewayType;
 use App\Abstracts\PaymentMethodSourceDTO;
+use App\DTO\Core\Gateway\GatewayPayInvoiceResultDTO;
 use App\DTO\Core\Gateway\GatewayUriDTO;
 use App\Exceptions\WrongPaymentException;
 use App\Helpers\EnvEditor;
+use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
-use App\Models\Billing\InvoiceItem;
-use App\Models\Billing\Subscription;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use PayPalCheckoutSdk\Core\ProductionEnvironment;
 use PayPalCheckoutSdk\Core\SandboxEnvironment;
 use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
@@ -45,31 +51,8 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
 
     public function createPayment(Invoice $invoice, Gateway $gateway, Request $request, GatewayUriDTO $dto)
     {
-        $client = $this->getClient();
-        $discounts = $invoice->getDiscountTotal();
-        $items = $invoice->items->map(function (InvoiceItem $item) use ($invoice) {
-            $discount = 0;
-            if ($item->hasDiscount()) {
-                $discount = $item->getDiscount()->sub_price + $item->getDiscount()->sub_setup;
-            }
-            $price = $item->unit_price_ht + $item->unit_setup_ht;
-            $price = $price * $item->quantity;
-
-            return [
-                'name' => $item->name,
-                'quantity' => $item->quantity,
-                'category' => 'DIGITAL_GOODS',
-                'sku' => $item->id,
-                'description' => $item->description,
-                'unit_amount' => [
-                    'currency_code' => $invoice->currency,
-                    'value' => (string) (number_format((float) ($price - $discount), 2)),
-                ],
-            ];
-        })->toArray();
         $order = new OrdersCreateRequest;
         $order->prefer('return=representation');
-        $order->headers['Authorization'] = 'Basic '.$client->environment->authorizationString();
         $order->body = [
             'intent' => 'CAPTURE',
             'application_context' => [
@@ -91,7 +74,7 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
                         'breakdown' => [
                             'item_total' => [
                                 'currency_code' => $invoice->currency,
-                                'value' => (string) number_format($invoice->total, 2),
+                                'value' => (string) number_format($invoice->subtotal, 2),
                             ],
                             'tax_total' => [
                                 'currency_code' => $invoice->currency,
@@ -99,16 +82,22 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
                             ],
                         ],
                     ],
-                    'items' => $items,
-                    'discount' => [
-                        'currency_code' => $invoice->currency,
-                        'value' => (string) number_format($discounts, 2),
-                    ],
+                    'items' => [[
+                        'name' => __('global.invoice').' #'.$invoice->id,
+                        'quantity' => '1',
+                        'category' => 'DIGITAL_GOODS',
+                        'unit_amount' => [
+                            'currency_code' => $invoice->currency,
+                            'value' => (string) number_format($invoice->subtotal, 2),
+                        ],
+                        'description' => __('global.invoice').' #'.$invoice->id,
+                        'sku' => 'invoice-'.$invoice->id,
+                    ]],
                 ],
             ],
         ];
         try {
-            $response = $client->execute($order);
+            $response = $this->executeClient($order);
         } catch (\Exception $e) {
             throw new WrongPaymentException($e->getMessage());
         }
@@ -131,8 +120,7 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
         try {
             $request = new OrdersCaptureRequest($token);
             $request->prefer('return=representation');
-            $request->headers['Authorization'] = 'Basic '.$this->getClient()->environment->authorizationString();
-            $responsePayPal = $this->getClient()->execute($request);
+            $responsePayPal = $this->executeClient($request);
             $result = $responsePayPal->result;
             if ($result->status === 'COMPLETED') {
                 $invoice->update(['external_id' => $result->purchase_units[0]->payments->captures[0]->id, 'fees' => $result->purchase_units[0]->payments->captures[0]->seller_receivable_breakdown->paypal_fee->value]);
@@ -199,108 +187,175 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
         return new HttpClient(new ProductionEnvironment($clientId, $clientSecret));
     }
 
-    public function createSubscription(Invoice $invoice, Gateway $gateway, Request $request, GatewayUriDTO $dto): ?Subscription
-    {
-        return null;
-    }
-
-    public function notification(Gateway $gateway, Request $request)
-    {
-        $type = $this->verifyNotification($request);
-
-        return parent::notification($gateway, $request); // TODO: Change the autogenerated stub
-    }
-
-    public function cancelSubscription(Subscription $subscription): ?Subscription
-    {
-        return parent::cancelSubscription($subscription); // TODO: Change the autogenerated stub
-    }
-
-    private function verifyNotification(Request $request)
-    {
-        $client = $this->getClient();
-        $req = new HttpRequest('v1/notifications/verify-webhook-signature', 'POST');
-        $headers = [
-            'transmission_id' => $request->header('PayPal-Transmission-ID'),
-            'transmission_time' => $request->header('PayPal-Transmission-Time'),
-            'cert_url' => $request->header('PayPal-Cert-Url'),
-            'auth_algo' => $request->header('PayPal-Auth-Algo'),
-            'transmission_sig' => $request->header('PayPal-Transmission-Sig'),
-            'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
-            'webhook_event' => $request->json()->all(),
-        ];
-        $req->headers = $headers;
-        $response = $client->execute($req);
-        $result = $response->result;
-        if ($result->verification_status !== 'SUCCESS') {
-            logger()->error('Invalid PayPal webhook signature.', $response->result);
-
-            abort(400, 'Invalid PayPal webhook signature.');
-        }
-
-        return $response->event_type;
-    }
-
     public function sourceForm(): string
     {
-        return '';
-
         return view('admin.settings.store.gateways.paypal-source')->render();
     }
 
-    public function addSource(Request $request): ?PaymentMethodSourceDTO
+    public function sourceReturn(Request $request)
     {
-        $client = $this->getClient();
-        $request = new OrdersCreateRequest;
-        $request->prefer('return=representation');
-        $request->headers['Authorization'] = 'Basic '.$client->environment->authorizationString();
-        $request->body = [
-            'intent' => 'AUTHORIZE',
-            'purchase_units' => [
-                [
-                    'amount' => [
-                        'currency_code' => 'EUR',
-                        'value' => '1.00',
-                    ],
-                ],
-            ],
-            'application_context' => [
-                'brand_name' => setting('app_name'),
-                'locale' => 'en-US',
-                'landing_page' => 'BILLING',
-                'shipping_preference' => 'NO_SHIPPING',
-                'user_action' => 'CONTINUE',
-                'cancel_url' => route('front.payment-methods.index'),
-                'return_url' => route('gateways.source.return', ['gateway' => self::UUID]),
-            ],
-        ];
-        $response = $client->execute($request);
-        $result = $response->result;
-        $approveLink = collect($result->links)->first(function ($link) {
-            return $link->rel === 'approve';
-        });
-        header('Location: '.$approveLink->href);
-        exit;
-        redirect($approveLink->href);
-
-        return null;
+        $token = $request->query('approval_token_id');
+        if (!$token) {
+            return redirect()->route('front.payment-methods.index')->with('error', __('client.payment-methods.errors.not_found'));
+        }
+        $req = new HttpRequest('/v3/vault/payment-tokens/', 'POST');
+        $req->body = json_encode([
+            'approval_token_id' => $token,
+            'customer' => ['id' => 'CLIENTXCMS-' . auth()->id()],
+            'payment_source' => [
+                'token' => [
+                    "id" => $token,
+                    "type" =>"SETUP_TOKEN"
+                ]
+            ]
+        ]);
+        try {
+            $resp = $this->executeClient($req);
+            if ($resp->statusCode === 200) {
+                $source = $resp->result->customer->id;
+                /** @var Customer $customer */
+                $customer = auth()->user();
+                if (!$customer) {
+                    logger()->error('Cannot find customer for PayPal source return');
+                    return redirect()->route('front.payment-methods.index')->with('error', __('store.checkout.wrong_payment'));
+                }
+                $customer->attachMetadata('paypal_customer_id', $source);
+                if ($customer->getDefaultPaymentMethod() == null) {
+                    $customer->setDefaultPaymentMethod($resp->result->payment_tokens[0]->id);
+                }
+                return redirect()->route('front.payment-methods.index')->with('success', __('client.payment-methods.success'));
+            }
+        } catch (\Exception $e) {
+            logger()->error('PayPal source return error: '.$e->getMessage());
+            return redirect()->route('front.payment-methods.index')->with('error', __(''));
+        }
     }
 
-    public function sourceReturn(Request $request): ?PaymentMethodSourceDTO
+    public function removeSource(PaymentMethodSourceDTO $sourceDTO)
     {
-        $token = $request->query('token');
-        $payerId = $request->query('PayerID');
-        $client = $this->getClient();
-        $request = new OrdersCaptureRequest($token);
-        $request->prefer('return=representation');
-        $request->headers['Authorization'] = 'Basic '.$client->environment->authorizationString();
-        $responsePayPal = $client->execute($request);
-        $result = $responsePayPal->result;
-        if ($result->status === 'COMPLETED') {
-            return new PaymentMethodSourceDTO($result->id, $result->payer->email_address);
+        $req = new HttpRequest('/v3/vault/payment-tokens/' . $sourceDTO->id, 'DELETE');
+        try {
+            $resp = $this->executeClient($req);
+            if ($resp->statusCode === 204) {
+                /** @var Customer $customer */
+                $customer = auth()->user();
+                if (!$customer) {
+                    logger()->error('Cannot find customer for PayPal source removal');
+                    return redirect()->route('front.payment-methods.index')->with('error', __('store.checkout.wrong_payment'));
+                }
+            }
+        } catch (\Exception $e) {
+            logger()->error('PayPal source removal error: '.$e->getMessage());
+        }
+    }
+
+    public function addSource(Request $request)
+    {
+        $req = new HttpRequest('/v3/vault/setup-tokens', 'POST');
+        $req->body = json_encode([
+            'payment_source' => [
+                'paypal' => [
+                    'description' => 'Test Content',
+                    "usage_pattern" => "IMMEDIATE",
+                    "usage_type" => "MERCHANT",
+                    "customer_type" => "CONSUMER",
+                    "experience_context" => [
+                        "shipping_preference" => "SET_PROVIDED_ADDRESS",
+                          "payment_method_preference" => "IMMEDIATE_PAYMENT_REQUIRED",
+                          "brand_name" => setting('app_name'),
+                          "locale" => 'en-US',
+                          "return_url" => route('gateways.source.return', ['gateway' => 'paypal_express_checkout']),
+                          "cancel_url" => route('front.payment-methods.index')
+                    ],
+                ]
+            ],
+            'customer' => ['id' => 'CLIENTXCMS-' . auth()->id()],
+        ]);
+        try {
+            $resp = $this->executeClient($req);
+            $approveLink = collect($resp->result->links)->first(fn($link) => $link->rel === 'approve');
+            return redirect($approveLink->href);
+        } catch (\Exception $e) {
+            throw new WrongPaymentException($e->getMessage());
+        }
+    }
+    public function payInvoice(Invoice $invoice, PaymentMethodSourceDTO $sourceDTO): GatewayPayInvoiceResultDTO
+    {
+        $vaultId  = $invoice->customer->getMetadata('paypal_vault_id');
+
+        if (!$vaultId) {
+            throw new WrongPaymentException('The customer does not have a PayPal vault_id.');
         }
 
-        return null;
+        $orderReq = new OrdersCreateRequest();
+        $orderReq->prefer('return=representation');
+
+        $orderReq->body = [
+            'intent' => 'CAPTURE',
+            'purchase_units' => [
+                [
+                    'reference_id' => $invoice->id,
+                    'amount' => [
+                        'currency_code' => $invoice->currency,
+
+                        'value' => number_format($invoice->total, 2, '.', ''),
+                    ],
+                    'description' => 'Payment for Invoice #' . $invoice->id,
+                ],
+            ],
+            'payment_source' => [
+                'token' => [
+                    'id'   => $sourceDTO->id,
+                    'type' => 'PAYMENT_METHOD_TOKEN',
+                ],
+            ],
+        ];
+        try {
+            $orderRes = $this->executeClient($orderReq);
+        } catch (\PayPalHttp\HttpException $e) {
+            logger()->error($e->getMessage());
+            throw new WrongPaymentException('PayPal order creation failed: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            logger()->error($e->getMessage());
+            throw new WrongPaymentException('An unexpected error occurred during PayPal order creation: ' . $e->getMessage());
+        }
+        $orderId = $orderRes->result->id;
+        $status  = $orderRes->result->status;
+        if ($status === 'APPROVED') {
+            $captureReq = new OrdersCaptureRequest($orderId);
+            $captureReq->prefer('return=representation');
+            $captureReq->payPalRequestId((string) Str::uuid());
+            try {
+                $captureRes = $this->executeClient($captureReq);
+            } catch (\PayPalHttp\HttpException $e) {
+                logger()->error($e->getMessage());
+                throw new WrongPaymentException('PayPal capture failed: ' . $e->getMessage());
+            } catch (\Exception $e) {
+                logger()->error($e->getMessage());
+                throw new WrongPaymentException('An unexpected error occurred during PayPal capture: ' . $e->getMessage());
+            }
+            $finalStatus = $captureRes->result->status ?? 'FAILED';
+        } else if ($status != "COMPLETED") {
+            throw new WrongPaymentException('PayPal order was not approved for capture. Status: ' . $status);
+        } else{
+            $finalStatus = $status;
+            $captureRes = $orderRes;
+        }
+        if ($finalStatus !== 'COMPLETED') {
+            throw new WrongPaymentException('PayPal payment was not completed. Final status: ' . $finalStatus);
+        }
+        $capture = $captureRes->result->purchase_units[0]->payments->captures[0] ?? null;
+        if (!$capture) {
+            throw new WrongPaymentException('Missing capture data from PayPal response.');
+        }
+
+        $invoice->update([
+            'external_id' => $capture->id,
+            'fees'        => $capture->seller_receivable_breakdown->paypal_fee->value ?? null,
+        ]);
+        $invoice->attachMetadata('used_payment_method', $sourceDTO->id);
+        $invoice->complete();
+        return new GatewayPayInvoiceResultDTO(true, 'Done', $invoice, $sourceDTO);
     }
 
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
@@ -311,5 +366,48 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
         }
 
         return null;
+    }
+
+    public function getSource(Customer $customer, string $sourceId): ?PaymentMethodSourceDTO
+    {
+        return collect($this->getSources($customer))->where('id', $sourceId)->first();
+    }
+
+    public function getSources(Customer $customer): array
+    {
+        $customer_id = $customer->getMetadata('paypal_customer_id');
+        if (!$customer_id) {
+            return [];
+        }
+        $req = new HttpRequest('/v3/vault/payment-tokens?customer_id=' . $customer_id, 'GET');
+        try {
+            $resp = $this->executeClient($req);
+        } catch (\Exception $e) {
+            return [];
+        }
+        return collect($resp->result->payment_tokens)->map(function ($token) use ($customer) {
+            return new PaymentMethodSourceDTO(
+                $token->id,
+                'PayPal',
+                '****',
+                '-',
+                '-',
+                $customer->id,
+                self::UUID,
+                $token->payment_source->paypal->email_address
+            );
+        })->toArray();
+    }
+
+    private function executeClient(HttpRequest $request)
+    {
+        $client = $this->getClient();
+        try {
+            $request->headers['Authorization'] = 'Basic '.$client->environment->authorizationString();
+            $request->headers['Content-Type'] = 'application/json';
+            return $client->execute($request);
+        } catch (\Exception $e) {
+            throw new WrongPaymentException('PayPal API request failed: ' . $e->getMessage());
+        }
     }
 }

@@ -10,6 +10,9 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 use App\Http\Controllers\Admin\Security\ActionsLogController;
@@ -17,6 +20,7 @@ use App\Http\Controllers\Admin\Security\DatabaseController;
 use App\Http\Controllers\Admin\Security\HistoryController;
 use App\Http\Controllers\Admin\Security\LicenseController;
 use App\Http\Controllers\Admin\Settings\SettingsSecurityController;
+use App\Http\Controllers\Admin\Security\UpdateController;
 use Illuminate\Support\Facades\Route;
 
 Route::name('history.')->prefix('history')->group(function () {
@@ -28,6 +32,9 @@ Route::name('history.')->prefix('history')->group(function () {
 });
 Route::get('/database', [DatabaseController::class, 'index'])->name('database.index');
 Route::post('/database', [DatabaseController::class, 'migrate']);
+Route::get('/update', [UpdateController::class, 'index'])->name('update.index');
+Route::post('/update', [UpdateController::class, 'update'])->name('update');
+
 Route::resource('/logs', ActionsLogController::class)->names('logs')->except('edit', 'update', 'delete', 'create', 'store');
 Route::get('/license', [LicenseController::class, 'index'])->name('license.index')->middleware('password.confirm:admin.password.confirm');
 Route::get('/api-keys', [\App\Http\Controllers\Admin\Security\ApiKeysController::class, 'index'])->name('api-keys.index')->middleware('password.confirm:admin.password.confirm');

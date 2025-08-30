@@ -10,6 +10,9 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 namespace App\DTO\Store;
@@ -20,133 +23,205 @@ use DragonCode\Contracts\Support\Jsonable;
 
 class ProductPriceDTO implements Jsonable
 {
-    public float $price;
 
-    public bool $free;
+    public string $mode;
 
-    public float $setup;
+    public float $price_ht;
+    public float $setup_ht;
+    public ?float $firstpayment_ht;
+
+    public float $base_price;
+    public float $base_setup;
+    public ?float $base_firstpayment;
 
     public string $currency;
-
     public string $recurring;
+    public bool   $free;
+    public float $price;
+    public float $setup;
 
-    public float $recurringprice;
+    public function __construct(
+        float  $recurringprice,
+        ?float $setup,
+        string $currency,
+        string $recurring,
+        ?float $firstpayment = null,
+        ?string $mode = null,
+    ) {
+        $this->mode = $mode ?? setting('store_mode_tax', TaxesService::MODE_TAX_EXCLUDED);
 
-    public ?float $firstpaymentprice = null;
+        $this->base_price        = $recurringprice;
+        $this->base_setup        = $setup ?? 0.0;
+        $this->base_firstpayment = $firstpayment;
 
-    public ?float $recurringprice_saved = null;
+        $this->price_ht        = $this->normalizeToHt($recurringprice);
+        $this->setup_ht        = $setup       !== null ? $this->normalizeToHt($setup)       : 0.0;
+        $this->firstpayment_ht = $firstpayment!== null ? $this->normalizeToHt($firstpayment): null;
 
-    public float $firstpaymentprice_saved;
-
-    public float $setup_saved;
-
-    /**
-     * ProductPriceDTO constructor.
-     *
-     * @param  float|null  $firstpaymentprice  - Permet de définir un prix de premier paiement différent du prix récurrent
-     */
-    public function __construct(float $recurringprice, ?float $setup, string $currency, string $recurring, ?float $firstpaymentprice = null, bool $saved = false)
-    {
-        $this->firstpaymentprice = $firstpaymentprice ? TaxesService::getAmount($firstpaymentprice, tax_percent()) : null;
-        $this->recurringprice = TaxesService::getAmount($recurringprice, tax_percent());
-        $this->price = TaxesService::getAmount($recurringprice, tax_percent());
-        $this->free = $recurringprice == 0;
-        $this->currency = $currency;
-        $this->setup = $setup ? TaxesService::getAmount($setup, tax_percent()) : 0;
+        $this->currency  = $currency;
         $this->recurring = $recurring;
-        $this->firstpaymentprice_saved = $firstpaymentprice ?? 0;
-        $this->recurringprice_saved = $recurringprice;
-        $this->setup_saved = $setup ?? 0;
+        $this->free      = $this->price_ht == 0.0;
+        $this->price = $this->price_ht;
+        $this->setup = $this->setup_ht;
+
     }
 
-    public function isFree(): bool
-    {
-        return $this->free;
-    }
+    public function isModeTTC(): bool { return $this->mode === TaxesService::MODE_TAX_INCLUDED; }
+    public function isModeHT(): bool  { return ! $this->isModeTTC(); }
 
-    public function getSymbol(): string
-    {
-        return currency_symbol($this->currency);
-    }
+    public function isFree(): bool { return $this->free; }
 
-    public function hasSetup(): bool
-    {
-        return $this->setup > 0;
-    }
+    public function getSymbol(): string { return currency_symbol($this->currency); }
 
-    public function firstPayment(): float
+    private function vatRate(): float   { return tax_percent(); }
+
+    private function normalizeToHt(float $amount): float
     {
-        if ($this->firstpaymentprice != null) {
-            return round($this->firstpaymentprice + $this->setup, 2);
+
+        if ($this->isModeHT()) {
+            return round($amount, 2);
         }
 
-        return round($this->price + $this->setup, 2);
+        $rate = $this->vatRate();
+        $ht   = $amount / (1 + $rate / 100);
+        return round($ht, 2);
+    }
+
+    private function format(float $number): float
+    {
+        return fmod($number, 1.0) === 0.0 ? (float)(int)$number : round($number, 2);
+    }
+
+    public function priceHT(): float  { return $this->price_ht; }
+    public function setupHT(): float  { return $this->setup_ht; }
+    public function firstPaymentHT(): float { return $this->firstpayment_ht ?? 0.0; }
+
+    public function setup(): float  { return $this->setup; }
+
+    public function priceTTC(): float {
+        return $this->isModeHT()
+            ? TaxesService::getPriceWithVat($this->price_ht)
+            : $this->base_price;
+    }
+    public function setupTTC(): float {
+        return $this->isModeHT()
+            ? TaxesService::getPriceWithVat($this->setup_ht)
+            : $this->base_setup;
+    }
+    public function firstPaymentTTC(): float {
+        if ($this->firstpayment_ht !== null) {
+            return $this->isModeHT()
+                ? TaxesService::getPriceWithVat($this->firstpayment_ht)
+                : $this->base_firstpayment;
+        }
+        return 0.0;
+    }
+
+    public function hasSetup(): bool { return $this->setup_ht > 0.0; }
+
+    public function displayPrice(?float $baseHT = null): float
+    {
+        $displayTtc = setting('display_product_price', TaxesService::PRICE_TTC) === TaxesService::PRICE_TTC;
+
+        if ($baseHT === null) {
+
+            $baseHT = $this->price_ht;
+        }
+
+        $price = $displayTtc
+            ? TaxesService::getPriceWithVat($baseHT)
+            : $baseHT;
+
+        return $this->format($price);
+    }
+
+    public function getPriceByDisplayMode(?float $baseHT = null): float
+    {
+        return $this->displayPrice($baseHT);
     }
 
     public function recurringPayment(): float
     {
-        if ($this->recurring == 'onetime') {
-            return 0;
-        }
-        return round($this->recurringprice, 2);
+        return $this->recurring === 'onetime' ? 0.0 : $this->format($this->price_ht);
     }
 
     public function onetimePayment(): float
     {
-        if ($this->recurring != 'onetime') {
-            return 0;
-        }
-        return round($this->price, 2);
+        return $this->recurring !== 'onetime' ? 0.0 : $this->format($this->price_ht);
     }
+
+    public function firstPayment(): float
+    {
+        $ht = $this->firstpayment_ht ?? ($this->price_ht + $this->setup_ht);
+        return $this->format($ht);
+    }
+
+    public function billableAmount(): float
+    {
+        $htTotal = $this->price_ht + $this->setup_ht + ($this->firstpayment_ht ?? 0.0);
+        $ttcTotal = TaxesService::getPriceWithVat($htTotal);
+        return $this->isModeHT() ? $htTotal : TaxesService::getPriceWithoutVat($ttcTotal);
+    }
+
+    public function taxAmount(): float
+    {
+        return TaxesService::getVatPrice($this->price_ht + $this->setup_ht + ($this->firstpayment_ht ?? 0.0));
+    }
+
+    public function tax(): float
+    {
+        return $this->taxAmount();
+    }
+
+    public function taxRate(): float { return $this->vatRate(); }
 
     public function recurring(): array
     {
         return app(RecurringService::class)->get($this->recurring);
     }
 
-    public function toJson(int $options = 0): string
+    public function pricingMessage(bool $setup = true): string
     {
-        return json_encode([
-            'price' => $this->price,
-            'subtotal' => $this->price + $this->setup,
-            'free' => $this->free,
-            'setup' => $this->setup,
-            'currency' => $this->currency,
-            'recurring' => $this->recurring,
-            'recurringPayment' => $this->recurringPayment(),
-            'onetimePayment' => $this->onetimePayment(),
-            'tax' => $this->tax(),
-            'tax_price' => TaxesService::getVatPrice($this->price),
-            'tax_setup' => TaxesService::getVatPrice($this->setup),
+        if ($this->isFree()) {
+            return trans('store.product.freemessage');
+        }
+
+        $unit = $this->recurring()['unit'];
+        $firstHT = $this->firstpayment_ht ?? ($this->price_ht + $this->setup_ht);
+        $recurringHT = $this->price_ht;
+
+        if ($this->hasSetup() && $setup || $this->firstpayment_ht !== null) {
+            return trans('store.product.setupmessage', [
+                'first'     => $this->getPriceByDisplayMode($firstHT),
+                'recurring' => $this->getPriceByDisplayMode($recurringHT),
+                'currency'  => $this->getSymbol(),
+                'tax'       => $this->taxTitle(),
+                'unit'      => $unit,
+            ]);
+        }
+
+        return trans('store.product.nocharge', [
+            'first'    => $this->getPriceByDisplayMode($recurringHT),
+            'currency' => $this->getSymbol(),
+            'unit'     => $unit,
+            'tax'      => $this->taxTitle(),
         ]);
     }
 
-    public function billableAmount()
+    public function taxTitle(): string
     {
-        return $this->firstpaymentprice_saved + $this->recurringprice_saved + $this->setup_saved;
-    }
-
-    public function setup(): float
-    {
-        return $this->setup;
-    }
-
-    public function tax(?float $amount = null): float
-    {
-        if ($amount != null) {
-            return TaxesService::getVatPrice($amount);
-        }
-
-        return TaxesService::getVatPrice($this->recurringprice_saved);
+        return setting('display_product_price', TaxesService::PRICE_TTC) === TaxesService::PRICE_TTC
+            ? __('store.ttc')
+            : __('store.ht');
     }
 
     public function getDiscountOnRecurring(ProductPriceDTO $monthlyprice): float
     {
-        $monthlyprice = $monthlyprice->price * $this->recurring()['months'];
+        $monthlyprice = $monthlyprice->price_ht * $this->recurring()['months'];
         if ($monthlyprice == 0) {
             return 0;
         }
-        return round(($monthlyprice - $this->price - $this->setup) / $monthlyprice * 100, 2);
+        return round(($monthlyprice - $this->price_ht - $this->setup_ht) / $monthlyprice * 100, 2);
     }
 
     public function hasDiscountOnRecurring(ProductPriceDTO $monthlyprice): bool
@@ -156,44 +231,26 @@ class ProductPriceDTO implements Jsonable
         return $discount > 1 && $discount < 100;
     }
 
-    public function pricingMessage(bool $setup = true): string
+    public function toJson(int $options = 0): string
     {
-        if ($this->isFree()) {
-            return trans('store.product.freemessage');
-        }
-        if ($this->hasSetup() && $setup || $this->firstpaymentprice_saved > 0) {
-            return trans('store.product.setupmessage', ['first' => $this->getPriceByDisplayMode($this->hasSetup() && $setup ? $this->setup() : $this->firstpaymentprice_saved), 'recurring' => $this->getPriceByDisplayMode($this->recurringprice_saved), 'currency' => $this->getSymbol(),  'tax' => $this->taxTitle(true), 'unit' => $this->recurring()['unit']]);
-        }
+        return json_encode([
+            'currency'         => $this->currency,
+            'mode'             => $this->mode,
+            'tax_rate'         => $this->taxRate(),
 
-        return trans('store.product.nocharge', ['first' => $this->getPriceByDisplayMode($this->recurringprice_saved), 'currency' => $this->getSymbol(), 'unit' => $this->recurring()['unit'], 'tax' => $this->taxTitle(true)]);
-    }
-
-    public function getPriceByDisplayMode(?float $payment = null)
-    {
-        if ($payment === null) {
-            $payment = $this->recurringprice_saved;
-        }
-
-        if (setting('display_product_price', TaxesService::PRICE_TTC) == TaxesService::PRICE_TTC && setting('store_mode_tax', TaxesService::MODE_TAX_INCLUDED) == TaxesService::MODE_TAX_EXCLUDED) {
-            $price = $payment + $this->tax($payment);
-        } else {
-            $price = $payment;
-        }
-        if (fmod($price, 1) === 0.0) {
-            return (int) $price;
-        }
-        return round($price, 2);
-    }
-
-    public function taxTitle(bool $ht = true): string
-    {
-        if (setting('display_product_price', TaxesService::PRICE_TTC) == TaxesService::PRICE_TTC) {
-            return __('store.ttc');
-        }
-        if ($ht) {
-            return __('store.ht');
-        }
-
-        return '';
+            'price_ht'         => $this->price_ht,
+            'setup_ht'         => $this->setup_ht,
+            'first_payment_ht' => $this->firstpayment_ht,
+            'subtotal'      => $this->price_ht + $this->setup_ht + ($this->firstpayment_ht ?? 0.0),
+            'tax'              => $this->taxAmount(),
+            'price_ttc'        => $this->priceTTC(),
+            'setup_ttc'        => $this->setupTTC(),
+            'first_payment_ttc'=> $this->firstPaymentTTC(),
+            'recurring'        => $this->recurring,
+            'setup'            => $this->setup(),
+            'recurringPayment' => $this->recurringPayment(),
+            'onetimePayment'   => $this->onetimePayment(),
+            'free'             => $this->free,
+        ], $options);
     }
 }

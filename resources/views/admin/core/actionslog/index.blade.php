@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title', __($translatePrefix .'.title'))
 @section('scripts')
@@ -59,7 +61,7 @@
                                     <th scope="col" class="px-6 py-3 text-start">
                                         <div class="flex items-center gap-x-2">
                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
-                                            {{ __($translatePrefix . '.user') }}
+                                            {{ __('global.user') }}
                     </span>
                                         </div>
                                     </th>
@@ -67,7 +69,7 @@
                                     <th scope="col" class="px-6 py-3 text-start">
                                         <div class="flex items-center gap-x-2">
                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
-                                            {{ __($translatePrefix . '.action') }}
+                                            {{ __('global.action') }}
                     </span>
                                         </div>
                                     </th>

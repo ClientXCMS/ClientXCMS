@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Requests\Profile;
 
 use App\Helpers\Countries;
@@ -32,6 +37,8 @@ class ProfileUpdateRequest extends FormRequest
             'zipcode' => ['string', 'max:255', new ZipCode($this->country)],
             'phone' => ['max:255', Countries::rule(), Rule::unique('customers', 'phone')->ignore($this->user('web')->id)],
             'region' => ['string', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'billing_details' => ['nullable', 'string', 'max:255'],
             'country' => ['string', 'max:255', Rule::in(array_keys(Countries::names()))],
             'locale' => ['string', 'max:255', Rule::in(array_keys(\App\Services\Core\LocaleService::getLocalesNames()))],
         ];

@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Core\Gateway;
 
 use App\Abstracts\AbstractGatewayType;
@@ -46,7 +51,7 @@ class BalanceType extends AbstractGatewayType
         if ($invoice->total > $invoice->customer->balance) {
             $invoice->fail();
         } else {
-            $invoice->customer->addFund(-$invoice->total);
+            $invoice->customer->addFund(-$invoice->total, 'Payment for invoice #'.$invoice->id);
             $invoice->complete();
         }
 

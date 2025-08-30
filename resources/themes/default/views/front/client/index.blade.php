@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('layouts/client')
 @section('title', __('global.clientarea'))
 @section('scripts')
@@ -145,6 +147,10 @@
                 @if (app('extension')->extensionIsEnabled('discordlink'))
                     @include('discordlink::front/client/discord')
                 @endif
+
+                    @if (app('extension')->extensionIsEnabled('discordgift'))
+                        @include('discordgift::card')
+                    @endif
             </div>
         </div>
     </div>

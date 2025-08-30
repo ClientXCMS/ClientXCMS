@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Billing\Traits;
 
 use App\DTO\Store\ProductPriceDTO;
@@ -120,7 +125,6 @@ trait PricingInteractTrait
                 }
             }
         }
-
         return new ProductPriceDTO($price, $setup, $currency, $recurring);
     }
 

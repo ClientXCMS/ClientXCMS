@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Providers;
 
 use App\Core\Menu\AdminMenuItem;
@@ -21,6 +26,7 @@ use App\Http\Controllers\Admin\Security\ApiKeysController;
 use App\Http\Controllers\Admin\Security\DatabaseController;
 use App\Http\Controllers\Admin\Security\HistoryController;
 use App\Http\Controllers\Admin\Security\LicenseController;
+use App\Http\Controllers\Admin\Security\UpdateController;
 use App\Http\Controllers\Admin\Settings\SettingsCoreController;
 use App\Http\Controllers\Admin\Settings\SettingsExtensionController;
 use App\Http\Controllers\Admin\Settings\SettingsSecurityController;
@@ -70,6 +76,7 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('days_before_expiration', 7);
             $service->setDefaultValue('notifications_expiration_days', '7,5,3,1');
             $service->setDefaultValue('days_before_subscription_renewal', 7);
+            $service->setDefaultValue('allow_add_balance_to_invoices', true);
             $service->setDefaultValue('max_subscription_tries', 7);
             $service->setDefaultValue('app_default_locale', 'fr_FR');
             $service->setDefaultValue('app_telemetry', env('TELEMETRY_ENABLED', 'true') == 'true');
@@ -155,6 +162,7 @@ class SettingServiceProvider extends ServiceProvider
         $service->addCardItem('security', 'apikeys', 'admin.api_keys.title', 'admin.api_keys.subheading', 'bi bi-key', action([ApiKeysController::class, 'index']), 'admin.manage_apikeys');
         $service->addCardItem('core', 'license', 'admin.license.title', 'admin.license.subheading', 'bi bi-key', action([LicenseController::class, 'index']), 'admin.manage_license');
         $service->addCardItem('security', 'database', 'admin.database.title', 'admin.database.description', 'bi bi-database', action([DatabaseController::class, 'index']), 'admin.manage_database');
+        //$service->addCardItem('security', 'update', 'admin.update.title', 'admin.update.subheading', 'bi bi-cloud-arrow-up-fill', action([UpdateController::class, 'index']), 'admin.manage_update');
         $service->addCardItem('security', 'security', 'admin.settings.core.security.title', 'admin.settings.core.security.description', 'bi bi-shield-lock', [SettingsSecurityController::class, 'showSecuritySettings'], Permission::MANAGE_SETTINGS);
         $service->addCardItem('extensions', 'extensions', 'extensions.title', 'extensions.description', 'bi bi-palette2', [SettingsExtensionController::class, 'showExtensions'], Permission::MANAGE_EXTENSIONS);
         $service->addCardItem('security', 'history', 'admin.history.title', 'admin.history.description', 'bi bi-archive', action([HistoryController::class, 'index']), 'admin.show_logs');

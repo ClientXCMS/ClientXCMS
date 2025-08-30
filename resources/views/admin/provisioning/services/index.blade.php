@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title', __($translatePrefix .'.title'))
 @section('scripts')
@@ -156,14 +158,18 @@
                                         <td class="h-px w-px whitespace-nowrap">
                     <span class="block px-6 py-2">
                       <span class="text-sm text-gray-600 dark:text-gray-400">
+                          @if (!$item->customer)
+                              <span class="italic text-gray-400 dark:text-gray-600">({{ __('global.deleted') }})</span>
+                            @else
                           <a href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
                           {{ $item->customer->excerptFullName() }}</span>
                         </a>
+                            @endif
                     </span>
                                         </td>
                                         <td class="h-px w-px whitespace-nowrap">
                     <span class="block px-6 py-2">
-                        <span class="text-sm text-gray-600 dark:text-gray-400">{{ formatted_price($item->getBillingPrice()->price, $item->currency) }}</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">{{ formatted_price($item->getBillingPrice()->displayPrice(), $item->currency) }}</span>
                     </span>
                                         </td>
 

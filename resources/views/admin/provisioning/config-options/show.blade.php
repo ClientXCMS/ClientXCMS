@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title',  __($translatePrefix . '.show.title', ['name' => $item->name]))
 @section('scripts')
@@ -196,57 +198,9 @@
                                                 </div>
                                                 </div>
                                             <div class="grid grid-cols-1 gap-4">
-
-                                            <div class="p-1.5 min-w-full inline-block align-middle">
-                                                <a href="#" class="text-primary" id="showmorepricingbtn">{{ __('admin.products.showmorepricing') }}</a>
-                                                <div class="overflow-hidden">
-                                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="pricingtable">
-                                                        <thead>
-                                                        <tr>
-                                                            <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">
-                                                                <button class="btn btn-primary btn-sm" type="button" id="calculatorBtn" data-hs-overlay="#calculator"><i class="bi bi-calculator"></i></button>
-                                                                {{ __('admin.products.tariff') }}
-                                                            </th>
-                                                            @foreach ($recurrings as $recurring)
-                                                                <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase {{ $recurring['additional'] ?? false ? 'hidden' : '' }}">
-                                                                    {{ $recurring['translate'] }}
-                                                                </th>
-                                                            @endforeach
-                                                        </tr>
-                                                        </thead>
-                                                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                                        <tr>
-                                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                                                                {{ __('store.price') }}
-                                                            </td>
-                                                            @foreach ($recurrings as $k => $recurring)
-
-                                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200 {{ $recurring['additional'] ?? false ? 'hidden' : '' }}">
-                                                                    @include('admin/shared/input', ['name' => 'options['.$option->id .'][pricing]['. $k .'][price]','type' => 'number','step' => '0.01','min' => 0, 'value' => old('recurrings_' . $k . '_price', $optionsPricing[$option->id]->{$k}), 'attributes' => ['data-months' => $recurring['months']]])
-                                                                </td>
-                                                            @endforeach
-                                                        </tr>
-                                                        <tr>
-                                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                                                                {{ __('store.fees') }}
-                                                            </td>
-                                                            @foreach ($recurrings as $k => $recurring)
-
-                                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200 {{ $recurring['additional'] ?? false ? 'hidden' : '' }}">
-                                                                    @include('admin/shared/input', ['name' => 'options['.$option->id .'][pricing]['. $k .'][setup]', 'step' => '0.01','min' => 0, 'value' => old('recurrings_' . $k . '_setup', $optionsPricing[$option->id]->{'setup_'.$k}), 'attributes' => ['data-months' => $recurring['months']]])
-                                                                </td>
-
-                                                            @endforeach
-                                                        </tr>
-
-                                                        </tbody>
-                                                    </table>
+                                                <div class="-m-1.5 overflow-x-auto">
+                                                    @include('admin/shared/pricing/table',['pricing_key' => "options[" .$option->id ."][pricing]", 'pricing' => $optionsPricing[$option->id]])
                                                 </div>
-                                                @if ($errors->has('options.'.$option->id .'.pricing'))
-                                                    <p class="text-red-500 text-xs italic mt-2">
-                                                        {{ $errors->first('options.'.$option->id .'.pricing') }}
-                                                    </p>
-                                                @endif
                                             </div>
                                         </div>
                                         </li>

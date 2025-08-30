@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models;
 
 use App\Models\Account\Customer;
@@ -93,6 +98,8 @@ class ActionLog extends Model
 
     const EXTENSION_INSTALLED = 'extension_installed';
 
+    const EXTENSION_UPDATED = 'extension_updated';
+
     const THEME_CHANGED = 'theme_changed';
 
     const BALANCE_CHANGED = 'balance_changed';
@@ -127,6 +134,7 @@ class ActionLog extends Model
         self::EXTENSION_ENABLED,
         self::EXTENSION_DISABLED,
         self::EXTENSION_INSTALLED,
+        self::EXTENSION_UPDATED,
         self::THEME_CHANGED,
         self::NEW_LOGIN,
         self::BALANCE_CHANGED,
@@ -184,6 +192,7 @@ class ActionLog extends Model
                 return 'bi bi-x-circle';
             case self::SERVICE_RENEWED:
             case self::SERVICE_UNCANCELLED:
+            case self::EXTENSION_UPDATED:
                 return 'bi bi-arrow-repeat';
             case self::SERVICE_SUSPENDED:
                 return 'bi bi-pause-circle';

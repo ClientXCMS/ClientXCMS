@@ -10,8 +10,12 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
 namespace App\Console\Commands\Invoice;
 
 use App\Models\Billing\InvoiceItem;
@@ -49,6 +53,10 @@ class InvoiceDeliveryCommand extends Command
         $services = Service::getItemsByMetadata('must_created_manually', '1');
         $services->each(function (Service $service) {
             try {
+                if (!$service->isPending()) {
+                    $this->info("Service {$service->id} is not pending, skipping delivery.");
+                    return;
+                }
                 $result = $service->deliver();
                 if ($result->success) {
                     $service->attachMetadata('must_created_manually', '0');

@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin.settings.sidebar')
 @section('title', __('admin.settings.core.security.title'))
 @section('script')
@@ -71,6 +73,12 @@
                     'label' => __('admin.settings.core.security.fields.admin_prefix'),
                     'name' => 'admin_prefix',
                     'value' => admin_prefix()
+            ])
+
+            @include('admin/shared/input', [
+                    'label' => __('admin.settings.core.security.fields.gdrp_cookies_privacy_link'),
+                    'name' => 'gdrp_cookies_privacy_link',
+                    'value' => setting('gdrp_cookies_privacy_link', 'https://clientxcms.com/privacy'),
             ])
             <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400 mt-2">{{ __('admin.settings.core.security.captcha.title') }}</h3>
 

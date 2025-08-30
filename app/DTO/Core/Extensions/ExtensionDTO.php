@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\DTO\Core\Extensions;
 
 use App\Core\License\LicenseCache;
@@ -19,13 +24,6 @@ use Illuminate\Contracts\Support\Arrayable;
 
 class ExtensionDTO implements Arrayable
 {
-    const TYPE_ADDON = 'addon';
-
-    const TYPE_THEME = 'theme';
-
-    const TYPE_MODULE = 'module';
-
-    const TYPE_COMPONENT = 'component';
 
     public string $uuid;
 
@@ -39,14 +37,25 @@ class ExtensionDTO implements Arrayable
 
     public array $api;
 
-    public function __construct(string $uuid, string $type, bool $installed, bool $enabled, array $api = [], ?string $version = null)
+    public function __construct(string $uuid, string $type, bool $enabled, array $api = [], ?string $version = null)
     {
         $this->uuid = $uuid;
         $this->type = $type;
-        $this->installed = $installed;
+        $this->installed = file_exists($this->extensionPath());
         $this->enabled = $enabled;
         $this->api = $api;
         $this->version = $version;
+    }
+
+    public function extensionPath(): string
+    {
+        if ($this->type == 'theme'){
+            return base_path('resources/themes/'.$this->uuid);
+        }
+        if ($this->type == 'email_template' || $this->type == 'invoice_template') {
+            return base_path('resources/views/vendor/notifications/'.$this->uuid . '.blade.php');
+        }
+        return base_path($this->type() . '/'.$this->uuid);
     }
 
     public static function fromArray(array $module)
@@ -54,11 +63,25 @@ class ExtensionDTO implements Arrayable
         return new self(
             $module['uuid'],
             $module['type'],
-            $module['installed'],
             $module['enabled'],
             $module['api'] ?? [],
             $module['version'],
         );
+    }
+
+    public function author(){
+        if (array_key_exists('author', $this->api) && is_array($this->api['author'])) {
+            return $this->api['author']['name'] ?? 'Unknown';
+        }
+        if (array_key_exists('author', $this->api) && is_string($this->api['author'])) {
+            return $this->api['author'];
+        }
+        return 'Unknown';
+    }
+
+    public function hasPadding()
+    {
+        return $this->type === 'themes';
     }
 
     public function toArray()
@@ -71,6 +94,28 @@ class ExtensionDTO implements Arrayable
             'enabled' => $this->enabled,
             'api' => $this->api,
         ];
+    }
+
+    public function isUnofficial()
+    {
+        return array_key_exists('unofficial', $this->api) && $this->api['unofficial'] === true;
+    }
+
+    public function getLatestVersion(): ?string
+    {
+        if (array_key_exists('unofficial', $this->api)) {
+            return $this->api['version'] ?? null;
+        }
+        if (array_key_exists('version', $this->api)) {
+            return $this->api['version'];
+        }
+
+        return null;
+    }
+
+    public function type()
+    {
+        return $this->type . 's';
     }
 
     public function name()
@@ -104,11 +149,11 @@ class ExtensionDTO implements Arrayable
 
     public function thumbnail()
     {
-        if (array_key_exists('unofficial', $this->api)) {
-            return $this->api['thumbnail'];
+        if ($this->type == 'theme' && file_exists(base_path('resources/themes/'.$this->uuid.'/screenshot.png'))) {
+            return \Vite::asset('resources/themes/'.$this->uuid.'/screenshot.png');
         }
-        if (array_key_exists('thumbnail', $this->api)) {
-            return "https://api-nextgen.clientxcms.com/assets/{$this->api['thumbnail']}";
+        if (array_key_exists('unofficial', $this->api) || ! empty($this->api['thumbnail'])) {
+            return $this->api['thumbnail'];
         }
 
         return 'https://via.placeholder.com/150';
@@ -128,27 +173,23 @@ class ExtensionDTO implements Arrayable
             ];
         }
         $locale = app()->getLocale();
-
-        if (! array_key_exists('translates', $this->api)) {
+        if (! array_key_exists('translations', $this->api)) {
             return [
                 'name' => $this->uuid,
                 'description' => $this->uuid,
             ];
         }
-        $get = collect($this->api['translates'])->first(fn ($translate) => $translate['locale'] === $locale);
-        if ($get == null) {
-            return [
-                'name' => $this->uuid,
-                'description' => $this->uuid,
-            ];
-        }
-
-        return $get;
+        $translations = $this->api['translations'];
+        return [
+            'name' => $translations['name'][$locale] ?? ($this->api['name'] ?? $this->uuid),
+            'description' => $translations['short_description'][$locale] ?? ($this->api['short_description'] ?? $this->uuid),
+        ];
     }
 
-    public function prices(): array
+    public function price(bool $formatted = true)
     {
-        return $this->api['prices'] ?? [];
+        $key = $formatted ? 'formatted_price' : 'price';
+        return $this->api[$key] ?? ($formatted ? __('global.free') : 0);
     }
 
     public function isActivable(): bool
@@ -163,8 +204,12 @@ class ExtensionDTO implements Arrayable
         if (is_array($extensions) && in_array($this->uuid, $extensions)) {
             return true;
         }
-
         return false;
+    }
+
+    public function canBeEnabled(): bool
+    {
+        return in_array($this->type, ['addon', 'module', 'theme']);
     }
 
     private function isIncluded()
@@ -172,7 +217,7 @@ class ExtensionDTO implements Arrayable
         if (array_key_exists('unofficial', $this->api)) {
             return true;
         }
-        if (! empty($this->prices()) && $this->prices()[0]['billing'] == 'included') {
+        if ($this->price(false) == 0)  {
             return true;
         }
 

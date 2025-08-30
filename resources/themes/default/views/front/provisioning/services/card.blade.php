@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 <div class="card">
     <div class="card-heading">
         <div>
@@ -115,12 +117,12 @@
                     <td class="h-px w-px whitespace-nowrap">
 
                     <span class="block px-6 py-2">
-                      <span class="text-sm text-gray-600 dark:text-gray-400">#{{ $service->id }} - {{ $service->excerptName() }}</span>
+                      <span class="text-sm text-gray-600 dark:text-gray-400">{{ $service->excerptName() }}</span>
                     </span>
                     </td>
                     <td class="h-px w-px whitespace-nowrap">
                     <span class="block px-6 py-2">
-                      <span class="text-sm text-gray-600 dark:text-gray-400">{{ formatted_price($service->getBillingPrice()->price, $service->currency) }}</span>
+                      <span class="text-sm text-gray-600 dark:text-gray-400">{{ formatted_price($service->getBillingPrice()->displayPrice(), $service->currency) }}</span>
                     </span>
                     </td>
                     <td class="h-px w-px whitespace-nowrap">

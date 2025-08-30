@@ -10,9 +10,11 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
-?>
 ?>
 @extends('admin/layouts/admin')
 @section('title',  __($ticket->subject, ['name' => $item->username]))

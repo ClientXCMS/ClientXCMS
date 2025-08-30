@@ -1,17 +1,5 @@
 <?php
-/*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
- *
- * Personal and non-commercial use of this source code is permitted.
- * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
- *
- * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
- *
- * Year: 2025
- */
+
 use App\Providers\AdminServiceProvider;
 use App\Providers\ProvisioningServiceProvider;
 use Illuminate\Support\Facades\Facade;
@@ -192,10 +180,10 @@ return [
         \App\Providers\StoreServiceProvider::class,
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
+        \App\Providers\BillingServiceProvider::class,
+        \App\Providers\HelpdeskServiceProvider::class,
         \App\Providers\ExtensionServiceProvider::class,
         L5SwaggerServiceProvider::class,
-        \App\Providers\HelpdeskServiceProvider::class,
-        \App\Providers\BillingServiceProvider::class,
         \App\Providers\ClientareaServiceProvider::class,
     ])->toArray(),
 

@@ -1,17 +1,5 @@
 <?php
-/*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
- *
- * Personal and non-commercial use of this source code is permitted.
- * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
- *
- * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
- *
- * Year: 2025
- */
+
 namespace Tests\Feature\Client;
 
 use App\Models\Account\Customer;
@@ -142,5 +130,66 @@ class InvoiceControllerTest extends TestCase
         /** @var Customer $user */
         $user = Customer::where('id', '!=', $invoice->customer_id)->first();
         $this->actingAs($user)->get(route('front.invoices.show', ['invoice' => $invoice]))->assertNotFound();
+    }
+
+    public function test_invoices_add_balance(): void
+    {
+        $this->seed(StoreSeeder::class);
+        Customer::factory(15)->create();
+        $customer = Customer::factory()->create(['balance' => 100]);
+        /** @var InvoiceItem $invoiceItem */
+        $invoiceItem = InvoiceItem::factory()->create();
+        /** @var Invoice $invoice */
+        $invoice = $invoiceItem->invoice;
+        $invoice->customer_id = $customer->id;
+        $invoice->save();
+        $this->actingAs($customer)->post(route('front.invoices.balance', ['invoice' => $invoice]), [
+            'amount' => 1,
+        ])->assertRedirect(route('front.invoices.show', ['invoice' => $invoice->uuid]))->assertSessionHas('success', __('client.invoices.balance.success'));
+        $customer->refresh();
+        $invoice->refresh();
+        $this->assertEquals(1, $invoice->balance);
+        $this->assertEquals(99, $customer->balance);
+    }
+
+    public function test_invoices_add_balance_paid_invoice(): void
+    {
+        $this->seed(StoreSeeder::class);
+        $this->seed(GatewaySeeder::class);
+        Customer::factory(15)->create();
+        $customer = Customer::factory()->create(['balance' => 100]);
+        /** @var InvoiceItem $invoiceItem */
+        $invoiceItem = InvoiceItem::factory()->create();
+        /** @var Invoice $invoice */
+        $invoice = $invoiceItem->invoice;
+        $invoice->customer_id = $customer->id;
+        $invoice->save();
+        $this->actingAs($customer)->post(route('front.invoices.balance', ['invoice' => $invoice]), [
+            'amount' => 50,
+        ])->assertRedirect(route('front.invoices.show', ['invoice' => $invoice->uuid]));
+        $customer->refresh();
+        $invoice->refresh();
+        $this->assertEquals(98.8, $customer->balance);
+        $this->assertEquals(0, $invoice->balance);
+        $this->assertEquals('paid', $invoice->status);
+        $this->assertEquals('balance', $invoice->paymethod);
+    }
+
+    public function test_invoices_add_balance_not_enough(): void
+    {
+        $this->seed(StoreSeeder::class);
+        Customer::factory(15)->create();
+
+        $customer = Customer::factory()->create(['balance' => 100]);
+        /** @var InvoiceItem $invoiceItem */
+        $invoiceItem = InvoiceItem::factory()->create();
+        /** @var Invoice $invoice */
+        $invoice = $invoiceItem->invoice;
+        $invoice->customer_id = $customer->id;
+        $invoice->save();
+        $this->actingAs($customer)->post(route('front.invoices.balance', ['invoice' => $invoice]), [
+            'amount' => 150,
+        ])->assertRedirect(route('front.invoices.show', ['invoice' => $invoice->uuid]))
+            ->assertSessionHas('error', __('client.invoices.balance.balance_not_enough'));
     }
 }

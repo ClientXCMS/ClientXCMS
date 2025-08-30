@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -30,7 +32,7 @@
 </head>
 
 <body class="bg-gray-50  {{is_darkmode() ? 'dark' : '' }}">
-<div class="dark:bg-gray-900 h-screen">
+<div class="dark:bg-gray-900 min-h-screen">
     <main id="content" role="main">
         <div class="overflow-hidden">
 

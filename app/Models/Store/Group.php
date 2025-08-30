@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Store;
 
 use App\DTO\Store\ProductPriceDTO;
@@ -271,5 +276,13 @@ class Group extends Model
     public function useImageAsBackground(): bool
     {
         return $this->getMetadata('use_image_as_background') === 'true';
+    }
+
+    public function attributesToArray()
+    {
+        $attributes = parent::attributesToArray();
+        $attributes['start_price'] = $this->startPrice();
+        $attributes['route'] = $this->route();
+        return $attributes;
     }
 }

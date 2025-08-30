@@ -10,6 +10,9 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 namespace App\Http\Controllers\Admin\Security;
@@ -50,6 +53,13 @@ class ApiKeysController extends AbstractCrudController
                 'pricing:show' => __('global.show'),
                 'pricing:update' => __('global.update'),
                 'pricing:delete' => __('global.delete'),
+            ],
+            __('global.invoices') => [
+                'invoices:index' => __('global.listing'),
+                'invoices:store' => __('global.store'),
+                'invoices:show' => __('global.show'),
+                'invoices:update' => __('global.update'),
+                'invoices:delete' => __('global.delete'),
             ],
             __('global.services') => [
                 'services:index' => __('global.listing'),

@@ -10,9 +10,16 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Rules;
+
+use App\Addons\CloudflareSubdomains\CloudflareDNSManager;
 
 class DomainIsNotRegisted implements \Illuminate\Contracts\Validation\Rule
 {
@@ -26,6 +33,9 @@ class DomainIsNotRegisted implements \Illuminate\Contracts\Validation\Rule
         if ($this->subdomain) {
             $value = $value.request()->input('subdomain');
         }
+        if (!preg_match('/^(?!:\/\/)(?=.{1,255}$)((.{1,63}\.){1,127}(?![0-9]*$)[a-z0-9-]+\.?)$/i', $value)) {
+            return true;
+        }
         $types = app('extension')->getProductTypes();
         foreach ($types as $type) {
             if ($type->server() != null) {
@@ -33,6 +43,11 @@ class DomainIsNotRegisted implements \Illuminate\Contracts\Validation\Rule
                 if ($server->isDomainRegistered($value)) {
                     return false;
                 }
+            }
+        }
+        if (app('extension')->extensionIsEnabled('cloudflaresubdomains')){
+            if (CloudflareDNSManager::existRecord($value)) {
+                return false;
             }
         }
 

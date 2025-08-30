@@ -10,11 +10,16 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
 namespace App\Console\Commands\Install;
 
 use App\Models\Admin\Admin;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 class LastLoggedAdminCommand extends Command
@@ -39,7 +44,25 @@ class LastLoggedAdminCommand extends Command
     public function handle()
     {
         $this->info('Getting the last logged admin...');
-        $admins = Admin::orderBy('last_login_ip', 'desc');
-        $this->table(['ID', 'Username', 'Email', 'Last Logged At', 'Created At', 'Role'], $admins->get(['id', 'username', 'email', 'last_login_ip', 'created_at', 'role_id'])->toArray());
+        $admins = Admin::orderBy('last_login', 'desc')->get();
+        foreach ($admins as $admin) {
+            if ($admin->last_login == null) {
+                $this->error('No admin has logged in yet.');
+                continue;
+            }
+            /** @var Carbon $carbon */
+            $carbon = $admin->last_login;
+            if ($carbon->diffInDays(Carbon::now()) > 30) {
+                $this->error('No admin has logged in the last 30 days.');
+                continue;
+            }
+            if ($carbon->diffInDays(Carbon::now()) > 7) {
+                $this->warn('No Admin has logged in the last 7 days.');
+                continue;
+            }
+            if ($carbon->diffInDays(Carbon::now()) < 3) {
+                $this->info('Admin has logged in the last 3 days.');
+            }
+        }
     }
 }

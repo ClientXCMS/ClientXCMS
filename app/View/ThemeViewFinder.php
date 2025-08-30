@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\View;
 
 class ThemeViewFinder extends \Illuminate\View\FileViewFinder
@@ -19,18 +24,15 @@ class ThemeViewFinder extends \Illuminate\View\FileViewFinder
     public function findInPaths($name, $paths)
     {
         $parent = app('theme')->getTheme()->getParentTheme();
-        if ($parent == 'default') {
-            array_push($paths, resource_path('themes/default/views'));
-        } else {
-            array_push($paths, resource_path('themes/'.$parent.'/views'));
-        }
+        //$paths = app('view')->getFinder()->getPaths();
+        $paths[] = resource_path('themes/' . $parent . '/views');
+
         if (strpos($paths[0] ?? '', '/vendor/')) {
             return parent::findInPaths($name, $paths);
         }
         if (env('APP_REVERSE_PATHS', false)) {
             $paths = array_reverse($paths);
         }
-
         return parent::findInPaths($name, $paths);
     }
 

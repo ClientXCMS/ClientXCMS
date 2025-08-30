@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Console\Commands\Purge;
 
 use App\Models\Billing\Invoice;
@@ -31,7 +36,7 @@ class InvoiceDeleteCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Delete pending invoices older than a specified number of days.';
 
     /**
      * Execute the console command.

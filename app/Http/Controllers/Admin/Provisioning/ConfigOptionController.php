@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Provisioning;
 
 use App\Http\Controllers\Admin\AbstractCrudController;
@@ -19,6 +24,7 @@ use App\Http\Requests\Provisioning\UpdateConfigOptionOptionRequest;
 use App\Http\Requests\Store\ConfigOptionRequest;
 use App\Models\Billing\ConfigOption;
 use App\Models\Billing\ConfigOptionsOption;
+use App\Models\Provisioning\ConfigOptionService;
 use App\Models\Store\Pricing;
 use App\Models\Store\Product;
 use App\Services\Store\PricingService;
@@ -71,7 +77,7 @@ class ConfigOptionController extends AbstractCrudController
         /** @var ConfigOption $option */
         $option = ConfigOption::create($validated);
         $option->products()->sync($request->input('products'));
-        if (in_array($option->type, ['dropdown', 'checkbox'])) {
+        if (in_array($option->type, ['dropdown', 'radio'])) {
             $option->fill(['hidden' => 1])->save();
             $option->addOption('Option 1', 'option_1');
         }
@@ -187,6 +193,9 @@ class ConfigOptionController extends AbstractCrudController
     public function destroy(ConfigOption $configoption)
     {
         $this->checkPermission('delete');
+        if (ConfigOptionService::where('config_option_id', $configoption->id)->count() > 0) {
+            return redirect()->route($this->routePath.'.index')->with('error', __($this->translatePrefix.'.cannot_delete_in_use'));
+        }
         $configoption->delete();
 
         return redirect()->route($this->routePath.'.index')->with('success', __($this->flashs['deleted']));

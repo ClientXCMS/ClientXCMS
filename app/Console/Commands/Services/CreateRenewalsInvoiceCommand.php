@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Console\Commands\Services;
 
 use App\Models\Provisioning\Service;
@@ -42,7 +47,7 @@ class CreateRenewalsInvoiceCommand extends Command
         $services = Service::getShouldCreateInvoice();
         $this->info('Running services:renewals at '.now()->format('Y-m-d H:i:s'));
         foreach ($services as $service) {
-            $invoice = InvoiceService::createInvoiceFromService($service);
+            $invoice = InvoiceService::createInvoiceFromService($service, $service->billing);
             logger()->info("Created invoice for service #{$service->id}");
             $service->invoice_id = $invoice->id;
             $service->save();

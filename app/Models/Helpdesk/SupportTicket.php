@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Helpdesk;
 
 use App\Events\Helpdesk\HelpdeskTicketAnsweredCustomer;
@@ -199,13 +204,13 @@ class SupportTicket extends Model
         });
 
         static::creating(function ($ticket) {
-            $ticket->uuid = Str::uuid();
+            $ticket->uuid = generate_uuid(SupportTicket::class);
         });
     }
 
     public function staffCanView(Admin $admin)
     {
-        return $admin->can('admin.manage_tickets_department.'.$this->department_id);
+        return $admin->can('admin.manage_tickets') || $admin->can('admin.manage_tickets_department.'.$this->department_id);
     }
 
     public function comments()
@@ -369,7 +374,7 @@ class SupportTicket extends Model
         return $this->status == self::STATUS_CLOSED;
     }
 
-    public function close(string $closedBy, int $closedById, ?string $reason = null)
+    public function close(string $closedBy, ?int $closedById = null, ?string $reason = null)
     {
         $this->status = self::STATUS_CLOSED;
         $this->closed_at = now();
@@ -434,11 +439,11 @@ class SupportTicket extends Model
 
     public function resolveRouteBinding($value, $field = null)
     {
-        if (Str::isUuid($value)) {
-            return $this->where('uuid', $value)->firstOrFail();
+        $model = $this->where('uuid', $value)->first();
+        if (! $model) {
+            $model = $this->where('id', $value)->first();
         }
-
-        return $this->where('id', $value)->firstOrFail();
+        return $model ?? abort(404);
     }
 
     public function getRouteKeyName()

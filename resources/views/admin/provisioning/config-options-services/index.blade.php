@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title', __($translatePrefix .'.title'))
 @section('content')
@@ -138,15 +140,26 @@
                                         <td class="h-px w-px whitespace-nowrap">
 
                     <span class="block px-6 py-2">
+                        @if ($item->option)
                       <span class="text-sm text-gray-600 dark:text-gray-400">{{ $item->option->name }}</span>
+                      @else
+                            <span class="italic text-gray-400 dark:text-gray-600">({{ __('global.deleted') }})</span>
+
+                        @endif
                     </span>
                                         </td>
                                         <td class="h-px w-px whitespace-nowrap">
                     <span class="block px-6 py-2">
                         <span class="text-sm text-gray-600 dark:text-gray-400">
+                            @if ($item->service)
                             <a href="{{ route('admin.services.show', ['service' => $item->service]) }}">
                                 {{ $item->service->excerptName() }}
                             </a>
+                            @else
+                                <span class="text-red-600 dark:text-red-400">
+                                    {{ __('global.deleted') }}
+                                </span>
+                            @endif
                         </span>
                     </span>
                                         </td>

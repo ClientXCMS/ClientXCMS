@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Requests\Provisioning;
 
 use App\Services\Store\RecurringService;
@@ -43,6 +48,8 @@ class StoreServiceRequest extends FormRequest
             'currency' => ['required', 'string', 'max:255', Rule::in(array_keys(currencies()->toArray()))],
             'server_id' => ['nullable', 'integer', Rule::exists('servers', 'id')],
             'expires_at' => ['nullable', 'date', 'after:now'],
+            'max_renewals' => ['nullable', 'integer', 'min:0'],
+            'description' => ['nullable', 'string'],
         ], $this->pricingRules());
     }
 

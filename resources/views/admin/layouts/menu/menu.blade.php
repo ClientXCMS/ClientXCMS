@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @if (empty($menuItem->children))
     <div class="snap-center shrink-0 pe-5 sm:pe-8 sm:last-pe-0">
         <a href="{{ route($menuItem->route) }}" class="{{ is_subroute(route($menuItem->route, [], false)) ? 'text-indigo-600 dark:text-indigo-600 hover:text-indigo-600 dark:hover:text-indigo-600' : '' }} inline-flex items-center gap-x-2 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">

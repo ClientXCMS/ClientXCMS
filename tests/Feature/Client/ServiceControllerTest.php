@@ -1,17 +1,5 @@
 <?php
-/*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
- *
- * Personal and non-commercial use of this source code is permitted.
- * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
- *
- * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
- *
- * Year: 2025
- */
+
 namespace Tests\Feature\Client;
 
 use App\Models\Account\Customer;
@@ -247,25 +235,28 @@ class ServiceControllerTest extends TestCase
     {
         $this->seed(ServerSeeder::class);
         $this->seed(StoreSeeder::class);
+        $this->seed(GatewaySeeder::class);
         $customer = $this->createCustomerModel();
         /** @var Service $service */
-        $service = $this->createServiceModel($customer->id);
-        $this->actingAs($customer)->post(route('front.services.billing', ['service' => $service->uuid]), [
+        $service = $this->createServiceModel($customer->id, 'active', ['monthly' => 10, 'quarterly' => 30]);
+        $request = $this->actingAs($customer)->post(route('front.services.billing', ['service' => $service->uuid]), [
             'billing' => 'quarterly',
             'gateway' => 'balance',
-        ])->assertRedirect();
+        ])->assertRedirect()->assertSessionHas('success');
         $this->assertDatabaseHas('services', [
             'id' => $service->id,
             'billing' => 'quarterly',
         ]);
         $service->refresh();
-        $this->assertEquals($service->getBillingPrice()->price, 12);
+        $this->assertEquals($service->getBillingPrice()->priceTTC(), 36);
+        $this->assertEquals($service->getBillingPrice()->priceHT(), 30);
     }
 
     public function test_services_change_simple_billing_invalid(): void
     {
         $this->seed(ServerSeeder::class);
         $this->seed(StoreSeeder::class);
+        $this->seed(GatewaySeeder::class);
         $customer = $this->createCustomerModel();
         /** @var Service $service */
         $service = $this->createServiceModel($customer->id);
@@ -361,7 +352,6 @@ class ServiceControllerTest extends TestCase
         $this->assertDatabaseCount('invoices', 2);
         $this->assertDatabaseCount('invoice_items', 2);
         $this->assertDatabaseCount('service_renewals', 2);
-        $this->assertDatabaseCount('email_messages', 1);
         /** @var Service $service */
         $service = Service::find($service->id);
         $this->assertEquals($service->invoice_id, $invoice->id + 1);

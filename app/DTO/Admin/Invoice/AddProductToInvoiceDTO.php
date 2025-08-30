@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\DTO\Admin\Invoice;
 
 use App\Models\Billing\Invoice;
@@ -45,10 +50,10 @@ class AddProductToInvoiceDTO implements Arrayable
     {
         $this->invoice = $invoice;
         $this->product = $product;
-        $this->unit_price_ht = $validatedData['unit_price_ht'];
-        $this->unit_price_ttc = TaxesService::getPriceWithVat($this->unit_price_ht);
-        $this->unit_setup_ht = $validatedData['unit_setup_ht'];
-        $this->unit_setup_ttc = TaxesService::getPriceWithVat($this->unit_setup_ht);
+        $this->unit_price_ttc = $validatedData['unit_price_ttc'];
+        $this->unit_price_ht = TaxesService::getPriceWithoutVat($this->unit_price_ttc);
+        $this->unit_setup_ttc = $validatedData['unit_setup_ttc'];
+        $this->unit_setup_ht = TaxesService::getPriceWithoutVat($this->unit_setup_ttc);
         $this->quantity = $validatedData['quantity'];
         $this->name = $validatedData['name'];
         $this->description = $validatedData['description'] ?? '';

@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Core\License;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
@@ -22,25 +27,13 @@ use Exception;
 
 class License
 {
-    private ?string $key;
-
-    /**
-     * @var string
-     *             - dev
-     *             - prod
-     *             - demo
-     */
     private string $type;
 
     private ?string $expire;
 
-    private int $clients;
-
     private ?string $domain = null;
 
     private array $domains = [];
-
-    private int $max;
 
     private int $lastChecked;
 
@@ -52,43 +45,48 @@ class License
 
     private ?int $serverId;
 
+    private string $version_type;
+
+    private ?string $supportExpiration = null;
+
     public function __construct(
         ?string $expire,
-        int $clients,
-        array $domains,
-        int $max,
+        ?string $supportExpiration,
         int $lastChecked,
         int $nextCheck,
         ?int $serverId,
         array $extensions,
+        string $type,
+        string $version_type,
         array $data
     ) {
         $this->expire = $expire;
-        $this->clients = $clients;
-        $this->domains = $domains;
-        $this->max = $max;
         $this->lastChecked = $lastChecked;
         $this->nextCheck = $nextCheck;
         $this->data = $data;
         $this->serverId = $serverId;
         $this->domain = \URL::getRequest()->getHttpHost();
         $this->extensions = $extensions;
+        $this->type = $type;
+        $this->version_type = $version_type;
+        $this->supportExpiration = $supportExpiration;
+
     }
 
     public function __serialize(): array
     {
         return [
-            'type' => $this->getType(),
             'expire' => $this->expire,
-            'clients' => $this->clients,
             'domain' => $this->domain,
-            'max' => $this->max,
             'lastchecked' => $this->lastChecked,
             'nextCheck' => $this->nextCheck,
             'domains' => $this->domains,
             'data' => $this->data,
             'server' => $this->serverId,
             'extensions' => $this->extensions,
+            'type' => $this->type,
+            'support_expiration' => $this->supportExpiration,
+            'version_type' => $this->version_type,
         ];
     }
 
@@ -120,25 +118,12 @@ class License
 
     private function getType(): string
     {
-        return 'prod:';
+        return ucfirst($this->type);
     }
 
     public function isValid(): bool
     {
-        if ($this->expire === null) {
-            return $this->clients <= $this->max;
-        }
-        if ($this->nextCheck < 0 || $this->lastChecked < 0 || $this->lastChecked > time()) {
-            return false;
-        }
-        /** @var DateTime $expire */
-        try {
-            $expire = (is_string($this->expire)) ? (new DateTime)->createFromFormat('d/m/y', $this->expire) : $this->expire;
-
-            return $this->clients <= $this->max && Carbon::createFromTimestamp($expire->format('U'))->isFuture();
-        } catch (Exception $e) {
-            return false;
-        }
+        return true;
     }
 
     public function save(string $token)
@@ -159,7 +144,7 @@ class License
         if (empty($this->extensions)) {
             return implode(', ', $names);
         }
-        $extensions = app('extension')->getAllExtensions(false);
+        $extensions = app('extension')->getAllExtensions();
         foreach ($this->extensions as $uuid => $value) {
             /** @var ExtensionDTO $extension */
             $extension = collect($extensions)->first(fn ($extension) => $extension->uuid == $uuid);
@@ -196,5 +181,17 @@ class License
     public function getExtensionExpiration(string $uuid)
     {
         return $this->extensions[$uuid]['expires_at'] ?? null;
+    }
+
+    public function getSupportExpiration(): ?Carbon
+    {
+        if ($this->supportExpiration == null) {
+            return null;
+        }
+        try {
+            return Carbon::createFromFormat('d-m-Y', $this->supportExpiration);
+        } catch (Exception $e) {
+            return null;
+        }
     }
 }

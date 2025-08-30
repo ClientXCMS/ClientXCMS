@@ -10,38 +10,61 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Listeners\Store\Basket;
 
 use App\Events\Core\CheckoutCompletedEvent;
+use App\Events\Core\Invoice\InvoiceCompleted;
+use App\Models\Billing\Invoice;
+use App\Models\Billing\InvoiceItem;
 use App\Models\Store\Coupon;
 use App\Models\Store\CouponUsage;
 
 class CouponUsageListener
 {
-    public function handle(CheckoutCompletedEvent $event): void
+    public function handle(InvoiceCompleted $event): void
     {
-        $basket = $event->basket;
-        /** @var Coupon $coupon */
-        $coupon = $basket->coupon;
-        if (! $coupon) {
+        $couponsUsed = [];
+        /** @var Invoice $invoice */
+        $invoice = $event->invoice;
+        /** @var InvoiceItem $item */
+        foreach ($invoice->items as $item) {
+            $couponId = $item->couponId();
+            if ($couponId && ! in_array($couponId, $couponsUsed)) {
+                $couponsUsed[] = [$couponId, $this->getCouponAmount($invoice, $couponId)];
+            }
+        }
+        if (empty($couponsUsed)) {
             return;
         }
-        if (! $coupon->isValid($basket)) {
-            return;
+        foreach ($couponsUsed as [$couponId, $amount]) {
+            $coupon = Coupon::find($couponId);
+            if ($coupon) {
+                $coupon->increment('usages');
+                CouponUsage::insert([
+                    'coupon_id' => $coupon->id,
+                    'customer_id' => $invoice->customer_id,
+                    'used_at' => now(),
+                    'amount' => $amount,
+                ]);
+            }
         }
-        if ($event->invoice->status !== 'paid') {
-            return;
+    }
+
+    private function getCouponAmount(Invoice $invoice, int $couponId = 0): float
+    {
+        $amount = 0;
+        foreach ($invoice->items as $item) {
+            if ($item->couponId() == $couponId) {
+                $amount += $item->discountTotal();
+            }
         }
-        if ($basket->coupon) {
-            $basket->coupon->increment('usages');
-        }
-        CouponUsage::insert([
-            'coupon_id' => $coupon->id,
-            'customer_id' => $event->invoice->customer_id,
-            'used_at' => now(),
-            'amount' => $basket->subtotal(),
-        ]);
+        return $amount;
     }
 }

@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 use App\Http\Controllers\Admin\Core\DashboardController;
 use App\Http\Controllers\Admin\Settings\SettingsController;
 use App\Http\Controllers\Admin\Settings\SettingsCoreController;
@@ -30,6 +35,7 @@ Route::name('settings.')->prefix('settings')->middleware('admin')->group(functio
     Route::get('/testmail', [SettingsCoreController::class, 'testmail'])->name('testmail');
     Route::post('/extensions/{type}/{extension}/enable', [SettingsExtensionController::class, 'enable'])->name('extensions.enable');
     Route::post('/extensions/{type}/{extension}/disable', [SettingsExtensionController::class, 'disable'])->name('extensions.disable');
+    Route::post('/extensions/{type}/{extension}/update', [SettingsExtensionController::class, 'update'])->name('extensions.update');
     Route::post('/extensions/clear', [SettingsExtensionController::class, 'clear'])->name('extensions.clear');
 });
 

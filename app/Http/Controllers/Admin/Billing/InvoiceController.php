@@ -10,26 +10,34 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Billing;
 
-use App\DTO\Admin\Invoice\AddCouponToInvoiceItemDTO;
 use App\DTO\Admin\MassActionDTO;
 use App\DTO\Store\ProductDataDTO;
 use App\Events\Core\Invoice\InvoiceCreated;
 use App\Helpers\Countries;
 use App\Http\Controllers\Admin\AbstractCrudController;
-use App\Http\Requests\Admin\Invoice\InvoiceDraftRequest;
+use App\Http\Requests\Billing\InvoiceDraftRequest;
+use App\Http\Requests\Billing\ExportInvoiceRequest;
+use App\Http\Requests\Billing\StoreInvoiceRequest;
+use App\Http\Requests\Billing\UpdateInvoiceRequest;
 use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceItem;
-use App\Models\Billing\Subscription;
 use App\Models\Provisioning\Service;
 use App\Models\Store\Coupon;
 use App\Models\Store\Product;
-use App\Services\Store\GatewayService;
+use App\Services\Billing\InvoiceService;
+use App\Services\InvoiceExporterService;
+use App\Services\Store\RecurringService;
 use Illuminate\Http\Request;
 
 class InvoiceController extends AbstractCrudController
@@ -66,10 +74,20 @@ class InvoiceController extends AbstractCrudController
         ];
     }
 
+    public function getIndexParams($items, string $translatePrefix)
+    {
+        $params = parent::getIndexParams($items, $translatePrefix);
+        $params['exportFormats'] = InvoiceExporterService::getAvailableFormats();
+        return $params;
+    }
+
     public function getMassActions()
     {
         return [
             new MassActionDTO('delete', __('global.delete'), function (Invoice $invoice) {
+                if (! $invoice->canDelete()) {
+                    return;
+                }
                 $invoice->items()->delete();
                 $invoice->delete();
             }),
@@ -88,37 +106,22 @@ class InvoiceController extends AbstractCrudController
         ];
     }
 
-    public function store(Request $request)
+    public function store(StoreInvoiceRequest $request)
     {
         $this->checkPermission('create');
-        $validatedData = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'currency' => 'required|string|max:3',
-        ]);
-        $invoice = Invoice::create([
-            'customer_id' => $validatedData['customer_id'],
-            'status' => Invoice::STATUS_DRAFT,
-            'currency' => $validatedData['currency'],
-            'due_date' => now()->addDays(30)->format('Y-m-d'),
-            'total' => 0,
-            'subtotal' => 0,
-            'tax' => 0,
-            'setupfees' => 0,
-            'discount' => [],
-            'invoice_number' => Invoice::generateInvoiceNumber(),
-            'notes' => 'Created manually by '.auth('admin')->user()->username,
-        ]);
-
+        $validatedData = $request->validated();
+        $invoice = InvoiceService::createFreshInvoice($validatedData['customer_id'], $validatedData['currency'], 'Created manually by '.auth('admin')->user()->username);
         return $this->storeRedirect($invoice);
     }
 
-    public function deliver(Invoice $invoice, InvoiceItem $item)
+    public function deliver(Invoice $invoice, InvoiceItem $invoice_item)
     {
         try {
-            $item->tryDeliver();
+            $invoice_item->tryDeliver();
 
             return back()->with('success', __('admin.invoices.deliveredsuccess'));
         } catch (\Exception $e) {
+            dd($e);
             return back()->with('error', $e->getMessage());
         }
     }
@@ -161,6 +164,15 @@ class InvoiceController extends AbstractCrudController
         return back()->with('success', __('admin.invoices.draft.itemremoved'));
     }
 
+    public function cancelItem(Invoice $invoice, InvoiceItem $invoice_item)
+    {
+        $this->checkPermission('update');
+        $invoice_item->cancel();
+        $invoice->recalculate();
+
+        return back()->with('success', __('admin.invoices.itemcancelled'));
+    }
+
     public function updateItem(InvoiceItem $invoiceItem, Request $request)
     {
         $this->checkPermission('update');
@@ -176,6 +188,7 @@ class InvoiceController extends AbstractCrudController
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:255',
             'coupon_id' => 'nullable',
+            'billing' => 'nullable|string|in:' . join(',', app(RecurringService::class)->getRecurringTypes()),
         ]);
         if ($invoiceItem->relatedType() instanceof Product) {
             $product = $invoiceItem->relatedType();
@@ -194,7 +207,7 @@ class InvoiceController extends AbstractCrudController
             /** @var Coupon $coupon */
             $coupon = Coupon::find($validatedData['coupon_id']);
             if ($coupon != null) {
-                $validatedData['discount'] = $coupon->discountArray(new AddCouponToInvoiceItemDTO($validatedData, $invoiceItem));
+                $validatedData['discount'] = $coupon->discountArray($validatedData['unit_price_ht'], $validatedData['unit_setup_ht'], $invoiceItem->billing());
             } else {
                 $validatedData['discount'] = [];
             }
@@ -213,8 +226,9 @@ class InvoiceController extends AbstractCrudController
         $params['item'] = $invoice;
         $params['invoice'] = $invoice;
         $params['customer'] = $invoice->customer;
-        $params['countries'] = Countries::names();
+        $params['address'] = $invoice->billing_address;
         $params['gateways'] = $this->gateways();
+        $params['countries'] = Countries::names();
         if ($invoice->isDraft()) {
             $params['products'] = $this->products($invoice);
             $params['coupons'] = $this->coupons();
@@ -262,36 +276,10 @@ class InvoiceController extends AbstractCrudController
         return view($this->viewPath.'.config', compact('coupons', 'relatedId', 'related', 'service', 'billing', 'invoice', 'translatePrefix', 'routePath', 'product', 'dataHTML'));
     }
 
-    public function update(Request $request, Invoice $invoice)
+    public function update(UpdateInvoiceRequest $request, Invoice $invoice)
     {
         $this->checkPermission('update');
-        $validatedData = $request->validate([
-            'status' => 'required|in:'.implode(',', array_keys(Invoice::getStatuses())),
-            'notes' => 'required|string|max:255',
-            'paymethod' => 'string|max:255',
-            'fees' => 'numeric|min:0',
-            'tax' => 'numeric|min:0',
-            'currency' => 'required|string|max:3',
-            'due_date' => 'required|date',
-            'paid_at' => 'nullable|date',
-            'external_id' => ['nullable', 'string', 'max:255', 'unique:invoices,external_id,'.$invoice->id],
-        ]);
-        if ($validatedData['status'] != $invoice->status) {
-            if ($validatedData['status'] == Invoice::STATUS_PAID) {
-                $invoice->complete(false);
-            }
-            if ($validatedData['status'] == Invoice::STATUS_CANCELLED) {
-                $invoice->cancel();
-            }
-            if ($validatedData['status'] == Invoice::STATUS_REFUNDED) {
-                $invoice->refund();
-            }
-            if ($validatedData['status'] == Invoice::STATUS_FAILED) {
-                $invoice->fail();
-            }
-        }
-        $invoice->update($validatedData);
-
+        $request->update($invoice);
         return $this->updateRedirect($invoice);
     }
 
@@ -311,7 +299,7 @@ class InvoiceController extends AbstractCrudController
     {
         $this->checkPermission('show');
 
-        return $invoice->download();
+        return $invoice->pdf();
     }
 
     public function getCreateParams()
@@ -327,6 +315,7 @@ class InvoiceController extends AbstractCrudController
             return [$currency['code'] => $currency['code']];
         })->toArray();
         $params['defaultCustomer'] = $defaultCustomer;
+        $params['item']->customer_id = $defaultCustomer;
 
         return $params;
     }
@@ -334,10 +323,17 @@ class InvoiceController extends AbstractCrudController
     public function destroy(Invoice $invoice)
     {
         $this->checkPermission('delete');
+        abort_if(!$invoice->canDelete(), 404);
         $invoice->items()->delete();
         $invoice->delete();
 
         return $this->deleteRedirect($invoice);
+    }
+
+    public function export(ExportInvoiceRequest $request): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
+    {
+        $this->checkPermission('export');
+        return $request->export();
     }
 
     public function payInvoice(Invoice $invoice, Request $request)
@@ -346,34 +342,20 @@ class InvoiceController extends AbstractCrudController
         $validatedData = $request->validate([
             'source' => 'required|string|max:255',
         ]);
-        $gateways = GatewayService::getAvailable(-1);
         $source = $validatedData['source'];
-        if ($source == Subscription::DEFAULT_PAYMENT_METHOD) {
-            $source = $invoice->customer->getDefaultPaymentMethod();
-            if ($source != null) {
-                /* @var \App\Abstracts\PaymentMethodSourceDTO $source */
-                $source = $invoice->customer->paymentMethods()->where('id', $source)->first();
+        try {
+            $source = $invoice->customer->getSourceById($source);
+            $result = $invoice->customer->payInvoiceWithPaymentMethod($invoice, $source);
+            if ($result->success) {
+                $result->invoice->update(['paymethod' => $source->gateway_uuid, 'payment_method_id' => $source->id]);
+                return back()->with('success', __('admin.invoices.paidsuccess'));
+            } else {
+                return back()->with('error', $result->message);
             }
-        } else {
-            /* @var \App\Abstracts\PaymentMethodSourceDTO $source */
-            $source = $invoice->customer->paymentMethods()->where('id', $source)->first();
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-        if (! $source) {
-            return back()->with('error', __('client.payment-methods.errors.not_found'));
-        }
-        /** @var Gateway $gateway */
-        $gateway = collect($gateways)->first(function ($gateway) use ($source) {
-            return $gateway->uuid == $source->gateway_uuid;
-        });
-        if (! $gateway) {
-            return back()->with('error', __('client.payment-methods.errors.not_found'));
-        }
-        $result = $gateway->paymentType()->payInvoice($invoice, $source);
-        if ($result->success) {
-            return back()->with('success', __('admin.invoices.paidsuccess'));
-        } else {
-            return back()->with('error', $result->message);
-        }
+
     }
 
     public function validateInvoice(Invoice $invoice)

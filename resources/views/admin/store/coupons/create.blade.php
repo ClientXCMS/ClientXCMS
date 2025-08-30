@@ -10,65 +10,22 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title',  __($translatePrefix . '.create.title', ['name' => $item->fullname]))
 @section('scripts')
     <script src="{{ Vite::asset('resources/global/js/flatpickr.js') }}" type="module"></script>
-
-    <script>
-        const showmorepricingbtn = document.getElementById('showmorepricingbtn');
-        const calculatorBtn = document.getElementById('calculatorBtn');
-        const table = document.getElementById('pricingtable');
-        const hidden = table.querySelectorAll('.hidden');
-        showmorepricingbtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            Array.from(hidden).map((el) => el.classList.toggle('hidden'));
-        });
-
-        function showmorepricingbtn_hidden() {
-            const filter = Array.from(hidden).filter((el) => el.classList.contains('hidden'));
-            if (filter.length > 0) {
-                return true;
-            }
-            return false;
-        }
-        calculatorBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            const percentage = document.querySelector('input[name="percentage"]').value;
-            const monthlyPrice = document.querySelector('input[data-months="1"][name$="[price]"]').value;
-            const monthlySetup = document.querySelector('input[data-months="1"][name$="[setup]"]').value;
-
-            const prices = document.querySelectorAll('input[name^="pricing"]:not([name*="onetime"])');
-            if (percentage > 100 || percentage < 0 || percentage === '') {
-                return;
-            }
-            prices.forEach((price) => {
-                const months = price.getAttribute('data-months');
-                const setup = document.querySelector('input[data-months="' + months +'"][name$="[setup]"]');
-                if (months === '1' || months === '0.5') return;
-                if (months === '24' || months === '36' && showmorepricingbtn_hidden()) return;
-                if (price.value === '' || setup.value === '') {
-                    if (price.value === '') {
-                        price.value = 0;
-                    }
-                    if (setup.value === '') {
-                        setup.value = '';
-                    }
-                }
-
-                const newPrice = monthlyPrice * months - (monthlyPrice * months) *(percentage / 100);
-                const newSetup = monthlySetup * months -  (monthlySetup * months) * (percentage / 100);
-                price.value = newPrice.toFixed(2);
-                setup.value = newSetup.toFixed(2);
-            });
-        });
-
-    </script>
+    <script src="{{ Vite::asset('resources/global/js/admin/tomselect.js') }}" type="module"></script>
+    <script src="{{ Vite::asset('resources/global/js/admin/pricing.js') }}" type="module"></script>
+@endsection
+@section('styles')
+    <link rel="stylesheet" href="{{ Vite::asset('resources/global/css/tomselect.scss') }}">
 @endsection
 @section('content')
     <div class="container mx-auto">
@@ -76,7 +33,7 @@
     @include('admin/shared/alerts')
         <form method="POST" action="{{ route($routePath .'.store') }}" enctype="multipart/form-data">
             <div class="flex flex-col">
-                <div class="-m-1.5 overflow-x-auto">
+                <div class="-m-1.5">
                     <div class="p-1.5 min-w-full inline-block align-middle">
                         <div class="card">
                             <div class="card-heading">
@@ -133,6 +90,9 @@
                                 </div>
                                 <div>
                                     @include('admin/shared/search-select-multiple', ['name' => 'required_products[]', 'label' => __($translatePrefix . '.required_products'), 'value' => $item->products_required ?? [], 'options' => $requiredProducts])
+                                </div>
+                                <div>
+                                    @include('admin/shared/search-field', ['name' => 'customer_id', 'label' => __($translatePrefix . '.allowed_customer'), 'apiUrl' => route('admin.customers.search'), 'value' => $item->customer_id])
                                 </div>
 
                                 <div>

@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title',  __($translatePrefix . '.show.title', ['name' => $item->fullname]))
 @section('scripts')
@@ -96,36 +98,36 @@
                                                         {{ __($translatePrefix . '.show.confirm') }}
                                                     </a>
                                                 @endif
-                                                    @if (staff_has_permission('admin.manage_services'))
+                                                @if (staff_has_permission('admin.manage_services'))
                                                     <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700" href="{{ route('admin.services.create') }}?customer_id={{ $item->id }}">
                                                         <i class="bi bi-box2"></i>
                                                         {{ __($translatePrefix . '.show.create_service') }}
                                                     </a>
                                                 @endif
-                                                    @if (staff_has_permission('admin.manage_invoices'))
-                                                        <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700" href="{{ route('admin.invoices.create') }}?customer_id={{ $item->id }}">
+                                                @if (staff_has_permission('admin.manage_invoices'))
+                                                    <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700" href="{{ route('admin.invoices.create') }}?customer_id={{ $item->id }}">
                                                         <i class="bi bi-file-earmark-text"></i>
                                                         {{ __($translatePrefix . '.show.create_invoice') }}
                                                     </a>
                                                 @endif
-                                                    @if (staff_has_permission('admin.manage_tickets'))
-                                                        <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700" href="{{ route('admin.helpdesk.tickets.create') }}?customer_id={{ $item->id }}">
+                                                @if (staff_has_permission('admin.manage_tickets'))
+                                                    <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700" href="{{ route('admin.helpdesk.tickets.create') }}?customer_id={{ $item->id }}">
                                                         <i class="bi bi-chat-left-text"></i>
                                                         {{ __($translatePrefix . '.show.create_ticket') }}
                                                     </a>
                                                 @endif
-                                                    @if (staff_has_permission('admin.manage_emails'))
-                                                <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700" href="{{ route('admin.emails.create') }}?emails={{ $item->email }}">
+                                                @if (staff_has_permission('admin.manage_emails'))
+                                                    <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700" href="{{ route('admin.emails.create') }}?emails={{ $item->email }}">
 
-                                                    <i class="bi bi-envelope-plus"></i>
-                                                    {{ __($translatePrefix . '.show.send_email') }}
-                                                </a>
-                                                    @endif
-
-                                                    <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700" href="{{ route($routePath . '.send_password', ['customer' => $item]) }}">
-                                                        <i class="bi bi-send"></i>
-                                                        {{ __($translatePrefix . '.show.send_password') }}
+                                                        <i class="bi bi-envelope-plus"></i>
+                                                        {{ __($translatePrefix . '.show.send_email') }}
                                                     </a>
+                                                @endif
+
+                                                <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700" href="{{ route($routePath . '.send_password', ['customer' => $item]) }}">
+                                                    <i class="bi bi-send"></i>
+                                                    {{ __($translatePrefix . '.show.send_password') }}
+                                                </a>
                                                 <span class="block pt-2 pb-1 px-3 text-xs font-medium uppercase text-gray-400 dark:text-neutral-500">
         DANGER ZONE
       </span>
@@ -153,7 +155,7 @@
                                                             <i class="bi bi-shield-lock-fill"></i>
                                                             {{ __($translatePrefix.'.show.disable2fa') }}
                                                         </button>
-                                                        @endif
+                                                    @endif
                                                     <button type="button" id="deleteButton" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-red-500 hover:bg-red-100 focus:outline-none focus:bg-red-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-red-300 dark:focus:bg-red-700">
                                                         <i class="bi bi-trash"></i>
                                                         {{ __('global.delete') }}
@@ -169,12 +171,16 @@
                         <div class="grid md:grid-cols-2 gap-2 grid-cols-1">
                             <div>
                                 <h4 class="text-xl font-semibold text-gray-800 dark:text-gray-200">{{ __($translatePrefix. '.show.billing')  }}</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <div>
                                         @include('admin/shared/input', ['name' => 'firstname', 'label' => __('global.firstname'), 'value' => old('firstname', $item->firstname)])
                                     </div>
                                     <div>
                                         @include('admin/shared/input', ['name' => 'lastname', 'label' => __('global.lastname'), 'value' => old('lastname', $item->lastname)])
+                                    </div>
+
+                                    <div>
+                                        @include("admin/shared/input", ["name" => "company_name", "label" => __('global.company_name'), 'value' => old('company_name', $item->company_name)])
                                     </div>
                                     <div>
                                         @include('admin/shared/input', ['name' => 'balance', 'label' => __('global.balance'), 'value' => old('balance', $item->balance), 'type' => 'number', 'step' => '0.01', 'min' => 0])
@@ -214,23 +220,25 @@
                                     <div>
                                         @include("admin/shared/input", ["name" => "region", "label" => __('global.region'), 'value' => old('region', $item->region)])
                                     </div>
-
                                 </div>
                             </div>
                             <div>
-
                                 <h4 class="text-xl font-semibold text-gray-800 dark:text-gray-200">{{ __($translatePrefix. '.show.details') }}</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        @include('admin/shared/textarea', ['name' => 'notes', 'label' => __($translatePrefix. '.show.notes'), 'value' => old('notes', $item->notes)])
+                                        @include('admin/shared/input', ['name' => 'last_login', 'label' => __($translatePrefix. '.show.last_login'), 'value' => old('last_login', $item->last_login), 'disabled' => true])
+                                        @include("admin/shared/textarea", ["name" => "billing_details", "label" => __('global.billing_details'), 'value' => old('billing_details', $item->billing_details), 'help' => __('global.billing_details_help')])
+
                                     </div>
                                     <div>
                                         @include('admin/shared/input', ['name' => 'last_ip', 'label' => __($translatePrefix. '.show.last_ip'), 'value' => old('last_ip', $item->last_ip), 'disabled' => true])
-                                        @include('admin/shared/input', ['name' => 'last_login', 'label' => __($translatePrefix. '.show.last_login'), 'value' => old('last_login', $item->last_login), 'disabled' => true])
+                                        @include('admin/shared/textarea', ['name' => 'notes', 'label' => __($translatePrefix. '.show.notes'), 'value' => old('notes', $item->notes)])
                                     </div>
                                 </div>
-                                @include('admin/shared/password', ['name' => 'password', 'label' => __('global.password'), 'value' => old('password'), 'help' => __('admin.customers.show.passwordhelp')])
-
+                                <div class="mt-4">
+                                    <h5 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ __('client.profile.security.index') }}</h5>
+                                    @include('admin/shared/password', ['name' => 'password', 'label' => __('global.password'), 'value' => old('password'), 'help' => __('admin.customers.show.passwordhelp')])
+                                </div>
                                 @if ($item->email_verified_at == null)
 
                                     <div>
@@ -409,24 +417,24 @@
                     </form>
                 </div>
             </div>
-    @endif
-    <form method="POST" action="{{ route($routePath . '.destroy', ['customer' => $item]) }}" id="deleteForm">
-        @csrf
-        @method('DELETE')
-    </form>
+        @endif
+        <form method="POST" action="{{ route($routePath . '.destroy', ['customer' => $item]) }}" id="deleteForm">
+            @csrf
+            @method('DELETE')
+        </form>
         @if ($item->twoFactorEnabled())
             <form method="POST" action="{{ route($routePath . '.action', ['customer' => $item, 'action' => 'disable2FA']) }}" id="disable2faForm">
                 @csrf
             </form>
         @endif
-    <script>
-        document.getElementById('deleteButton').addEventListener('click', function() {
-            document.getElementById('deleteForm').submit();
-        });
-        @if ($item->twoFactorEnabled())
-        document.getElementById('disabled2faButton').addEventListener('click', function() {
-            document.getElementById('disable2faForm').submit();
-        });
-        @endif
-    </script>
-@endsection
+        <script>
+            document.getElementById('deleteButton').addEventListener('click', function() {
+                document.getElementById('deleteForm').submit();
+            });
+            @if ($item->twoFactorEnabled())
+            document.getElementById('disabled2faButton').addEventListener('click', function() {
+                document.getElementById('disable2faForm').submit();
+            });
+            @endif
+        </script>
+        @endsection

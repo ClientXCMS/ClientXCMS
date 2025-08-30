@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Requests\Customer;
 
 use App\Helpers\Countries;
@@ -41,7 +46,9 @@ use Propaganistas\LaravelPhone\Rules\Phone;
  *     @OA\Property(property="balance", type="number", format="float", example=99.99),
  *     @OA\Property(property="locale", type="string", example="fr"),
  *     @OA\Property(property="country", type="string", example="FR"),
- *     @OA\Property(property="confirmed", type="boolean", nullable=true, example=true)
+ *     @OA\Property(property="confirmed", type="boolean", nullable=true, example=true),
+ *     @OA\Property(property="company_name", type="string", maxLength=255, nullable=true, example="Doe Enterprises"),
+ *     @OA\Property(property="billing_details", type="string", maxLength=255, nullable=true, example="Billing details here")
  * )
  */
 class StoreCustomerRequest extends FormRequest
@@ -74,6 +81,8 @@ class StoreCustomerRequest extends FormRequest
             'region' => ['required', 'string', 'max:255'],
             'verified' => ['nullable', 'boolean'],
             'balance' => ['numeric', 'min:0', 'max:9999999999'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'billing_details' => ['nullable', 'string', 'max:255'],
             'locale' => ['required', 'string', 'max:255', Rule::in(array_keys(\App\Services\Core\LocaleService::getLocalesNames()))],
             'country' => ['required', 'string', 'max:255', Rule::in(array_keys(Countries::names()))],
         ];

@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\Helpers\EnvEditor;
@@ -20,6 +25,7 @@ use App\Http\Requests\Admin\Settings\AppSettingsRequest;
 use App\Mail\MailTested;
 use App\Models\Admin\Permission;
 use App\Models\Admin\Setting;
+use App\Rules\NotContainRule;
 use App\Services\Core\LocaleService;
 use Illuminate\Http\Request;
 
@@ -81,7 +87,7 @@ class SettingsCoreController extends Controller
                 'mail_smtp_host' => 'required|string|max:1000',
                 'mail_smtp_port' => 'required|integer|between:1,65535',
                 'mail_smtp_username' => 'string|nullable|max:1000',
-                'mail_smtp_password' => 'string|nullable|max:1000',
+                'mail_smtp_password' => ['string','nullable','max:1000', new NotContainRule(['"'])],
                 'mail_smtp_encryption' => 'required|string|in:tls,ssl,none',
             ]);
             EnvEditor::updateEnv([
@@ -125,48 +131,28 @@ class SettingsCoreController extends Controller
     {
         staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $data = $request->validated();
-        if ($request->hasFile('app_logo')) {
-            if (\setting('app_logo') && \Storage::exists(\setting('app_logo'))) {
-                \Storage::delete(\setting('app_logo'));
+        $fileFields = [
+            'app_logo' => 'public/app_logo' . rand(1000, 9999) . '.png',
+            'app_favicon' => 'public/app_favicon' . rand(1000, 9999) . '.png',
+            'app_logo_text' => 'public/app_logo_text' . rand(1000, 9999) . '.png',
+        ];
+        foreach ($fileFields as $field => $path) {
+            if ($request->hasFile($field)) {
+                $currentFile = \setting($field);
+                if ($currentFile && \Storage::disk('public')->exists(str_replace('/storage/', '', $currentFile))) {
+                    \Storage::disk('public')->delete(str_replace('/storage/', '', $currentFile));
+                }
+                $file = $request->file($field)->storeAs('public', basename($path));
+                $data[$field] = $file;
             }
-            $file = $request->file('app_logo')->storeAs('public', 'app_logo'.rand(1000, 9999).'.png');
-            $data['app_logo'] = $file;
-        }
-        if ($request->hasFile('app_favicon')) {
-            if (\setting('app_favicon') && \Storage::exists(\setting('app_favicon'))) {
-                \Storage::delete(\setting('app_favicon'));
+            if ($request->input("remove_{$field}") == 'true') {
+                $currentFile = \setting($field);
+                if ($currentFile && \Storage::exists($currentFile)) {
+                    \Storage::delete($currentFile);
+                }
+                $data[$field] = null;
+                unset($data["remove_{$field}"]);
             }
-            $file = $request->file('app_favicon')->storeAs('public', 'app_favicon'.rand(1000, 9999).'.png');
-            $data['app_favicon'] = $file;
-        }
-        if ($request->hasFile('app_logo_text')) {
-            if (\setting('app_logo_text') && \Storage::exists(\setting('app_logo_text'))) {
-                \Storage::delete(\setting('app_logo_text'));
-            }
-            $file = $request->file('app_logo_text')->storeAs('public', 'app_logo_text'.rand(1000, 9999).'.png');
-            $data['app_logo_text'] = $file;
-        }
-
-        if ($request->remove_app_logo == 'true') {
-            if (\setting('app_logo') && \Storage::exists(\setting('app_logo'))) {
-                \Storage::delete(\setting('app_logo'));
-            }
-            $data['app_logo'] = null;
-            unset($data['remove_app_logo']);
-        }
-        if ($request->remove_app_favicon == 'true') {
-            if (\setting('app_favicon') && \Storage::exists(\setting('app_favicon'))) {
-                \Storage::delete(\setting('app_favicon'));
-            }
-            $data['app_favicon'] = null;
-            unset($data['remove_app_favicon']);
-        }
-        if ($request->remove_app_logo_text == 'true') {
-            if (\setting('app_logo_text') && \Storage::exists(\setting('app_logo_text'))) {
-                \Storage::delete(\setting('app_logo_text'));
-            }
-            $data['app_logo_text'] = null;
-            unset($data['remove_app_logo_text']);
         }
         EnvEditor::updateEnv([
             'APP_NAME' => $data['app_name'],
@@ -174,9 +160,7 @@ class SettingsCoreController extends Controller
             'APP_DEBUG' => $data['app_debug'] == 'true' ? 'true' : 'false',
             'TELEMETRY_ENABLED' => $data['app_telemetry'] ?? 'false'
         ]);
-        unset($data['app_env']);
-        unset($data['app_debug']);
-        unset($data['app_telemetry']);
+        unset($data['app_env'], $data['app_debug'], $data['app_telemetry']);
         Setting::updateSettings($data);
 
         return redirect()->back()->with('success', __('admin.settings.core.app.success'));

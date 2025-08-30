@@ -10,15 +10,19 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title', __($translatePrefix .'.title'))
 @section('scripts')
     <script src="{{ Vite::asset('resources/global/js/admin/filter.js') }}" type="module"></script>
+    <script src="{{ Vite::asset('resources/global/js/flatpickr.js') }}" type="module"></script>
+
 @endsection
 @section('content')
     <div class="container mx-auto">
@@ -44,6 +48,12 @@
                                     {{ __('admin.create') }}
                                 </a>
                                 @endif
+                            @if (staff_has_permission('admin.export_invoices') && $items->count() > 0)
+                                <a class="btn btn-secondary text-sm sm:ml-1 mt-2 sm:mt-0 w-full max-w-md sm:w-auto" href="#" data-hs-overlay="#export-overlay">
+
+                                    {{ __($translatePrefix.'.export.btn') }}
+                                </a>
+                            @endif
                             </div>
                         </div>
                         <div class="border rounded-lg overflow-hidden dark:border-gray-700">
@@ -155,9 +165,14 @@
                                         <td class="h-px w-px whitespace-nowrap">
                     <span class="block px-6 py-2">
                       <span class="text-sm text-gray-600 dark:text-gray-400">
+                        @if ($item->customer)
                           <a href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
                           {{ $item->customer->excerptFullName() }}</span>
                         </a>
+                        @else
+                            <span class="italic text-gray-400 dark:text-gray-600">({{ __('global.deleted') }})</span>
+
+                        @endif
                     </span>
                                         </td>
                                         <td class="h-px w-px whitespace-nowrap">
@@ -183,13 +198,13 @@
 
                                             <a href="{{ route($routePath . '.show', ['invoice' => $item]) }}">
                                         <span class="py-1.5">
-                                          <span class="py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-gray-700 dark:text-gray-400 dark:hover:text-white dark:focus:ring-offset-gray-800">
+                                          <span class="{{ !$item->canDelete() ? 'w-full ' : '' }}py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-gray-700 dark:text-gray-400 dark:hover:text-white dark:focus:ring-offset-gray-800">
                                                <i class="bi bi-eye-fill"></i>
                                             {{ __('global.show') }}
                                           </span>
                                         </span>
                                             </a>
-                                            @if (staff_has_permission('admin.manage_invoices'))
+                                            @if (staff_has_permission('admin.manage_invoices') && $item->canDelete())
 
                                             <form method="POST" action="{{ route($routePath . '.show', ['invoice' => $item]) }}" class="inline confirmation-popup">
                                                 @method('DELETE')
@@ -215,6 +230,35 @@
             </div>
         </div>
     </div>
+    @if (staff_has_permission('admin.export_invoices') && $items->count() > 0)
+    <div id="export-overlay" class="overflow-x-hidden overflow-y-auto hs-overlay hs-overlay-open:translate-x-0 translate-x-full fixed top-0 end-0 transition-all duration-300 transform h-full max-w-lg w-full w-full z-[80] bg-white border-s dark:bg-gray-800 dark:border-gray-700 hidden" tabindex="-1">
+        <div class="flex justify-between items-center py-3 px-4 border-b dark:border-gray-700">
+            <h3 class="font-bold text-gray-800 dark:text-white">
+                {{ __($translatePrefix . '.export.title') }}
+            </h3>
+            <button type="button" class="flex justify-center items-center w-7 h-7 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" data-hs-overlay="#config-overlay">
+                <span class="sr-only">{{ __('global.closemodal') }}</span>
+                <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-4">
+            <form method="POST" action="{{ route($routePath . '.export') }}" enctype="multipart/form-data">
+                @include('admin/shared/flatpickr', ['name' => 'date_from', 'label' => __($routePath . '.export.date_from'), 'value' => old('date_from', \Carbon\Carbon::now()->subMonth()->format('Y-m-d')), 'attributes' => ['autocomplete' => 'off']])
+                @include('admin/shared/flatpickr', ['name' => 'date_to', 'label' => __($routePath . '.export.date_to'), 'value' => old('date_to', \Carbon\Carbon::now()->format('Y-m-d')), 'attributes' => ['autocomplete' => 'off']])
+                @include('admin/shared/search-select-multiple', [
+    'name' => 'status[]',
+    'label' => __('global.status'),
+    'options' => $filters,
+    'value' => ['paid'],
+])
+                @csrf
+                @include('admin/shared.select', ['name' => 'format', 'label' => __($routePath . '.export.format'), 'options' => $exportFormats, 'value' => old('format', 'csv')])
+                <button class="btn btn-primary mt-2 w-full">{{ __($translatePrefix . '.export.btn') }}</button>
+
+            </form>
+        </div>
+    </div>
+    @endif
     @include('admin/shared/mass_actions/modal')
 
 @endsection

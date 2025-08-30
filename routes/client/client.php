@@ -10,6 +10,9 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 use App\Http\Controllers\Front\Billing\PaymentMethodController;
@@ -38,5 +41,6 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::get('/', [PaymentMethodController::class, 'index'])->middleware(['auth'])->name('index');
         Route::post('/default/{paymentMethod}', [PaymentMethodController::class, 'default'])->name('default');
         Route::delete('/{paymentMethod}', [PaymentMethodController::class, 'delete'])->middleware(['auth'])->name('delete');
+        Route::post('/pay/{invoice}', [PaymentMethodController::class, 'pay'])->middleware(['auth'])->name('pay');
     });
 });

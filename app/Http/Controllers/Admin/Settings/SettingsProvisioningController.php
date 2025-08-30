@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\Models\Admin\Permission;
@@ -36,7 +41,6 @@ class SettingsProvisioningController extends \App\Http\Controllers\Controller
             'webhook_renewal_url' => 'nullable|url',
             'notifications_expiration_days' => 'nullable|string',
             'max_subscription_tries' => 'required|integer|min:0',
-            'service_days_before_subscription_renewal' => 'required|integer|min:1',
         ]);
         Setting::updateSettings($data);
 

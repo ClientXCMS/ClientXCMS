@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Personalization;
 
 use App\Models\Admin\Setting;
@@ -28,7 +33,6 @@ class ThemeController extends \App\Http\Controllers\Controller
         $theme = app('theme')->getTheme();
         $context = [
             'configHTML' => $theme->configView(['errors' => $errors]),
-            'themes' => app('theme')->getThemes(),
             'currentTheme' => $theme,
             'modes' => [
                 'light' => __('personalization.theme.fields.theme_switch_mode.light'),
@@ -38,26 +42,6 @@ class ThemeController extends \App\Http\Controllers\Controller
         ];
 
         return view('admin.personalization.settings.theme', $context);
-    }
-
-    public function switchTheme(\Request $request, string $theme)
-    {
-        staff_aborts_permission(\App\Models\Admin\Permission::MANAGE_PERSONALIZATION);
-        if (! app('theme')->themeExists($theme)) {
-            return redirect()->back()->withErrors(['theme' => __('personalization.theme.errors.not_found')]);
-        }
-        $themes = app('theme')->getThemes();
-        $selectedTheme = collect($themes)->firstWhere('uuid', $theme);
-        if (! $selectedTheme) {
-            return redirect()->back()->withErrors(['theme' => __('personalization.theme.errors.not_found')]);
-        }
-        if (! $selectedTheme->toDto()->isActivable()) {
-            return redirect()->back()->withErrors(['theme' => __('personalization.theme.errors.not_activable')]);
-        }
-        app('theme')->setTheme($theme, true);
-        \App\Theme\ThemeManager::clearCache();
-
-        return redirect()->back();
     }
 
     public function configTheme(Request $request)

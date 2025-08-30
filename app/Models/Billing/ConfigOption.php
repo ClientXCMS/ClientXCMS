@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Billing;
 
 use App\DTO\Store\ConfigOptionDTO;
@@ -97,6 +102,10 @@ class ConfigOption extends Model
     const TYPE_DROPDOWN = 'dropdown';
 
     protected $with = ['options'];
+
+    const MODE_NO_INVOICE = 'no_invoice';
+
+    const MODE_INVOICE = 'invoice';
 
     protected $fillable = [
         'type',

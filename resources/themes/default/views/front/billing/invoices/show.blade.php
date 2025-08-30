@@ -10,13 +10,36 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('layouts/client')
 @section('title', __('client.invoices.details'))
+@section('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const paymentMethodSelect = document.querySelector('select[name="paymentmethod"]');
+            const paymentMethodBtn1 = document.querySelector('.paymentmethod-btn1');
+            const paymentMethodBtn2 = document.querySelector('.paymentmethod-btn2');
+            const onPaymentMethodChange = () => {
+                if (paymentMethodSelect.value === 'none') {
+                    paymentMethodBtn1.classList.add('hidden');
+                    paymentMethodBtn2.classList.remove('hidden');
+                } else {
+                    paymentMethodBtn1.classList.remove('hidden');
+                    paymentMethodBtn2.classList.add('hidden');
+                }
+            };
+            if (paymentMethodSelect) {
+                paymentMethodSelect.addEventListener('change', onPaymentMethodChange);
+                onPaymentMethodChange();
+            }
+        });
+    </script>
 @section('content')
     <div class="max-w-[85rem] py-5 lg:py-7 mx-auto">
     <div class="sm:w-11/12 lg:w-3/4 mx-auto">
@@ -41,12 +64,15 @@
 
                 <div class="mt-8 grid sm:grid-cols-2 gap-3">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ __('client.invoices.billto', ['name' => $customer->firstname . ' ' . $customer->lastname]) }}</h3>
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ __('client.invoices.billto', ['name' => $address[0]]) }}</h3>
                         <address class="mt-2 not-italic text-gray-500">
-                            {{ $customer->email }}<br>
-                            {{ $customer->address }} {{ $customer->address2 != null ? ',' . $customer->address2 : '' }}<br>
-                            {{ $customer->region }}, {{ $customer->city }} , {{ $customer->zipcode }}<br>
-                            {{ $countries[$customer->country] }}<br>
+
+                            @foreach ($address as $i => $line)
+                                @if ($i == 0)
+                                    @continue
+                                @endif
+                                {{ $line }}<br/>
+                            @endforeach
                         </address>
                     </div>
 
@@ -142,6 +168,22 @@
                             </div>
 
                         </div>
+                        @if ($invoice->balance > 0)
+                            <div class="hidden sm:block border-b border-gray-200 dark:border-gray-700"></div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-6 gap-2">
+                                <div class="sm:col-span-5 hidden sm:grid">
+                                    <p class="sm:text-end font-semibold text-gray-800 dark:text-gray-200 text-end">{{ __('client.invoices.balance.title') }}</p>
+                                </div>
+
+                                <div>
+                                    <h5 class="sm:hidden text-xs font-medium text-gray-500 uppercase">{{ __('client.invoices.balance.title') }}</h5>
+
+                                    <p class="text-gray-800 dark:text-gray-200 sm:text-end text-start">{{ formatted_price($invoice->balance, $invoice->currency) }}</p>
+                                </div>
+
+                            </div>
+                        @endif
                         <div class="hidden sm:block border-b border-gray-200 dark:border-gray-700"></div>
 
                         <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -213,21 +255,50 @@
 
                 <!-- Flex -->
                 <div class="mt-8 flex sm:justify-end">
-                    <div class="w-full max-w-2xl sm:text-end space-y-2 text-end">
-                        <!-- Grid -->
-                        <div class="grid grid-cols-2 sm:grid-cols-1 gap-3 sm:gap-2">
+                    <div class="w-full max-w-xl sm:text-end space-y-2 text-end">
                             @if ($invoice->canPay())
-                            <dl class="grid sm:grid-cols-5 gap-x-3">
+                            <dl class="grid gap-x-3">
                                 <dt class="col-span-5">
                                     @if ($invoice->total == 0)
-                                        <a class="hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none" href="{{ route('front.invoices.pay', ['invoice' => $invoice, 'gateway' => 'none']) }}">
+                                        <a class="paymentmethod-btn2 hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none" href="{{ route('front.invoices.pay', ['invoice' => $invoice, 'gateway' => 'none']) }}">
                                             <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h0M2 9.5h20"/></svg>
                                             {{ __('client.invoices.pay') }}
                                         </a>
                                     @else
+
+                                        @if (auth('web')->user()->balance > 0 && setting('allow_add_balance_to_invoices'))
+                                            <form method="POST" action="{{ route('front.invoices.balance', ['invoice' => $invoice]) }}">
+                                                <p class="font-semibold mt-2 dark:text-white">{{ __('client.invoices.pay_with_balance') }}</p>
+                                                @csrf
+                                                <div class="grid sm:grid-cols-5 gap-x-3">
+                                                    <div class="col-span-4">
+                                                        @include('shared/input', ['name' => 'amount', 'value' => auth('web')->user()->balance > $invoice->total ? $invoice->total : auth('web')->user()->balance])
+                                                    </div>
+                                                <button type="submit" class="mt-3 hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none">
+                                                    <i class="bi bi-plus"></i>
+                                                    {{ __('global.add') }}
+                                                </button>
+                                            </div>
+                                            </form>
+                                        @endif
+                                        @if (auth('web')->user()->paymentMethods()->isNotEmpty())
+                                            <form method="POST" action="{{ route('front.payment-methods.pay', ['invoice' => $invoice]) }}">
+                                                @csrf
+                                                <h3 class="font-semibold mt-2 dark:text-white">{{ __('store.checkout.choose_payment_method') }}</h3>
+                                                @include('shared/select', [
+                                                            'name' => 'paymentmethod',
+                                                            'options' => auth('web')->user()->getPaymentMethodsArray()->merge(['none' => __('store.checkout.not_use_payment_method')]),
+                                                            'value' => 'none'
+                                                        ])
+                                                <button type="submit" class="paymentmethod-btn1 mt-3 hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none">
+                                                    <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h0M2 9.5h20"/></svg>
+                                                    {{ __('client.invoices.pay') }}
+                                                </button>
+                                            </form>
+                                        @endif
                                     <div class="hs-dropdown relative inline-flex">
 
-                                        <button class="hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none">
+                                        <button class="paymentmethod-btn2 hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none">
                                             <svg class="flex-shrink-0 w-4 h-4"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h0M2 9.5h20"/></svg>
                                             {{ __('client.invoices.pay') }}
                                             <svg class="hs-dropdown-open:rotate-180 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -242,11 +313,12 @@
                                             @endforeach
                                         </div>
                                     </div>
+
                                         @endif
                                 </dt>
                             </dl>
                                 @endif
-                        </div>
+
                     </div>
                 </div>
 
@@ -274,7 +346,7 @@
                     <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                     {{ __('client.invoices.download') }}
                 </a>
-                <a onclick="window.print();" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#">
+                <a target="_blank" href="{{ route('front.invoices.pdf', ['invoice' => $invoice]) }}" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#">
                     <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
                     {{ __('client.invoices.print') }}
                 </a>

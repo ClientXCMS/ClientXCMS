@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\DTO\Store;
 
 use App\Models\Billing\Upgrade;
@@ -74,19 +79,19 @@ class UpgradeDTO
         $diffInMonths = $diff->m;
         $diffInDays = $diff->d;
         if ($diffInMonths == 0) {
-            $prorata = ($diffInDays / $datetime->format('t')) * ($price->price - $this->service->getBillingPrice()->price);
+            $prorata = round(($diffInDays / $datetime->format('t')) * ($price->price_ht - $this->service->getBillingPrice()->price_ht), 2);
         } else {
-            $prorata = ($diffInMonths * 30 + $diffInDays) / 30 * ($price->price - $this->service->getBillingPrice()->price);
+            $prorata = round(($diffInMonths * 30 + $diffInDays) / 30 * ($price->price_ht - $this->service->getBillingPrice()->price_ht), 2);
         }
         $firstpayment = $prorata;
         if ($diffInDays <= setting('minimum_days_to_force_renewal_with_upgrade', 3)) {
-            $firstpayment = $prorata + $price->price;
+            $firstpayment = $prorata + $price->price_ht;
         }
         if (setting('add_setupfee_on_upgrade', 'true') == 'true') {
-            return new ProductPriceDTO($price->price, $price->setup, $price->currency, $price->recurring, $firstpayment);
+            return new ProductPriceDTO($price->priceTTC(), $price->setupTTC(), $price->currency, $price->recurring, $firstpayment);
         }
 
-        return new ProductPriceDTO($price->price, 0, $price->currency, $price->recurring, $firstpayment);
+        return new ProductPriceDTO($price->priceTTC(), 0, $price->currency, $price->recurring, $firstpayment);
     }
 
     public function createUpgrade(Product $newProduct)
@@ -107,7 +112,7 @@ class UpgradeDTO
         $current = Carbon::now();
         $expiresAt = $expiresAt ?? $this->service->expires_at;
 
-        return __('client.services.upgrade.upgrade_to2', ['product' => $newProduct->name])."({$current->format('d/m/y')} - {$expiresAt->format('d/m/y')})";
+        return __('client.services.upgrade.upgrade_to2', ['product' => $newProduct->name])." ({$current->format('d/m/y')} - {$expiresAt->format('d/m/y')})";
     }
 
     public function getUpgradeDescription(Product $newProduct)
@@ -118,19 +123,14 @@ class UpgradeDTO
     public function toInvoiceItem(Product $newProduct, Upgrade $upgrade)
     {
         $price = $this->generatePrice($newProduct);
-        if ($price->firstpaymentprice == null) {
-            $price->firstpaymentprice = $price->price;
-        }
-
         return [
             'name' => $this->getUpgradeName($newProduct),
             'description' => $this->getUpgradeDescription($newProduct),
             'quantity' => 1,
-            'unit_price_ttc' => TaxesService::getPriceWithVat($price->firstpaymentprice),
-            'unit_price_ht' => $price->firstpaymentprice,
-            'unit_setup_ttc' => TaxesService::getPriceWithVat($price->setup),
-            'unit_setup_ht' => $price->setup,
-            'setupfee' => $price->setup,
+            'unit_price_ttc' => $price->firstPaymentTTC(),
+            'unit_price_ht' => $price->firstPaymentHT(),
+            'unit_setup_ttc' => $price->setupTTC(),
+            'unit_setup_ht' => $price->setupHT(),
             'type' => 'upgrade',
             'related_id' => $upgrade->id,
             'data' => [],

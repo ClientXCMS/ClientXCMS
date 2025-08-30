@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Traits;
 
 use App\Models\Metadata;
@@ -53,7 +58,11 @@ trait HasMetadata
         return self::whereHas('metadata', function ($query) use ($key, $value) {
             $query->where('key', $key)->where('model_type', self::class);
             if ($value !== null) {
-                $query->where('value', $value);
+                if (is_array($value)) {
+                    $query->whereIn('value', $value);
+                } else {
+                    $query->where('value', $value);
+                }
             }
         })->get();
     }
@@ -144,8 +153,13 @@ trait HasMetadata
         }
     }
 
-    public function hasMetadata(string $key): bool
+    public function hasMetadata($key): bool
     {
+        if (is_array($key)) {
+            return collect($key)->every(function ($k) {
+                return $this->hasMetadata($k);
+            });
+        }
         return $this->getCachedMetadata()[$key] ?? false;
     }
 

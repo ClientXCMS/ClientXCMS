@@ -1,17 +1,5 @@
 <?php
-/*
- * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
- *
- * Personal and non-commercial use of this source code is permitted.
- * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
- *
- * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
- *
- * Year: 2025
- */
+
 namespace Store\Basket;
 
 use App\Models\Account\Customer;
@@ -30,15 +18,16 @@ class CouponTest extends TestCase
         $user = $this->createCustomerModel();
         $product = $this->createProductModel();
         $this->createBasket($user);
-        $basket = Basket::first();
+        $basket = Basket::getBasket();
         $basketRow = BasketRow::insert([
             'basket_id' => $basket->id,
             'product_id' => $product->id,
             'quantity' => 1,
             'billing' => 'monthly',
+            'options' => json_encode([]),
         ]);
         $coupon = $this->createCoupon();
-        $response = $this->post(route('front.store.basket.coupon'), [
+        $response = $this->be($user)->post(route('front.store.basket.coupon'), [
             'coupon' => $coupon->code,
         ]);
         $response->assertStatus(302);

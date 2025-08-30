@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('layouts/client')
 @section('title', __('client.services.renewals.index'))
 @section('content')
@@ -138,14 +140,21 @@
                     </h2>
                     @if ($service->getSubscription()->isActive())
                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                        {{ __('client.services.subscription.enabled', compact('date')) }}
+                        {{ __('client.services.subscription.enabled', ['date' => $service->getSubscription()->getNextPaymentDate()]) }}
                     </p>
                     @endif
                     <form method="POST" action="{{ route('front.services.subscription', ['service' => $service]) }}">
                         @csrf
                         @if ($customer->getPaymentMethodsArray()->isNotEmpty())
-                        @include('admin/shared/select', ['name' => 'paymentmethod', 'options' => $customer->getPaymentMethodsArray(), 'label' => __('client.payment-methods.paymentmethod'), 'value' => $service->getSubscription()->paymentmethod_id])
-                        <button class="btn btn-primary mt-2">{{ __('global.save') }}</button>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    @include('admin/shared/select', ['name' => 'paymentmethod', 'options' => $customer->getPaymentMethodsArray(), 'label' => __('client.payment-methods.paymentmethod'), 'value' => $service->getSubscription()->paymentmethod_id])
+                                </div>
+                                <div>
+                                    @include('admin/shared/input', [ 'type' => 'number', 'name' => 'billing_day','label' => __('client.services.subscription.billing_day'), 'help' => __('client.services.subscription.billing_day_help'), 'attributes' => ['min' => 1, 'max' => 28], 'value' => $service->getSubscription()->billing_day ?? 5])
+                                </div>
+                            </div>
+                            <button class="btn btn-primary mt-2">{{ __('global.save') }}</button>
                         @else
                             <div class="alert text-yellow-800 bg-yellow-100 mt-2" role="alert">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
@@ -194,7 +203,7 @@
                 </form>
                 @else
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                    {{ __('client.services.renewals.not_autorized_to_change_billing') }}
+                    {{ __('client.services.renewals.not_authorized_to_change_billing') }}
                 </p>
                 @endif
             </div>
@@ -212,11 +221,12 @@
                     {{ __('client.services.upgradeservice') }}
                 </a>
                 @endif
-
+                @if ($service->configoptions->isNotEmpty())
                 <a class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3" href="{{ route('front.services.options', ['service' => $service]) }}">
                     <i class="bi bi-boxes"></i>
                     {{ __('client.services.manageoptions') }}
                 </a>
+                @endif
                 @if (auth('admin')->check())
 
                     <a href="{{ route('admin.services.show', ['service' => $service]) }}" class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3 text-primary">
@@ -306,33 +316,13 @@
                             </div>
                             <div class="mt-1 flex items-center gap-x-2">
                                 <h3 class="text-xl font-medium text-gray-800 dark:text-gray-200">
-                                    {{ formatted_price($service->getBillingPrice()->price, $service->currency) }}
+                                    {{ formatted_price($service->getBillingPrice()->displayPrice(), $service->currency) }}
                                     <span class="text-gray-500 text-sm">/{{ $service->recurring()['unit'] }}</span>
                                 </h3>
                             </div>
                         </div>
                     </div>
                 </div>
-
-
-                <!-- div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-800 mt-2">
-                    <div class="p-4 md:p-5 flex gap-x-4">
-                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-indigo-100 rounded-lg dark:bg-gray-800">
-                            <svg class="flex-shrink-0 w-5 h-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        </div>
-
-                        <div class="grow">
-                            <div class="flex items-center gap-x-2">
-                                <p class="text-xs uppercase tracking-wide text-gray-500">
-                                    {{ __('client.services.subusers.index') }}
-                                </p>
-                            </div>
-                            <div class="mt-1 flex items-center gap-x-2">
-                                <a href="#" class="btn-action-with-icon">{{ __('client.services.subusers.manage') }}</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>-->
             </div>
         </div>
     </div>

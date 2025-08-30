@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Billing;
 
 use Illuminate\Database\Eloquent\Model;
@@ -72,6 +77,8 @@ class InvoiceLog extends Model
     const REMOVE_LINE = 'remove_line';
 
     const DELETE_INVOICE = 'delete_invoice';
+
+    const UPDATE_BALANCE = 'update_balance';
 
     protected $fillable = [
         'invoice_id',

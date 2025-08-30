@@ -10,17 +10,24 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Front\Provisioning;
 
 use App\DTO\Provisioning\ProvisioningTabDTO;
 use App\Exceptions\WrongPaymentException;
 use App\Http\Controllers\Controller;
+use App\Models\Billing\Gateway;
 use App\Models\Billing\Subscription;
 use App\Models\Provisioning\Service;
 use App\Models\Store\Group;
 use App\Models\Store\Product;
+use App\Rules\isValidBillingDayRule;
 use App\Services\Billing\InvoiceService;
 use App\Services\Provisioning\ServiceService;
 use App\Services\Store\GatewayService;
@@ -73,7 +80,7 @@ class ServiceController extends Controller
             'services' => $services,
             'filter' => $filter,
             'filters' => $this->getFilters(),
-            'gateways' => GatewayService::getAvailable(1),
+            'gateways' => GatewayService::getAvailable(),
         ]);
     }
 
@@ -84,7 +91,7 @@ class ServiceController extends Controller
         abort_if($service->state == 'pending', 404);
         abort_if(! $service->canUpgrade(), 404);
         $customer = $service->customer;
-        $gateways = GatewayService::getAvailable($service->getBillingPrice()->price);
+        $gateways = GatewayService::getAvailable();
         $products = $service->product->getUpgradeProducts();
 
         return view('front.provisioning.services.upgrade', compact('service', 'customer', 'gateways', 'products'));
@@ -95,7 +102,7 @@ class ServiceController extends Controller
         abort_if($service->customer_id != auth()->id(), 404);
         abort_if($service->state == 'pending', 404);
         $customer = $service->customer;
-        $gateways = GatewayService::getAvailable($service->getBillingPrice()->price);
+        $gateways = GatewayService::getAvailable();
 
         return view('front.provisioning.services.options', compact('service', 'customer', 'gateways'));
     }
@@ -123,7 +130,7 @@ class ServiceController extends Controller
         abort_if($service->customer_id != auth()->id(), 404);
         abort_if($service->state == 'pending', 404);
         $customer = $service->customer;
-        $gateways = \App\Models\Billing\Gateway::getAvailable()->get();
+        $gateways = GatewayService::getAvailable();
         $panel_html = ProvisioningTabDTO::renderPanel($service);
         if ($service->hasMetadata('renewal_error')) {
             \Session::flash('error', __('client.services.subscription.failed', ['date' => $service->getMetadata('renewal_last_try'), 'tries' => $service->getMetadata('renewal_tries')]));
@@ -173,17 +180,20 @@ class ServiceController extends Controller
     {
         abort_if($service->customer_id != auth()->id(), 404);
         $customer = $service->customer;
-        $gateways = GatewayService::getAvailable($service->getBillingPrice()->price);
+        $gateways = GatewayService::getAvailable();
         $panel = $service->productType()->panel();
         if ($panel == null) {
             return redirect()->route('front.services.show', ['service' => $service->uuid]);
         }
         $current_tab = $panel->getTab($service, $tab);
-        $panel_html = $current_tab->renderTab($service, $tab);
+
+        if (! $current_tab) {
+            return redirect()->route('admin.services.show', ['service' => $service])->with('error', __('provisioning.admin.services.tab_not_found'));
+        }
+        $panel_html = $current_tab->renderTab($service);
         if ($panel_html instanceof \Illuminate\Http\Response || $panel_html instanceof \Illuminate\Http\RedirectResponse) {
             return $panel_html;
         }
-
         return view('front.provisioning.services.show', compact('current_tab', 'panel_html', 'service', 'customer', 'gateways'));
     }
 
@@ -193,16 +203,10 @@ class ServiceController extends Controller
             abort(404);
         }
         $customer = $service->customer;
-        $gateways = GatewayService::getAvailable($service->getBillingPrice()->price);
-        $days = setting('service_days_before_subscription_renewal');
-        if ($service->canSubscribe()) {
-            $date = $service->expires_at->subDays($days)->format('d/m');
-        } else {
-            $date = $service->expires_at->format('d/m');
-        }
+        $gateways = GatewayService::getAvailable();
         $renewals = $service->serviceRenewals()->whereNotNull('renewed_at')->orderBy('created_at', 'desc')->paginate(10);
 
-        return view('front.provisioning.services.renewal', compact('gateways', 'date', 'service', 'customer', 'renewals'));
+        return view('front.provisioning.services.renewal', compact('gateways', 'service', 'customer', 'renewals'));
     }
 
     public function billing(Request $request, Service $service)
@@ -213,9 +217,10 @@ class ServiceController extends Controller
         $recurrings = collect($service->pricingAvailable($service->currency))->map(function ($recurring) {
             return $recurring->recurring;
         })->join(',');
+        $gateways = Gateway::getAvailable();
         $this->validate($request, [
-            'billing' => 'required|string|in:'.$recurrings,
-            'gateway' => 'nullable|string|in:'.\App\Models\Billing\Gateway::getAvailable()->pluck('uuid')->join(','),
+            'billing' => 'required|in:'.$recurrings,
+            'gateway' => 'nullable|in:'.$gateways->pluck('uuid')->join(','),
         ]);
         $service->billing = $request->get('billing');
         event(new \App\Events\Core\Service\ServiceChangeBillingEvent($service, $request->get('billing')));
@@ -223,7 +228,7 @@ class ServiceController extends Controller
         if ($request->has('pay')) {
             try {
                 $invoice = ServiceService::createRenewalInvoice($service, $service->billing);
-                $gateway = \App\Models\Billing\Gateway::getAvailable()->where('uuid', $request->get('gateway'))->first();
+                $gateway = $gateways->where('uuid', $request->get('gateway'))->first();
                 return $invoice->pay($gateway, $request);
             } catch (WrongPaymentException $e) {
                 logger()->error($e->getMessage());
@@ -264,7 +269,6 @@ class ServiceController extends Controller
         }
         if ($service->cancelled_at != null) {
             $service->uncancel();
-
             return redirect()->route('front.services.show', ['service' => $service->uuid])->with('success', __('client.alerts.service_uncancelled'));
         }
         $request->validate([
@@ -279,7 +283,6 @@ class ServiceController extends Controller
         $reason = $reason.(! empty($request->details) ? ' - '.$request->details : '');
         $date = $request->expiration == 'end_of_period' ? $service->expires_at : new \DateTime;
         $service->cancel($reason, $date, $request->expiration == 'now');
-
         return redirect()->route('front.services.show', ['service' => $service->uuid])->with('success', __('client.alerts.service_cancelled'));
     }
 
@@ -293,18 +296,25 @@ class ServiceController extends Controller
         }
         if (array_key_exists('cancel', $request->all())) {
             $service->subscription->cancel();
-
             return back()->with('success', __('client.services.subscription.cancelled', ['date' => $service->expires_at->format('d/m')]));
         }
-        $paymentmethods = $service->customer->getPaymentMethodsArray(true)->join(',');
+        $paymentmethods = $service->customer->getPaymentMethodsArray(true)->keys()->join(',');
+        if (empty($paymentmethods)) {
+            return back()->with('error', __('client.services.subscription.cannot'));
+        }
         $validated = $request->validate([
             'paymentmethod' => "in:$paymentmethods",
+            'billing_day' => ['nullable', "between:1,28", new isValidBillingDayRule($service)]
         ]);
         $paymentmethod = $validated['paymentmethod'];
-        Subscription::createOrUpdateForService($service, $paymentmethod);
-        $days = setting('service_days_before_subscription_renewal');
+        $subscription = Subscription::createOrUpdateForService($service, $paymentmethod);
+        if ($request->has('billing_day')){
+            $billingDay = $request->get('billing_day');
+            $subscription->setBillingDay($billingDay);
+            return back()->with('success', __('client.services.subscription.billing_day_updated', ['date' => $subscription->getNextPaymentDate()]));
+        }
 
-        return redirect()->route('front.services.show', ['service' => $service->uuid])->with('success', __('client.services.subscription.success', ['date' => $service->expires_at->subDays($days)->format('d/m')]));
+        return back()->with('success', __('client.services.subscription.success', ['date' => $subscription->getNextPaymentDate()]));
     }
 
     public function getFilters()

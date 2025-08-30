@@ -1,12 +1,10 @@
 #!/bin/ash -e
 cd /app
 
-# Fonction pour extraire le domaine depuis APP_URL
 extract_domain() {
     echo "$APP_URL" | sed 's~https*://~~g' | sed 's~/.*~~g'
 }
 
-# Validation des variables critiques
 if [ -z "$APP_URL" ]; then
     echo "ERROR: APP_URL is required"
     exit 1
@@ -17,12 +15,10 @@ if [ -z "$DB_HOST" ]; then
     exit 1
 fi
 
-# Création des dossiers avec permissions appropriées
 mkdir -p /var/log/supervisord/ /var/log/nginx/ /var/log/php7/
 chmod 755  /var/log/supervisord/ /var/log/nginx/ /var/log/php7/
 chown nginx:nginx /var/log/nginx/
 
-# Configuration Laravel
 if [ ! -f /app/.env ]; then
     echo "Copying .env.example to .env"
     cp /app/.env.example /app/.env
@@ -31,7 +27,6 @@ fi
 DOMAIN=$(extract_domain)
 echo "Detected domain: $DOMAIN"
 
-# Configuration Nginx
 echo "Configuring nginx..."
 if [ -f /etc/nginx/http.d/clientxcms.conf ]; then
     echo "Using existing nginx config"
@@ -45,7 +40,6 @@ if [ -f /etc/nginx/http.d/clientxcms.conf ]; then
     fi
 else
     echo "Setting up nginx configuration"
-    # Supprimer la config par défaut
     rm -f /etc/nginx/http.d/default.conf
 
     if [ -z "$LETSENCRYPT_EMAIL" ]; then
@@ -67,11 +61,8 @@ else
     sed -i "s|<domain>|$DOMAIN|g" /etc/nginx/http.d/clientxcms.conf
 fi
 
-# Configuration base de données
 DB_PORT=${DB_PORT:-3306}
 echo "Using DB_PORT: $DB_PORT"
-
-# Attendre la base de données
 echo "Waiting for database connection..."
 TIMEOUT=60
 COUNTER=0
@@ -88,8 +79,6 @@ while ! nc -z -v -w5 "$DB_HOST" "$DB_PORT"; do
 done
 
 echo "Database connection established"
-
-# Configuration Laravel
 echo "Running Laravel setup..."
 php artisan migrate --seed --force || {
     echo "ERROR: Migration failed"
@@ -102,7 +91,6 @@ php artisan key:generate || {
     exit 1
 }
 
-# Démarrage des services
 echo "Starting cron jobs..."
 crond -L /var/log/crond -l 5
 

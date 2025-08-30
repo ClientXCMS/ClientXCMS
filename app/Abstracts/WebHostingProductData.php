@@ -10,8 +10,12 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
 namespace App\Abstracts;
 
 use App\DTO\Store\ProductDataDTO;
@@ -40,14 +44,22 @@ class WebHostingProductData extends AbstractProductData
     {
         return [
             'domain' => ['nullable', 'max:255', new FQDN, new DomainIsNotRegisted, new RequiredIf(function () {
-                return request()->input('domain_subdomain') == null;
-            })],
-            'domain_subdomain' => ['nullable', 'string', 'max:255', new DomainIsNotRegisted(true), new RequiredIf(function () {
-                return request()->input('domain') == null && SubdomainHost::count() > 0;
-            })],
-            'subdomain' => ['nullable', 'string', 'max:255', Rule::in(SubdomainHost::all()->pluck('domain')->toArray()), new RequiredIf(function () {
-                return request()->input('domain') == null && SubdomainHost::count() > 0;
-            })],
+                    return request()->input('domain_subdomain') == null;
+                }),
+            ],
+
+            'domain_subdomain' => ['nullable', 'string', 'max:255', new DomainIsNotRegisted(true),
+                new RequiredIf(function () {
+                    return request()->input('domain') == null && SubdomainHost::count() > 0;
+                }),
+                'regex:/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/',
+            ],
+            'subdomain' => ['nullable', 'string', 'max:255', Rule::in(SubdomainHost::all()->pluck('domain')->toArray()),
+                new RequiredIf(function () {
+                    return request()->input('domain') == null && SubdomainHost::count() > 0;
+                })
+            ],
+
         ];
     }
 
@@ -60,7 +72,6 @@ class WebHostingProductData extends AbstractProductData
             $parameters['domain'] = request()->input('domain');
         }
         $parameters['domain'] = strtolower($parameters['domain']);
-
         return $parameters;
     }
 

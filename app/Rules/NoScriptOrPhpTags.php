@@ -10,19 +10,43 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
 
 class NoScriptOrPhpTags implements Rule
 {
+
+    const FORBIDDEN_TAGS_CONTENT = ['<script>', '<?php', '</script>', '?>', '<=', '<?=', '<%=', '<%', '<%', '{{', '{%'];
+    const FORBIDDEN_TAGS_FILES = [
+        '<script>', '<?php', '</script>',
+    ];
     public function passes($attribute, $value)
     {
-        $content = file_get_contents($value->getRealPath());
-        if (str_contains($content, '<script>') || str_contains($content, '<?php')) {
+        $type = 'content';
+        if ($value instanceof \Illuminate\Http\UploadedFile) {
+            if (!$value->isValid() || !$value->isReadable()) {
+                return false;
+            }
+            $content = file_get_contents($value->getRealPath());
+            $type = 'file';
+        } else {
+            $content = $value;
+        }
+        if (!is_string($content)) {
             return false;
+        }
+        foreach ($type == 'file' ? self::FORBIDDEN_TAGS_FILES : self::FORBIDDEN_TAGS_CONTENT as $tag) {
+            if (stripos($content, $tag) !== false) {
+                return false;
+            }
         }
 
         return true;

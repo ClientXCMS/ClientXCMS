@@ -10,6 +10,9 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 use App\Http\Controllers\Admin\Provisioning\ServerController;
@@ -30,7 +33,7 @@ Route::post('/services/{service}/reinstall', [ServiceController::class, 'reinsta
 Route::post('/services/{service}/update_data', [ServiceController::class, 'updateData'])->name('services.update_data');
 Route::post('/services/{service}/upgrade', [ServiceController::class, 'upgrade'])->name('services.upgrade');
 Route::get('/services/{service}/{tab}', [ServiceController::class, 'tab'])->name('services.tab');
-Route::post('/services/{service}/action/{action}', [ServiceController::class, 'changeStatus'])->name('services.action')->where('action', 'suspend|unsuspend|expire|cancel');
+Route::post('/services/{service}/action/{action}', [ServiceController::class, 'changeStatus'])->name('services.action')->where('action', 'suspend|unsuspend|expire|cancel|cancel_delivery');
 Route::resource('/configoptions_services', \App\Http\Controllers\Admin\Provisioning\ConfigOptionServiceController::class)->names('configoptions_services')->except('edit');
 
 Route::name('settings.')->prefix('settings')->middleware('admin')->group(function () {

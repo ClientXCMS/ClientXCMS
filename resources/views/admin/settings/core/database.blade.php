@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin.settings.sidebar')
 @section('title', __('admin.database.title'))
 @section('setting')
@@ -46,6 +48,7 @@
 
                 </form>
             </div>
+            @if (app('license')->getLicense()->getServer() != "local")
                 <div>
 
                 <ul class="space-y-3 text-sm">
@@ -54,11 +57,7 @@
       <svg class="flex-shrink-0 h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
     </span>
                         <span class="text-gray-800 dark:text-gray-400">
-                            @if (app('license')->getLicense()->getServer() != null)
       {{ __('admin.database.host') }} : ctx-{{ app('license')->getLicense()->getServer() }}.clientxcms.com
-                            @else
-        {{ __('admin.database.host') }} : {{ $_ENV['DB_HOST'] }}
-                            @endif
                         </span>
                     </li>
                     <li class="flex space-x-3">
@@ -89,6 +88,7 @@
                     </li>
                 </ul>
                 </div>
+                @endif
             </div>
         </div>
         @if($output = Session::get('output'))

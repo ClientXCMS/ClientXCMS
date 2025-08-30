@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Console\Commands\Translations;
 
 use File;
@@ -32,11 +37,6 @@ class ImportFileTranslationCommand extends Command
             return;
         }
         $locale = basename($jsonFilePath, '.json');
-        if ($locale == 'fr' && app()->environment() == 'local') {
-            $this->info('Skipping French locale.');
-
-            return;
-        }
         $this->info("Processing locale: {$locale}");
         $translations = json_decode(File::get($jsonFilePath), true);
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -59,8 +59,6 @@ class ImportFileTranslationCommand extends Command
                 $this->info('Folder created: '.$langDirectory);
             }
             $phpFilePath = "{$baseDir}.php";
-
-            // Appliquer l'inversion des variables {_variable} vers :variable
             $processedTranslationData = $this->restoreLaravelVariables($translationData);
 
             $phpContent = "<?php\n\nreturn ".$this->varExport($processedTranslationData, true).";\n";
@@ -73,10 +71,8 @@ class ImportFileTranslationCommand extends Command
     {
         foreach ($translations as $key => $value) {
             if (is_string($value)) {
-                // Inverser les variables {_variable} en :variable
                 $translations[$key] = preg_replace('/{\_(\w+)}/', ':$1', $value);
             } elseif (is_array($value)) {
-                // Appliquer l'inversion de manière récursive pour les sous-tableaux
                 $translations[$key] = $this->restoreLaravelVariables($value);
             }
         }

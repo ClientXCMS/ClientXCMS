@@ -10,16 +10,18 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin.layouts.admin')
 @section('title', __('admin.settings.title'))
 @section('content')
     <div class="container mx-auto">
-
+        @include('admin/shared/alerts')
     <div class="grid gap-2 sm:grid-cols-2 grid-cols-1">
     @foreach($cards as $card)
         <div class="grid-cols-1 sm:col-span-{{ $card->columns }}">

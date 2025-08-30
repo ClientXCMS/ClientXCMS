@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 
 <footer class="print:hidden mt-auto py-10 sm:px-6 lg:px-8 mx-auto dark:bg-gray-900 border-gray-700 shadow-sm ">
     <!-- Grid -->
@@ -67,3 +69,6 @@
     </div>
     <!-- End Grid -->
 </footer>
+@if (!is_gdpr_compliment() && setting('gdrp_cookies_privacy_link') != null)
+    @include('shared/gdpr')
+@endif

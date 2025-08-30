@@ -6,8 +6,10 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "ext-dom": "*",
         "ext-gd": "*",
         "ext-intl": "*",
+        "ext-libxml": "*",
         "ext-simplexml": "*",
         "ext-zip": "*",
         "bacon/bacon-qr-code": "^3.0",
@@ -33,7 +35,8 @@
         "sentry/sentry-laravel": "^4.9",
         "spatie/laravel-query-builder": "^5.7",
         "stancer/stancer": "^2.0",
-        "stripe/stripe-php": "^13.7"
+        "stripe/stripe-php": "^13.7",
+        "symfony/filesystem": "^7.3"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.9",

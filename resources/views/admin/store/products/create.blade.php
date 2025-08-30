@@ -10,70 +10,35 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title',  __($translatePrefix . '.create.title', ['name' => $item->fullname]))
 @section('styles')
     <link rel="stylesheet" href="{{ Vite::asset('resources/global/css/editor.scss') }}">
+    <link rel="stylesheet" href="{{ Vite::asset('resources/global/css/monaco-editor.main.css') }}">
 @endsection
 @section('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.37.1/min/vs/loader.js"></script>
     <script src="{{ Vite::asset('resources/global/js/editor.js') }}" type="module"></script>
     <script src="{{ Vite::asset('resources/global/js/admin/pricing.js') }}" type="module"></script>
+    <script src="{{ Vite::asset('resources/global/js/admin/product.js') }}" type="module"></script>
 
     <script>
-        let editorMode = 'editor';
-        function toggleEditor() {
-            const editor = document.getElementById('monaco-editor');
-            const description = document.getElementsByClassName('editor-description')[0];
-            const toggleBtn = document.getElementById('toggle-btn');
-            if (editorMode === 'html') {
-                editorMode = 'editor';
-
-                editor.style.display = 'none';
-                description.style.display = 'block';
-
-                toggleBtn.innerHTML = 'HTML';
-            } else {
-                editorMode = 'html';
-
-                editor.style.display = 'block';
-                description.style.display = 'none';
-
-                toggleBtn.innerHTML = 'Editor';
-            }
+        window.product = {
+            value: @json(old('description', $item->description)),
+            theme: {!! !is_darkmode(true) ? '"vs"' : '"vs-dark"' !!}
         }
-        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.37.1/min/vs' }});
-        require(['vs/editor/editor.main'], function () {
-            const editor = monaco.editor.create(document.getElementById('monaco-editor'), {
-                value: @json(old('description', $item->description)),
-                language: 'html',
-                theme: {!! is_darkmode('admin') ? "'vs-dark'" : "'vs'" !!},
-                automaticLayout: true,
-                minimap: { enabled: false },
-                wordWrap: 'on',
-                lineNumbers: 'on'
-            });
-
-            document.getElementById("product-form").addEventListener("submit", function (event) {
-
-                if (editorMode === 'html') {
-                    document.querySelector("textarea[name='description']").innerHTML = editor.getValue();
-                } else {
-                    document.querySelector("textarea[name='description']").innerHTML = document.querySelector('#editor_value-description').innerHTML;
-                }
-            });
-        });
     </script>
 @endsection
 @section('content')
     <div class="container mx-auto">
     @include('admin/shared/alerts')
-        <form method="POST" action="{{ route($routePath .'.store') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route($routePath .'.store') }}" enctype="multipart/form-data" id="product-form">
         <div class="flex flex-col">
             <div class="-m-1.5 overflow-x-auto">
                 <div class="p-1.5 min-w-full inline-block align-middle">
@@ -130,7 +95,7 @@
                             </div>
 
                             <div class="col-span-2">
-                                @include('admin/shared/editor', ['name' => 'description', 'label' => __('global.description') . '<a href="#" onclick="toggleEditor(); return false;" id="toggle-btn" class="ml-5 btn btn-outline-primary btn-sm mb-2">HTML</a>', 'value' => old('description', $item->description), 'translatable' => true])
+                                @include('admin/shared/editor', ['name' => 'description', 'label' => __('global.description') . '<a href="#" id="toggle-btn" class="ml-5 btn btn-outline-primary btn-sm mb-2">HTML</a>', 'value' => old('description', $item->description), 'translatable' => true])
 
                                 <div id="monaco-editor" style="height: 400px;display:none;"></div>
                                 <input type="hidden" name="description_html" value="{{ old('description', $item->description) }}">

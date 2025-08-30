@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Account;
 
 use App\Casts\CustomRawPhoneNumberCast;
@@ -41,7 +46,7 @@ use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
- *
+ * 
  *
  * @OA\Schema (
  *      schema="Customer",
@@ -122,6 +127,12 @@ use Laravel\Sanctum\HasApiTokens;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereZipcode($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer withoutTrashed()
+ * @property string|null $company_name
+ * @property string|null $billing_details
+ * @property int $gdpr_compliment
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereBillingDetails($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereCompanyName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereGdprCompliment($value)
  * @mixin \Eloquent
  */
 class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\MustVerifyEmail, HasNotifiableVariablesInterface, NotifiablePlaceholderInterface
@@ -225,6 +236,21 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
      *     type="string",
      *     description="Last login IP address"
      * )
+     * @OA\Property(
+     *     property="company_name",
+     *     type="string",
+     *     description="Customer company name"
+     * )
+     * @OA\Property(
+     *     property="billing_details",
+     *     type="string",
+     *     description="Customer billing details"
+     * * )
+     * @OA\Property(
+     *     property="gdpr_compliment",
+     *     type="boolean",
+     *     description="Indicates if the customer has given GDPR consent"
+     * )
      */
     protected $fillable = [
         'email',
@@ -248,6 +274,9 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'notes',
         'balance',
         'locale',
+        'billing_details',
+        'company_name',
+        'gdpr_compliment',
     ];
 
     protected $attributes = [
@@ -255,6 +284,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'balance' => 0,
         'country' => 'FR',
         'locale' => 'fr_FR',
+        'gdpr_compliment' => false,
     ];
 
     /**
@@ -279,6 +309,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'password' => 'hashed',
         'last_login' => 'datetime',
         'phone' => CustomRawPhoneNumberCast::class.':FR',
+        'balance' => 'decimal:2'
     ];
 
     public static function boot()
@@ -388,12 +419,15 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         }
     }
 
-    public function addFund(float $amount)
+    public function addFund(float $amount, ?string $reason = null)
     {
         $old = $this->balance;
         $this->balance += $amount;
         $this->save();
-        ActionLog::log(ActionLog::BALANCE_CHANGED, self::class, $this->id, null, $this->id, ['old' => $old, 'new' => $this->balance], ['balance' => $old], ['balance' => $this->balance]);
+        if ($reason !== null) {
+            $reason = " " . strtolower(__('global.for')) . " " . $reason;
+            ActionLog::log(ActionLog::BALANCE_CHANGED, self::class, $this->id, auth('admin')->id(), $this->id, ['old' => formatted_price($old), 'new' => formatted_price($this->balance), 'reason' => $reason], ['balance' => $old], ['balance' => $this->balance]);
+        }
     }
 
     public function getBadgeColor()
@@ -450,5 +484,23 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public function getLocale(): string
     {
         return $this->locale;
+    }
+
+    public function generateBillingAddress()
+    {
+        return [
+            'firstname' => $this->firstname,
+            'lastname' => $this->lastname,
+            'company_name' => $this->company_name,
+            'address' => $this->address,
+            'address2' => $this->address2,
+            'city' => $this->city,
+            'country' => $this->country,
+            'region' => $this->region,
+            'zipcode' => $this->zipcode,
+            'phone' => $this->phone,
+            'email' => $this->email,
+            'billing_details' => $this->billing_details,
+        ];
     }
 }

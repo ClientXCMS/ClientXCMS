@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Observers;
 
 use App\Models\Billing\Invoice;
@@ -54,6 +59,7 @@ class InvoiceObserver
 
     public function creating(Invoice $model)
     {
-        $model->uuid = \Str::uuid();
+        $model->uuid = generate_uuid(Invoice::class);
+        $model->billing_address = $model->customer->generateBillingAddress();
     }
 }

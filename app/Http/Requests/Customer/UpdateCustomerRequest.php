@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Requests\Customer;
 
 use App\Helpers\Countries;
@@ -39,7 +44,9 @@ use Propaganistas\LaravelPhone\Rules\Phone;
  *     @OA\Property(property="balance", type="number", format="float", example=250.50),
  *     @OA\Property(property="notes", type="string", maxLength=1000, nullable=true, example="Client fidèle"),
  *     @OA\Property(property="country", type="string", maxLength=255, example="FR"),
- *     @OA\Property(property="locale", type="string", maxLength=255, example="fr")
+ *     @OA\Property(property="locale", type="string", maxLength=255, example="fr"),
+ * *     @OA\Property(property="company_name", type="string", maxLength=255, nullable=true, example="Doe Industries"),
+ *     @OA\Property(property="billing_details", type="string", maxLength=255, nullable=true, example="Details de facturation ici")
  * )
  */
 class UpdateCustomerRequest extends FormRequest
@@ -75,6 +82,8 @@ class UpdateCustomerRequest extends FormRequest
             'password' => ['nullable', 'string', 'min:8', Rules\Password::defaults()],
             'country' => ['string', 'max:255', Rule::in(array_keys(Countries::names()))],
             'locale' => ['string', 'max:255', Rule::in(array_keys(\App\Services\Core\LocaleService::getLocalesNames()))],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'billing_details' => ['nullable', 'string', 'max:255'],
         ];
     }
 

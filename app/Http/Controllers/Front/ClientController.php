@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
@@ -34,7 +39,7 @@ class ClientController extends Controller
         $invoices = Invoice::where('customer_id', auth()->id())->where('status', '!=', Invoice::STATUS_DRAFT)->orderBy('created_at', 'desc')->limit(5)->paginate();
         $serviceFilters = Service::FILTERS;
         $invoiceFilters = Invoice::FILTERS;
-        $gateways = GatewayService::getAvailable(1);
+        $gateways = GatewayService::getAvailable();
 
         return view('front.client.index', compact('gateways', 'tickets', 'services', 'services', 'invoices', 'ticketsCount', 'pending', 'servicesCount', 'invoicesCount', 'serviceFilters', 'invoiceFilters'));
     }

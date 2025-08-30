@@ -1,18 +1,15 @@
 const showmorepricingbtn = document.getElementById('showmorepricingbtn');
 const calculatorBtn = document.getElementById('calculatorBtn');
 const table = document.getElementById('pricingtable');
-if (!table){
-    const hidden = table.querySelectorAll('.hidden');
-} else {
-    const hidden = [];
+if (table) {
+    showmorepricingbtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        Array.from(table.querySelectorAll('.hidden')).map((el) => el.classList.toggle('hidden'));
+    });
 }
-showmorepricingbtn.addEventListener('click', function (e) {
-    e.preventDefault();
-    Array.from(hidden).map((el) => el.classList.toggle('hidden'));
-});
 
 function showmorepricingbtn_hidden() {
-    const filter = Array.from(hidden).filter((el) => el.classList.contains('hidden'));
+    const filter = Array.from(table.querySelectorAll('.hidden')).filter((el) => el.classList.contains('hidden'));
     if (filter.length > 0) {
         return true;
     }

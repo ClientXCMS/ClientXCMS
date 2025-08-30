@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title',  __($translatePrefix . '.show.title', ['name' => $item->name]))
 @section('scripts')
@@ -42,7 +44,7 @@
 
                                 </h2>
                                 <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    {{ __($translatePrefix. '.show.subheading', ['date' => $item->created_at->format('d/m/y'), 'owner' => $item->customer->fullName]) }}
+                                    {{ __($translatePrefix. '.show.subheading', ['date' => $item->created_at->format('d/m/y'), 'owner' => $item->customer ? $item->customer->fullName : __('global.deleted')]) }}
                                 </p>
                             </div>
                             @if (staff_has_permission('admin.manage_services'))
@@ -64,7 +66,7 @@
                                 @if ($item->isOnetime())
                                     @include('/admin/shared/input', ['name' => 'expires_at', 'label' => __('global.expiration'), 'value' => __('recurring.onetime'), 'disabled' => true])
                                 @else
-                                    @include('/admin/shared/flatpickr', ['name' => 'expires_at', 'label' => __('global.expiration'), 'value' => $item->expires_at ? $item->expires_at->format('Y-m-d H:i:s') : null, 'type' => 'datetime'])
+                                    @include('/admin/shared/flatpickr', ['name' => 'expires_at', 'label' => __('global.expiration'), 'value' => $item->expires_at ? $item->expires_at->format('Y-m-d H:i') : null, 'type' => 'datetime'])
                                 @endif
 
                             </div>
@@ -268,7 +270,15 @@
                                 <form method="POST" action="{{ route('admin.services.subscription', ['service' => $item]) }}">
                                     @csrf
                                     @if ($paymentmethods->isNotEmpty())
-                                        @include('admin/shared/select', ['name' => 'paymentmethod', 'options' => $paymentmethods, 'label' => __('client.payment-methods.paymentmethod'), 'value' => $item->getSubscription()->paymentmethod_id])
+                                        <div class="grid md:grid-cols-2 gap-2">
+                                            <div>
+                                                @include('admin/shared/select', ['name' => 'paymentmethod', 'options' => $paymentmethods, 'label' => __('client.payment-methods.paymentmethod'), 'value' => $item->getSubscription()->paymentmethod_id])
+
+                                            </div>
+                                            <div>
+                                                @include('admin/shared/input', [ 'type' => 'number', 'name' => 'billing_day','label' => __('client.services.subscription.billing_day'), 'help' => __('client.services.subscription.billing_day_help'), 'attributes' => ['min' => 1, 'max' => 28], 'value' => $item->getSubscription()->billing_day ?? 5])
+                                            </div>
+                                        </div>
                                         <button
                                             class="btn btn-primary mt-2">{{ __('global.save') }}</button>
                                     @else
@@ -397,6 +407,9 @@
 
                                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                             @foreach($item->configoptions as $configoption)
+                                                @if (!$configoption->option)
+                                                    @continue
+                                                @endif
                                                 <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
 
                                                     <td class="h-px w-px whitespace-nowrap">
@@ -665,7 +678,7 @@
                                 </form>
                             @endif
                         @endif
-                    @if (staff_has_permission('admin.show_customers'))
+                    @if (staff_has_permission('admin.show_customers') && $item->customer)
 
                         <a class="btn bg-blue-600 w-full text-left mb-2" href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
                             <i class="bi bi-people mr-2"></i>
@@ -676,7 +689,11 @@
                     @if (staff_has_permission('admin.manage_services'))
                         <button class="btn bg-red-500 mb-2 w-full text-left" data-hs-overlay="#cancel-overlay">
                             <i class="bi bi-trash2 mr-2"></i>
+                            @if ($item->isPending())
+                                {{ __('provisioning.admin.services.cancel.delivery') }}
+                            @else
                             {{ __('provisioning.admin.services.cancel.btn') }}
+                            @endif
                         </button>
                     @endif
 
@@ -729,10 +746,17 @@
             </div>
             <div class="p-4">
 
-                <form method="POST" action="{{ route('admin.services.action', ['service' => $item, 'action' => 'cancel']) }}">
-                    <p class="text-gray-800 dark:text-gray-400">
+                <form method="POST" action="{{ route('admin.services.action', ['service' => $item, 'action' => $item->isPending() ? 'cancel_delivery' : 'cancel']) }}">
+                    @csrf
 
-                        @csrf
+                    @if ($item->isPending())
+                    <p class="text-gray-800 dark:text-gray-400">
+                        {{ __($translatePrefix . '.cancel.pending') }}
+                    </p>
+                    <button class="btn btn-primary w-full mt-10">
+                        <i class="bi bi-check mr-2"></i>{{ __($translatePrefix . '.cancel.delivery') }}
+                    </button>
+                    @else
                         @if ($item->cancelled_reason != NULL)
                             @include('/admin/shared/select', ['name' => 'reason', 'label' => __('client.services.cancel.reason'), 'options' => \App\Models\Provisioning\CancellationReason::getReasons(), 'value' => old('reason')])
                             @include('/admin/shared/textarea', ['name' => 'message', 'label' => __($translatePrefix. '.cancel.message'), 'value' => $item->cancelled_reason])
@@ -745,13 +769,12 @@
                             @include('/admin/shared/select', ['name' => 'reason', 'label' => __('client.services.cancel.reason'), 'options' => \App\Models\Provisioning\CancellationReason::getReasons(), 'value' => old('reason')])
                             @include('/admin/shared/textarea', ['name' => 'message', 'label' => __('client.services.cancel.message'), 'value' => old('message')])
                             @if (!$item->isOnetime())
-                                @include('/admin/shared/select', ['name' => 'expiration', 'label' => __('client.services.cancel.expiration'), 'options' => \App\Models\Provisioning\CancellationReason::getCancellationMode(), 'value' => old('expiration')])
-
+                                @include('/admin/shared/select', ['name' => 'expiration', 'label' => __('client.services.cancel.expiration'), 'options' => \App\Models\Provisioning\CancellationReason::getCancellationMode($service), 'value' => old('expiration')])
                             @endif
                             <button class="btn btn-primary w-full mt-10"> <i class="bi bi-trash2 mr-2"></i>{{ __($translatePrefix . '.cancel.title') }}</button>
 
                         @endif
-                    </p>
+                        @endif
                 </form>
             </div>
         </div>

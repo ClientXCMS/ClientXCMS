@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @php($pricing = $product->getPriceByCurrency(currency()))
 
 <div class="flex flex-col border border-gray-200 text-center rounded-xl p-8 dark:border-slate-900 product:bg-slate-900 mb-3">

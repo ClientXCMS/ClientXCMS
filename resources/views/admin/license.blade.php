@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title', __('admin.license.title'))
 @section('content')
@@ -70,8 +72,23 @@
       <svg class="flex-shrink-0 h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
     </span>
                                     <span class="text-gray-800 dark:text-gray-400">
-       {{ __('admin.license.max_customers', ['count' => $license->get('max')]) }}
-    </span>
+                                        @if (!$license->get('supportExpiration'))
+                                            {{ __('admin.license.no_support') }}
+
+                                            <a class="btn btn-secondary" href="https://clientxcms.com/pricing">
+                                        {{ __('admin.license.buy_support') }}
+                                    </a>
+                                        @elseif ($license->get('supportExpiration')->isFuture())
+                                            {{ __('admin.license.support_active', ['date' => $license->get('supportExpiration')->format('d/m/y')]) }}
+                                        @else
+                                            {{ __('admin.license.support_expired', ['date' => $license->get('supportExpiration')->format('d/m/y')]) }}
+
+                                            <a class="btn btn-secondary" href="https://clientxcms.com/client/services">
+                                        {{ __('admin.license.renew_support') }}
+                                    </a>
+                                        @endif
+                                    </span>
+
                                 </li>
 
                                 <li class="flex space-x-3">
@@ -79,7 +96,7 @@
       <svg class="flex-shrink-0 h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
     </span>
                                     <span class="text-gray-800 dark:text-gray-400">
-       {{ __('admin.license.current_customers', ['count' => $license->get('clients')]) }}
+       {{ __('admin.license.type') }} : {{ $license->get('type') }}
     </span>
                                 </li>
 

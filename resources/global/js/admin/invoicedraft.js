@@ -57,9 +57,9 @@ if (addItemBtn) {
     }
 
     function updateSummary(pricing, form) {
-        const unitPriceHT = form.querySelector('input[name="unit_price_ht"]');
-        const unitSetupHT = form.querySelector('input[name="unit_setup_ht"]');
-        unitSetupHT.value = pricing.setup;
-        unitPriceHT.value = pricing.price;
+        const unitPriceTTC = form.querySelector('input[name="unit_price_ttc"]');
+        const unitSetupTTC = form.querySelector('input[name="unit_setup_ttc"]');
+        unitSetupTTC.value = pricing.setup_ttc;
+        unitPriceTTC.value = pricing.price_ttc;
     }
 }

@@ -10,17 +10,23 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Provisioning;
 
+use App\Models\Traits\HasMetadata;
 use App\Models\Traits\Loggable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
+ *
  *
  * @property int $id
  * @property string $domain
@@ -42,7 +48,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class SubdomainHost extends Model
 {
-    use HasFactory, Loggable, softDeletes;
+    use HasFactory, Loggable, softDeletes, HasMetadata;
 
     protected $fillable = ['domain'];
 

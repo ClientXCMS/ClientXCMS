@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
     <!doctype html>
 <html class="{{is_darkmode(true) ? 'dark' : '' }}" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>

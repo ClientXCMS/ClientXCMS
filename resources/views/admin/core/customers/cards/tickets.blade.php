@@ -10,10 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
+
  $tickets_filters = collect(\App\Models\Helpdesk\SupportTicket::FILTERS)->mapWithKeys(function ($k, $v) {
      return [$k => __('global.states.'.$v)];
  })->toArray();

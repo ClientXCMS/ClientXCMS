@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Core;
 
 use App\Http\Controllers\Admin\AbstractCrudController;
@@ -80,7 +85,10 @@ class RoleController extends AbstractCrudController
             $permissions = [];
         } else {
             $role->is_admin = false;
-            $permissions = $validated['permissions'];
+            $permissions = $validated['permissions'] ?? [];
+            if (empty($permissions)) {
+                return back()->with('error', __('admin.roles.error_no_permissions'));
+            }
         }
         $role->save();
         $role->permissions()->sync($permissions);
@@ -127,11 +135,11 @@ class RoleController extends AbstractCrudController
     public function destroy(Role $role)
     {
         $this->checkPermission('delete');
-        if ($role->default || $role->level >= auth('admin')->user()->role->level) {
+        if ($role->is_default || $role->level >= auth('admin')->user()->role->level) {
             return back()->with('error', __('admin.roles.error_delete'));
         }
         $role->permissions()->detach();
-        $default = Role::where('default', true)->first();
+        $default = Role::where('is_default', true)->first();
         $role->staffs->each(function ($staff) use ($default) {
             $staff->update(['role_id' => $default->id]);
         });

@@ -10,10 +10,16 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Billing;
 
+use App\Abstracts\PaymentMethodSourceDTO;
 use App\Contracts\Store\GatewayTypeInterface;
 use App\DTO\Core\Gateway\GatewayUriDTO;
 use App\Models\Traits\ModelStatutTrait;
@@ -108,6 +114,11 @@ class Gateway extends Model
         $dto = new GatewayUriDTO($this, $invoice);
 
         return $this->paymentType()->processPayment($invoice, $this, $request, $dto);
+    }
+
+    public function payInvoice(Invoice $invoice, PaymentMethodSourceDTO $sourceDTO)
+    {
+        return $this->paymentType()->payInvoice($invoice, $sourceDTO);
     }
 
     public function getAttribute($key)

@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Services\Store;
 
 use App\Models\Billing\Gateway;
@@ -26,21 +31,14 @@ class GatewayService
      *
      * @return array|void
      */
-    public static function getAvailable(float $amount = 0)
+    public static function getAvailable()
     {
         if (! is_installed()) {
             return [];
         }
-        $gateways = Cache::remember('gateways', 60 * 60 * 24, function () {
+        return Cache::remember('gateways', 60 * 60 * 24, function () {
             return Gateway::getAvailable()->get();
         });
-        if ($amount == 0) {
-            return $gateways->filter(function ($gateway) {
-                return $gateway->uuid == 'balance';
-            });
-        }
-
-        return $gateways;
     }
 
     public static function forgotAvailable()

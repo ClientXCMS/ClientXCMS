@@ -10,12 +10,18 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Provisioning;
 
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Models\Provisioning\SubdomainHost;
+use App\Rules\FQDN;
 use Illuminate\Http\Request;
 
 class SubdomainHostController extends AbstractCrudController
@@ -43,6 +49,8 @@ class SubdomainHostController extends AbstractCrudController
 
     public function show(SubdomainHost $subdomainsHost)
     {
+        staff_aborts_permission('admin.manage_subdomains_hosts');
+
         $card = app('settings')->getCards()->firstWhere('uuid', 'provisioning');
         if (! $card) {
             abort(404);
@@ -58,8 +66,15 @@ class SubdomainHostController extends AbstractCrudController
 
     public function store(Request $request)
     {
+        staff_aborts_permission('admin.manage_subdomains_hosts');
         $data = $request->validate([
-            'domain' => 'required|string|unique:subdomains_hosts|max:255',
+            'domain' => [
+                'required',
+                'string',
+                'unique:subdomains_hosts',
+                'max:255',
+                new FQDN
+            ],
         ]);
         $subdomain = SubdomainHost::create($data);
 
@@ -68,8 +83,15 @@ class SubdomainHostController extends AbstractCrudController
 
     public function update(Request $request, SubdomainHost $subdomainsHost)
     {
+        staff_aborts_permission('admin.manage_subdomains_hosts');
         $data = $request->validate([
-            'domain' => 'required|string|unique:subdomains_hosts',
+            'domain' => [
+                'required',
+                'string',
+                'max:255',
+                new FQDN,
+                'unique:subdomains_hosts,domain,'.$subdomainsHost->id,
+            ],
         ]);
         $subdomainsHost->update($data);
 
@@ -78,6 +100,7 @@ class SubdomainHostController extends AbstractCrudController
 
     public function destroy(SubdomainHost $subdomainsHost)
     {
+        staff_aborts_permission('admin.manage_subdomains_hosts');
         $subdomainsHost->delete();
 
         return $this->deleteRedirect($subdomainsHost);

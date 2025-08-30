@@ -10,6 +10,9 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 namespace App\Http\Controllers\Admin\Settings;
@@ -54,6 +57,7 @@ class SettingsSecurityController
             'admin_prefix' => 'required|string',
             'captcha_site_key' => [new RequiredIf($request->captcha_driver != 'none')],
             'captcha_secret_key' => [new RequiredIf($request->captcha_driver != 'none')],
+            'gdrp_cookies_privacy_link' => ['nullable', 'string', 'url'],
         ]);
         EnvEditor::updateEnv([
             'HASH_DRIVER' => $data['hash_driver'],

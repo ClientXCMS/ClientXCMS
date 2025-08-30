@@ -1,0 +1,92 @@
+# APP_URL : URL d'accès à l'application prise en compte dans le processus de déploiement.
+# Pour le développement local : utiliser une url au format http
+# Pour la production : utiliser l'URL complète en https
+# Tester votre environnement localement en http sans configurer la variable "LETSENCRYPT_EMAIL" avant de générer vos certificats.
+x-common-variables: &common-variables
+  APP_URL: "http://localhost"
+
+services:
+  app:
+    #image: ghcr.io/clientxcms/app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - .github/logs/nginx/:/var/log/nginx/
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      <<: *common-variables
+      APP_ENV: "production"
+      APP_TIMEZONE: "Europe/Paris"
+      # LETSENCRYPT_EMAIL : E-mail utilisé lors de la génération du certificat SSL.
+      # À configurer uniquement pour une génération de certificat SSL public.
+      LETSENCRYPT_EMAIL: ""
+      APP_ENVIRONMENT_ONLY: "false"
+      CACHE_DRIVER: "file"
+      SESSION_DRIVER: "file"
+      QUEUE_DRIVER: "database"
+      REDIS_HOST: "127.0.0.1"
+      DB_HOST: "database"
+      DB_PORT: "3306"
+      DB_NAME: "clientxcms"
+      DB_PASSWORD: "clientxcms"
+      MAIL_FROM: "noreply@example.com"
+      MAIL_DRIVER: "smtp"
+      MAIL_HOST: "smtp.exemple.com"
+      MAIL_PORT: "587"
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_ENCRYPTION: "true"
+      # Veiller à remplir votre ID et votre secret avant le démarrage.
+      OAUTH_CLIENT_ID: ""
+      OAUTH_CLIENT_SECRET: ""
+    networks:
+      - clientxcms-network
+
+  database:
+    image: mariadb:10.5
+    restart: always
+    ports:
+      -   3306:3306
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    environment:
+      MYSQL_PASSWORD: "clientxcms"
+      MYSQL_ROOT_PASSWORD: "clientxcms"
+      MYSQL_DATABASE: "clientxcms"
+      MYSQL_USER: "clientxcms"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pclientxcms"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - clientxcms-network
+
+  # A conserver en cas de besoin mais déconseiller pour un déploiement en production.
+  phpmyadmin:
+    image: phpmyadmin:latest
+    restart: always
+    environment:
+      PMA_ABSOLUTE_URI: "${APP_URL}/phpmyadmin/"
+      PMA_HOSTS: ${PMA_HOSTS:-database}
+      UPLOAD_LIMIT: ${UPLOAD_LIMIT:-1024M}
+      HIDE_PHP_VERSION: ${HIDE_PHP_VERSION:-true}
+      MAX_EXECUTION_TIME: ${MAX_EXECUTION_TIME:-600}
+      MEMORY_LIMIT: ${MEMORY_LIMIT:-1024M}
+    networks:
+      - clientxcms-network
+
+networks:
+  clientxcms-network:
+    driver: bridge
+
+volumes:
+  mariadb-data:

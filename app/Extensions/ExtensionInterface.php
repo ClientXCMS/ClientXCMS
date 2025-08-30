@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Extensions;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
@@ -21,15 +26,6 @@ use Illuminate\Foundation\Application;
 
 interface ExtensionInterface
 {
-    public function onInstall(string $uuid): void;
-
-    public function onUninstall(string $uuid): void;
-
-    public function onEnable(string $uuid): void;
-
-    public function onDisable(string $uuid): void;
-
-    public function download(string $uuid): ExtensionInstallDTO;
 
     public function autoload(ExtensionDTO $DTO, Application $application, ClassLoader $composer): void;
 

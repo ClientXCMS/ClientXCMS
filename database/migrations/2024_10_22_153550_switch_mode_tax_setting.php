@@ -21,10 +21,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $mode = setting('store_mode_tax', \App\Services\Store\TaxesService::MODE_TAX_INCLUDED);
-        \App\Models\Admin\Setting::updateSettings([
-            'store_mode_tax' => $mode === \App\Services\Store\TaxesService::MODE_TAX_INCLUDED ? \App\Services\Store\TaxesService::PRICE_TTC : \App\Services\Store\TaxesService::PRICE_HT,
-        ]);
     }
 
     /**

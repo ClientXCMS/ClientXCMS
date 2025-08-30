@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Helpdesk\Support;
 
 use App\Core\Admin\Dashboard\AdminCountWidget;
@@ -22,6 +27,7 @@ use App\Models\Account\Customer;
 use App\Models\Helpdesk\SupportComment;
 use App\Models\Helpdesk\SupportMessage;
 use App\Models\Helpdesk\SupportTicket;
+use App\Services\Helpdesk\TicketStatisticsService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
@@ -34,15 +40,10 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
     protected string $viewPath = 'admin.helpdesk.tickets';
 
     protected string $routePath = 'admin.helpdesk.tickets';
-
     protected string $translatePrefix = 'helpdesk.admin.tickets';
-
     protected string $model = \App\Models\Helpdesk\SupportTicket::class;
-
     protected string $searchField = 'subject';
-
     protected string $filterField = 'department_id';
-
     protected array $relations = ['customer', 'messages'];
 
     public function getIndexFilters()
@@ -58,114 +59,29 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
     public function getIndexParams($items, string $translatePrefix): array
     {
         $params = parent::getIndexParams($items, $translatePrefix);
-        $widgets = collect();
+        $ticketStatsService = new TicketStatisticsService();
         $pending_tickets = SupportTicket::where('status', SupportTicket::STATUS_OPEN)->count();
         $active_tickets = SupportTicket::whereIn('status', [SupportTicket::STATUS_ANSWERED, SupportTicket::STATUS_OPEN])->count();
         $total_tickets = SupportTicket::count();
         $tickets_last_week = SupportTicket::where('created_at', '>=', now()->subWeek())->count();
+        $widgets = collect();
+        $stats = $ticketStatsService->getClosedTicketStats();
 
         $widgets->push(new AdminCountWidget('pending_tickets', 'bi bi-ticket-detailed', 'helpdesk.admin.widgets.pending_tickets', $pending_tickets, true));
         $widgets->push(new AdminCountWidget('active_tickets', 'bi bi-headset', 'helpdesk.admin.widgets.active_tickets', $active_tickets, true));
         $widgets->push(new AdminCountWidget('total_tickets', 'bi bi-ticket', 'helpdesk.admin.widgets.total_tickets', $total_tickets, true));
         $widgets->push(new AdminCountWidget('tickets_last_week', 'bi bi-calendar-week', 'helpdesk.admin.widgets.tickets_last_week', $tickets_last_week, true));
-
-        $closed_tickets = SupportTicket::where('status', SupportTicket::STATUS_CLOSED)
-            ->whereNotNull('closed_at')
-            ->with(['messages' => fn ($q) => $q->orderBy('created_at', 'asc')])
-            ->get();
-        $total_reply_seconds = 0;
-        $total_resolution_seconds = 0;
-        $tickets_with_admin_reply = 0;
-        $closed_ticket_count = $closed_tickets->count();
-
-        foreach ($closed_tickets as $ticket) {
-            $total_resolution_seconds += $ticket->closed_at->diffInSeconds($ticket->created_at);
-            $first_admin_message = $ticket->messages->firstWhere('admin_id', '!=', null);
-            if ($first_admin_message) {
-                $total_reply_seconds += $first_admin_message->created_at->diffInSeconds($ticket->created_at);
-                $tickets_with_admin_reply++;
-            }
-        }
-
-        $avg_reply_seconds = $tickets_with_admin_reply > 0 ? $total_reply_seconds / $tickets_with_admin_reply : 0;
-        $avg_resolution_seconds = $closed_ticket_count > 0 ? $total_resolution_seconds / $closed_ticket_count : 0;
-
-        $avg_reply_time_str = $avg_reply_seconds > 0 ? Carbon::now()->subSeconds(round($avg_reply_seconds))->diffForHumans(null, true, false, 2) : __('N/A');
-        $avg_resolution_time_str = $avg_resolution_seconds > 0 ? Carbon::now()->subSeconds(round($avg_resolution_seconds))->diffForHumans(null, true, false, 2) : __('N/A');
-
-        $widgets->push(new AdminCountWidget('avg_reply_time', 'bi bi-clock-history', 'helpdesk.admin.widgets.avg_reply_time', $avg_reply_time_str, true, true));
-        $widgets->push(new AdminCountWidget('avg_resolution_time', 'bi bi-stopwatch', 'helpdesk.admin.widgets.avg_resolution_time', $avg_resolution_time_str, true, true));
-
-        $tickets_to_reply = QueryBuilder::for(SupportTicket::class)
-            ->where('status', SupportTicket::STATUS_ANSWERED)
-            ->with('customer:id,firstname,lastname', 'department:id,name')
-            ->orderBy('updated_at', 'asc')
-            ->allowedFilters(['department_id', 'priority'])
-            ->allowedSorts(['updated_at'])
-            ->get();
-        $tickets_to_reply = $tickets_to_reply->filter(function ($ticket) {
-            return $ticket->staffCanView(auth('admin')->user());
-        });
-        $active_tickets = QueryBuilder::for(SupportTicket::class)
-            ->where('status', SupportTicket::STATUS_OPEN)
-            ->with('customer:id,firstname,lastname', 'department:id,name')
-            ->orderBy('updated_at', 'asc')
-            ->allowedFilters(['department_id', 'priority'])
-            ->allowedSorts(['updated_at'])
-            ->get();
-        $active_tickets = $active_tickets->filter(function ($ticket) {
-            return $ticket->staffCanView(auth('admin')->user());
-        });
-
-        $staff_message_counts = SupportMessage::whereNotNull('admin_id')
-            ->select('admin_id', DB::raw('count(*) as message_count'))
-            ->groupBy('admin_id')
-            ->with('admin:id,username,firstname,lastname')
-            ->orderBy('message_count', 'desc')
-            ->limit(10)
-            ->get();
-
-        $department_ticket_counts = SupportTicket::select('department_id', DB::raw('count(*) as ticket_count'))
-            ->groupBy('department_id')
-            ->with('department:id,name,icon')
-            ->orderBy('ticket_count', 'desc')
-            ->limit(10)
-            ->get();
+        $widgets->push(new AdminCountWidget('avg_reply_time', 'bi bi-clock-history', 'helpdesk.admin.widgets.avg_reply_time', $stats['avg_reply_time'], true, true));
+        $widgets->push(new AdminCountWidget('avg_resolution_time', 'bi bi-stopwatch', 'helpdesk.admin.widgets.avg_resolution_time', $stats['avg_resolution_time'], true, true));
 
         $params['helpdesk_widgets'] = $widgets;
-        $params['tickets_to_reply'] = $tickets_to_reply;
-        $params['active_tickets'] = $active_tickets;
-        $params['staff_message_counts'] = $staff_message_counts;
-        $params['department_ticket_counts'] = $department_ticket_counts;
-        $params['graph_labels'] = $this->getWeeklyGraphLabels();
-        $params['graph_data'] = $this->getWeeklyGraphData();
-
+        $params['tickets_to_reply'] = $ticketStatsService->getTicketsToReply();
+        $params['active_tickets'] = $ticketStatsService->getActiveTickets();
+        $params['staff_message_counts'] = $ticketStatsService->getStaffMessageCounts();
+        $params['department_ticket_counts'] = $ticketStatsService->getDepartmentTicketCounts();
+        $params['graph_labels'] = $ticketStatsService->getWeeklyGraphLabels();
+        $params['graph_data'] = $ticketStatsService->getWeeklyGraphData();
         return $params;
-    }
-
-    private function getWeeklyGraphLabels()
-    {
-        $labels = [];
-        for ($i = 0; $i < 52; $i++) {
-            $date = now()->subWeeks($i);
-            $labels[] = $date->startOfWeek()->format('d/m').' - '.
-                $date->endOfWeek()->format('d/m');
-        }
-
-        return json_encode([$labels]);
-    }
-
-    private function getWeeklyGraphData()
-    {
-        $data = [];
-        $messages = [];
-        for ($i = 0; $i < 52; $i++) {
-            $date = now()->subWeeks($i);
-            $data[] = SupportTicket::whereBetween('created_at', [$date->startOfWeek()->toDate(), $date->endOfWeek()->toDate()])->count();
-            $messages[] = SupportMessage::whereBetween('created_at', [$date->startOfWeek()->toDate(), $date->endOfWeek()->toDate()])->count();
-        }
-
-        return json_encode([$data, $messages]);
     }
 
     protected function queryIndex(): LengthAwarePaginator
@@ -221,7 +137,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
             $data['customer'] = $customer;
         }
         $data['currentCustomer'] = (bool) $customerId;
-
+        $data['item']->customer_id = $customerId;
         return $data;
     }
 
@@ -410,7 +326,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
                 'admin.close_'.$tablename,
             ],
             'create' => [
-                'admin.create_'.$tablename,
+                'admin.manage_'.$tablename,
             ],
             'reply' => [
                 'admin.reply_'.$tablename,

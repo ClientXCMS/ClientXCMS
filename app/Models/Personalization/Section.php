@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Personalization;
 
 use App\DTO\Core\Extensions\ExtensionSectionTrait;
@@ -117,6 +122,9 @@ class Section extends Model
 
     public function saveContent(string $content)
     {
+        if ($this->toDTO()->isProtected()){
+            return;
+        }
         $theme = app('theme')->getTheme();
         $path = $theme->path.'/views/sections_copy/'.$this->id.'-'.$this->uuid.'.blade.php';
         $this->path = 'sections_copy/'.$this->id.'-'.$this->uuid;

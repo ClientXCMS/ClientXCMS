@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title',  __($translatePrefix . '.create.title'))
 @section('scripts')
@@ -90,7 +92,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                         <div>
-                            @include('admin/shared/search-select', ['name' => 'condition', 'label' => __($translatePrefix . '.condition'), 'value' => old('condition', ['all_customers']), 'options' => $conditions])
+                            @include('admin/shared/search-select', ['name' => 'condition', 'label' => __($translatePrefix . '.condition'), 'value' => old('condition', ['none']), 'options' => $conditions])
                         </div>
                         <div>
                             @include('admin/shared/input', ['name' => 'emails', 'label' => __($translatePrefix . '.emails'), 'value' => old('emails'), 'help' => __('global.separebycomma')])

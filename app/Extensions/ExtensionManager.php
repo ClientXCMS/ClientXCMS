@@ -10,12 +10,19 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Extensions;
 
+use App\Core\License\LicenseGateway;
 use App\DTO\Core\Extensions\ExtensionDTO;
 use App\Exceptions\ExtensionException;
+use App\Models\Admin\Setting;
 use Composer\Autoload\ClassLoader;
 use Composer\Semver\VersionParser;
 use Illuminate\Contracts\Foundation\Application;
@@ -38,7 +45,6 @@ class ExtensionManager extends ExtensionCollectionsManager
         $composer = $this->files->getRequire(base_path('vendor/autoload.php'));
         $this->autoloadModules($composer, $enabledOnly);
         $this->autoloadAddons($composer, $enabledOnly);
-        // $this->autoloadComponants($composer);
     }
 
     public static function readExtensionJson(): array
@@ -84,31 +90,41 @@ class ExtensionManager extends ExtensionCollectionsManager
         if ($this->extensions !== []) {
             return $this->extensions;
         }
-        $extensions = [];
-        $extensions['modules'] = self::makeRequest('modules');
-        $extensions['addons'] = self::makeRequest('addons');
-        $extensions['themes'] = self::makeRequest('themes');
-        $extensions['components'] = self::makeRequest('components');
-        $extensions['extensions_types'] = [];
-        foreach ($extensions as $type => $extension) {
-            if (! is_array($extension)) {
-                continue;
-            }
-            foreach ($extension as $_extension) {
-                $extensions['extensions_types'][$_extension['uuid']] = $type;
-            }
-        }
+        $extensions = self::makeRequest();
         $cache->put('extensions_array', $extensions, now()->addDays(7));
-
         return $extensions;
     }
 
-    private static function makeRequest(string $endpoint)
+    public function getGroupsWithExtensions(): array
+    {
+        $fetch = $this->fetch();
+        $groups = $fetch['groups'] ?? [];
+        $items = $this->getAllExtensions();
+        $return = [];
+        foreach ($groups as $group) {
+            $return[$group['name']] = collect($items)->filter(function (ExtensionDTO $item) use ($group) {
+                if (! array_key_exists('group_uuid', $item->api)) {
+                    return false;
+                }
+                return $item->api['group_uuid'] == $group['uuid'];
+            });
+        }
+        $return['Un Official'] = collect($items)->filter(function (ExtensionDTO $item) {
+            return $item->isUnofficial();
+        });
+        foreach ($return as $key => $group) {
+            if ($group->isEmpty()) {
+                unset($return[$key]);
+            }
+        }
+        return $return;
+    }
+
+    private static function makeRequest()
     {
         try {
-            $response = \Http::timeout(10)->get('https://api-nextgen.clientxcms.com/items/'.$endpoint.'?filter[status]=published');
-
-            return $response->json('data');
+            $response = \Http::timeout(10)->get(LicenseGateway::getDomain() . '/api/resources');
+            return $response->json('data', []);
         } catch (\Exception $e) {
             throw new ExtensionException($e->getMessage());
         }
@@ -118,7 +134,7 @@ class ExtensionManager extends ExtensionCollectionsManager
     {
         $extensions = $this->getAllExtensions();
         $extension = $extensions->first(function ($item) use ($uuid, $type) {
-            return $item->uuid == $uuid && $item->type == $type;
+            return $item->uuid == $uuid && $item->type() == $type;
         });
         if ($extension == null) {
             throw new ExtensionException('Extension not found');
@@ -133,16 +149,21 @@ class ExtensionManager extends ExtensionCollectionsManager
         $versions = collect($installed)->pluck('version')->toArray();
         $uuids = collect($installed)->pluck('uuid')->toArray();
         $enabled = $this->fetchEnabledExtensions();
-        $fetch = $this->fetch();
-        $extensions = array_merge($fetch['modules'] ?? [], $fetch['addons'] ?? [], $withTheme ? $fetch['themes'] ?? [] : [], $fetch['components'] ?? []);
-        $return = collect($extensions)->map(function ($extension) use ($uuids, $enabled, $versions, $fetch) {
-            $extension['api'] = $extension;
-            $extension['installed'] = in_array($extension['uuid'], $uuids);
-            $extension['version'] = $versions[array_search($extension['uuid'], $uuids)] ?? null;
-            $extension['type'] = $fetch['extensions_types'][$extension['uuid']] ?? 'module';
+        $theme = app('theme')->getTheme();
+        $enabled = array_merge($enabled, [$theme->uuid]);
+        $versions = array_merge($versions, [$theme->version]);
+        if (setting('email_template_name') != null)
+            $enabled = array_merge($enabled, [\setting('email_template_name')]);
+        $return = collect($this->fetch()['items'] ?? [])->filter(function(array $extensionDTO) use ($withTheme){
+            $allowedTypes = ['module', 'addon', 'email_template', 'invoice_template'];
+            if ($withTheme) {
+                $allowedTypes[] = 'theme';
+            }
+            return in_array($extensionDTO['type'], $allowedTypes);
+        })->map(function ($extension) use ($uuids, $enabled, $versions, $theme) {
             $extension['enabled'] = in_array($extension['uuid'], $enabled);
-            $extension['uuid'] = $extension['uuid'] ?? $extension['id'];
-
+            $extension['api'] = $extension;
+            $extension['version'] = $versions[array_search($extension['uuid'], $uuids)] ?? null;
             return ExtensionDTO::fromArray($extension);
         });
         if (! $withUnofficial) {
@@ -157,7 +178,7 @@ class ExtensionManager extends ExtensionCollectionsManager
     {
         $extensions = self::readExtensionJson();
 
-        return collect($extensions['modules'] ?? [])->merge($extensions['addons'] ?? [])->merge($extensions['themes'] ?? [])->merge($extensions['components'] ?? [])->where('installed', true)->toArray();
+        return collect($extensions['modules'] ?? [])->merge($extensions['addons'] ?? [])->merge($extensions['themes'] ?? [])->merge($extensions['email_templates'] ?? [])->where('installed', true)->toArray();
     }
 
     public function extensionIsEnabled(string $uuid): bool
@@ -177,31 +198,70 @@ class ExtensionManager extends ExtensionCollectionsManager
         return $extension['version'] ?? null;
     }
 
-    public function canBeActivated(string $uuid): bool
-    {
-        return true;
-    }
-
     public function fetchEnabledExtensions(): array
     {
         $extensions = self::readExtensionJson();
-        $extensions = collect($extensions['modules'] ?? [])->merge($extensions['addons'] ?? [])->merge($extensions['themes'] ?? [])->merge($extensions['components'] ?? [])->where('enabled', true);
+        $extensions = collect($extensions['modules'] ?? [])->merge($extensions['addons'] ?? [])->merge($extensions['themes'] ?? [])->merge($extensions['email_templates'] ?? [])->where('enabled', true);
         foreach ($extensions as $extension) {
             if (! ExtensionDTO::fromArray($extension)->isActivable()) {
                 $extensions = $extensions->filter(function ($item) use ($extension) {
                     return $item['uuid'] != $extension['uuid'];
                 });
             }
-
         }
-
         return $extensions->pluck('uuid')->toArray();
+    }
+
+    public function update(string $type, string $extension)
+    {
+        $extensions = self::readExtensionJson();
+        $api = collect($this->fetch()['items'] ?? [])->first(function ($item) use ($extension) {
+            return $item['uuid'] == $extension;
+        });
+        if ($api == null) {
+            throw new ExtensionException('Extension not found in the API');
+        }
+        $extensions[$type] = collect($extensions[$type] ?? [])->map(function ($item) use ($extension, $api) {
+            if ($item['uuid'] == $extension) {
+                $item['version'] = $api['version'];
+                $item['api'] = $api;
+            }
+
+            return $item;
+        })->toArray();
+
+        try {
+            (new UpdaterManager())->update($api['uuid']);
+            self::writeExtensionJson($extensions);
+
+        } catch (\Exception $e) {
+            throw new ExtensionException('Error in UpdaterManager: '.$e->getMessage());
+        }
+    }
+
+    public function checkPrerequisitesForEnable(string $type, string $extension): array
+    {
+        if ($type == 'themes') {
+            $file = base_path('resources/themes/'.$extension.'/theme.json');
+        } else if ($type == 'addons' || $type == 'modules') {
+            $file = base_path($type.'/'.$extension.'/composer.json');
+        } else {
+            return [];
+        }
+        if (! file_exists($file)) {
+            throw new ExtensionException(__('extensions.flash.composer_not_found'));
+        }
+        if ($type == 'themes'){
+            return [];
+        }
+        $composerJson = json_decode((new Filesystem)->get($file), true);
+        return $this->checkPrerequisites($composerJson);
     }
 
     public function enable(string $type, string $extension)
     {
         $extensions = self::readExtensionJson();
-        $api = collect($this->fetch()[$type])->first(function ($item) use ($extension) {
+        $api = collect($this->fetch()['items'] ?? [])->first(function ($item) use ($extension) {
             return $item['uuid'] == $extension;
         });
         if ($api == null) {
@@ -213,6 +273,13 @@ class ExtensionManager extends ExtensionCollectionsManager
                 throw new ExtensionException('Extension not found');
             }
             $api = $api->api;
+        }
+        if ($type == 'email_templates'){
+            Setting::updateSettings(['email_template_name' => $extension]);
+        }
+        if ($type == 'themes'){
+            app('theme')->setTheme($extension, true);
+            return;
         }
         if (collect($extensions[$type] ?? [])->where('uuid', $extension)->isEmpty()) {
             $extensions[$type][] = ['uuid' => $extension, 'version' => 'v1.0', 'type' => $type, 'enabled' => true, 'installed' => true, 'api' => $api];
@@ -228,6 +295,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         try {
             self::writeExtensionJson($extensions);
         } catch (\Exception $e) {
+            throw new ExtensionException('Unable to write extensions.json file: '.$e->getMessage());
         }
     }
 
@@ -241,6 +309,9 @@ class ExtensionManager extends ExtensionCollectionsManager
 
             return $item;
         })->toArray();
+        if ($type == 'email_templates'){
+            Setting::updateSettings(['email_template_name' => null]);
+        }
         try {
             self::writeExtensionJson($extensions);
         } catch (\Exception $e) {
@@ -295,7 +366,7 @@ class ExtensionManager extends ExtensionCollectionsManager
     {
         $unofficial = [];
         $unofficial = array_merge($unofficial, $this->scanFolder('modules', 'module', $extensions, $enabled));
-
+        $unofficial = array_merge($unofficial, $this->scanFolder('resources/themes', 'theme', $extensions, $enabled));
         return array_merge($unofficial, $this->scanFolder('addons', 'addon', $extensions, $enabled));
     }
 
@@ -318,8 +389,8 @@ class ExtensionManager extends ExtensionCollectionsManager
             }
             $unofficial[] = ExtensionDTO::fromArray([
                 'uuid' => $extension['uuid'],
-                'version' => $extension['version'] ?? 'v1.0',
-                'type' => $type.'s',
+                'version' => $extension['version'] ?? '1.0.0',
+                'type' => $type,
                 'installed' => true,
                 'enabled' => in_array($extension['uuid'], $enabled),
                 'api' => [

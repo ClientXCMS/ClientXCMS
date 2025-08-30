@@ -10,6 +10,9 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 use App\Http\Controllers\Admin\Personalization\EmailTemplateController;
@@ -19,6 +22,12 @@ use App\Http\Controllers\Admin\Personalization\SettingsPersonalizationController
 use App\Http\Controllers\Admin\Personalization\SocialCrudController;
 use App\Http\Controllers\Admin\Personalization\ThemeController;
 use Illuminate\Support\Facades\Route;
+
+if (!is_installed()) {
+    $types = ['front', 'bottom'];
+} else {
+    $types = \App\Models\Personalization\MenuLink::pluck('type')->unique()->toArray();
+}
 
 Route::name('personalization.')->prefix('/personalization')->group(function () {
     Route::resource('/socials', SocialCrudController::class)->names('socials')->except('index')->except('edit');
@@ -36,12 +45,12 @@ Route::name('personalization.')->prefix('/personalization')->group(function () {
 Route::resource('email_templates', EmailTemplateController::class)->names('personalization.email_templates');
 Route::post('email_templates/import', [EmailTemplateController::class, 'import'])->name('personalization.email_templates.import');
 Route::put('menulink/{menulink}', [MenuLinkController::class, 'update'])->name('personalization.menulinks.update');
-Route::post('menulink/{type}', [MenuLinkController::class, 'store'])->whereIn('type', ['front', 'bottom']);
-Route::get('menulink/{type}', [MenuLinkController::class, 'create'])->name('personalization.menulinks.create')->whereIn('type', ['front', 'bottom']);
+Route::post('menulink/{type}', [MenuLinkController::class, 'store'])->whereIn('type', $types);
+Route::get('menulink/{type}', [MenuLinkController::class, 'create'])->name('personalization.menulinks.create')->whereIn('type', $types);
 Route::delete('menulink/{menulink}', [MenuLinkController::class, 'delete'])->name('personalization.menulinks.delete');
 Route::get('menulink/{menulink}', [MenuLinkController::class, 'show'])->name('personalization.menulinks.show');
 Route::post('menulink/{type}/sort', [MenuLinkController::class, 'sort'])->name('personalization.menulinks.sort')->withoutMiddleware('csrf');
-
+Route::get('menulink/custom/{type}', [SettingsPersonalizationController::class, 'showCustomMenu'])->name('personalization.menulinks.custom');
 Route::name('settings.')->prefix('settings')->middleware('admin')->group(function () {
     Route::put('/personalization/seo', [SettingsPersonalizationController::class, 'storeSeoSettings'])->name('personalization.seo');
     Route::put('/personalization/home', [SettingsPersonalizationController::class, 'storeHomeSettings'])->name('personalization.home');

@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Admin\Provisioning;
 
 use App\DTO\Store\ConfigOptionDTO;
@@ -100,5 +105,16 @@ class ConfigOptionServiceController extends AbstractCrudController
         $service->saveOptions([$configoption->key => $validated['value']]);
 
         return back()->with('success', __($this->flashs['created']));
+    }
+
+    public function destroy(ConfigOptionService $configoptions_service)
+    {
+        $configoptions_service->delete();
+        Pricing::where('related_id', $configoptions_service->id)
+            ->where('related_type', 'config_options_service')
+            ->delete();
+        PricingService::forgot();
+
+        return $this->destroyRedirect($configoptions_service);
     }
 }

@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Models\Store\Basket;
 
 use App\Casts\OptionCast;
@@ -151,7 +156,7 @@ class BasketRow extends Model
     public function amountBillable(): float
     {
         $this->enableCoupon();
-        $amount = $this->product->getPriceByCurrency($this->currency, $this->billing)->billableAmount();
+        $amount = $this->product->getPriceByCurrency($this->currency, $this->billing)->billableAmount() * $this->quantity;
         $amount += $this->optionsAmountBillable();
         return $this->applyCoupon($amount, self::PRICE);
     }
@@ -280,7 +285,7 @@ class BasketRow extends Model
             'applied_month' => $coupon->applied_month,
             'free_setup' => $coupon->free_setup,
             'pricing' => $coupon->pricing()->first(),
-            'sub_price' => number_format($this->recurringPaymentWithoutCoupon() - $this->recurringPayment(), 2),
+            'sub_price' => number_format($this->recurringPaymentWithoutCoupon() - $this->recurringPayment() + $this->onetimePaymentWithoutCoupon() - $this->onetimePayment(), 2),
             'sub_setup' => number_format($this->setupWithoutCoupon() - $this->setup(), 2),
             'value_price' => (float) $coupon->getPricingRecurring($this->billing, self::PRICE) ?? 0,
             'value_setup' => (float) $coupon->getPricingRecurring($this->billing, self::SETUP_FEES) ?? 0,

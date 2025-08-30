@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Requests;
 
 use App\Models\Store\Basket\Basket;
@@ -36,11 +41,13 @@ class ProcessCheckoutRequest extends FormRequest
     public function rules(): array
     {
         $types = app(\App\Services\Core\PaymentTypeService::class)->all()->keys()->implode(',');
+        $source = auth()->user()->paymentMethods()->pluck('id')->implode(',');
         $rules = AccountEditService::rules($this->country ?? 'FR', false, false, auth()->id());
         if (setting('checkout_toslink', false)) {
             $rules['accept_tos'] = ['required', 'accepted'];
         }
         $rules['gateway'] = ['required', 'in:'.$types];
+        $rules['paymentmethod'] = ['nullable', 'in:'.$source];
 
         return $rules;
     }
@@ -49,6 +56,9 @@ class ProcessCheckoutRequest extends FormRequest
     {
         if (Basket::getBasket()->total() == 0) {
             $this->merge(['gateway' => 'none']);
+        }
+        if (! $this->has('paymentmethod') || $this->get('paymentmethod') === 'none') {
+            $this->merge(['paymentmethod' => null]);
         }
     }
 }

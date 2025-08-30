@@ -10,12 +10,16 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Extensions;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
-use App\DTO\Core\Extensions\ExtensionInstallDTO;
 use App\Exceptions\ExtensionException;
 use Composer\Autoload\ClassLoader;
 use Illuminate\Filesystem\Filesystem;
@@ -28,31 +32,6 @@ class AddonManager implements ExtensionInterface
     public function __construct()
     {
         $this->files = new Filesystem;
-    }
-
-    public function onInstall(string $uuid): void
-    {
-        // TODO: Implement onInstall() method.
-    }
-
-    public function onUninstall(string $uuid): void
-    {
-        // TODO: Implement onUninstall() method.
-    }
-
-    public function onEnable(string $uuid): void
-    {
-        // TODO: Implement onEnable() method.
-    }
-
-    public function onDisable(string $uuid): void
-    {
-        // TODO: Implement onDisable() method.
-    }
-
-    public function download(string $uuid): ExtensionInstallDTO
-    {
-        // TODO: Implement download() method.
     }
 
     public function autoload(ExtensionDTO $DTO, Application $application, ClassLoader $composer): void

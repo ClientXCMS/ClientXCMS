@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('layouts/client')
 @section('title', __('client.services.options.index'))
 @section('content')
@@ -263,31 +265,13 @@
                                 </div>
                                 <div class="mt-1 flex items-center gap-x-2">
                                     <h3 class="text-xl font-medium text-gray-800 dark:text-gray-200">
-                                        {{ formatted_price($service->getBillingPrice()->price, $service->currency) }}
+                                        {{ formatted_price($service->getBillingPrice()->displayPrice(), $service->currency) }}
                                         <span class="text-gray-500 text-sm">/{{ $service->recurring()['unit'] }}</span>
                                     </h3>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <!-- div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-800 mt-2">
-                    <div class="p-4 md:p-5 flex gap-x-4">
-                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-indigo-100 rounded-lg dark:bg-gray-800">
-                            <svg class="flex-shrink-0 w-5 h-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        </div>
-
-                        <div class="grow">
-                            <div class="flex items-center gap-x-2">
-                                <p class="text-xs uppercase tracking-wide text-gray-500">
-                                    {{ __('client.services.subusers.index') }}
-                    </p>
-                </div>
-                <div class="mt-1 flex items-center gap-x-2">
-                    <a href="#" class="btn-action-with-icon">{{ __('client.services.subusers.manage') }}</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>-->
                 </div>
             </div>
         </div>

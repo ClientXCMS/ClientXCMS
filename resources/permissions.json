@@ -20,6 +20,11 @@
         "label": "permissions.manage_database",
         "group": "permissions.technical"
     },
+    {
+        "name": "admin.manage_subdomains_hosts",
+        "label": "permissions.manage_subdomains_hosts",
+        "group": "permissions.technical"
+    },
 
     {
         "name": "admin.manage_gateways",
@@ -84,6 +89,11 @@
     {
         "name": "admin.manage_invoices",
         "label": "permissions.manage_invoices",
+        "group": "permissions.billing"
+    },
+    {
+        "name": "admin.export_invoices",
+        "label": "permissions.export_invoices",
         "group": "permissions.billing"
     },
     {
@@ -174,6 +184,11 @@
     {
         "name": "admin.manage_api_keys",
         "label": "permissions.manage_api_keys",
+        "group": "permissions.technical"
+    },
+    {
+        "name": "admin.manage_update",
+        "label": "permissions.manage_update",
         "group": "permissions.technical"
     }
 ]

@@ -10,11 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
 ?>
-?>
-?>
+
 @extends('admin/layouts/admin')
 @section('title', __($translatePrefix .'.title'))
 @section('content')
@@ -86,6 +88,14 @@
                     </span>
                                         </div>
                                     </th>
+
+                                    <th scope="col" class="px-6 py-3 text-start">
+                                        <div class="flex items-center gap-x-2">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
+                      {{ __('global.name') }}
+                    </span>
+                                        </div>
+                                    </th>
                                     <th scope="col" class="px-6 py-3 text-start">
                                         <div class="flex items-center gap-x-2">
                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
@@ -134,6 +144,13 @@
 
                     <span class="block px-6 py-2">
                       <span class="text-sm text-gray-600 dark:text-gray-400">{{ $keys[$item->key] }}</span>
+                    </span>
+                                        </td>
+
+                                        <td class="h-px w-px whitespace-nowrap">
+
+                    <span class="block px-6 py-2">
+                      <span class="text-sm text-gray-600 dark:text-gray-400">{{ $item->name }}</span>
                     </span>
                                         </td>
 

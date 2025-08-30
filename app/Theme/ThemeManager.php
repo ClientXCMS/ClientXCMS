@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Theme;
 
 use App\DTO\Core\Extensions\ExtensionThemeDTO;
@@ -73,10 +78,6 @@ class ThemeManager
             return $item->uuid == $theme;
         });
         Setting::updateSettings(['theme' => $theme]);
-        \Artisan::call('config:clear');
-        \Artisan::call('view:clear');
-        \Artisan::call('cache:clear');
-        \Artisan::call('db:seed', ['--no-interaction' => true]);
         $sections1 = $this->fetchThemeSection($oldTheme);
         $sections2 = $this->fetchThemeSection($this->theme);
         $existing = collect($sections1)->pluck('uuid')->intersect(collect($sections2)->pluck('uuid'));
@@ -129,32 +130,25 @@ class ThemeManager
      */
     public function getBottomLinks(): \Illuminate\Support\Collection
     {
-        if (app()->environment('testing')) {
-            return collect();
-        }
-        $support = $this->getTheme()->supportOption('multi_footer_columns');
-        $items = $this->getSetting()['bottom_lists'] ?? collect();
-        if (!$support){
-            return $items->first()->children->filter(function (MenuLink $item) use ($support) {;
-                return $item->canShowed(true);
-            });
-        }
-        return $items->filter(function (MenuLink $item) use ($support) {
-            return $item->canShowed($support, true);
-        });
+        return $this->getCustomLinks('bottom');
     }
 
-    public function getFrontLinks(): \Illuminate\Support\Collection
+    public function getCustomLinks(string $type): Collection
     {
         if (app()->environment('testing')) {
             return collect();
         }
         $support = $this->getTheme()->supportOption('menu_dropdown');
-        $items = $this->getSetting()['front_links'] ?? collect();
+        $items = $this->getSetting()[$type . '_links'] ?? collect();
 
         return $items->filter(function (MenuLink $item) use ($support) {
             return $item->canShowed($support);
         });
+    }
+
+    public function getFrontLinks(): \Illuminate\Support\Collection
+    {
+        return $this->getCustomLinks('front');
     }
 
     public function getSections(): Collection
@@ -179,16 +173,18 @@ class ThemeManager
     public function getSetting()
     {
         return Cache::remember('theme_configuration', 60 * 60 * 24 * 7, function () {
-            return [
+            $types = \App\Models\Personalization\MenuLink::pluck('type')->unique()->toArray();
+            $links = collect($types)->mapWithKeys(function ($type) {
+                return [$type . '_links' => MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get()];
+            });
+            return $links->merge([
                 'socials' => SocialNetwork::all()->where('hidden', false),
                 'sections_pages' => $this->getSectionsPages(),
-                'front_links' => MenuLink::where('type', 'front')->whereNull('parent_id')->orderBy('position')->get(),
-                'bottom_lists' => MenuLink::where('type', 'bottom')->whereNull('parent_id')->orderBy('position')->get(),
                 'sections' => Section::orderBy('order')->get(),
                 'sections_html' => Section::orderBy('order')->get()->mapWithKeys(function (Section $item) {
                     return [$item->path => $item->toDTO()->render(false)];
                 }),
-            ];
+            ]);
         });
     }
 
@@ -291,7 +287,7 @@ class ThemeManager
     public function getSectionsTypes()
     {
         return Cache::get('sections_types', function () {
-            return collect(Http::get('https://api-nextgen.clientxcms.com/items/theme_sections_types')->json('data'))->map(function ($item) {
+            return collect(Http::get('https://clientxcms.com/api/sections_types')->json('data'))->map(function ($item) {
                 return new SectionTypeDTO($item, $this->getThemeSections());
             });
         });
@@ -368,7 +364,9 @@ class ThemeManager
 
     private function mergeWithExtensions()
     {
-        $themes = app('extension')->fetch()['themes'] ?? [];
+        $themes = collect(app('extension')->fetch()['items'] ?? [])->filter(function ($item) {
+            return $item['type'] == 'theme';
+        });
         foreach ($themes as $theme) {
             if (collect($this->themes)->where('uuid', $theme['uuid'])->count() == 1) {
                 $current = collect($this->themes)->where('uuid', $theme['uuid'])->first();

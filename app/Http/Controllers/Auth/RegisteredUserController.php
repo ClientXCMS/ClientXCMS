@@ -10,8 +10,13 @@
  * To request permission or for more information, please contact our support:
  * https://clientxcms.com/client/support
  *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
  * Year: 2025
  */
+
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -74,6 +79,7 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
             'locale' => LocaleService::fetchCurrentLocale(),
             'dark_mode' => is_darkmode(),
+            'gdpr_compliment' => is_gdpr_compliment(),
         ]);
 
         if (setting('auto_confirm_registration', false) === true) {
@@ -103,7 +109,7 @@ class RegisteredUserController extends Controller
                 return null;
             }
 
-            return (new PhoneNumber($phone, $country))->format(libPhoneNumberFormat::E164);
+            return (new PhoneNumber($phone))->format(libPhoneNumberFormat::E164);
         } catch (NumberParseException $e) {
             return 'invalid';
         }
