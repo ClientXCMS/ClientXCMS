@@ -33,7 +33,7 @@ class ImportTranslationCommand extends Command
         try {
             $locale = $this->option('locale');
             LocaleService::downloadFiles($locale);
-            $this->success('Translations imported successfully.');
+            $this->info('Translations imported successfully.');
         } catch (\Exception $e) {
             $this->error('Error importing translations: '.$e->getMessage());
         }

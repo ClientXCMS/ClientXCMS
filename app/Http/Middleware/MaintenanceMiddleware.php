@@ -73,7 +73,7 @@ class MaintenanceMiddleware
     private function renderMaintenancePage(Request $request, Closure $next): Response
     {
         if ($request->expectsJson()) {
-            return response()->json(['message' => setting('in_maintenance_message')], 503);
+            return response()->json(['message' => setting('maintenance_message')], 503);
         }
 
         return response(view('maintenance'), 503, [

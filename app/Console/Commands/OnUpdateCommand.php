@@ -75,13 +75,18 @@ class OnUpdateCommand extends Command
 
     private function downloadExtensions()
     {
-        $extensions = LicenseCache::get()?->getExtensions();
-        if ($extensions == null){
+        try {
+            $extensions = LicenseCache::get()?->getExtensions();
+            if ($extensions == null){
+                return;
+            }
+            foreach ($extensions as $extension => $details) {
+                app('extension')->update($details['type'], $extension);
+                $this->info("Extension {$extension} has been updated.");
+            }
+        } catch (\Exception $e) {
+            $this->error("Failed to download extensions: {$e->getMessage()}");
             return;
-        }
-        foreach ($extensions as $extension => $details) {
-            app('extension')->update($details['type'], $extension);
-            $this->info("Extension {$extension} has been updated.");
         }
     }
 

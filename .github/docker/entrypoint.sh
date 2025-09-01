@@ -90,8 +90,8 @@ php artisan key:generate || {
     echo "ERROR: Key generation failed"
     exit 1
 }
-php artisan translations:import $DEFAULT_LOCALE || {
-    echo "ERROR: Key generation failed"
+php artisan translations:import --locale $DEFAULT_LOCALE || {
+    echo "ERROR: Translations import failed"
     exit 1
 }
 

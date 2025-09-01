@@ -493,7 +493,7 @@ class Invoice extends Model implements SupportRelateItemInterface
         if ($amount <= 0 || !$this->canPay()) {
             return;
         }
-        if ($amount > ($this->total - $this->balance)) {
+        if ($amount >= ($this->total - $this->balance)) {
             $amount = $this->total - $this->balance;
             $this->customer->addFund(-$amount, 'Invoice payment for '.$this->id);
             $this->update(['paymethod' => 'balance']);

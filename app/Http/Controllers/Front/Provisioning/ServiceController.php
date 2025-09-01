@@ -265,7 +265,7 @@ class ServiceController extends Controller
             abort(404);
         }
         if ($service->isOneTime()) {
-            $request->params->set('expiration', 'now');
+            $request->request->set('expiration', 'now');
         }
         if ($service->cancelled_at != null) {
             $service->uncancel();

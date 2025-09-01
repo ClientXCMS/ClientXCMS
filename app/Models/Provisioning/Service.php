@@ -399,7 +399,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
             ->whereNull('subscriptions.cancelled_at')
             ->whereNotNull('invoice_id')
             ->where('subscriptions.state', 'active')
-            ->whereRaw('subscriptions.billing_day = DAY(CURDATE());')
+            ->whereRaw('subscriptions.billing_day = DAY(CURDATE())')
             ->get();
     }
 
