@@ -65,7 +65,7 @@ class Section extends Model
 
     const TAGS_DISABLED = [
         '<?php', '?>', '@php', '@endphp', '@shell', '<?=',
-        'env(', '$_ENV', '$_SERVER', '$_GET',
+        'env(', '$_ENV', '$_SERVER', '$_GET', '.env', '.__DIR__', 
         '$_POST', '$_REQUEST', '$_SESSION', '$_COOKIE', 'exec(',
         'shell_exec(', 'system(', 'passthru(', 'proc_open(', 'popen(',
         'pcntl_exec(', 'eval(', 'assert(', 'preg_replace(', 'create_function(',
@@ -78,6 +78,7 @@ class Section extends Model
         'exit(', 'phpinfo(', 'php_uname(', 'getenv(', 'get_current_user(',
         'getmyuid(', 'getmygid(', 'getmypid(', 'getmyinode(', 'getlastmod(',
         'getprotobyname(', 'getprotobynumber(', 'getservbyname(', 'getservbyport(',
+        
     ];
 
     protected $fillable = [
