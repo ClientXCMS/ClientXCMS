@@ -25,10 +25,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::name('history.')->prefix('history')->group(function () {
     Route::get('/', [HistoryController::class, 'index'])->name('index');
-    Route::get('/deleteall', [HistoryController::class, 'deleteAll'])->name('deleteall');
     Route::get('/download', [HistoryController::class, 'download'])->name('download');
-    Route::get('/delete', [HistoryController::class, 'delete'])->name('delete');
-    Route::get('/clear', [HistoryController::class, 'clear'])->name('clear');
 });
 Route::get('/database', [DatabaseController::class, 'index'])->name('database.index');
 Route::post('/database', [DatabaseController::class, 'migrate']);

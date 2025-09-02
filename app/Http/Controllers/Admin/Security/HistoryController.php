@@ -42,7 +42,7 @@ class HistoryController extends Controller
                 $reader->setFile(Crypt::decrypt($request->input('l')));
             }
         } catch (\Exception $e) {
-            return back()->with('error', 'Invalid folder or file');
+            return back()->with('error', $e->getMessage());
         }
         $data = [
             'folders' => $reader->getFolders(),
@@ -66,47 +66,11 @@ class HistoryController extends Controller
     public function download(Request $request)
     {
         staff_aborts_permission('admin.show_logs');
+        if (! $request->input('dl')) {
+            return back()->with('error', 'Invalid download link');
+        }
         $file = Crypt::decrypt($request->input('dl'));
 
         return response()->download((new LogsReaderService)->pathToLogFile($file));
-    }
-
-    public function clear(Request $request)
-    {
-        staff_aborts_permission('admin.show_logs');
-        $file = Crypt::decrypt($request->input('clean'));
-        \File::put((new LogsReaderService)->pathToLogFile($file), '');
-
-        return back()->with('success', 'File has been cleared');
-    }
-
-    public function delete(Request $request)
-    {
-        staff_aborts_permission('admin.show_logs');
-        $file = $request->input('del');
-        try {
-            if (! \File::delete((new LogsReaderService)->pathToLogFile($file))) {
-                return back()->with('error', 'File could not be deleted');
-            }
-        } catch (\Exception $e) {
-            return back()->with('error', 'File could not be deleted '.$e->getMessage());
-        }
-
-        return back()->with('success', 'File has been deleted');
-    }
-
-    public function deleteAll(Request $request)
-    {
-        staff_aborts_permission('admin.show_logs');
-        $reader = new LogsReaderService;
-        if ($request->input('f')) {
-            $reader->setFolder(Crypt::decrypt($request->input('f')));
-        }
-        $files = $reader->getFolderName() ? $reader->getFolderFiles(true) : $reader->getFiles(true);
-        foreach ($files as $file) {
-            \File::delete($file);
-        }
-
-        return back()->with('success', 'All files have been deleted');
     }
 }
