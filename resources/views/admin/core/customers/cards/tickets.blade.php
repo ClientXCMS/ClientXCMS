@@ -15,8 +15,6 @@
  *
  * Year: 2025
  */
-?>
-
  $tickets_filters = collect(\App\Models\Helpdesk\SupportTicket::FILTERS)->mapWithKeys(function ($k, $v) {
      return [$k => __('global.states.'.$v)];
  })->toArray();

@@ -61,19 +61,6 @@
                     <a class="btn btn-secondary mr-2" href="{{ route('admin.history.download')  }}?dl={{ \Illuminate\Support\Facades\Crypt::encrypt($current_file) }}{{ ($current_folder) ? '&f=' . \Illuminate\Support\Facades\Crypt::encrypt($current_folder) : '' }}">
                         <span class="bi bi-download"></span>
                     </a>
-
-                    <a class="btn btn-primary mr-2" href="{{ route('admin.history.clear')  }}?clean={{ \Illuminate\Support\Facades\Crypt::encrypt($current_file) }}{{ ($current_folder) ? '&f=' . \Illuminate\Support\Facades\Crypt::encrypt($current_folder) : '' }}">
-                        <span class="bi bi-arrow-repeat"></span>
-                    </a>
-
-                    <a class="btn btn-danger mr-2" href="{{ route('admin.history.delete')  }}?del={{ \Illuminate\Support\Facades\Crypt::encrypt($current_file) }}{{ ($current_folder) ? '&f=' . \Illuminate\Support\Facades\Crypt::encrypt($current_folder) : '' }}">
-                        <span class="bi bi-trash"></span>
-                    </a>
-                    @if(count($files) > 1)
-                        <a class="btn btn-danger" href="{{ route('admin.history.deleteall')  }}?delall=true{{ ($current_folder) ? '&f=' . \Illuminate\Support\Facades\Crypt::encrypt($current_folder) : '' }}">
-                            <span class="bi bi-trash2"></span>
-                        </a>
-                    @endif
                 @endif
             </div>
         </div>

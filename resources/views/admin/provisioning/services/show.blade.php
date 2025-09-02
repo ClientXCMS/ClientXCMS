@@ -769,7 +769,7 @@
                             @include('/admin/shared/select', ['name' => 'reason', 'label' => __('client.services.cancel.reason'), 'options' => \App\Models\Provisioning\CancellationReason::getReasons(), 'value' => old('reason')])
                             @include('/admin/shared/textarea', ['name' => 'message', 'label' => __('client.services.cancel.message'), 'value' => old('message')])
                             @if (!$item->isOnetime())
-                                @include('/admin/shared/select', ['name' => 'expiration', 'label' => __('client.services.cancel.expiration'), 'options' => \App\Models\Provisioning\CancellationReason::getCancellationMode($service), 'value' => old('expiration')])
+                                @include('/admin/shared/select', ['name' => 'expiration', 'label' => __('client.services.cancel.expiration'), 'options' => \App\Models\Provisioning\CancellationReason::getCancellationMode($item), 'value' => old('expiration')])
                             @endif
                             <button class="btn btn-primary w-full mt-10"> <i class="bi bi-trash2 mr-2"></i>{{ __($translatePrefix . '.cancel.title') }}</button>
 

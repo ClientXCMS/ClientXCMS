@@ -16,8 +16,8 @@
  * Year: 2025
  */
 ?>
-$rand = rand(1000, 9999); ?>
 
+@php $rand = rand(1, 999); @endphp
 @if (isset($label))
     <label for="{{ $name }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">
         {{ $label }}

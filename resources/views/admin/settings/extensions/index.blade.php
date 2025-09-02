@@ -33,19 +33,6 @@
                 </button>
             </form>
         </div>
-        <div class="mb-4">
-            <label for="extension-search-input" class="sr-only"> @lang('extensions.settings.search')</label>
-            <div class="relative">
-                <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                    <i class="bi bi-search text-gray-400"></i>
-                </div>
-                <input type="text"
-                       id="extension-search-input"
-                       class="py-2 px-3 ps-10 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400 dark:focus:ring-slate-600"
-                       placeholder=" @lang('extensions.settings.search_placeholder')">
-            </div>
-        </div>
-
         @if (!empty($groups))
             <div>
                     <nav class="flex space-x-2 border-b flex-col md:flex-row border-gray-200 dark:border-slate-700" aria-label="Tabs" role="tablist">
@@ -188,31 +175,7 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const searchInput = document.getElementById('extension-search-input');
-            const allExtensionCards = document.querySelectorAll('.extension-card');
-            const tabPanels = document.querySelectorAll('[role="tabpanel"]');
             const ajaxForms = document.querySelectorAll('.ajax-extension-form');
-
-            searchInput.addEventListener('input', function () {
-                const searchTerm = searchInput.value.toLowerCase().trim();
-                allExtensionCards.forEach(card => {
-                    const cardContent = card.textContent || card.innerText;
-                    const isVisible = cardContent.toLowerCase().includes(searchTerm);
-                    card.style.display = isVisible ? '' : 'none';
-                });
-                updateNoResultsMessages();
-            });
-            function updateNoResultsMessages() {
-                tabPanels.forEach(panel => {
-                    const noResultsMessage = panel.querySelector('.no-results-message');
-                    const visibleCardsInPanel = panel.querySelectorAll('.extension-card:not([style*="display: none"])');
-                    if (visibleCardsInPanel.length === 0) {
-                        noResultsMessage.classList.remove('hidden');
-                    } else {
-                        noResultsMessage.classList.add('hidden');
-                    }
-                });
-            }
             ajaxForms.forEach(form => {
                 form.addEventListener('submit', function (event) {
                     event.preventDefault();

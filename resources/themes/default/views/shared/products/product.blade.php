@@ -15,8 +15,6 @@
  *
  * Year: 2025
  */
-?>
-
 $pricing = $product->getPriceByCurrency(currency(), $billing ?? null);
 $showSetup = $pricing->hasSetup() && (isset($showSetup) ? $showSetup : true);
 ?>

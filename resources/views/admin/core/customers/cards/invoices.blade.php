@@ -15,8 +15,6 @@
  *
  * Year: 2025
  */
-?>
-
 $invoices_filters = collect(\App\Models\Billing\Invoice::FILTERS)->mapWithKeys(function ($k, $v) {
     return [$k => __('global.states.'.$v)];
 })->toArray();

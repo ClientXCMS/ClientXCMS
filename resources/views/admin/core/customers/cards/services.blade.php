@@ -15,7 +15,6 @@
  *
  * Year: 2025
  */
-?>
 
 $services_filters = collect(\App\Models\Provisioning\Service::FILTERS)->mapWithKeys(function ($k, $v) {
     return [$k => __('global.states.'.$v)];
