@@ -21,7 +21,6 @@ namespace App\Http;
 
 use App\Http\Middleware\ApiJsonMiddleware;
 use App\Http\Middleware\BannedMiddleware;
-use App\Http\Middleware\CustomCanMiddleware;
 use App\Http\Middleware\ForceLoginMiddleware;
 use App\Http\Middleware\InstallationMiddleware;
 use App\Http\Middleware\isAdminMiddleware;
