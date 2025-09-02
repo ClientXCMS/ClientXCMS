@@ -60,6 +60,9 @@ class InvoiceExporterService
     private static function exportToCsv(Collection $invoices): string
     {
         $filename = storage_path('app/exports/invoices-'.date('Y-m-d_H-i-s').'.csv');
+        if (!is_dir(dirname($filename))) {
+            mkdir(dirname($filename), 0755, true);
+        }
         $file = fopen($filename, 'w');
         fputcsv($file, self::getHeaderRow());
         foreach ($invoices as $invoice) {
@@ -91,6 +94,9 @@ class InvoiceExporterService
     private static function exportToXlsx(Collection $invoices): string
     {
         $filename = 'exports/invoices-' . date('Y-m-d_H-i-s') . '.xlsx';
+        if (!is_dir(dirname($filename))) {
+            mkdir(dirname($filename), 0755, true);
+        }
         $data = [];
         $data[] = self::getHeaderRow();
         foreach ($invoices as $invoice) {
