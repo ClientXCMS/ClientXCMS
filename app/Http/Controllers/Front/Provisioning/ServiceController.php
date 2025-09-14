@@ -87,7 +87,9 @@ class ServiceController extends Controller
 
     public function upgrade(Service $service)
     {
-        abort_if($service->customer_id != auth()->id(), 404);
+        if (! auth('web')->user()->hasServicePermission($service, 'service.upgrade')) {
+            abort(404);
+        }
         abort_if($service->state == 'pending', 404);
         abort_if(! $service->canUpgrade(), 404);
         $customer = $service->customer;
@@ -99,7 +101,9 @@ class ServiceController extends Controller
 
     public function options(Service $service)
     {
-        abort_if($service->customer_id != auth()->id(), 404);
+        if (! auth('web')->user()->hasServicePermission($service, 'service.options')) {
+            abort(404);
+        }
         abort_if($service->state == 'pending', 404);
         $customer = $service->customer;
         $gateways = GatewayService::getAvailable();
@@ -109,7 +113,9 @@ class ServiceController extends Controller
 
     public function upgradeProcess(Service $service, Product $product)
     {
-        abort_if($service->customer_id != auth()->id(), 404);
+        if (! auth('web')->user()->hasServicePermission($service, 'service.upgrade')) {
+            abort(404);
+        }
         abort_if($service->state == 'pending', 404);
         abort_if(! $service->canUpgrade(), 404);
         abort_if(! $product->isValid(), 404);
@@ -127,7 +133,9 @@ class ServiceController extends Controller
 
     public function show(Service $service)
     {
-        abort_if($service->customer_id != auth()->id(), 404);
+        if (! auth('web')->user()->hasServicePermission($service, 'service.show')) {
+            abort(404);
+        }
         abort_if($service->state == 'pending', 404);
         $customer = $service->customer;
         $gateways = GatewayService::getAvailable();
@@ -178,7 +186,9 @@ class ServiceController extends Controller
 
     public function tab(Service $service, string $tab)
     {
-        abort_if($service->customer_id != auth()->id(), 404);
+        if (! auth('web')->user()->hasServicePermission($service, 'service.show')) {
+            abort(404);
+        }
         $customer = $service->customer;
         $gateways = GatewayService::getAvailable();
         $panel = $service->productType()->panel();
