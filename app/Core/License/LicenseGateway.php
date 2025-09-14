@@ -183,7 +183,7 @@ class LicenseGateway
     public function restartNPM()
     {
         $license = $this->getLicense(setting('app.license.access_token'), true);
-        $token = $this->refreshAccessToken(setting('apzp.license.refresh_token'), $license);
+        $token = $this->refreshAccessToken(setting('app.license.refresh_token'), $license);
         $this->callAPI($token, '/restartnpm');
     }
 

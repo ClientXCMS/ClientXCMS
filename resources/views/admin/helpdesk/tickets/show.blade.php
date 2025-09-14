@@ -44,23 +44,16 @@
                                         </p>
                                     </div>
                                 </div>
-
-                                <!-- Timeline -->
                                 <div>
                                     @foreach ($ticket->messages->groupBy(fn($msg) => $msg->created_at->translatedFormat('d M, Y')) as $date => $messages)
-                                        <!-- Heading -->
                                         <div class="ps-2 my-2 first:mt-0">
                                             <h3 class="text-xs font-medium uppercase text-gray-500 dark:text-neutral-400">
                                                 {{ $date }}
                                             </h3>
                                         </div>
-                                        <!-- End Heading -->
 
                                         @foreach ($messages as $i => $message)
-                                            <!-- Item -->
                                             <div class="flex gap-x-3 relative group rounded-lg hover:bg-gray-100 dark:hover:bg-white/10">
-
-                                                <!-- Icon -->
                                                 <div class="relative last:after:hidden after:absolute after:top-10 after:bottom-0 after:start-5 after:w-px after:-translate-x-[0.5px] after:bg-gray-200 dark:after:bg-neutral-700">
                                                     <div class="relative z-10 size-10 flex justify-center items-center">
                                                         <span class="flex shrink-0 justify-center items-center size-10 bg-white border border-gray-200 text-[10px] font-semibold uppercase text-gray-600 rounded-full dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400">
@@ -68,9 +61,6 @@
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <!-- End Icon -->
-
-                                                <!-- Right Content -->
                                                 <div class="grow p-2 pb-2">
                                                     <div class="flex justify-between">
                                                         <h3 class="flex gap-x-1.5 font-semibold text-gray-800 dark:text-white">
@@ -85,7 +75,6 @@
                                                         </h3>
 
                                                         @if($message->isStaff() && $message->canEdit())
-                                                            <!-- Toggle collapse for message editing -->
                                                             <button class="btn btn-sm hs-collapse-toggle ml-2" data-bs-toggle="collapse" aria-expanded="false" data-hs-collapse="#edit-message-{{ $message->id }}" title="{{ __('helpdesk.support.show.staff') }}">
                                                                 <i class="bi bi-pen"></i>
                                                             </button>
@@ -123,7 +112,6 @@
                                                         <span class="text-xs">· {{ $message->edited_at ? __('helpdesk.support.show.edited_at', ['date' => $message->edited_at->format('H:i')]) :$message->created_at->format('H:i') }}</span>
                                                     </div>
                                                 </div>
-                                                <!-- End Collapse Section -->
                                             </div>
                                             @if($message->isStaff() && $message->canEdit())
 
@@ -142,11 +130,9 @@
                                                 </div>
                                             </div>
                                             @endif
-                                            <!-- End Item -->
                                         @endforeach
                                     @endforeach
                                 </div>
-                                <!-- End Timeline -->
 
                                 @if ($ticket->isOpen())
                                     <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-6">
@@ -338,4 +324,74 @@
             </div>
         </div>
     </div>
+
+    <div id="edit-overlay" class="overflow-x-hidden overflow-y-auto hs-overlay hs-overlay-open:translate-x-0 translate-x-full fixed top-0 end-0 transition-all duration-300 transform h-full max-w-lg w-full w-full z-[80] bg-white border-s dark:bg-gray-800 dark:border-gray-700 hidden" tabindex="-1">
+        <div class="flex justify-between items-center py-3 px-4 border-b dark:border-gray-700">
+            <h3 class="font-bold text-gray-800 dark:text-white">
+                {{ __($translatePrefix . '.edit') }}
+            </h3>
+            <button type="button" class="flex justify-center items-center w-7 h-7 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" data-hs-overlay="#metadata-overlay">
+                <span class="sr-only">{{ __('global.closemodal') }}</span>
+                <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-4">
+            <form method="POST" action="{{ route($routePath . '.update', ['ticket' => $ticket]) }}">
+                @csrf
+                @method('PUT')
+                <div>
+                    @include("admin/shared/input", ["name" => "subject", "label" => __("helpdesk.subject"), 'value' => old('subject', $ticket->subject)])
+                </div>
+                <div>
+                    @include("admin/shared/select", ["name" => "priority", "label" => __("helpdesk.priority"), "options" => $priorities, 'value' => old('priority', $ticket->priority)])
+                </div>
+                <div>
+                    @include("admin/shared/select", ["name" => "related_id", "label" => __("helpdesk.support.create.relatedto"), "options" => $related, 'value' => old('related_id', $ticket->relatedValue())])
+                </div>
+                <div>
+                    @include("admin/shared/select", ["name" => "department_id", "label" => __("helpdesk.department"), "options" => $departments, 'value' => old('department_id', $item->department_id)])
+                </div>
+                <div>
+                    @include('admin/shared/select', ['name' => 'assigned_to', "label" => __("helpdesk.support.show.assigned_to"), 'options' => $staffs, 'value' => old($ticket->assigned_to ?? 'none', 'none')])
+
+                </div>
+                @if ($ticket->isClosed())
+                <div>
+                    @include("admin/shared/textarea", ["name" => "close_reason", "label" => __("helpdesk.support.show.close_reason"), 'value' => old('close_reason', $item->close_reason)])
+                </div>
+                @endif
+                <button class="btn btn-primary mt-2">{{ trans("global.save")  }}</button>
+            </form>
+        </div>
+    </div>
+    @foreach ($ticket->messages as $message)
+        @if (!$message->isStaff())
+            @continue
+        @endif
+        <div id="edit-message-{{ $message->id }}" class="overflow-x-hidden overflow-y-auto hs-overlay hs-overlay-open:translate-x-0 translate-x-full fixed top-0 end-0 transition-all duration-300 transform h-full max-w-lg w-full w-full z-[80] bg-white border-s dark:bg-gray-800 dark:border-gray-700 hidden" tabindex="-1">
+            <div class="flex justify-between items-center py-3 px-4 border-b dark:border-gray-700">
+                <h3 class="font-bold text-gray-800 dark:text-white">
+                    {{ __('helpdesk.support.show.edit_message') }}
+                </h3>
+                <button type="button" class="flex justify-center items-center w-7 h-7 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" data-hs-overlay="#metadata-overlay">
+                    <span class="sr-only">{{ __('global.closemodal') }}</span>
+                    <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-4">
+                <form method="POST" action="{{ route('admin.helpdesk.tickets.messages.update', ['ticket' => $ticket, 'message' => $message]) }}">
+                    @csrf
+                    <div>
+                        <textarea class="editor" name="content">{{ $message->message }}</textarea>
+                    </div>
+                    <button class="btn btn-primary mt-2">{{ __('global.save') }}</button>
+                </form>
+                <form method="POST" action="{{ route('admin.helpdesk.tickets.messages.destroy', ['ticket' => $ticket, 'message' => $message]) }}">
+                    @csrf
+                    @method('DELETE')
+                    <button class="btn btn-danger mt-2">{{ __('global.delete') }}</button>
+                </form>
+            </div>
+        </div>
+    @endforeach
 @endsection
