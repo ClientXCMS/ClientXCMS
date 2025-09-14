@@ -385,7 +385,7 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
         } catch (\Exception $e) {
             return [];
         }
-        return collect($resp->result->payment_tokens)->map(function ($token) use ($customer) {
+        return collect($resp->result->payment_tokens ?? [])->map(function ($token) use ($customer) {
             return new PaymentMethodSourceDTO(
                 $token->id,
                 'PayPal',
