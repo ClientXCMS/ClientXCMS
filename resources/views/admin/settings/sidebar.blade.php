@@ -48,7 +48,7 @@
                                                 @foreach($card->items as $child)
 
                                                     <li>
-                                                        <a {{ !$child->isActive() ? 'disabled="true"' : '' }} class="{{ !$child->isActive() ? 'cursor-not-allowed' : '' }} flex items-center py-4 text-sm {{ $child->uuid == isset($current_item) && $current_item->uuid ? 'text-primary' : 'text-slate-700 dark:text-slate-400 dark:hover:text-slate-300' }} rounded-lg hover:bg-gray-100 dark:bg-gray-800   dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="{{ !$child->isActive() ? '#':  $child->url() }}">
+                                                        <a {{ !$child->isActive() ? 'disabled="true"' : '' }} class="{{ !$child->isActive() ? 'cursor-not-allowed' : '' }} flex items-center py-4 text-sm {{ isset($current_item) && $child->uuid == $current_item->uuid ? 'text-primary' : 'text-slate-700 dark:text-slate-400 dark:hover:text-slate-300' }} rounded-lg hover:bg-gray-100 dark:bg-gray-800   dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="{{ !$child->isActive() ? '#':  $child->url() }}">
                                                             {{ __($child->name) }}
                                                         </a>
                                                     </li>

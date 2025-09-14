@@ -209,10 +209,9 @@ if (! function_exists('is_subroute')) {
         if ($route instanceof \App\Models\Personalization\MenuLink){
             $route = $route->trans('url');
         }
-        if ($route == '/') {
-            return request()->path() == '/';
+        if ($route == '/' || $route == '/client') {
+            return request()->path() == '/' || request()->path() == 'client';
         }
-        // remove domain from the route
         if (Str::startsWith($route, 'http://') || Str::startsWith($route, 'https://')) {
             $route = parse_url($route, PHP_URL_PATH);
         }
