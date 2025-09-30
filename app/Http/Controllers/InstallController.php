@@ -88,7 +88,7 @@ class InstallController extends Controller
         $data['username'] = $data['firstname'].' '.$data['lastname'];
         $data['role_id'] = Role::first()->id;
         $data['email'] = strtolower($data['email']);
-        Admin::insert($data);
+        Admin::insert($request->only(['email', 'firstname', 'lastname', 'username', 'password', 'role_id']));
         $data['send_telemetry'] = array_key_exists('send_telemetry', $data) ? true : false;
         if ($data['send_telemetry']) {
             app(TelemetryService::class)->sendTelemetry();
