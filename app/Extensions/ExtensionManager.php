@@ -399,6 +399,7 @@ class ExtensionManager extends ExtensionCollectionsManager
                     'unofficial' => true,
                     'prices' => $extension['prices'] ?? [],
                     'thumbnail' => $extension['thumbnail'] ?? null,
+                    'author' => $extension['author'] ?? ['name' => 'Unknown'],
                     'providers' => collect($extension['providers'] ?? [])->map(function ($provider) {
                         return [
                             'provider' => $provider,
