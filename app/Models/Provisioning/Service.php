@@ -455,7 +455,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
             $pricing = PricingService::for($this->id, 'service')->first();
             if ($pricing) {
                 return new ProductPriceDTO(
-                    $pricing[$billing],
+                    $pricing[$billing] ?? 0,
                     $pricing['setup_' . $billing] ?? 0,
                     $this->currency,
                     $billing

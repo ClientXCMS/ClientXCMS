@@ -270,7 +270,7 @@ class Pricing extends Model
                 return false;
             }
 
-            return $value !== null && ! str_contains($key, 'setup') && $value > 0;
+            return $value !== null && ! str_contains($key, 'setup') && $value >= 0;
         })->keys()->first();
     }
 
