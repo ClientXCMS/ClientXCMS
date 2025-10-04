@@ -95,6 +95,12 @@ php artisan translations:import --locale $DEFAULT_LOCALE || {
     exit 1
 }
 
+php artisan cache:clear || {
+    echo "ERROR: Cache clear failed"
+    exit 1
+}
+chmod -R 775 storage bootstrap/cache
+
 echo "Starting cron jobs..."
 crond -L /var/log/crond -l 5
 
