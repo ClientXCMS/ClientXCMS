@@ -85,5 +85,4 @@
             </div>
         @endforeach
     </div>
-    {!! render_theme_sections() !!}
 @endsection

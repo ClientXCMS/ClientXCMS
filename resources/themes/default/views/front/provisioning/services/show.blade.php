@@ -78,6 +78,11 @@
                             {{ __('client.services.manageoptions') }}
                         </a>
                     @endif
+
+                    @if (app('extension')->extensionIsEnabled('customers_reviews'))
+                        @include('customers_reviews::default.service_button', ['service' => $service])
+                    @endif
+
                     @if (auth('admin')->check())
 
                         <a href="{{ route('admin.services.show', ['service' => $service]) }}" class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3 text-primary">
