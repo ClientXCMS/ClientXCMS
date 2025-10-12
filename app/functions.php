@@ -16,6 +16,7 @@
  * Year: 2025
  */
 
+use App\Models\Personalization\Section;
 use App\Services\SettingsService;
 use App\Services\Store\CurrencyService;
 
@@ -349,5 +350,49 @@ if (! function_exists('generate_uuid')) {
             return generate_uuid($class);
         }
         return $uuid;
+    }
+}
+
+if (! function_exists('sanitize_content')) {
+    function sanitize_content(string $content): string
+    {
+        if (str_contains($content, '%%')) {
+            $content = str_replace('%%', '%', $content);
+        }
+
+        $badPatterns = [
+            '/<\?(?:php|=)?/i',
+            '/@php\b/i',
+            '/\{\!\!.*?\!\!\}/s',
+            '/@(include|extends|component|each|includeIf|includeWhen)\s*\(/i',
+        ];
+
+        foreach ($badPatterns as $pattern) {
+            if (preg_match($pattern, $content)) {
+                $content = preg_replace_callback($pattern, function($m){
+                    return '&lt;?';
+                }, $content);
+            }
+        }
+        return $content;
+    }
+}
+
+if (! function_exists('is_sanitized')) {
+    function is_sanitized(string $content): bool
+    {
+        $badPatterns = [
+            '/<\?(?:php|=)?/i',
+            '/@php\b/i',
+            '/\{\!\!.*?\!\!\}/s',
+            '/@(include|extends|component|each|includeIf|includeWhen)\s*\(/i',
+        ];
+
+        foreach ($badPatterns as $pattern) {
+            if (preg_match($pattern, $content)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

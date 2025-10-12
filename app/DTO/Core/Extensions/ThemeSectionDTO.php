@@ -91,9 +91,10 @@ class ThemeSectionDTO
     {
         $path = $this->json['path'];
         $content = File::get(app('view')->getFinder()->find($path));
-        $bannedValues = Section::TAGS_DISABLED;
-
-        return str_replace($bannedValues, '', $content);
+        if (!$this->isProtected()) {
+            return sanitize_content($content);
+        }
+        return $content;
     }
 
     public function isDefault(): bool

@@ -20,7 +20,6 @@
 namespace App\Models\Admin;
 
 use App\Contracts\Notifications\NotifiablePlaceholderInterface;
-use App\Models\Personalization\Section;
 use App\Theme\ThemeManager;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -152,12 +151,7 @@ class EmailTemplate extends Model
         if (str_contains($content, '%%')) {
             $content = str_replace('%%', '%', $content);
         }
-        $bannedValues = Section::TAGS_DISABLED;
-        foreach ($bannedValues as $bannedValue) {
-            if (str_contains($content, $bannedValue)) {
-                throw new \Exception('Banned value found in HTML');
-            }
-        }
+        $content = sanitize_content($content);
 
         return \Blade::render($content, $context);
     }

@@ -248,8 +248,6 @@ class WhmcsMigrate extends Command
     {
         try {
             if (str_contains($date, '0000-00-00') || str_contains($date, '1970-01-01') || $date == null || str_contains($date, '0001-11-30')) {
-                dump('format to now');
-
                 return now()->format('Y-m-d H:i:s');
             }
             if ($date == '0000-00-00 00:00:00' || $date == '-0001-11-30 00:00:00' || $date == '1970-01-01 00:00:00') {

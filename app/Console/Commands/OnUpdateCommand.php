@@ -32,6 +32,7 @@ use Illuminate\Console\Command;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Symfony\Component\Finder\Finder;
 
 class OnUpdateCommand extends Command
 {
@@ -62,6 +63,7 @@ class OnUpdateCommand extends Command
         $this->migrateServicesWithoutProduct();
         $this->migrateServicesWithProduct();
         $this->migrateConfigOptions();
+        $this->cleanupSections();
 
         PricingService::forgot();
         DB::commit();
@@ -212,7 +214,7 @@ class OnUpdateCommand extends Command
                 $configOption->setup_amount,
                 $configOption->onetime_amount
             );
-            $this->info("Service options {$configOption->id} has been updated.");
+            $this->info("Service options {$configOption->id} has been updated.");       
         }
     }
 
@@ -234,4 +236,52 @@ class OnUpdateCommand extends Command
             $table->dropColumn(['recurring_amount', 'onetime_amount', 'setup_amount']);
         });
     }
+
+    private function cleanupSections(): void
+    {
+        $paths = [
+            base_path('resources/themes/**/views'),
+        ];
+
+        $finder = new Finder();
+        $finder
+            ->files()
+            ->in($paths)
+            ->name('*.php')
+            ->path('#(?:^|/)sections(?:_copy)?(?:/|$)#i');
+        $total = 0;
+        $modified = 0;
+
+        foreach ($finder as $file) {
+            $total++;
+            $realPath = $file->getRealPath();
+            if ($realPath === false) {
+                $this->warn("Invalid path for: {$file->getRelativePathname()}");
+                continue;
+            }
+            $this->info("Updating section: {$file->getRelativePathname()}");
+            $content = file_get_contents($realPath);
+            [$changed, $content] = $this->stripLeadingPhpHeader($content);
+            $this->info("Changed: {$changed}");
+            file_put_contents($realPath, $content);
+            $modified++;
+            $this->info("Section {$file->getRelativePathname()} has been updated.");
+        }
+    }
+
+    private function stripLeadingPhpHeader(string $content): array
+    {
+        $original = $content;
+        if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
+            $content = substr($content, 3);
+        }
+        $new = preg_replace('/^\s*<\?php[\s\S]*?\?>\s*/', '', $content, 1);
+        $changed = ($new !== null) && ($new !== $content);
+        if ($changed && substr($original, 0, 3) === "\xEF\xBB\xBF") {
+            $new = "\xEF\xBB\xBF" . $new;
+        }
+        return [$changed, $new ?? $content];
+    }
+
+
 }

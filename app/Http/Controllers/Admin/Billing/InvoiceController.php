@@ -121,7 +121,6 @@ class InvoiceController extends AbstractCrudController
 
             return back()->with('success', __('admin.invoices.deliveredsuccess'));
         } catch (\Exception $e) {
-            dd($e);
             return back()->with('error', $e->getMessage());
         }
     }

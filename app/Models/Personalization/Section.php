@@ -132,7 +132,7 @@ class Section extends Model
         if (! file_exists($theme->path.'/views/sections_copy')) {
             mkdir($theme->path.'/views/sections_copy', 0777, true);
         }
-        $content = str_replace(self::TAGS_DISABLED, '', $content);
+        $content = sanitize_content($content);
         file_put_contents($path, $content);
         $this->save();
     }
@@ -163,7 +163,7 @@ class Section extends Model
         } else {
             $content = file_get_contents(app('view')->getFinder()->find($this->path));
         }
-        $content = str_replace(self::TAGS_DISABLED, '', $content);
+        $content = sanitize_content($content);
         file_put_contents($path, $content);
 
         return $clone;

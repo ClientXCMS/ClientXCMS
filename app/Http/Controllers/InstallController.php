@@ -91,7 +91,7 @@ class InstallController extends Controller
         if (Admin::first()) {
             return redirect()->to(route('install.summary'));
         }
-        Admin::insert($request->only(['email', 'firstname', 'lastname', 'password', 'role_id']) + ['username' => $data['username']]);
+        Admin::insert(collect($data)->only(['email', 'firstname', 'lastname', 'password', 'role_id', 'username'])->toArray());
         $data['send_telemetry'] = array_key_exists('send_telemetry', $data) ? true : false;
         if ($data['send_telemetry']) {
             app(TelemetryService::class)->sendTelemetry();
@@ -115,7 +115,6 @@ class InstallController extends Controller
 
     public function storeSummary(Request $request)
     {
-        auth('admin')->loginUsingId(Admin::first()->id);
         app('installer')->createInstalledFile();
 
         return redirect()->to(route('admin.dashboard'));

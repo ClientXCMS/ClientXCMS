@@ -91,10 +91,8 @@ class SectionController extends AbstractCrudController
             'theme_uuid' => 'required',
         ]);
         $validated['is_active'] = $request->has('is_active');
-        foreach (Section::TAGS_DISABLED as $tag) {
-            if (str_contains($request->get('content'), $tag)) {
-                return back()->with('error', 'Tag '.$tag.' is not allowed');
-            }
+        if (is_sanitized($request->get('content'))) {
+            return back()->with('error', __('personalization.sections.errors.sanitized_content'))->withInput();
         }
         unset($validated['content']);
         $section->saveContent($request->get('content'));
