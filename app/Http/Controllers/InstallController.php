@@ -88,7 +88,10 @@ class InstallController extends Controller
         $data['username'] = $data['firstname'].' '.$data['lastname'];
         $data['role_id'] = Role::first()->id;
         $data['email'] = strtolower($data['email']);
-        Admin::insert($request->only(['email', 'firstname', 'lastname', 'username', 'password', 'role_id']));
+        if (Admin::first()) {
+            return redirect()->to(route('install.summary'));
+        }
+        Admin::insert($request->only(['email', 'firstname', 'lastname', 'password', 'role_id']) + ['username' => $data['username']]);
         $data['send_telemetry'] = array_key_exists('send_telemetry', $data) ? true : false;
         if ($data['send_telemetry']) {
             app(TelemetryService::class)->sendTelemetry();
