@@ -89,10 +89,10 @@ class EmailTemplate extends Model
             return new HtmlString($part);
         });
         $mail = (new MailMessage)
-            ->greeting(self::replacePlaceholders(self::bladeRender(setting('mail_greeting')), $notifiable))
-            ->subject(self::replacePlaceholders(self::bladeRender($template->subject), $notifiable))
+            ->greeting(self::replacePlaceholders(self::bladeRender(setting('mail_greeting'), $context), $notifiable))
+            ->subject(self::replacePlaceholders(self::bladeRender($template->subject, $context), $notifiable))
             ->lines($parts)
-            ->salutation(self::replacePlaceholders(self::bladeRender(setting('mail_salutation')), $notifiable))
+            ->salutation(self::replacePlaceholders(self::bladeRender(setting('mail_salutation'), $context), $notifiable))
             ->action($template->button_text, $url);
         $mail->viewData = [
             'button_url' => $url,
