@@ -30,6 +30,8 @@ use App\Models\Store\Product;
 use App\Services\Store\PricingService;
 use App\Services\Store\RecurringService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Str;
 
 class ConfigOptionController extends AbstractCrudController
 {
@@ -137,10 +139,13 @@ class ConfigOptionController extends AbstractCrudController
         $this->checkPermission('update');
         $validated = $request->validated();
         $rules = [
-            'options' => 'required|array',
-            'options.*.friendly_name' => 'required|string|max:255',
-            'options.*.value' => 'required|string',
-            'options.*.hidden' => 'nullable|boolean',
+            'options' => ['required','array'],
+            'options.*.friendly_name' => ['required','string','max:255'],
+            'options.*.value' => [
+                'required',
+                Rule::when(Str::startsWith($configOption->key, 'additional_'), ['numeric'], ['string']),
+            ],
+            'options.*.hidden' => ['nullable','boolean'],
         ];
         $data = $request->all();
         foreach ($request->input('options') as $id => $option) {

@@ -27,6 +27,7 @@ use App\Services\Store\PricingService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Str;
 
 /**
  * 
@@ -272,5 +273,14 @@ class ConfigOption extends Model
             self::TYPE_RADIO => __('provisioning.admin.configoptions.types.radio'),
             self::TYPE_DROPDOWN => __('provisioning.admin.configoptions.types.dropdown'),
         ];
+    }
+
+    public function getFieldType(): string
+    {
+        if (Str::startsWith($this->key, 'additional_')) {
+            return 'number';
+        }
+
+        return 'text';
     }
 }

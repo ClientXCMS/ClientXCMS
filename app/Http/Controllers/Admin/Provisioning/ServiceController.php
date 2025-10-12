@@ -258,7 +258,11 @@ class ServiceController extends AbstractCrudController
             if ($product !== null) {
                 $productServer = $product->productType()->server();
                 if ($productServer !== null) {
-                    $server = $productServer->findServer($product);
+                    try {
+                        $server = $productServer->findServer($product);
+                    } catch (\Exception $e) {
+                        return back()->with('error', $e->getMessage());
+                    }
                 }
                 if ($server === null) {
                     $server = Server::getAvailable()->where('type', $data['type'])->first();

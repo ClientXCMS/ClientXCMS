@@ -24,8 +24,10 @@ use App\Core\Admin\Dashboard\AdminCountWidget;
 use App\Core\Menu\AdminMenuItem;
 use App\Models\Account\Customer;
 use App\Models\Admin\Permission;
+use Cache;
 use Carbon\Carbon;
 use Illuminate\Support\ServiceProvider;
+use View;
 
 class AdminServiceProvider extends ServiceProvider
 {
@@ -43,6 +45,8 @@ class AdminServiceProvider extends ServiceProvider
         if (is_installed()) {
             $this->registerAdminCountWidgets();
         }
+        View::share('appVersion', $this->versionData()['version'] ?? 'undefined');
+        View::share('appIsGit', $this->versionData()['is_git'] ?? false);
     }
 
     private function registerMenuItems()
@@ -89,5 +93,36 @@ class AdminServiceProvider extends ServiceProvider
             return view('admin.dashboard.cards.customer-search', ['fields' => $fields]);
         }, 'admin.manage_customers', 1, 'services_canvas'));
         $this->app['settings']->addCardItem('security', 'roles', 'admin.roles.title', 'admin.roles.description', 'bi bi-person-badge', route('admin.roles.index'), 'admin.manage_roles');
+    }
+
+    /**
+     * Return version information for the footer.
+     *
+     * @return array
+     * @see https://github.com/pterodactyl/panel/blob/0.7-develop/app/Providers/AppServiceProvider.php
+     */
+    protected function versionData()
+    {
+        return Cache::remember('git-version', 5, function () {
+            if (file_exists(base_path('.git/HEAD'))) {
+                $head = explode(' ', file_get_contents(base_path('.git/HEAD')));
+
+                if (array_key_exists(1, $head)) {
+                    $path = base_path('.git/' . trim($head[1]));
+                }
+            }
+
+            if (isset($path) && file_exists($path)) {
+                return [
+                    'version' => substr(file_get_contents($path), 0, 8),
+                    'is_git' => true,
+                ];
+            }
+
+            return [
+                'version' => AppServiceProvider::VERSION,
+                'is_git' => false,
+            ];
+        });
     }
 }

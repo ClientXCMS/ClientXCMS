@@ -85,4 +85,8 @@
             </div>
         @endforeach
     </div>
+    @if (app('extension')->extensionIsEnabled('faq'))
+        @include('faq::widget', ['group' => $group ?? null])
+    @endif
+    {!! render_theme_sections() !!}
 @endsection

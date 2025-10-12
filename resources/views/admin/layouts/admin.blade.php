@@ -33,10 +33,29 @@
 <body class="bg-gray-50 dark:bg-slate-900 {{ is_darkmode(true) ? 'dark' : '' }} h-full">
 <header class="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full bg-white border-b text-sm py-2.5 sm:py-4 dark:bg-slate-900 dark:border-gray-700">
     <nav class="max-w-7xl flex basis-full items-center w-full mx-auto px-4 sm:px-6 lg:px-8" aria-label="Global">
-            <a class="flex-none text-xl font-semibold dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="https://clientxcms.com/client/support" aria-label="CLIENTXCMS">CLIENTXCMS
-                <span class="bg-gray-100 text-xs text-gray-500 font-semibold rounded-full py-1 px-2 dark:bg-gray-700 dark:text-gray-400">v{{ ctx_version() }}</span>
-            </a>
 
+  <a
+    href="https://clientxcms.com/client/support"
+    aria-label="CLIENTXCMS"
+    class="flex-none text-xl font-semibold dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+  >
+    CLIENTXCMS
+    <span class="bg-gray-100 text-xs text-gray-500 font-semibold rounded-full py-1 px-2 dark:bg-gray-700 dark:text-gray-400 hs-tooltip-toggle hs-tooltip inline-block relative">
+      v{{ ctx_version() }}
+        @if ($appIsGit)
+    <span
+      class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible
+             opacity-0 invisible transition duration-200 z-20
+             absolute start-1/2 -translate-x-1/2 mt-2
+             bg-gray-900 text-white text-xs rounded px-2 py-1
+             dark:bg-gray-800"
+      role="tooltip"
+    >
+      {{ $appVersion }}
+    </span>
+  @endif
+    </span>
+  </a>
         <div class="w-full flex items-center justify-end ms-auto sm:justify-between sm:gap-x-3 sm:order-3">
             <div class="w-full flex items-center justify-end ms-auto sm:justify-between sm:gap-x-3 sm:order-3">
                 <div class="sm:hidden">

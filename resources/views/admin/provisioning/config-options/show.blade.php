@@ -70,6 +70,15 @@
     @section('content')
     <div class="container mx-auto">
         @include('admin/shared/alerts')
+        @if ($errors->any())
+            <div class="alert text-red-700 bg-red-100 mt-2" role="alert">
+                <ul class="list-disc pl-5">
+                    @foreach ($errors->all() as $error)
+                        <li>{!! $error !!}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
                     <form method="POST" action="{{ route($routePath . '.update', ['configoption' => $item]) }}">
                         <div class="card">
                         <div class="card-heading">
@@ -187,7 +196,7 @@
                                             @include('admin/shared/input', ['name' => 'options[' . $option->id . '][friendly_name]', 'label' => __($translatePrefix . '.show.options.friendly_name'), 'value' => $option->friendly_name])
                                         </div>
                                         <div class="col-span-2">
-                                            @include('admin/shared/input', ['name' => 'options[' . $option->id . '][value]', 'label' => __('global.value'), 'value' => $option->value])
+                                            @include('admin/shared/input', ['name' => 'options[' . $option->id . '][value]', 'label' => __('global.value'), 'value' => $option->value, 'type' => $item->getFieldType()])
                                         </div>
                                                 <div class="justify-end">
                                                     <button type="button" class="btn btn-danger" onclick="document.querySelector('#deleteOptionForm{{ $option->id }}').submit();">{{ __('global.delete') }}</button>
