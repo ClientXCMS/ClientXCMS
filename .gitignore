@@ -31,3 +31,6 @@ yarn-error.log
 !/lang/*/install.php
 /resources/views/vendor/notifications/*
 /data/*
+/src/CTX*
+/views/CTX*
+2025-*.txt
