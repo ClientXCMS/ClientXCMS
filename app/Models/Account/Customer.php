@@ -503,4 +503,36 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
             'billing_details' => $this->billing_details,
         ];
     }
+
+    /**
+     * Check if customer is trusted based on account age and service count.
+     * Used for review auto-publication (Option 4).
+     */
+    public function isTrustedForReviews(): bool
+    {
+        // If trusted client feature is disabled, always return false
+        if (!setting('reviews_trusted_client_enabled', false)) {
+            return false;
+        }
+
+        // Check account age
+        $minMonths = (int) setting('reviews_trusted_client_min_months', 6);
+        $accountAgeInMonths = $this->created_at->diffInMonths(now());
+
+        if ($accountAgeInMonths < $minMonths) {
+            return false;
+        }
+
+        // Check active service count
+        $minServices = (int) setting('reviews_trusted_client_min_services', 3);
+        $activeServicesCount = $this->services()
+            ->where('status', 'active')
+            ->count();
+
+        if ($activeServicesCount < $minServices) {
+            return false;
+        }
+
+        return true;
+    }
 }
