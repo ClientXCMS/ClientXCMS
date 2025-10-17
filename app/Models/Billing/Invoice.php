@@ -386,21 +386,21 @@ class Invoice extends Model implements SupportRelateItemInterface
         $id = CustomItem::create([
             'name' => $validatedData['name'],
             'description' => $validatedData['description'],
-            'unit_price' => $validatedData['unit_price_ht'],
-            'unit_setupfees' => $validatedData['unit_setup_ht'],
+            'unit_price' => $validatedData['unit_price_ttc'],
+            'unit_setupfees' => $validatedData['unit_setup_ttc'],
         ])->id;
         InvoiceItem::create([
             'name' => $validatedData['name'],
             'description' => $validatedData['description'],
             'quantity' => $validatedData['quantity'],
-            'unit_price_ht' => $validatedData['unit_price_ht'],
-            'unit_setup_ht' => $validatedData['unit_setup_ht'],
+            'unit_price_ttc' => $validatedData['unit_price_ttc'],
+            'unit_setup_ttc' => $validatedData['unit_setup_ttc'],
             'invoice_id' => $this->id,
             'type' => 'custom_item',
             'related_id' => $id,
             'data' => [],
-            'unit_price_ttc' => TaxesService::getPriceWithVat($validatedData['unit_price_ht']),
-            'unit_setup_ttc' => TaxesService::getPriceWithVat($validatedData['unit_setup_ht']),
+            'unit_price_ht' => TaxesService::getPriceWithoutVat($validatedData['unit_price_ttc']),
+            'unit_setup_ht' => TaxesService::getPriceWithoutVat($validatedData['unit_setup_ttc']),
         ]);
     }
 

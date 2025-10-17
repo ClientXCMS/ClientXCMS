@@ -41,6 +41,9 @@ class CreateServiceListener
     {
         $invoice = $event->invoice;
         foreach ($invoice->items as $item) {
+            if ($item->cancelled_at !== null) {
+                continue;
+            }
             if ($item->type == 'service') {
                 InvoiceService::createServicesFromInvoiceItem($invoice, $item);
             }

@@ -91,7 +91,7 @@ class SectionController extends AbstractCrudController
             'theme_uuid' => 'required',
         ]);
         $validated['is_active'] = $request->has('is_active');
-        if (is_sanitized($request->get('content'))) {
+        if (!is_sanitized($request->get('content'))) {
             return back()->with('error', __('personalization.sections.errors.sanitized_content'))->withInput();
         }
         unset($validated['content']);

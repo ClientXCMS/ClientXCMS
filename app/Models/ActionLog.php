@@ -148,6 +148,11 @@ class ActionLog extends Model
 
     protected static array $ignoreKeys = [];
 
+    protected static array $extensionActions = [];
+    protected static array $extensionIcons = [];
+    protected static array $extensionTranslations = [];
+
+
     protected $fillable = [
         'customer_id',
         'staff_id',
@@ -160,6 +165,18 @@ class ActionLog extends Model
     protected $casts = [
         'payload' => 'array',
     ];
+
+    public static function registerExtensionActions(array $actions, array $icons = [], array $translations = []): void
+    {
+        self::$extensionActions = array_merge(self::$extensionActions, $actions);
+        self::$extensionIcons = array_merge(self::$extensionIcons, $icons);
+        self::$extensionTranslations = array_merge(self::$extensionTranslations, $translations);
+    }
+
+    public static function getAllActions(): array
+    {
+        return array_merge(self::ALL_ACTIONS, self::$extensionActions);
+    }
 
     public function customer()
     {
@@ -224,6 +241,9 @@ class ActionLog extends Model
             case self::TWO_FACTOR_RECOVERY_CODES_GENERATED:
                 return 'bi bi-shield-check';
             default:
+                if (isset(self::$extensionIcons[$this->action])) {
+                    return self::$extensionIcons[$this->action];
+                }
                 return 'bi bi-question-circle';
         }
     }
@@ -254,9 +274,13 @@ class ActionLog extends Model
         return $this->hasMany(ActionLogEntries::class);
     }
 
-    public function getFormattedName()
+   public function getFormattedName()
     {
         $parameters = $this->getParameters();
+
+        if (isset(self::$extensionTranslations[$this->action])) {
+            return __(self::$extensionTranslations[$this->action], $parameters);
+        }
         $action = __("actionslog.actions.{$this->action}", $parameters);
 
         return $action;

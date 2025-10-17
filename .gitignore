@@ -34,3 +34,6 @@ yarn-error.log
 /src/CTX*
 /views/CTX*
 2025-*.txt
+/resources/themes/*/views/sections_copy/*
+/data/*
+docker-compose.yml

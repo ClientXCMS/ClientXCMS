@@ -293,9 +293,9 @@ class ThemeManager
         });
     }
 
-    public function getThemeSections()
+    public function getThemeSections(): array
     {
-        return Cache::get('themes_sections', function () {
+        return (array) Cache::remember('themes_sections', 60 * 60 * 24 * 7, function () {
             return $this->fetchThemeSection($this->getTheme());
         });
     }
