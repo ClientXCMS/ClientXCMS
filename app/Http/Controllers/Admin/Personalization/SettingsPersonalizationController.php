@@ -116,6 +116,7 @@ class SettingsPersonalizationController extends Controller
             'theme_home_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'theme_home_enabled' => 'in:true,false',
             'theme_home_title_meta' => 'required|string|max:255',
+            'theme_home_redirect_route' => 'nullable|string|max:255',
         ]);
         if ($request->hasFile('theme_home_image')) {
             if (\setting('theme_home_image') && \Storage::exists(\setting('theme_home_image'))) {

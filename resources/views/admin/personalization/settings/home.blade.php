@@ -43,6 +43,7 @@
                     <div class="mt-2 mb-2">
                         @include('admin/shared/checkbox', ['name' => 'theme_home_enabled', 'label' => __('personalization.home.fields.theme_home_enabled'), 'checked' => setting('theme_home_enabled')])
                     </div>
+                    @include('admin/shared/input', ['name' => 'theme_home_redirect_route', 'label' => __('personalization.home.fields.theme_home_redirect_route'), 'value' => setting('theme_home_redirect_route', '/store'), 'help' => __('personalization.home.fields.theme_home_redirect_route_help')])
                 </div>
                 <div>
 

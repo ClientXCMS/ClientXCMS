@@ -37,7 +37,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (! setting('theme_home_enabled')) {
-        return redirect()->route('front.store.index');
+        return redirect()->to(setting('theme_home_redirect_route', '/store'));
     }
 
     return view('home');

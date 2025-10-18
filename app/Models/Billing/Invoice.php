@@ -354,7 +354,7 @@ class Invoice extends Model implements SupportRelateItemInterface
         if (str_contains($domain, 'localhost')) {
             $logoSrc = '/' . setting('app_logo_text');
         } else {
-            $logoSrc = setting('app_logo_text');
+            $logoSrc = $domain .setting('app_logo_text');
         }
 
         $primaryColor = ThemeManager::getColorsArray()['600'];
