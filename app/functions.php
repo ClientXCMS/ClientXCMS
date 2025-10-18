@@ -16,7 +16,6 @@
  * Year: 2025
  */
 
-use App\Models\Personalization\Section;
 use App\Services\SettingsService;
 use App\Services\Store\CurrencyService;
 
@@ -394,5 +393,43 @@ if (! function_exists('is_sanitized')) {
             }
         }
         return true;
+    }
+}
+if (! function_exists('get_group_icon')) {
+    function get_group_icon(string $name): string
+    {
+        $name = mb_strtolower($name, 'UTF-8');
+        $name = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name);
+        $icon = 'bi bi-cloud text-xl';
+        $map = [
+            'vps'          => 'bi bi-server',
+            'hosting'      => 'bi bi-globe',
+            'hebergement'  => 'bi bi-globe',
+            'dedicated'    => 'bi bi-hdd-rack',
+            'dedie'        => 'bi bi-hdd-rack',
+            'domain'       => 'bi bi-globe2',
+            'domaine'      => 'bi bi-globe2',
+            'fivem'        => 'bi bi-controller',
+            'gmod'         => 'bi bi-joystick',
+            'garry'        => 'bi bi-joystick',
+            'ark'          => 'bi bi-rocket-takeoff',
+            'minecraft'    => 'bi bi-box',
+            'rust'         => 'bi bi-fire',
+            'valheim'      => 'bi bi-shield',
+            'palworld'     => 'bi bi-stars',
+            'cs2'          => 'bi bi-bullseye',
+            'csgo'         => 'bi bi-bullseye',
+            'dayz'         => 'bi bi-compass',
+            'terraria'     => 'bi bi-tree',
+            'satisfactory' => 'bi bi-gear',
+        ];
+        foreach ($map as $key => $cls) {
+            if (str_contains($name, $key)) { $icon = $cls.' text-xl'; break; }
+        }
+
+        if ($icon === 'bi bi-cloud text-xl' && preg_match('/\bmc\b/', $name)) {
+            $icon = 'bi bi-box text-xl';
+        }
+        return $icon;
     }
 }
