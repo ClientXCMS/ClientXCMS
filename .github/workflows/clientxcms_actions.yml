@@ -68,7 +68,7 @@ jobs:
           repository: ${{ vars.CTX_TRANSLATIONS_REPO }}
           token: ${{ secrets.CTX_TRANSLATIONS_PAT }}
           path: translations
-          branch: main
+          ref: main
           fetch-depth: 0
 
       - name: Copy translations to translations
