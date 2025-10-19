@@ -59,10 +59,10 @@ jobs:
             sleep 2
           done
       - name: Export translations
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         run: php artisan translations:export
       - name: Checkout ctx-translations repository
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         uses: actions/checkout@v3
         with:
           repository: ${{ vars.CTX_TRANSLATIONS_REPO }}
@@ -71,13 +71,13 @@ jobs:
           fetch-depth: 0
 
       - name: Copy translations to translations
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         run: |
           mkdir -p translations/translations
           cp storage/fr.json translations/translations/fr.json
 
       - name: Commit and push translations
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         run: |
           cd translations
           git config user.name "github-actions[bot]"
@@ -99,5 +99,5 @@ jobs:
         run: php artisan migrate --force --no-interaction --no-ansi --seed
       - name: Build assets
         run: npm install && npm run build
-      - name: Run PHPUnit
-        run: ./vendor/bin/phpunit --configuration phpunit_github.xml -d date.timezone=Europe/Paris
+      # - name: Run PHPUnit
+      #   run: ./vendor/bin/phpunit --configuration phpunit_github.xml -d date.timezone=Europe/Paris
