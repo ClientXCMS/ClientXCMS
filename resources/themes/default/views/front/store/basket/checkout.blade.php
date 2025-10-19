@@ -24,7 +24,7 @@
 @endsection
 @section('content')
 
-    <main class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+    <main class="{{ theme_metadata('layout_classes', 'max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto') }}">
         @if (theme_metadata('enable_pagetitle', 'false') == 'false')
                 <h1 class="text-2xl font-semibold mb-4 dark:text-white">{{ __('store.checkout.title') }}</h1>
         @endif

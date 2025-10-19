@@ -1,4 +1,4 @@
-<div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+<div class="{{ theme_metadata('layout_classes', 'max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto') }}">
     <div class="w-2/3 sm:w-1/2 lg:w-1/3 mx-auto text-center mb-6">
         <h2 class="text-gray-600 dark:text-neutral-400">Lorem ipsum dolor sit amet, consectetur adipiscing elit</h2>
     </div>
