@@ -180,8 +180,7 @@ class LocaleService
     private static function isLocaleEnabled(string $key): bool
     {
         $enabled = json_decode(setting('app_enabled_locales', self::DEFAULT_ENABLED_LOCALES), true);
-
-        return in_array($key, $enabled);
+        return in_array($key, $enabled) || self::isLocaleDefault($key);
     }
 
     public static function storeTranslations(string $model, int $model_id, array $translations)

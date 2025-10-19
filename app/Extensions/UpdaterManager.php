@@ -57,8 +57,11 @@ class UpdaterManager
             }
             $path = (basename(collect($finder->in($to)->directories()->depth("== 0"))->first()->getPathname()));
             $fileSystem = new Filesystem();
-            if (file_exists($to . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . 'README.md')) {
-                unlink($to . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . 'README.md');
+            $removedFiles = ['README.md', 'LICENSE.txt', 'CHANGELOG.md', '.gitignore', 'LICENSE'];
+            foreach ($removedFiles as $file) {
+                if (file_exists($to . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $file)) {
+                    unlink($to . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $file);
+                }
             }
             $fileSystem->mirror($to . DIRECTORY_SEPARATOR . $path, base_path(), null, ['override' => true]);
         }

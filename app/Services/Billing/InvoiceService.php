@@ -404,7 +404,7 @@ class InvoiceService
             $invoiceItem = $invoice->items()->create([
                 'invoice_id' => $invoice->id,
                 'name' => self::formatItemname($item),
-                'description' => 'Created from basket item',
+                'description' => $item->product ? $item->product->formattedDescription() : 'Created from basket item',
                 'quantity' => $item->quantity,
                 'unit_price_ht' => $price_ht,
                 'unit_price_ttc' => TaxesService::getPriceWithVat($price_ht),

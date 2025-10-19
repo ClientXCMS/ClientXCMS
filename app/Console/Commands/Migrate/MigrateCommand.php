@@ -446,7 +446,7 @@ class MigrateCommand extends Command
                     'is_deleted' => $result->is_deleted,
                     'notes' => $result->note,
                     'confirmation_token' => $result->confirmation_token,
-                    'last_login' => $result->last_sign_at,
+                    'last_login' => $this->normalizeDateTime($result->last_sign_at),
                     'last_ip' => $result->last_sign_ip,
                     'created_at' => $result->created_at,
                     'updated_at' => $result->updated_at,
@@ -466,6 +466,23 @@ class MigrateCommand extends Command
     private function decode(string $string)
     {
         return html_entity_decode($string, ENT_QUOTES);
+    }
+
+    private function normalizeDateTime($value)
+    {
+        try {
+            if ($value === null) {
+                return null;
+            }
+            $string = is_string($value) ? trim($value) : (string) $value;
+            if ($string === '' || str_contains($string, '0000-00-00') || $string === '-0001-11-30 00:00:00') {
+                return null;
+            }
+            $dt = \Carbon\Carbon::parse($string);
+            return $dt;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     /**

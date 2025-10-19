@@ -387,4 +387,9 @@ class Product extends Model
 
         return ! $this->isValid($canUnreferenced);
     }
+
+    public function formattedDescription(): string
+    {
+        return \App\Helpers\StringHTML::htmlToPlainLines($this->description);
+    }
 }
