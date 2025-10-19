@@ -26,6 +26,7 @@
         \App\Models\Helpdesk\SupportTicket::STATUS_ANSWERED,
         \App\Models\Billing\Invoice::STATUS_DRAFT,
         \App\Models\Provisioning\Service::STATUS_PENDING,
+        'sent',
         'unreferenced',
     ];
 
@@ -35,13 +36,15 @@
         'approved',
         'completed',
         'yes',
+        'accepted',
     ];
 
     $failedStates = [
         \App\Models\Billing\Invoice::STATUS_FAILED,
         \App\Models\Provisioning\Service::STATUS_EXPIRED,
         'rejected',
-        'no'
+        'no',
+        'refused',
     ];
 
     $neutralStates = [
