@@ -3,11 +3,11 @@ name: ClientX CMS Actions
 on:
   push:
     branches:
-      - main
+      - master
       - develop
   pull_request:
     branches:
-      - main
+      - master
       - develop
 jobs:
   unit-test:
