@@ -1,11 +1,14 @@
 name: ClientX CMS Actions
 
 on:
+  push:
+    branches:
+      - main
+      - develop
   pull_request:
     branches:
-      - preprod
       - main
-
+      - develop
 jobs:
   unit-test:
     name: Unit testing
@@ -55,7 +58,37 @@ jobs:
             echo "Waiting for MySQL..."
             sleep 2
           done
+      - name: Export translations
+        if: github.ref == 'refs/heads/main'
+        run: php artisan translations:export
+      - name: Checkout ctx-translations repository
+        if: github.ref == 'refs/heads/main'
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ vars.CTX_TRANSLATIONS_REPO }}
+          token: ${{ secrets.CTX_TRANSLATIONS_PAT }}
+          path: translations
+          fetch-depth: 0
 
+      - name: Copy translations to translations
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p translations/translations
+          cp storage/fr.json translations/translations/fr.json
+
+      - name: Commit and push translations
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd translations
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No changes in translations, skipping commit."
+          else
+            git add translations/fr.json
+            git commit -m "Update translations from source repository"
+            git push origin main
+          fi
       - name: Create installed flag
         run: mkdir -p storage && touch storage/installed
       - name: Set up environment
@@ -66,32 +99,5 @@ jobs:
         run: php artisan migrate --force --no-interaction --no-ansi --seed
       - name: Build assets
         run: npm install && npm run build
-      - name: Export translations
-        run: php artisan translations:export
-      - name: Checkout ctx-translations repository
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ vars.CTX_TRANSLATIONS_REPO }}
-          token: ${{ secrets.CTX_TRANSLATIONS_PAT }}
-          path: translations
-          fetch-depth: 0
-
-      - name: Copy translations to translations
-        run: |
-          mkdir -p translations/translations
-          cp storage/fr.json translations/translations/fr.json
-
-      - name: Commit and push translations
-        run: |
-          cd translations
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet; then
-            echo "No changes in translations, skipping commit."
-          else
-            git add translations/fr.json
-            git commit -m "Update translations"
-            git push origin main
-          fi
       - name: Run PHPUnit
         run: ./vendor/bin/phpunit --configuration phpunit_github.xml -d date.timezone=Europe/Paris
