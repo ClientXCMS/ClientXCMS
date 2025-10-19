@@ -10,6 +10,43 @@ on:
       - master
       - develop
 jobs:
+  export-translations:
+    name: Export translations
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: Export translations to fr.json
+        if: github.ref == 'refs/heads/master'
+        run: php artisan translations:export
+      - name: Checkout ctx-translations repository
+        if: github.ref == 'refs/heads/master'
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ vars.CTX_TRANSLATIONS_REPO }}
+          token: ${{ secrets.CTX_TRANSLATIONS_PAT }}
+          path: translations
+          fetch-depth: 0
+          branch: main
+
+      - name: Copy translations to translations
+        if: github.ref == 'refs/heads/master'
+        run: |
+          mkdir -p translations/translations
+          cp storage/fr.json translations/translations/fr.json
+
+      - name: Commit and push translations
+        if: github.ref == 'refs/heads/master'
+        run: |
+          cd translations
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No changes in translations, skipping commit."
+          else
+            git add translations/fr.json
+            git commit -m "Update translations from source repository"
+            git push origin main
+          fi
   unit-test:
     name: Unit testing
     runs-on: ubuntu-latest
@@ -58,37 +95,6 @@ jobs:
             echo "Waiting for MySQL..."
             sleep 2
           done
-      - name: Export translations
-        if: github.ref == 'refs/heads/master'
-        run: php artisan translations:export
-      - name: Checkout ctx-translations repository
-        if: github.ref == 'refs/heads/master'
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ vars.CTX_TRANSLATIONS_REPO }}
-          token: ${{ secrets.CTX_TRANSLATIONS_PAT }}
-          path: translations
-          fetch-depth: 0
-
-      - name: Copy translations to translations
-        if: github.ref == 'refs/heads/master'
-        run: |
-          mkdir -p translations/translations
-          cp storage/fr.json translations/translations/fr.json
-
-      - name: Commit and push translations
-        if: github.ref == 'refs/heads/master'
-        run: |
-          cd translations
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet; then
-            echo "No changes in translations, skipping commit."
-          else
-            git add translations/fr.json
-            git commit -m "Update translations from source repository"
-            git push origin main
-          fi
       - name: Create installed flag
         run: mkdir -p storage && touch storage/installed
       - name: Set up environment
