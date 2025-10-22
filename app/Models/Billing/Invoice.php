@@ -386,8 +386,6 @@ class Invoice extends Model implements SupportRelateItemInterface
         $id = CustomItem::create([
             'name' => $validatedData['name'],
             'description' => $validatedData['description'],
-            'unit_price' => $validatedData['unit_price_ttc'],
-            'unit_setupfees' => $validatedData['unit_setup_ttc'],
         ])->id;
         InvoiceItem::create([
             'name' => $validatedData['name'],

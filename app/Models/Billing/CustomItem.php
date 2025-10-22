@@ -72,8 +72,6 @@ class CustomItem extends Model
     protected $fillable = [
         'name',
         'description',
-        'unit_price',
-        'unit_setupfees',
     ];
 
     public function productType(): NoneProductType
