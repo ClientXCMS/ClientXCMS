@@ -34,9 +34,9 @@ class ClientController extends Controller
         $invoicesCount = auth()->user()->invoices()->where('status', '!=', 'draft')->count();
         $pending = auth()->user()->invoices()->where('status', Invoice::STATUS_PENDING)->count();
         $ticketsCount = auth()->user()->tickets()->count();
-        $services = Service::where('customer_id', auth()->id())->orderBy('created_at', 'desc')->whereNot('status', Service::STATUS_HIDDEN)->limit(5)->get();
-        $tickets = SupportTicket::where('customer_id', auth()->id())->orderBy('created_at', 'desc')->limit(5)->get();
-        $invoices = Invoice::where('customer_id', auth()->id())->where('status', '!=', Invoice::STATUS_DRAFT)->orderBy('created_at', 'desc')->limit(5)->paginate();
+        $services = auth()->user()->services()->orderBy('created_at', 'desc')->whereNot('status', Service::STATUS_HIDDEN)->limit(5)->get();
+        $tickets = auth()->user()->tickets()->orderBy('created_at', 'desc')->limit(5)->get();
+        $invoices = auth()->user()->invoices()->where('status', '!=', Invoice::STATUS_DRAFT)->orderBy('created_at', 'desc')->limit(5)->paginate();
         $serviceFilters = Service::FILTERS;
         $invoiceFilters = Invoice::FILTERS;
         $gateways = GatewayService::getAvailable();

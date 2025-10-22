@@ -222,12 +222,16 @@ class InvoiceController extends AbstractCrudController
     public function show(Invoice $invoice)
     {
         $this->checkPermission('show');
+        $invoice->load(['logs' => function ($query) {
+            $query->with(['staff', 'customer'])->latest();
+        }]);
         $params['item'] = $invoice;
         $params['invoice'] = $invoice;
         $params['customer'] = $invoice->customer;
         $params['address'] = $invoice->billing_address;
         $params['gateways'] = $this->gateways();
         $params['countries'] = Countries::names();
+        $params['logs'] = $invoice->logs;
         if ($invoice->isDraft()) {
             $params['products'] = $this->products($invoice);
             $params['coupons'] = $this->coupons();

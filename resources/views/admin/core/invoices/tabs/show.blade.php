@@ -74,7 +74,6 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-6 gap-2">
             <div class="sm:col-span-2 sm:flex">
-
                 <h5 class="sm:hidden text-xs font-medium text-gray-500 uppercase">{{ __('client.invoices.itemname') }}</h5>
 
 
@@ -135,12 +134,6 @@
                     <p class="font-medium text-gray-400 md:text-end sm:text-start">-{{ formatted_price($item->getDiscount()->sub_price + $item->getDiscount()->sub_setup, $invoice->currency) }}</p>
                     @endif
                 </div>
-            </div>
-
-            <div>
-                <h5 class="sm:hidden text-xs font-medium text-gray-500 uppercase">{{ __('store.vat') }}</h5>
-
-                <p class="text-gray-800 dark:text-gray-200 sm:text-end text-start">{{ formatted_price($invoice->tax, $invoice->currency) }}</p>
             </div>
 
         </div>

@@ -53,7 +53,7 @@
             @include('admin/shared/input', ['name' => 'unit_setup_ttc', 'label' => __($translatePrefix . '.draft.unitsetupfees') . ' (TTC)', 'value' => $product->unit_setup_ttc ?? 0, 'min' => 0, 'step' => 0.01])
         </div>
         <div class="col-span-3">
-            @include('admin/shared/textarea', ['name' => 'description', 'label' => __($translatePrefix . '.draft.description'), 'value' => $product->formattedDescription() ?? ($service->description ?? ''), 'rows' => 3])
+            @include('admin/shared/textarea', ['name' => 'description', 'label' => __($translatePrefix . '.draft.description'), 'value' => $product && $product->formattedDescription() ?? ($service->description ?? ''), 'rows' => 3])
         </div>
     </div>
     <input type="hidden" name="related" value="{{ $relatedId == 'none' ? 'custom_item' : $related }}">

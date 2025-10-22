@@ -19,6 +19,8 @@
 
 namespace App\Models\Billing;
 
+use App\Models\Account\Customer;
+use App\Models\Admin\Admin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -95,6 +97,16 @@ class InvoiceLog extends Model
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function staff()
+    {
+        return $this->belongsTo(Admin::class, 'staff_id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public static function log(Invoice $invoice, string $status, array $context = []): self

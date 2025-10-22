@@ -70,6 +70,12 @@
                         </button>
                         @endif
                         @endif
+                        <button type="button"
+                            class="hs-tab-active:font-semibold hs-tab-active:border-blue-600 hs-tab-active:text-blue-600 py-2 md:py-4 px-2 inline-flex items-center gap-x-2 border-l-2 md:border-l-0 md:border-b-2 border-transparent text-sm whitespace-nowrap text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none"
+                            id="tabs-with-underline-item-logs" data-hs-tab="#tabs-with-underline-logs"
+                            aria-controls="tabs-with-underline-logs" role="tab">
+                            {{ __($translatePrefix .'.show.tabs.logs') }}
+                        </button>
                     </nav>
                 </div>
 
@@ -91,6 +97,9 @@
                             </div>
                         @endif
                     @endif
+                    <div id="tabs-with-underline-logs" class="hidden" role="tabpanel" aria-labelledby="tabs-with-underline-item-logs">
+                        @include('admin/core/invoices/tabs/logs')
+                    </div>
                 </div>
             </div>
         </div>
