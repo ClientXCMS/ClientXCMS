@@ -15,10 +15,10 @@ class EmailTemplateSeeder extends Seeder
         $templates = $this->templates();
         $extensions = app('extension')->getAllExtensions(false, true);
         foreach ($extensions as $extension) {
-            if (! in_array($extension->type, ['modules', 'addons'])) {
+            if (! in_array($extension->type(), ['modules', 'addons'])) {
                 continue;
             }
-            $path = $extension->type.'/'.$extension->uuid.'/emails.json';
+            $path = $extension->type().'/'.$extension->uuid.'/emails.json';
             if (file_exists(base_path($path))) {
                 $extensionTemplates = json_decode(file_get_contents(base_path($path)), true);
                 $templates = array_merge($templates, $extensionTemplates);
