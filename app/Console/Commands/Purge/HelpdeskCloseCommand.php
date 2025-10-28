@@ -51,7 +51,7 @@ class HelpdeskCloseCommand extends Command
             return;
         }
         $date = now()->subDays($days);
-        $tickets = \App\Models\Helpdesk\SupportTicket::where('status', 'open')->where('updated_at', '<', $date)->get();
+        $tickets = \App\Models\Helpdesk\SupportTicket::whereIn('status', ['answered', 'open'])->where('updated_at', '<', $date)->get();
         foreach ($tickets as $ticket) {
             $ticket->close('system', null, __('helpdesk.support.ticket_auto_close', ['days' => $days]));
             $this->info('Ticket #'.$ticket->id.' closed.');
