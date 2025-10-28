@@ -80,7 +80,7 @@
                     @endif
 
                     @if (app('extension')->extensionIsEnabled('customers_reviews'))
-                        @include('customers_reviews::default.service_button', ['service' => $service])
+                        @include('customers_reviews::service_button', ['service' => $service])
                     @endif
 
                     @if (auth('admin')->check())

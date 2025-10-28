@@ -16,7 +16,6 @@
  * Year: 2025
  */
 
-
 namespace App\Services\Core;
 
 use Illuminate\Support\Facades\Cache;
@@ -47,11 +46,25 @@ class SeoService
         $this->put('seo_footer', $footer);
     }
 
+    public function replaceInHeader(string $search, string $replace, string $context = 'front'): void
+    {
+        $header = $this->get('seo_header_'.$context);
+        $header = str_replace($search, $replace, $header);
+        $this->put('seo_header_'.$context, $header);
+    }
+
     public function addFooter(string $content, string $context = 'front'): void
     {
         $footer = $this->get('seo_footer_'.$context);
         $footer .= $content;
         $this->put('seo_footer_'.$context, $footer);
+    }
+
+    public function addHeader(string $content, string $context = 'front'): void
+    {
+        $header = $this->get('seo_header_'.$context);
+        $header .= $content;
+        $this->put('seo_header_'.$context, $header);
     }
 
     public function addFooterIfNotExists(string $content, string $context = 'front'): void
@@ -72,6 +85,15 @@ class SeoService
         }
     }
 
+    public function addHeaderIfNotExists(string $search, string $content, string $context = 'front'): void
+    {
+        $head = $this->get('seo_header_'.$context);
+        if (str_contains($head, $search) === false) {
+            $head .= $content;
+            $this->put('seo_header_'.$context, $head);
+        }
+    }
+
     public function head(string $context = 'front', ?string $append = null): string
     {
         return $this->get('seo_head_'.$context, $this->generateHead($append)).$append;
@@ -80,6 +102,11 @@ class SeoService
     public function foot(string $context = 'front', ?string $append = null): string
     {
         return $this->get('seo_footer_'.$context, setting('seo_footerscripts', '')).$append;
+    }
+
+    public function header(string $context = 'front', ?string $append = null): string
+    {
+        return $this->get('seo_header_'.$context, '').$append;
     }
 
     public function favicon(): string

@@ -31,6 +31,8 @@
     <meta name="viewport" content="width=device-width">
 </head>
 <body class="{{is_darkmode() ? 'dark' : '' }} flex flex-col h-full">
+    {!! app('seo')->header() !!}
+
 <div class="dark:bg-gray-900 h-full">
     <main id="content" role="main" class="shrink-0">
         <div class="overflow-hidden">
