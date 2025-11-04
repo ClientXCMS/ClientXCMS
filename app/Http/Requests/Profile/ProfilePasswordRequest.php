@@ -31,7 +31,7 @@ class ProfilePasswordRequest extends FormRequest
         return [
             'password' => ['required', 'confirmed', Password::default()],
             'currentpassword' => ['required', 'current_password'],
-            '2fa' => [new RequiredIf($this->user('web')->twoFactorEnabled()), 'required', 'string', 'size:6', new Valid2FACodeRule],
+            '2fa' => [new RequiredIf($this->user('web')->twoFactorEnabled()), 'string', 'size:6', new Valid2FACodeRule],
         ];
     }
 }
