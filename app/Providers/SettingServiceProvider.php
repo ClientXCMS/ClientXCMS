@@ -150,6 +150,9 @@ class SettingServiceProvider extends ServiceProvider
 
     protected function loadCards(SettingsService $service)
     {
+        if (app()->runningInConsole()) {
+            return;
+        }
         $service->addCard('core', 'admin.settings.core.title', 'admin.settings.core.description', 1);
         $service->addCard('extensions', 'extensions.settings.title', 'extensions.settings.description', 3);
         $service->addCard('security', 'admin.security.title', 'admin.security.description', 4);

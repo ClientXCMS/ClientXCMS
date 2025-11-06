@@ -46,6 +46,9 @@ class HelpdeskServiceProvider extends ServiceProvider
 
     private function registerWidgets()
     {
+        if (app()->runningInConsole()) {
+            return;
+        }
         $ticketWidgets = new AdminCountWidget('tickets', 'bi bi-chat-left-text', 'helpdesk.admin.open_tickets', function () {
             return SupportTicket::where('status', 'open')->count();
         }, 'admin.manage_tickets');

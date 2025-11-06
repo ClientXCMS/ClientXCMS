@@ -59,7 +59,9 @@ class AdminServiceProvider extends ServiceProvider
 
     private function registerAdminCountWidgets()
     {
-
+        if (app()->runningInConsole()) {
+            return;
+        }
         $cron = new AdminCountWidget('cron', 'bi bi-clock-history', 'admin.dashboard.widgets.cron', function () {
             $date = setting('app_cron_last_run', null);
             if ($date == null) {

@@ -47,7 +47,7 @@ class StoreServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (! is_installed() || app()->runningUnitTests()) {
+        if (! is_installed() || app()->runningUnitTests() || app()->runningInConsole()) {
             return;
         }
         try {

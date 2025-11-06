@@ -35,7 +35,7 @@ class BillingServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        if (! is_installed() || app()->runningUnitTests()) {
+        if (! is_installed() || app()->runningUnitTests() || app()->runningInConsole()) {
             return;
         }
         $invoiceWidgets = new AdminCountWidget('invoices', 'bi bi-receipt-cutoff', 'admin.invoices.title', function () {
