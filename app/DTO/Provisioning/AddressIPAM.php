@@ -42,7 +42,7 @@ class AddressIPAM
 
     public ?string $bridge;
 
-    public ?int $mut;
+    public ?int $mtu;
 
     public ?string $mac;
 
@@ -70,7 +70,7 @@ class AddressIPAM
         $this->netmask = $data['netmask'];
         $this->gateway = $data['gateway'];
         $this->bridge = $data['bridge'] ?? null;
-        $this->mut = $data['mut'] ?? null;
+        $this->mtu = $data['mtu'] ?? null;
         $this->mac = $data['mac'] ?? null;
         $this->ipv6 = $data['ip6'] ?? null;
         $this->ipv6_gateway = $data['gateway6'] ?? null;
@@ -89,7 +89,7 @@ class AddressIPAM
             'netmask' => $this->netmask,
             'gateway' => $this->gateway,
             'bridge' => $this->bridge,
-            'mut' => $this->mut,
+            'mtu' => $this->mtu,
             'mac' => $this->mac,
             'ipv6' => $this->ipv6,
             'ipv6_gateway' => $this->ipv6_gateway,
@@ -150,7 +150,7 @@ class AddressIPAM
             'service_id' => null,
             'notes' => null,
             'bridge' => $net['bridge'] ?? null,
-            'mut' => $net['mtu'] ?? null,
+            'mtu' => $net['mtu'] ?? null,
             'mac' => $net['virtio'] ?? null,
             'status' => self::AVAILABLE,
         ];
@@ -185,7 +185,7 @@ class AddressIPAM
             'service_id' => $serviceId,
             'notes' => null,
             'bridge' => $net['bridge'] ?? null,
-            'mut' => $net['mtu'] ?? null,
+            'mtu' => $net['mtu'] ?? null,
             'mac' => $net['hwaddr'] ?? null,
             'status' => self::USED,
         ];
