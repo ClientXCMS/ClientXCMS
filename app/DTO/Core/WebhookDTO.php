@@ -20,6 +20,7 @@
 namespace App\DTO\Core;
 
 use Http;
+use Illuminate\Support\Str;
 
 class WebhookDTO
 {
@@ -79,12 +80,34 @@ class WebhookDTO
         }
         $variables['%appname%'] = config('app.name');
         $variables['%appurl%'] = setting('app.url');
-        $data = call_user_func($this->webhook, $variables);
+        if ($this->isDiscordUrl()) {
+            $data = call_user_func($this->webhook, $variables);
+        } else {
+            $data = $this->removePercentSigns($variables);
+        }
         $data = $this->remplaceInArray($data, $variables);
+        $payload = $this->isDiscordUrl() ? $data : ['payload' => $data];
+
         try {
-            Http::post($this->url, $data)->json();
+            Http::post($this->url, $payload)->json();
         } catch (\Exception $e) {
         }
+    }
+
+    private function removePercentSigns(array $variables): array
+    {
+        $newVariables = [];
+        foreach ($variables as $key => $value) {
+            $newKey = trim($key, '%');
+            $newVariables[$newKey] = $value;
+        }
+
+        return $newVariables;
+    }
+
+    private function isDiscordUrl(): bool
+    {
+        return $this->url !== null && Str::startsWith($this->url, 'https://discord.com/');
     }
 
     private function isMessageJson(): bool

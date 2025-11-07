@@ -46,28 +46,25 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
-
-        $this->routes(function () {
-            Route::middleware(['api', 'auth:sanctum'])
-                ->prefix('api/customer')
-                ->name('api.customer.')
-                ->group(base_path('routes/api-customer.php'));
-            Route::middleware(['api', 'auth:sanctum'])
-                ->prefix('api/application')
-                ->name('api.application.')
-                ->group(base_path('routes/api-application.php'));
-            Route::middleware(['web', 'admin'])
-                ->prefix(admin_prefix())
-                ->name('admin.')
-                ->group(base_path('routes/admin.php'));
-            if (! is_installed()) {
-                Route::middleware('web')
-                    ->prefix('install')
-                    ->name('install.')
-                    ->group(base_path('routes/install.php'));
-            }
+        Route::middleware(['api', 'auth:sanctum'])
+            ->prefix('api/customer')
+            ->name('api.customer.')
+            ->group(base_path('routes/api-customer.php'));
+        Route::middleware(['api', 'auth:sanctum'])
+            ->prefix('api/application')
+            ->name('api.application.')
+            ->group(base_path('routes/api-application.php'));
+        Route::middleware(['web', 'admin'])
+            ->prefix(admin_prefix())
+            ->name('admin.')
+            ->group(base_path('routes/admin.php'));
+        if (! is_installed()) {
             Route::middleware('web')
-                ->group(base_path('routes/web.php'));
-        });
+                ->prefix('install')
+                ->name('install.')
+                ->group(base_path('routes/install.php'));
+        }
+        Route::middleware('web')
+            ->group(base_path('routes/web.php'));
     }
 }
