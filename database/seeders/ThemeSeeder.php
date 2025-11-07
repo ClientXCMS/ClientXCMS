@@ -46,19 +46,28 @@ class ThemeSeeder extends Seeder
             $path = $theme->path.'/menus.json';
             if (file_exists($path)) {
                 $menus = json_decode(file_get_contents($path), true);
+                if ($menus === null) {
+                    logger()->info('[ThemeSeeder] Unable to parse menus.json for theme '.$theme->name);
+                    continue;
+                }
                 if (is_array($menus)) {
                     foreach ($menus as $type => $menuList) {
                         foreach ($menuList as $menu) {
                             if (MenuLink::where('type', $type)->where('name', $menu['name'])->exists()) {
                                 continue;
                             }
-                            MenuLink::create([
+                            $created = MenuLink::create([
                                 'name' => $menu['name'],
                                 'url' => $menu['url'] ?? "#",
                                 'icon' => $menu['icon'] ?? null,
                                 'type' => $type,
                                 'position' => $menu['position'] ?? 0,
                             ]);
+                            if (array_key_exists('metadata', $menu) && is_array($menu['metadata'])) {
+                                foreach ($menu['metadata'] as $key => $value) {
+                                    $created->attachMetadata($key, $value);
+                                }
+                            }
                         }
                     }
                 }
