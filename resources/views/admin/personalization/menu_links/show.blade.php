@@ -77,10 +77,17 @@
                 @endif
             </div>
 
+            @if (staff_has_permission('admin.manage_metadata'))
+                <button class="btn btn-secondary text-left mt-2" type="button" data-hs-overlay="#metadata-overlay">
+                    <i class="bi bi-database mr-2"></i>
+                    {{ __('admin.metadata.title') }}
+                </button>
+            @endif
             <button type="submit" class="btn btn-primary mt-2">{{ __('global.save') }}</button>
         </form>
         </div>
     </div>
     @include('admin/translations/overlay', ['item' => $item])
+    @include('admin/metadata/overlay', ['item' => $item])
 
 @endsection

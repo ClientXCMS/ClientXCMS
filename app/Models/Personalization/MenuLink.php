@@ -19,11 +19,12 @@
 
 namespace App\Models\Personalization;
 
+use App\Models\Traits\HasMetadata;
 use App\Models\Traits\Translatable;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
+ *
  *
  * @property int $id
  * @property string $name
@@ -64,6 +65,7 @@ use Illuminate\Database\Eloquent\Model;
 class MenuLink extends Model
 {
     use Translatable;
+    use HasMetadata;
 
     protected $table = 'theme_menu_links';
 
