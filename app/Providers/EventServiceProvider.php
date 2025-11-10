@@ -26,6 +26,7 @@ use App\Events\Core\Service\ServiceRenewed;
 use App\Events\Core\Service\ServiceUpgraded;
 use App\Events\Helpdesk\HelpdeskTicketAnsweredCustomer;
 use App\Events\Helpdesk\HelpdeskTicketAnsweredStaff;
+use App\Events\Helpdesk\HelpdeskTicketClosedEvent;
 use App\Events\Helpdesk\HelpdeskTicketCreatedEvent;
 use App\Events\Resources\ResourceCloneEvent;
 use App\Events\Resources\ResourceCreatedEvent;
@@ -83,6 +84,9 @@ class EventServiceProvider extends ServiceProvider
             WebhookNotification::class,
         ],
         HelpdeskTicketAnsweredStaff::class => [
+            WebhookNotification::class,
+        ],
+        HelpdeskTicketClosedEvent::class => [
             WebhookNotification::class,
         ],
         InvoiceCreated::class => [

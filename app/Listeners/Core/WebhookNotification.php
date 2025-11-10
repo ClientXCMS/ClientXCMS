@@ -25,6 +25,7 @@ use App\Events\Core\Service\ServiceRenewed;
 use App\Events\Core\Service\ServiceUpgraded;
 use App\Events\Helpdesk\HelpdeskTicketAnsweredCustomer;
 use App\Events\Helpdesk\HelpdeskTicketAnsweredStaff;
+use App\Events\Helpdesk\HelpdeskTicketClosedEvent;
 use App\Events\Helpdesk\HelpdeskTicketCreatedEvent;
 use App\Models\Billing\Invoice;
 
@@ -105,6 +106,7 @@ class WebhookNotification
             ];
         }, function (HelpdeskTicketAnsweredCustomer $event) {
             return [
+                '%action%' => 'helpdesk_answered_customer',
                 '%__url%' => route('admin.helpdesk.tickets.show', $event->ticket->id),
                 '%ticketid%' => $event->ticket->id,
                 '%customer_url%' => route('admin.customers.show', $event->ticket->customer->id),
@@ -116,6 +118,56 @@ class WebhookNotification
             ];
         }, setting('helpdesk_webhook_url'));
 
+        $this->webhooks[] = new WebhookDTO(HelpdeskTicketClosedEvent::class, function() {
+            return [
+                'content' => null,
+                'embeds' => [
+                    [
+                        'title' => __('webhook.ticket_closed.title'),
+                        'description' => __('webhook.ticket_closed.description'),
+                        'color' => 0x95A5A6,
+                        'fields' => [
+                            [
+                                'name' => __('helpdesk.subject'),
+                                'value' => '[`📝`]  %subject%',
+                                'inline' => true,
+                            ],
+                            [
+                                'name' => __('helpdesk.department'),
+                                'value' => '[`📂`]  %department%',
+                                'inline' => true,
+                            ],
+                            [
+                                'name' => __('global.email'),
+                                'value' => '[`📙`]  [%customeremail%](%customer_url%)',
+                                'inline' => true,
+                            ],
+                            [
+                                'name' => __('helpdesk.support.show.reply'),
+                                'value' => '[`🔗`]  %__url%',
+                                'inline' => true,
+                            ],
+                        ],
+                        'footer' => [
+                            'text' => config('app.name'),
+                            'icon_url' => 'https://clientxcms.com/Themes/CLIENTXCMS/images/CLIENTXCMS/LogoBlue.png',
+                        ],
+                        'timestamp' => now()->format('c'),
+                    ],
+                ],
+            ];
+        }, function (HelpdeskTicketClosedEvent $event) {
+            return [
+                '%action%' => 'helpdesk_closed',
+                '%__url%' => route('admin.helpdesk.tickets.show', $event->ticket->id),
+                '%ticketid%' => $event->ticket->id,
+                '%customer_url%' => route('admin.customers.show', $event->ticket->customer->id),
+                '%subject%' => $event->ticket->subject,
+                '%customername%' => $event->ticket->customer->excerptFullName(),
+                '%customeremail%' => $event->ticket->customer->email,
+                '%department%' => $event->ticket->department->trans('name'),
+            ];
+        }, setting('helpdesk_webhook_url'));
         $this->webhooks[] = new WebhookDTO(HelpdeskTicketCreatedEvent::class, function () {
             return [
                 'content' => null,
@@ -166,6 +218,7 @@ class WebhookNotification
             ];
         }, function (HelpdeskTicketCreatedEvent $event) {
             return [
+                '%action%' => 'helpdesk_created',
                 '%__url%' => route('admin.helpdesk.tickets.show', $event->ticket->id),
                 '%ticketid%' => $event->ticket->id,
                 '%customer_url%' => route('admin.customers.show', $event->ticket->customer->id),
@@ -228,6 +281,7 @@ class WebhookNotification
             ];
         }, function (HelpdeskTicketAnsweredStaff $event) {
             return [
+                '%action%' => 'helpdesk_answered_staff',
                 '%__url%' => route('admin.helpdesk.tickets.show', $event->ticket->id),
                 '%ticketid%' => $event->ticket->id,
                 '%customer_url%' => route('admin.customers.show', $event->ticket->customer->id),
@@ -288,6 +342,7 @@ class WebhookNotification
             $invoiceId = $invoice ? $invoice->id : 0;
 
             return [
+                '%action%' => 'helpdesk_service_renewed',
                 '%__url%' => route('admin.services.show', $event->service->id),
                 '%servicename%' => $event->service->name,
                 '%serviceid%' => $event->service->id,
@@ -357,7 +412,8 @@ class WebhookNotification
             }
 
             return [
-                '__url' => route('admin.invoices.show', ['invoice' => $event->basket->getMetadata('invoice')]),
+                '%action%' => 'checkout_completed',
+                '%__url%' => route('admin.invoices.show', ['invoice' => $event->basket->getMetadata('invoice')]),
                 '%customername%' => $customer->excerptFullName(),
                 '%customeremail%' => $customer->email,
                 '%basketid%' => $event->basket->id,
@@ -422,6 +478,7 @@ class WebhookNotification
             $customer = $upgrade->customer;
             $service = $upgrade->service;
             return [
+                '%action%' => 'service_upgraded',
                 '%customername%' => $customer->excerptFullName(),
                 '%customeremail%' => $customer->email,
                 '%customer_url%' => route('admin.customers.show', $customer->id),
