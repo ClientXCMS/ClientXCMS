@@ -25,6 +25,10 @@ export default {
         "./resources/**/*.blade.php",
         "./resources/**/*.js",
         "./resources/**/*.jsx",
+        "./addons/**/*.blade.php",
+        "./modules/**/*.blade.php",
+        "./addons/**/*.js",
+        "./modules/**/*.js",
         "node_modules/preline/dist/*.js",
     ],
     theme: {
