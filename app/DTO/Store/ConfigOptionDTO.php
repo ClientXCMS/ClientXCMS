@@ -261,8 +261,7 @@ class ConfigOptionDTO
             return $this->option->name;
         }
         $current = $this->expiresAt ?? Carbon::now();
-        $expiresAt = $expiresAt ?? app(RecurringService::class)->addFrom(clone $current, $billing);
-
+        $expiresAt = $this->expiresAt ? clone $this->expiresAt: app(RecurringService::class)->addFrom(clone $current, $billing);
         return "{$this->option->name} ({$current->format('d/m/y')} - {$expiresAt->format('d/m/y')})";
     }
 
@@ -324,7 +323,10 @@ class ConfigOptionDTO
         if ($isOnetime) {
             $expiresAt = null;
         } else {
-            $expiresAt = $expiresAt ?? app(RecurringService::class)->addFrom(clone $this->expiresAt, $billing)->format('d-m-y H:i');
+            if (! $this->expiresAt) {
+                $this->expiresAt = Carbon::now();
+            }
+            $expiresAt = $expiresAt ?? ($this->expiresAt? $this->expiresAt->format('d-m-y H:i'): app(RecurringService::class)->addFrom(clone $this->expiresAt, $billing)->format('d-m-y H:i'));
         }
 
         return [
