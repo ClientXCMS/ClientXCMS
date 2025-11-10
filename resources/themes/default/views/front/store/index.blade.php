@@ -50,6 +50,9 @@
                     <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 dark:hover:text-white">
                         {{ $group->trans('name') }}
                     </h3>
+                    @if (app('extension')->extensionIsEnabled('free_trial'))
+                        @include('free_trial::store_card', ['product' => $product])
+                    @endif
                     <p class="mt-3 text-gray-500">
                         {{ $group->trans('description') }}
                     </p>
