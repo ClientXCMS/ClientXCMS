@@ -84,6 +84,7 @@ class Permission extends Model
     const AUTOLOGIN_CUSTOMER = 'admin.autologin_customer';
     const SHOW_EMAILS = 'admin.show_emails';
     const SEND_EMAILS = 'admin.send_emails';
+    const MANAGE_EMAILS = 'admin.manage_emails';
     const DASHBOARD_LAST_LOGIN = 'admin.dashboard_last_login';
 
     // Helpdesk permissions
