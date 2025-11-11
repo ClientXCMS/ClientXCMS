@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Jobs\MassEmailSendJob;
 use App\Models\Account\Customer;
 use App\Models\Account\EmailMessage;
+use App\Models\Admin\Permission;
 use App\Models\Provisioning\Server;
 use App\Models\Provisioning\Service;
 use App\Models\Store\Product;
@@ -47,7 +48,7 @@ class EmailController extends AbstractCrudController
 
     public function show(EmailMessage $email)
     {
-        staff_aborts_permission('admin.show_emails');
+        staff_aborts_permission(Permission::SHOW_EMAILS);
 
         return new Response($email->content, 200, [
             'Content-Type' => 'text/html; charset=UTF-8',
@@ -56,7 +57,7 @@ class EmailController extends AbstractCrudController
 
     public function store(Request $request)
     {
-        staff_aborts_permission('admin.send_emails');
+        staff_aborts_permission(Permission::SEND_EMAILS);
         $validated = $request->validate([
             'subject' => 'required|max:255',
             'content' => 'required|string|max:65535',
@@ -86,7 +87,7 @@ class EmailController extends AbstractCrudController
 
     public function preview(Request $request)
     {
-        staff_aborts_permission('admin.send_emails');
+        staff_aborts_permission(Permission::SEND_EMAILS);
         $validated = $request->validate([
             'subject' => 'nullable',
             'content' => 'nullable|string|max:65535',
@@ -108,7 +109,7 @@ class EmailController extends AbstractCrudController
 
     public function destroy(EmailMessage $email)
     {
-        staff_aborts_permission('admin.show_emails');
+        staff_aborts_permission(Permission::SEND_EMAILS);
         $email->delete();
 
         return $this->deleteRedirect($email);
