@@ -293,7 +293,7 @@
                                     @endif
                                 </form>
                             @endif
-                            @if (staff_has_permission('admin.create_invoice'))
+                            @if (staff_has_permission('admin.create_invoices'))
                                 @if (!$item->isOnetime())
                                     @if ($item->invoice_id == null)
 
