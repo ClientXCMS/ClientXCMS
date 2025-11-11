@@ -47,7 +47,7 @@ class EmailController extends AbstractCrudController
 
     public function show(EmailMessage $email)
     {
-        staff_aborts_permission('admin.show_email_messages');
+        staff_aborts_permission('admin.show_emails');
 
         return new Response($email->content, 200, [
             'Content-Type' => 'text/html; charset=UTF-8',
@@ -56,7 +56,7 @@ class EmailController extends AbstractCrudController
 
     public function store(Request $request)
     {
-        staff_aborts_permission('admin.send_email_messages');
+        staff_aborts_permission('admin.send_emails');
         $validated = $request->validate([
             'subject' => 'required|max:255',
             'content' => 'required|string|max:65535',
@@ -86,7 +86,7 @@ class EmailController extends AbstractCrudController
 
     public function preview(Request $request)
     {
-        staff_aborts_permission('admin.send_email_messages');
+        staff_aborts_permission('admin.send_emails');
         $validated = $request->validate([
             'subject' => 'nullable',
             'content' => 'nullable|string|max:65535',

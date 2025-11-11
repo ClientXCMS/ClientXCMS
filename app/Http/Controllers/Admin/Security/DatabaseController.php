@@ -29,7 +29,7 @@ class DatabaseController extends Controller
 {
     public function index()
     {
-        staff_aborts_permission('admin.database');
+        staff_aborts_permission('admin.manage_database');
         $extensions = collect(app('extension')->getAllExtensions())->mapWithKeys(function (ExtensionDTO $extension) {
             return [$extension->uuid => $extension->name()];
         })->toArray();
@@ -47,7 +47,7 @@ class DatabaseController extends Controller
 
     public function migrate(Request $request)
     {
-        staff_aborts_permission('admin.database');
+        staff_aborts_permission('admin.manage_database');
         $extension = $request->input('extension');
         $output = new BufferedOutput;
         if ($request->has('seed')) {
