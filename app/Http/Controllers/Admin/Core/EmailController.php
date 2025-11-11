@@ -67,22 +67,28 @@ class EmailController extends AbstractCrudController
             'send_at' => 'nullable|date',
             'selected_emails' => 'required|string',
         ]);
-        $emails = explode(',', $request->input('selected_emails'));
-        if (count($emails) == 1) {
-            $customer = Customer::where('email', $emails[0])->first();
-            if ($customer == null) {
-                return back()->with('error', __('provisioning.admin.services.invalid_customer'));
-            }
-            MassEmailSendJob::dispatch($validated)->delay(Carbon::parse($request->input('send_at')));
 
-            return redirect()->route($this->routePath.'.index')->with('success', __($this->translatePrefix.'.success_job', ['count' => count($emails), 'date' => $request->input('send_at')]));
-        } else {
-            $dispatch = MassEmailSendJob::dispatch($validated)->delay(Carbon::parse($request->input('send_at')));
+        $emails = array_map('trim', explode(',', $request->input('selected_emails')));
+        $emails = array_filter($emails, function ($email) {
+            return filter_var($email, FILTER_VALIDATE_EMAIL);
+        });
 
-            return redirect()->route($this->routePath.'.index')->with('success', __($this->translatePrefix.'.success_job', ['count' => count($emails), 'date' => $request->input('send_at')]));
+        if (empty($emails)) {
+            return back()->with('error', __('admin.emails.no_valid_emails'));
         }
 
-        return redirect()->route($this->routePath.'.index')->with('success', __($this->flashs['created']));
+        $validEmails = Customer::whereIn('email', $emails)->pluck('email')->toArray();
+        $invalidEmails = array_diff($emails, $validEmails);
+
+        if (! empty($invalidEmails)) {
+            return back()->with('error', __('admin.emails.invalid_emails', ['emails' => implode(', ', $invalidEmails)]));
+        }
+
+        $validated['selected_emails'] = implode(',', $validEmails);
+
+        MassEmailSendJob::dispatch($validated)->delay(Carbon::parse($request->input('send_at')));
+
+        return redirect()->route($this->routePath.'.index')->with('success', __($this->translatePrefix.'.success_job', ['count' => count($validEmails), 'date' => $request->input('send_at')]));
     }
 
     public function preview(Request $request)
@@ -109,7 +115,7 @@ class EmailController extends AbstractCrudController
 
     public function destroy(EmailMessage $email)
     {
-        staff_aborts_permission(Permission::SEND_EMAILS);
+        staff_aborts_permission(Permission::MANAGE_EMAILS);
         $email->delete();
 
         return $this->deleteRedirect($email);
