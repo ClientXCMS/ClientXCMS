@@ -18,6 +18,7 @@
 namespace App\Http\Controllers\Admin\Security;
 
 use App\Http\Controllers\Admin\AbstractCrudController;
+use App\Models\Admin\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\RequiredIf;
 
@@ -76,7 +77,7 @@ class ApiKeysController extends AbstractCrudController
 
     public function index(Request $request)
     {
-        staff_aborts_permission('admin.manage_api_keys');
+        staff_aborts_permission(Permission::MANAGE_API_KEYS);
         $card = app('settings')->getCards()->firstWhere('uuid', 'security');
         if (! $card) {
             abort(404);
@@ -94,7 +95,7 @@ class ApiKeysController extends AbstractCrudController
 
     public function create(Request $request)
     {
-        staff_aborts_permission('admin.manage_api_keys');
+        staff_aborts_permission(Permission::MANAGE_API_KEYS);
         $card = app('settings')->getCards()->firstWhere('uuid', 'security');
         if (! $card) {
             abort(404);
@@ -112,7 +113,7 @@ class ApiKeysController extends AbstractCrudController
 
     public function store(Request $request)
     {
-        staff_aborts_permission('admin.manage_api_keys');
+        staff_aborts_permission(Permission::MANAGE_API_KEYS);
         $validated = $request->validate([
             'name' => 'required|max:200',
             'permissions' => [new RequiredIf(! array_key_exists('is_admin', $request->all())), 'array'],
@@ -131,7 +132,7 @@ class ApiKeysController extends AbstractCrudController
 
     public function destroy($id)
     {
-        staff_aborts_permission('admin.manage_api_keys');
+        staff_aborts_permission(Permission::MANAGE_API_KEYS);
         $token = auth('admin')->user()->tokens()->findOrFail($id);
         $token->delete();
 
@@ -140,7 +141,7 @@ class ApiKeysController extends AbstractCrudController
 
     public function rotate($id)
     {
-        staff_aborts_permission('admin.manage_api_keys');
+        staff_aborts_permission(Permission::MANAGE_API_KEYS);
         $token = auth('admin')->user()->tokens()->findOrFail($id);
         $newToken = auth('admin')->user()->createToken($token->name, $token->abilities);
         $token->delete();
