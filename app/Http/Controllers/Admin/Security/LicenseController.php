@@ -20,6 +20,7 @@
 namespace App\Http\Controllers\Admin\Security;
 
 use App\Exceptions\LicenseInvalidException;
+use App\Models\Admin\Permission;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Http\Request;
 
@@ -63,7 +64,7 @@ class LicenseController
 
     public function index()
     {
-        staff_aborts_permission('admin.manage_license');
+        staff_aborts_permission(Permission::MANAGE_LICENSE);
 
         return view('admin.license', ['license' => app('license')->getLicense(), 'client_id' => $_ENV['OAUTH_CLIENT_ID'], 'oauth' => app('license')->getAuthorizationUrl()]);
     }

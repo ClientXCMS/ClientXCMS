@@ -161,8 +161,8 @@ class SettingServiceProvider extends ServiceProvider
         $service->addCardItem('core', 'mail', 'admin.settings.core.mail.title', 'admin.settings.core.mail.description', 'bi bi-envelope-at', [SettingsCoreController::class, 'showEmailSettings'], Permission::MANAGE_SETTINGS);
         $service->addCardItem('core', 'maintenance', 'maintenance.settings.title', 'maintenance.settings.description', 'bi bi-toggle-on', [SettingsCoreController::class, 'showMaintenanceSettings'], Permission::MANAGE_SETTINGS);
         $service->addCardItem('core', 'locales', 'admin.locales.title', 'admin.locales.description', 'bi bi-translate', action([AdminLocalesController::class, 'index']), Permission::MANAGE_SETTINGS);
-        $service->addCardItem('security', 'admin', 'admin.admins.title', 'admin.admins.description', 'bi bi-person-badge', route('admin.staffs.index'), 'admin.manage_staffs');
-        $service->addCardItem('security', 'apikeys', 'admin.api_keys.title', 'admin.api_keys.subheading', 'bi bi-key', action([ApiKeysController::class, 'index']), 'admin.manage_apikeys');
+        $service->addCardItem('security', 'admin', 'admin.admins.title', 'admin.admins.description', 'bi bi-person-badge', route('admin.staffs.index'), 'admin.manage_staff');
+        $service->addCardItem('security', 'apikeys', 'admin.api_keys.title', 'admin.api_keys.subheading', 'bi bi-key', action([ApiKeysController::class, 'index']), 'admin.manage_api_keys');
         $service->addCardItem('core', 'license', 'admin.license.title', 'admin.license.subheading', 'bi bi-key', action([LicenseController::class, 'index']), 'admin.manage_license');
         $service->addCardItem('security', 'database', 'admin.database.title', 'admin.database.description', 'bi bi-database', action([DatabaseController::class, 'index']), 'admin.manage_database');
         //$service->addCardItem('security', 'update', 'admin.update.title', 'admin.update.subheading', 'bi bi-cloud-arrow-up-fill', action([UpdateController::class, 'index']), 'admin.manage_update');

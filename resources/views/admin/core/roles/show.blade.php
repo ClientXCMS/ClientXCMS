@@ -103,7 +103,7 @@
                         </div>
                     </div>
                 </div>
-        @if (staff_has_permission('admin.manage_staffs'))
+        @if (staff_has_permission('admin.manage_staff'))
             @php($items = $item->staffs)
     <div class="card">
         <div class="card-heading">

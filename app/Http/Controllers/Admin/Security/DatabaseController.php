@@ -21,6 +21,7 @@ namespace App\Http\Controllers\Admin\Security;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -29,7 +30,7 @@ class DatabaseController extends Controller
 {
     public function index()
     {
-        staff_aborts_permission('admin.database');
+        staff_aborts_permission(Permission::MANAGE_DATABASE);
         $extensions = collect(app('extension')->getAllExtensions())->mapWithKeys(function (ExtensionDTO $extension) {
             return [$extension->uuid => $extension->name()];
         })->toArray();
@@ -47,7 +48,7 @@ class DatabaseController extends Controller
 
     public function migrate(Request $request)
     {
-        staff_aborts_permission('admin.database');
+        staff_aborts_permission(Permission::MANAGE_DATABASE);
         $extension = $request->input('extension');
         $output = new BufferedOutput;
         if ($request->has('seed')) {
