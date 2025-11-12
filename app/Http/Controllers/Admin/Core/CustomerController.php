@@ -67,13 +67,18 @@ class CustomerController extends AbstractCrudController
 
     public function getSearchFields()
     {
-        return [
+        $fields = [
             'email' => __('global.email'),
             'id' => 'ID',
             'firstname' => __('global.firstname'),
             'lastname' => __('global.lastname'),
             'phone' => __('global.phone'),
         ];
+        if (app('extension')->extensionIsEnabled('supportid') && \Schema::hasColumn('customers', 'support_id')) {
+            $fields['support_id'] = __('supportid::lang.admin.search.label');
+        }
+
+        return $fields;
     }
 
     public function show(Customer $customer)
@@ -248,6 +253,18 @@ class CustomerController extends AbstractCrudController
                     $this->routePath = 'admin.invoices';
 
                     return collect([$invoice]);
+                }
+            }
+            if (
+                $request->get('field') == 'support_id'
+                && app('extension')->extensionIsEnabled('supportid')
+                && \Schema::hasColumn('customers', 'support_id')
+            ) {
+                $customer = Customer::where('support_id', $request->get('q'))->first();
+                if ($customer) {
+                    $this->routePath = 'admin.customers';
+
+                    return collect([$customer]);
                 }
             }
         }

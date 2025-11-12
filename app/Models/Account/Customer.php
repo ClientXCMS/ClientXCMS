@@ -60,6 +60,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $locale
  * @property $phone
  * @property string $address
+ * @property string $support_id
  * @property string|null $address2
  * @property string $city
  * @property string $country
@@ -259,6 +260,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'lastname',
         'email',
         'phone',
+        'support_id',
         'address',
         'address2',
         'city',
@@ -426,7 +428,12 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         $this->save();
         if ($reason !== null) {
             $reason = " " . strtolower(__('global.for')) . " " . $reason;
-            ActionLog::log(ActionLog::BALANCE_CHANGED, self::class, $this->id, auth('admin')->id(), $this->id, ['old' => formatted_price($old), 'new' => formatted_price($this->balance), 'reason' => $reason], ['balance' => $old], ['balance' => $this->balance]);
+            if (auth('admin')->check()) {
+                $adminId = auth('admin')->id();
+            } else {
+                $adminId = null;
+            }
+            ActionLog::log(ActionLog::BALANCE_CHANGED, self::class, $this->id, $adminId, $this->id, ['old' => formatted_price($old), 'new' => formatted_price($this->balance), 'reason' => $reason], ['balance' => $old], ['balance' => $this->balance]);
         }
     }
 
