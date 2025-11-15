@@ -32,7 +32,7 @@ class UpdateMetadataRequest extends FormRequest
     {
         return [
             'metadata_key.*' => 'required|string|max:100',
-            'metadata_value.*' => 'nullable|string|max:1000',
+            'metadata_value.*' => 'nullable|string|max:65535',
             'model' => 'required|string|max:100',
             'model_id' => 'required|integer',
         ];
