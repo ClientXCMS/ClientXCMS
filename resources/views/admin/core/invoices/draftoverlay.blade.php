@@ -48,7 +48,7 @@
             </button>
         </div>
         <div class="p-4" id="item-content-{{ $item->id }}">
-            <form method="POST" action="{{ route($routePath . '.updateitem', ['invoice_item' => $item, 'invoice' => $invoice]) }}">
+            <form method="POST" action="{{ route($routePath . '.updateitem', ['invoiceItem' => $item, 'invoice' => $invoice]) }}">
                 @csrf
                 @method('PATCH')
                 @if ($related instanceof \App\Models\Store\Product)

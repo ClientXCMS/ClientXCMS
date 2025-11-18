@@ -114,10 +114,10 @@ class InvoiceController extends AbstractCrudController
         return $this->storeRedirect($invoice);
     }
 
-    public function deliver(Invoice $invoice, InvoiceItem $invoice_item)
+    public function deliver(Invoice $invoice, InvoiceItem $invoiceItem)
     {
         try {
-            $invoice_item->tryDeliver();
+            $invoiceItem->tryDeliver();
 
             return back()->with('success', __('admin.invoices.deliveredsuccess'));
         } catch (\Exception $e) {
@@ -151,31 +151,30 @@ class InvoiceController extends AbstractCrudController
         return back()->with('success', __('admin.invoices.draft.itemadded'));
     }
 
-    public function deleteItem(InvoiceItem $invoiceItem)
+    public function deleteItem(Invoice $invoice, InvoiceItem $invoiceItem)
     {
         $this->checkPermission('update');
-        if (! $invoiceItem->invoice->isDraft()) {
+        if (! $invoice->isDraft()) {
             return back()->with('error', __('admin.invoices.draft.notallowed'));
         }
         $invoiceItem->delete();
-        $invoiceItem->invoice->recalculate();
-
+        $invoice->recalculate();
         return back()->with('success', __('admin.invoices.draft.itemremoved'));
     }
 
-    public function cancelItem(Invoice $invoice, InvoiceItem $invoice_item)
+    public function cancelItem(Invoice $invoice, InvoiceItem $invoiceItem)
     {
         $this->checkPermission('update');
-        $invoice_item->cancel();
+        $invoiceItem->cancel();
         $invoice->recalculate();
 
         return back()->with('success', __('admin.invoices.itemcancelled'));
     }
 
-    public function updateItem(InvoiceItem $invoiceItem, Request $request)
+    public function updateItem(Invoice $invoice, InvoiceItem $invoiceItem, Request $request)
     {
         $this->checkPermission('update');
-        if (! $invoiceItem->invoice->isDraft()) {
+        if (! $invoice->isDraft()) {
             return back()->with('error', __('admin.invoices.draft.notallowed'));
         }
         $validatedData = $request->validate([

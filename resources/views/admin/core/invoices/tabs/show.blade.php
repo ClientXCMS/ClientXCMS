@@ -79,7 +79,7 @@
 
                 @if ($invoice->isDraft())
 
-                <form method="POST" class="flex" action="{{ route($routePath . '.deleteitem', ['invoice_item' => $item, 'invoice' => $invoice]) }}">
+                <form method="POST" class="flex" action="{{ route($routePath . '.deleteitem', ['invoiceItem' => $item, 'invoice' => $invoice]) }}">
                     @csrf
                     @method('DELETE')
                     <button class="text-danger mx-2" type="submit">
