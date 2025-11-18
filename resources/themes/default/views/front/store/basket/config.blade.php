@@ -67,7 +67,14 @@
                         @endif
                     @if (app('extension')->extensionIsEnabled('free_trial'))
                         @include('free_trial::config_card', ['product' => $product])
-                        @endif
+                    @endif
+                    @if (app('extension')->extensionIsEnabled('faq'))
+                        @include('faq::widget', [
+                            'product' => $product ?? null,
+                            'title' => __('faq::messages.client.product_title', ['name' => $product->name]),
+                            'description' => __('faq::messages.client.product_description', ['name' => $product->name]),
+                        ])
+                    @endif
                 </div>
                 <div class="col-span-3 md:col-span-1">
                     <div class="card dark:text-gray-400">

@@ -32,7 +32,7 @@
 </head>
 
 <body class="bg-gray-50  {{is_darkmode() ? 'dark' : '' }}">
-    {!! app('seo')->header() !!}
+    {!! method_exists(app('seo'), 'header') ? app('seo')->header() : '' !!}
 <div class="dark:bg-gray-900 min-h-screen">
     <main id="content" role="main">
         <div class="overflow-hidden">

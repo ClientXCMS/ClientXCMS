@@ -18,23 +18,15 @@
 $pricing = $product->getPriceByCurrency(currency(), $billing ?? null);
 $showSetup = $pricing->hasSetup() && (isset($showSetup) ? $showSetup : true);
 ?>
-@includeWhen(app('extension')->extensionIsEnabled('customers_reviews'), 'customers_reviews::default.partials.product_widgets')
+@includeWhen(app('extension')->extensionIsEnabled('customers_reviews'), 'customers_reviews::partials.product_widgets')
 <div class="flex flex-col border border-gray-200 text-center rounded-xl p-8 dark:border-gray-700">
-    {{-- Extension injection point: Top badges (e.g., "Top Rated", "New", promotional badges, etc.) --}}
-    {{-- Extensions can push content here using View Composers and @push('product-badges-top') --}}
     @stack('product-badges-top')
 
     @if ($product->image)
         <img src="{{ Storage::url($product->image) }}" alt="{{ $product->trans('name') }}" class="w-16 h-16 mx-auto rounded-lg mb-2">
     @endif
     <h4 class="font-medium text-lg text-gray-800 dark:text-gray-200">{{ $product->trans('name') }}</h4>
-
-    {{-- Extension injection point: After title (e.g., rating stars, reviews count, certifications) --}}
-    {{-- Extensions can push content here using View Composers and @push('product-after-title') --}}
     @stack('product-after-title')
-
-    {{-- Extension injection point: Before price (e.g., discount badges, limited offers) --}}
-    {{-- Extensions can push content here using View Composers and @push('product-before-price') --}}
     @stack('product-before-price')
 
     @if ($pricing->isFree())

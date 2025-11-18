@@ -147,10 +147,13 @@
                 @if (app('extension')->extensionIsEnabled('discordlink'))
                     @include('discordlink::front/client/discord')
                 @endif
+                @if (app('extension')->extensionIsEnabled('supportid'))
+                    @include('supportid::card')
+                @endif
 
-                    @if (app('extension')->extensionIsEnabled('discordgift'))
-                        @include('discordgift::card')
-                    @endif
+                @if (app('extension')->extensionIsEnabled('discordgift'))
+                    @include('discordgift::card')
+                @endif
             </div>
         </div>
     </div>

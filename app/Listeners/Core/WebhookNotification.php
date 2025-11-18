@@ -342,7 +342,7 @@ class WebhookNotification
             $invoiceId = $invoice ? $invoice->id : 0;
 
             return [
-                '%action%' => 'helpdesk_service_renewed',
+                '%action%' => 'service_renewed',
                 '%__url%' => route('admin.services.show', $event->service->id),
                 '%servicename%' => $event->service->name,
                 '%serviceid%' => $event->service->id,

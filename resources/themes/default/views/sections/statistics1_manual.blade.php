@@ -1,4 +1,4 @@
-<div class="{{ theme_metadata('layout_classes', 'max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto') }}">
+<div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
     <div class="grid gap-6 grid-cols-4 sm:gap-12 lg:grid-cols-4 lg:gap-8">
         <div class="text-center">
             <div class="flex">
