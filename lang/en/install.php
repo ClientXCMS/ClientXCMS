@@ -32,4 +32,22 @@ return [
   'password_confirmation' => 'Password confirmation',
   'authentication' => 'Authentication',
   'extensions' => 'Extensions',
+  'departmentsseeder' => [
+      'general' => [
+        'name' => 'General',
+        'description' => 'General Department',
+      ],
+      'billing' => [
+        'name' => 'Invoicing',
+        'description' => 'Billing Department',
+      ],
+      'technical' => [
+        'name' => 'Technique',
+        'description' => 'Technical Department',
+      ],
+      'sales' => [
+        'name' => 'Commercial',
+        'description' => 'Sales Department',
+      ],
+    ],
 ];

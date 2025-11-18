@@ -17,23 +17,23 @@ class SupportDepartmentSeeder extends Seeder
         }
         $departments = [
             [
-                'name' => __('helpdesk.support.departmentsseeder.general.name'),
-                'description' => __('helpdesk.support.departmentsseeder.general.description'),
+                'name' => __('install.departmentsseeder.general.name'),
+                'description' => __('install.departmentsseeder.general.description'),
                 'icon' => 'bi bi-question-circle',
             ],
             [
-                'name' => __('helpdesk.support.departmentsseeder.billing.name'),
-                'description' => __('helpdesk.support.departmentsseeder.billing.description'),
+                'name' => __('install.departmentsseeder.billing.name'),
+                'description' => __('install.departmentsseeder.billing.description'),
                 'icon' => 'bi bi-credit-card',
             ],
             [
-                'name' => __('helpdesk.support.departmentsseeder.technical.name'),
-                'description' => __('helpdesk.support.departmentsseeder.technical.description'),
+                'name' => __('install.departmentsseeder.technical.name'),
+                'description' => __('install.departmentsseeder.technical.description'),
                 'icon' => 'bi bi-tools',
             ],
             [
-                'name' => __('helpdesk.support.departmentsseeder.sales.name'),
-                'description' => __('helpdesk.support.departmentsseeder.sales.description'),
+                'name' => __('install.departmentsseeder.sales.name'),
+                'description' => __('install.departmentsseeder.sales.description'),
                 'icon' => 'bi bi-cart',
             ],
         ];
