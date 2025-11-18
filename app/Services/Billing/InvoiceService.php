@@ -323,7 +323,7 @@ class InvoiceService
 
     public static function appendServiceOnExistingInvoice(Service $service, Invoice $invoice, ?string $billing = null, ?ProductPriceDTO $price = null)
     {
-        $price = ($price ?? $service->getBillingPrice($billing))->price_ht - $service->discountAmount();
+        $price = $price ?? ($service->discountAmount() != 0 ? $service->discountAmount() : $service->getBillingPrice($billing))->price_ht;
         $months = $service->recurring()['months'];
         $current = $service->expires_at->format('d/m/y');
         $expiresAt = app(RecurringService::class)->addFrom($service->expires_at, $service->billing);
