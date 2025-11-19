@@ -67,7 +67,7 @@
                 <td class="px-4 py-3">
                     <div class="flex items-center justify-end gap-2">
                         @if (is_null($item->delivered_at))
-                        <form method="POST" action="{{ route($routePath . '.deliver', ['invoice_item' => $item, 'invoice' => $invoice]) }}">
+                        <form method="POST" action="{{ route($routePath . '.deliver', ['invoiceItem' => $item, 'invoice' => $invoice]) }}">
                             @csrf
                             <button class="inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-semibold bg-primary text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                                 <i class="bi bi-truck me-1"></i> {{ __($translatePrefix .'.deliver') }}
@@ -76,7 +76,7 @@
                         @endif
 
                         @if (is_null($item->cancelled_at))
-                        <form method="POST" action="{{ route($routePath . '.cancelitem', ['invoice_item' => $item, 'invoice' => $invoice]) }}"
+                        <form method="POST" action="{{ route($routePath . '.cancelitem', ['invoiceItem' => $item, 'invoice' => $invoice]) }}"
                             class="confirmation-popup" data-text="{{ __($translatePrefix .'.show.fulfillment.confirmation.cancel_title') }}" data-cancel-button-text="{{ __($translatePrefix .'.show.fulfillment.confirmation.cancel') }}" data-confirm-button-text="{{ __($translatePrefix .'.show.fulfillment.confirmation.confirm') }}">
                             @csrf
                             <button class="inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-semibold bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
@@ -144,7 +144,7 @@
 
             <div class="mt-3 grid grid-cols-2 gap-2">
                 @if (is_null($item->delivered_at))
-                <form method="POST" action="{{ route($routePath . '.deliver', ['invoice_item' => $item, 'invoice' => $invoice]) }}">
+                <form method="POST" action="{{ route($routePath . '.deliver', ['invoiceItem' => $item, 'invoice' => $invoice]) }}">
                     @csrf
                     <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary text-white px-3 py-2 text-xs font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                         <i class="bi bi-truck"></i> {{ __($translatePrefix .'.deliver') }}
@@ -153,7 +153,7 @@
                 @endif
 
                 @if (is_null($item->cancelled_at) && !is_null($item->delivered_at))
-                <form method="POST" action="{{ route($routePath . '.cancelitem', ['invoice_item' => $item, 'invoice' => $invoice]) }}"
+                <form method="POST" action="{{ route($routePath . '.cancelitem', ['invoiceItem' => $item, 'invoice' => $invoice]) }}"
                     onsubmit="return confirm('{{ __($translatePrefix .'.fulfillment.confirm_cancel') }}');">
                     @csrf
                     <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-xs font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
