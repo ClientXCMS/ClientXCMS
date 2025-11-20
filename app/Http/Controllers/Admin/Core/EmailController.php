@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Jobs\MassEmailSendJob;
 use App\Models\Account\Customer;
 use App\Models\Account\EmailMessage;
+use App\Models\Admin\Permission;
 use App\Models\Provisioning\Server;
 use App\Models\Provisioning\Service;
 use App\Models\Store\Product;
@@ -47,7 +48,7 @@ class EmailController extends AbstractCrudController
 
     public function show(EmailMessage $email)
     {
-        staff_aborts_permission('admin.show_email_messages');
+        staff_aborts_permission(Permission::SHOW_EMAILS);
 
         return new Response($email->content, 200, [
             'Content-Type' => 'text/html; charset=UTF-8',
@@ -56,7 +57,7 @@ class EmailController extends AbstractCrudController
 
     public function store(Request $request)
     {
-        staff_aborts_permission('admin.send_email_messages');
+        staff_aborts_permission(Permission::SEND_EMAILS);
         $validated = $request->validate([
             'subject' => 'required|max:255',
             'content' => 'required|string|max:65535',
@@ -66,27 +67,33 @@ class EmailController extends AbstractCrudController
             'send_at' => 'nullable|date',
             'selected_emails' => 'required|string',
         ]);
-        $emails = explode(',', $request->input('selected_emails'));
-        if (count($emails) == 1) {
-            $customer = Customer::where('email', $emails[0])->first();
-            if ($customer == null) {
-                return back()->with('error', __('provisioning.admin.services.invalid_customer'));
-            }
-            MassEmailSendJob::dispatch($validated)->delay(Carbon::parse($request->input('send_at')));
 
-            return redirect()->route($this->routePath.'.index')->with('success', __($this->translatePrefix.'.success_job', ['count' => count($emails), 'date' => $request->input('send_at')]));
-        } else {
-            $dispatch = MassEmailSendJob::dispatch($validated)->delay(Carbon::parse($request->input('send_at')));
+        $emails = array_map('trim', explode(',', $request->input('selected_emails')));
+        $emails = array_filter($emails, function ($email) {
+            return filter_var($email, FILTER_VALIDATE_EMAIL);
+        });
 
-            return redirect()->route($this->routePath.'.index')->with('success', __($this->translatePrefix.'.success_job', ['count' => count($emails), 'date' => $request->input('send_at')]));
+        if (empty($emails)) {
+            return back()->with('error', __('admin.emails.no_valid_emails'));
         }
 
-        return redirect()->route($this->routePath.'.index')->with('success', __($this->flashs['created']));
+        $validEmails = Customer::whereIn('email', $emails)->pluck('email')->toArray();
+        $invalidEmails = array_diff($emails, $validEmails);
+
+        if (! empty($invalidEmails)) {
+            return back()->with('error', __('admin.emails.invalid_emails', ['emails' => implode(', ', $invalidEmails)]));
+        }
+
+        $validated['selected_emails'] = implode(',', $validEmails);
+
+        MassEmailSendJob::dispatch($validated)->delay(Carbon::parse($request->input('send_at')));
+
+        return redirect()->route($this->routePath.'.index')->with('success', __($this->translatePrefix.'.success_job', ['count' => count($validEmails), 'date' => $request->input('send_at')]));
     }
 
     public function preview(Request $request)
     {
-        staff_aborts_permission('admin.send_email_messages');
+        staff_aborts_permission(Permission::SEND_EMAILS);
         $validated = $request->validate([
             'subject' => 'nullable',
             'content' => 'nullable|string|max:65535',
@@ -108,7 +115,7 @@ class EmailController extends AbstractCrudController
 
     public function destroy(EmailMessage $email)
     {
-        staff_aborts_permission('admin.show_emails');
+        staff_aborts_permission(Permission::MANAGE_EMAILS);
         $email->delete();
 
         return $this->deleteRedirect($email);

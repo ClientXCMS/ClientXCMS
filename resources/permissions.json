@@ -47,6 +47,11 @@
         "group": "permissions.customers"
     },
     {
+        "name": "admin.manage_emails",
+        "label": "permissions.manage_emails",
+        "group": "permissions.customers"
+    },
+    {
         "name": "admin.show_logs",
         "label": "permissions.show_logs",
         "group": "permissions.technical"

@@ -20,6 +20,7 @@
 namespace App\Http\Controllers\Admin\Provisioning;
 
 use App\Http\Controllers\Admin\AbstractCrudController;
+use App\Models\Admin\Permission;
 use App\Models\Provisioning\SubdomainHost;
 use App\Rules\FQDN;
 use Illuminate\Http\Request;
@@ -49,7 +50,7 @@ class SubdomainHostController extends AbstractCrudController
 
     public function show(SubdomainHost $subdomainsHost)
     {
-        staff_aborts_permission('admin.manage_subdomains_hosts');
+        staff_aborts_permission(Permission::MANAGE_SUBDOMAINS_HOSTS);
 
         $card = app('settings')->getCards()->firstWhere('uuid', 'provisioning');
         if (! $card) {
@@ -66,7 +67,7 @@ class SubdomainHostController extends AbstractCrudController
 
     public function store(Request $request)
     {
-        staff_aborts_permission('admin.manage_subdomains_hosts');
+        staff_aborts_permission(Permission::MANAGE_SUBDOMAINS_HOSTS);
         $data = $request->validate([
             'domain' => [
                 'required',
@@ -83,7 +84,7 @@ class SubdomainHostController extends AbstractCrudController
 
     public function update(Request $request, SubdomainHost $subdomainsHost)
     {
-        staff_aborts_permission('admin.manage_subdomains_hosts');
+        staff_aborts_permission(Permission::MANAGE_SUBDOMAINS_HOSTS);
         $data = $request->validate([
             'domain' => [
                 'required',
@@ -100,7 +101,7 @@ class SubdomainHostController extends AbstractCrudController
 
     public function destroy(SubdomainHost $subdomainsHost)
     {
-        staff_aborts_permission('admin.manage_subdomains_hosts');
+        staff_aborts_permission(Permission::MANAGE_SUBDOMAINS_HOSTS);
         $subdomainsHost->delete();
 
         return $this->deleteRedirect($subdomainsHost);

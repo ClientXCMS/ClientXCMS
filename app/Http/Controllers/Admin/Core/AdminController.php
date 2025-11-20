@@ -45,7 +45,7 @@ class AdminController extends AbstractCrudController
 
     protected string $searchField = 'email';
 
-    protected ?string $managedPermission = 'admin.manage_staffs';
+    protected ?string $managedPermission = 'admin.manage_staff';
 
     public function getCreateParams()
     {

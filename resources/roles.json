@@ -13,15 +13,13 @@
         "is_admin": false,
         "permissions": [
             "admin.manage_customers",
-            "admin.show_email_messages",
+            "admin.show_emails",
             "admin.show_invoices",
             "admin.show_customers",
             "admin.show_services",
             "admin.deliver_services",
-            "admin.show_tickets",
             "admin.manage_services",
             "admin.manage_tickets",
-            "admin.reply_tickets",
             "admin.close_tickets",
             "admin.manage_staff_profile"
         ]
@@ -33,7 +31,7 @@
         "is_admin": false,
         "permissions": [
             "admin.manage_coupons",
-            "admin.show_email_messages",
+            "admin.show_emails",
             "admin.show_invoices",
             "admin.show_services",
             "admin.show_customers",
@@ -49,9 +47,8 @@
         "is_admin": false,
         "permissions": [
             "admin.manage_tickets",
-            "admin.reply_tickets",
             "admin.close_tickets",
-            "admin_manage_services",
+            "admin.manage_services",
             "admin.manage_servers",
             "admin.show_metadata",
             "admin.manage_staff_profile"

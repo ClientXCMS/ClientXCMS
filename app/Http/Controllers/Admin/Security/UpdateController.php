@@ -19,13 +19,14 @@ namespace App\Http\Controllers\Admin\Security;
 
 use App\Core\License\LicenseGateway;
 use App\Extensions\UpdaterManager;
+use App\Models\Admin\Permission;
 use App\Providers\AppServiceProvider;
 
 class UpdateController
 {
     public function index()
     {
-        staff_aborts_permission('admin.manage_update');
+        staff_aborts_permission(Permission::MANAGE_UPDATE);
         $changelogUrl = LicenseGateway::getDomain() . '/changelogs';
         $changelog = \Cache::rememberForever('changelogs', function () use ($changelogUrl) {
             try {
@@ -53,7 +54,7 @@ class UpdateController
 
     public function update()
     {
-        staff_aborts_permission('admin.manage_update');
+        staff_aborts_permission(Permission::MANAGE_UPDATE);
         try {
             (new UpdaterManager())->update('core');
             return back()->with('success', __('admin.update.updated_success'));
