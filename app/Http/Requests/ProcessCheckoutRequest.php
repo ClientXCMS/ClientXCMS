@@ -41,7 +41,7 @@ class ProcessCheckoutRequest extends FormRequest
     public function rules(): array
     {
         $types = app(\App\Services\Core\PaymentTypeService::class)->all()->keys()->implode(',');
-        $source = auth()->user()->paymentMethods()->pluck('id')->implode(',');
+        $source = auth()->id() === null ? '' : auth()->user()->paymentMethods()->pluck('id')->implode(',');
         $rules = AccountEditService::rules($this->country ?? 'FR', false, false, auth()->id());
         if (setting('checkout_toslink', false)) {
             $rules['accept_tos'] = ['required', 'accepted'];

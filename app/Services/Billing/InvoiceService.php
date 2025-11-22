@@ -253,7 +253,7 @@ class InvoiceService
     public static function createInvoiceFromService(Service $service, ?string $billing = null)
     {
         $currency = $service->currency;
-        $months = app(RecurringService::class)->get($billing)['months'];
+        $months = app(RecurringService::class)->get($billing ?? $service->billing)['months'];
         $days = setting('remove_pending_invoice', 0) != 0 ? setting('remove_pending_invoice') : 7;
         $months_label = "{$months} ".__('recurring.month');
         if ($months == 0.5) {
@@ -323,7 +323,13 @@ class InvoiceService
 
     public static function appendServiceOnExistingInvoice(Service $service, Invoice $invoice, ?string $billing = null, ?ProductPriceDTO $price = null)
     {
-        $price = $price ?? ($service->discountAmount() != 0 ? $service->discountAmount() : $service->getBillingPrice($billing))->price_ht;
+        if ($price){
+            $price = $price->price_ht;
+        } elseif ($service->discountAmount() != 0) {
+            $price = $service->discountAmount();
+        } else {
+            $price = $service->getBillingPrice($billing ?? $service->billing)->price_ht;
+        }
         $months = $service->recurring()['months'];
         $current = $service->expires_at->format('d/m/y');
         $expiresAt = app(RecurringService::class)->addFrom($service->expires_at, $service->billing);
