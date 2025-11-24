@@ -71,6 +71,7 @@ class OnUpdateCommand extends Command
         $this->cleanupOldColumns();
         $this->changeUuidValue();
         $this->downloadExtensions();
+        $this->info('All extensions are up to date.');
         \Artisan::call('clientxcms:define-billing-address-to-invoices');
         $this->info('CLIENTXCMS is up to date.');
     }
@@ -78,17 +79,17 @@ class OnUpdateCommand extends Command
     private function downloadExtensions()
     {
         try {
-            $extensions = LicenseCache::get()?->getExtensions();
+            $extensions = app('extension')->fetchInstalledExtensions();
             if ($extensions == null){
                 return;
             }
-            foreach ($extensions as $extension => $details) {
-                app('extension')->update($details['type'], $extension);
-                $this->info("Extension {$extension} has been updated.");
+            $this->info('Updating extensions... (' . collect($extensions)->map(fn ($e) => $e['uuid'])->join(', ') . ')');
+            foreach ($extensions as $extension) {
+                app('extension')->update($extension['type'], $extension['uuid']);
+                $this->info("Extension {$extension['uuid']} has been updated.");
             }
         } catch (\Exception $e) {
             $this->error("Failed to download extensions: {$e->getMessage()}");
-            return;
         }
     }
 
