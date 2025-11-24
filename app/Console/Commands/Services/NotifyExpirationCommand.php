@@ -51,8 +51,11 @@ class NotifyExpirationCommand extends Command
         /** @var Service[] $services */
         $services = Service::getShouldNotifyExpiration($days);
         foreach ($services as $service) {
+            $this->info("Notifying service {$service->id} of expiration.");
             if ($service->notifyExpiration()) {
                 $this->info("Service {$service->id} notified of expiration");
+            } else {
+                $this->error("Service {$service->id} was not notified of expiration");
             }
         }
 
