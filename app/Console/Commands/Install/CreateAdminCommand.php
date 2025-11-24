@@ -19,6 +19,7 @@
 namespace App\Console\Commands\Install;
 
 use App\Models\Admin\Admin;
+use App\Models\Admin\Role;
 use Illuminate\Console\Command;
 
 class CreateAdminCommand extends Command
@@ -47,13 +48,18 @@ class CreateAdminCommand extends Command
         } else {
             $username = $this->ask('Admin username');
         }
+        $role = Role::where('is_default', true)->first();
+        if (!$role) {
+            $this->error('No default role found. Please create a role first.');
+            return;
+        }
         Admin::insert([
             'username' => $username,
             'email' => $this->option('email') ?? $this->ask('Admin email'),
             'password' => bcrypt($this->option('password') ?? $this->secret('Admin password')),
             'firstname' => $this->option('firstname') ?? $this->ask('Admin firstname'),
             'lastname' => $this->option('lastname') ?? $this->ask('Admin lastname'),
-            'role_id' => 1,
+            'role_id' => $role->id,
         ]);
         $this->info('Admin user created successfully.');
     }
