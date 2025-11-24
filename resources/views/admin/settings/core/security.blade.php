@@ -148,6 +148,11 @@
                 'name' => 'allow_reset_password',
                 'checked' => setting('allow_reset_password'),
             ])
+            @include('admin/shared/checkbox', [
+                'label' => __('admin.settings.core.security.fields.allow_plus_in_email'),
+                'name' => 'allow_plus_in_email',
+                'checked' => setting('allow_plus_in_email', true),
+            ])
             </div>
             @method('PUT')
             <button type="submit" class="btn btn-primary mt-2">{{ __('global.save') }}</button>

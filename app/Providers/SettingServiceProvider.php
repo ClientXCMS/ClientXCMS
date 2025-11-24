@@ -105,6 +105,7 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('allow_registration', true);
             $service->setDefaultValue('auto_confirm_registration', false);
             $service->setDefaultValue('allow_reset_password', true);
+            $service->setDefaultValue('allow_plus_in_email', true);
             $service->setDefaultValue('force_password_reset', false);
             $service->setDefaultValue('force_login_client', false);
             $service->setDefaultValue('banned_emails', '');
@@ -150,9 +151,6 @@ class SettingServiceProvider extends ServiceProvider
 
     protected function loadCards(SettingsService $service)
     {
-        if (app()->runningInConsole()) {
-            return;
-        }
         $service->addCard('core', 'admin.settings.core.title', 'admin.settings.core.description', 1);
         $service->addCard('extensions', 'extensions.settings.title', 'extensions.settings.description', 3);
         $service->addCard('security', 'admin.security.title', 'admin.security.description', 4);

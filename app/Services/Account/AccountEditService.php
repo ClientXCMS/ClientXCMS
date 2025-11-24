@@ -45,7 +45,7 @@ class AccountEditService
         if ($email) {
             $rules['email'] = ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('customers')->ignore($except),
                 function ($attribute, $value, $fail) {
-                    if (str_contains($value, '+')) {
+                    if (str_contains($value, '+') && !setting('allow_plus_in_email', false)) {
                         $fail('The :attribute must not contain the character "+".');
                     }
                 }, ];

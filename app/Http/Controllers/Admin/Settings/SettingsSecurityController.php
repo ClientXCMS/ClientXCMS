@@ -51,6 +51,7 @@ class SettingsSecurityController
             'allow_registration' => 'nullable|string|in:true,false',
             'auto_confirm_registration' => 'nullable|string|in:true,false',
             'force_login_client' => 'nullable|string|in:true,false',
+            'allow_plus_in_email' => 'nullable|string|in:true,false',
             'password_timeout' => 'nullable|integer',
             'banned_emails' => 'nullable|string',
             'captcha_driver' => 'required|string',
@@ -67,6 +68,7 @@ class SettingsSecurityController
         $data['allow_registration'] = $data['allow_registration'] ?? 'false';
         $data['auto_confirm_registration'] = $data['auto_confirm_registration'] ?? 'false';
         $data['force_login_client'] = $data['force_login_client'] ?? 'false';
+        $data['allow_plus_in_email'] = $data['allow_plus_in_email'] ?? 'false';
         Setting::updateSettings($data);
 
         return redirect()->back()->with('success', __('admin.settings.core.security.success'));
