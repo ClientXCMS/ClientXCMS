@@ -87,11 +87,17 @@ class UpgradeDTO
         if ($diffInDays <= setting('minimum_days_to_force_renewal_with_upgrade', 3)) {
             $firstpayment = $prorata + $price->price_ht;
         }
-        if (setting('add_setupfee_on_upgrade', 'true') == 'true') {
-            return new ProductPriceDTO($price->priceTTC(), $price->setupTTC(), $price->currency, $price->recurring, $firstpayment);
-        }
+        $setupHt = setting('add_setupfee_on_upgrade', 'true') == 'true' ? $price->setupHT() : 0.0;
 
-        return new ProductPriceDTO($price->priceTTC(), 0, $price->currency, $price->recurring, $firstpayment);
+        return new ProductPriceDTO(
+            recurringprice: $price->priceHT(),
+            setup: $setupHt,
+            currency: $price->currency,
+            recurring: $price->recurring,
+            firstpayment: $firstpayment,
+            mode: $price->mode,
+            amountsAreHt: true,
+        );
     }
 
     public function createUpgrade(Product $newProduct)

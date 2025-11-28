@@ -29,6 +29,7 @@ Route::prefix('/store')->name('front.')->group(function () {
         Route::post('/coupon', [BasketController::class, 'coupon'])->name('coupon');
         Route::delete('/coupon', [BasketController::class, 'removeCoupon'])->name('coupon.remove');
         Route::any('/add/{product}', [BasketController::class, 'addProduct'])->name('add');
+        Route::post('/config/{product}/preview', [BasketController::class, 'previewConfig'])->name('config.preview');
         Route::get('/config/{product}', [BasketController::class, 'showConfigProduct'])->name('config');
         Route::post('/config/{product}', [BasketController::class, 'configProduct']);
         Route::delete('/remove/{product}', [BasketController::class, 'removeRow'])->name('remove');

@@ -20,21 +20,12 @@
 @extends('layouts/front')
 @section('title', $product->name)
 @section('scripts')
-    <script>
-        window.optionsPrices = @json($options_prices);
-        window.taxPercent = '{{ tax_percent($row->currency) }}';
-        window.translations = @json(['setupfee' => __('store.setup_price'), 'recurring' => __('store.config.recurring_payment'), 'onetime' => __('store.config.onetime_payment')]);
-        window.per = '{{ __('store.per') }}';
-        window.currency = '{{ currency() }}';
-        window.recurrings = @json(app(\App\Services\Store\RecurringService::class)->getRecurringTypes());
-        window.taxType = '{{ is_tax_excluded() ? 'excluded' : 'included' }}';
-    </script>
     <script src="{{ Vite::asset('resources/themes/default/js/basket.js') }}" type="module"></script>
 @endsection
 @section('content')
 
     <div class="{{ theme_metadata('layout_classes', 'max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto') }}">
-        <form method="POST" action="{{ route('front.store.basket.config', ['product' => $product]) }}{{(request()->getQueryString() != null ? '?' . request()->getQueryString() : '')}}">
+        <form id="basket-config-form" data-pricing-endpoint="{{ route('front.store.basket.config.preview', ['product' => $product]) }}" method="POST" action="{{ route('front.store.basket.config', ['product' => $product]) }}{{(request()->getQueryString() != null ? '?' . request()->getQueryString() : '')}}">
             <input type="hidden" name="currency" value="{{ $row->currency }}" id="currency">
             @csrf
             @include("shared.alerts")
@@ -79,6 +70,7 @@
                 <div class="col-span-3 md:col-span-1">
                     <div class="card dark:text-gray-400">
                         <h2 class="text-lg font-semibold  dark:text-gray-300 mb-4">{{ __('store.config.summary') }}</h2>
+                        <div id="basket-config-error" class="text-sm text-red-600 mb-3 hidden"></div>
                         <div class="flex justify-between mb-2">
                             <span>{{ __('global.product') }}</span>
                             <span>{{ $row->product->name }}</span>

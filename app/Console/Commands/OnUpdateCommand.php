@@ -64,6 +64,23 @@ class OnUpdateCommand extends Command
         $this->migrateServicesWithProduct();
         $this->migrateConfigOptions();
         $this->cleanupSections();
+        Pricing::whereNull('weekly')
+            ->whereNull('setup_weekly')
+            ->whereNull('onetime')
+            ->whereNull('monthly')
+            ->whereNull('quarterly')
+            ->whereNull('semiannually')
+            ->whereNull('annually')
+            ->whereNull('biennially')
+            ->whereNull('triennially')
+            ->whereNull('setup_onetime')
+            ->whereNull('setup_monthly')
+            ->whereNull('setup_quarterly')
+            ->whereNull('setup_semiannually')
+            ->whereNull('setup_annually')
+            ->whereNull('setup_biennially')
+            ->whereNull('setup_triennially')
+            ->delete();
 
         PricingService::forgot();
         DB::commit();

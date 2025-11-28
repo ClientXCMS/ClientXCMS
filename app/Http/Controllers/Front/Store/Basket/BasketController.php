@@ -30,6 +30,7 @@ use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Product;
 use App\Services\Account\AccountEditService;
 use App\Services\Billing\InvoiceService;
+use App\Services\Store\ProductConfigurationPricingService;
 use Illuminate\Http\Request;
 
 class BasketController extends \App\Http\Controllers\Controller
@@ -134,6 +135,27 @@ class BasketController extends \App\Http\Controllers\Controller
         }
 
         return redirect()->route('front.store.basket.show')->with('success', __('store.basket.added'));
+    }
+
+    public function previewConfig(Product $product, BasketConfigRequest $request, ProductConfigurationPricingService $pricingService)
+    {
+        if ($product->isNotValid(true) || $product->hasPricesForCurrency() !== true) {
+            return response()->json(['message' => __('store.basket.not_valid')], 422);
+        }
+
+        $validated = $request->validated();
+        if (! $product->hasPricesForCurrency($validated['currency'])) {
+            return response()->json(['message' => __('store.basket.no_prices')], 422);
+        }
+
+        $preview = $pricingService->preview(
+            $product,
+            $validated['billing'],
+            $validated['currency'],
+            $validated['options'] ?? [],
+        );
+
+        return response()->json($preview);
     }
 
     public function removeRow(Product $product)
