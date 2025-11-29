@@ -130,7 +130,8 @@
 
                                                         <button class="w-full btn btn-info"><i class="bi bi-download"></i> {{ __('extensions.settings.update') }}</button>
                                                         </form>
-                                                    @elseif ($extension->isEnabled() && $extension->isActivable())
+                                                        @endif
+                                                    @if ($extension->isEnabled() && $extension->isActivable())
                                                         <form action="{{ route('admin.settings.extensions.disable', [$extension->type(), $extension->uuid]) }}" method="POST" class="w-full"> @csrf
                                                             <button type="submit" class="w-full btn btn-danger"><i class="bi bi-ban"></i>
                                                                 {{ __('extensions.settings.disabled') }}</button>

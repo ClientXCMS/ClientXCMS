@@ -95,18 +95,19 @@ class OnUpdateCommand extends Command
 
     private function downloadExtensions()
     {
-        try {
-            $extensions = app('extension')->fetchInstalledExtensions();
-            if ($extensions == null){
-                return;
-            }
-            $this->info('Updating extensions... (' . collect($extensions)->map(fn ($e) => $e['uuid'])->join(', ') . ')');
-            foreach ($extensions as $extension) {
+        $extensions = app('extension')->fetchInstalledExtensions();
+        if ($extensions == null){
+            return;
+        }
+        $this->info('Updating extensions... (' . collect($extensions)->map(fn ($e) => $e['uuid'])->join(', ') . ')');
+        foreach ($extensions as $extension) {
+            try {
                 app('extension')->update($extension['type'], $extension['uuid']);
                 $this->info("Extension {$extension['uuid']} has been updated.");
+            } catch (\Exception $e) {
+                $this->error("Failed to download extension {$extension['uuid']}: {$e->getMessage()}");
+                continue;
             }
-        } catch (\Exception $e) {
-            $this->error("Failed to download extensions: {$e->getMessage()}");
         }
     }
 
