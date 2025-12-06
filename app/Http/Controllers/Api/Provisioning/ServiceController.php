@@ -57,8 +57,7 @@ class ServiceController extends AbstractApiController
      *     description="Returns a list of services",
      *     @OA\Response(
      *         response=200,
-     *         description="Successful operation",
-     *         @OA\JsonContent(ref="#/components/schemas/ProvisioningServiceCollection")
+     *         description="Successful operation"
      *     ),
      *      @OA\Parameter(
      *          name="page",
@@ -67,7 +66,7 @@ class ServiceController extends AbstractApiController
      *          required=false,
      *          @OA\Schema(type="integer", default=1)
      *      ),
-     *      *     @OA\Parameter(
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         description="Page number",

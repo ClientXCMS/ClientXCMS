@@ -31,7 +31,7 @@ class RenewServiceListerner
             if ($item->type == 'renewal' && $item->delivered_at == null) {
                 $service = $item->relatedType();
                 if ($service) {
-                    $service->renew($item);
+                    $service->renew($item->data['billing'] ?? null);
                 }
                 $item->delivered_at = now();
                 $item->save();
