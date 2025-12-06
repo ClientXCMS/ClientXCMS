@@ -150,7 +150,10 @@ class ExtensionDTO implements Arrayable
     public function thumbnail()
     {
         if ($this->type == 'theme' && file_exists(base_path('resources/themes/'.$this->uuid.'/screenshot.png'))) {
-            return \Vite::asset('resources/themes/'.$this->uuid.'/screenshot.png');
+            try {
+                \Vite::asset('resources/themes/'.$this->uuid.'/screenshot.png');
+            } catch (\Exception $e) {
+            }
         }
         if (array_key_exists('unofficial', $this->api) || ! empty($this->api['thumbnail'])) {
             return $this->api['thumbnail'];

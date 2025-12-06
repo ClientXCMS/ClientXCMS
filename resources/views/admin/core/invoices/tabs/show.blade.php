@@ -137,6 +137,7 @@
             </div>
 
         </div>
+        @endforeach
 
         <div class="hidden sm:block border-b border-gray-200 dark:border-gray-700"></div>
 
@@ -166,7 +167,6 @@
             </div>
 
         </div>
-        @endforeach
     </div>
 </div>
 
