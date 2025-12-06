@@ -90,6 +90,18 @@ trait PricingInteractTrait
         return $this->getPriceByCurrency($currency) !== null;
     }
 
+    public function hasBilling(string $billing): bool
+    {
+        $pricing = $this->getAllPricing($this->id);
+        foreach ($pricing as $price) {
+            if ($price[$billing] !== null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function getPriceByCurrency(string $currency, ?string $recurring = null): ProductPriceDTO
     {
         $price = 0;

@@ -55,6 +55,8 @@ class ServiceTest extends TestCase
         $service = $this->createServiceModel(Customer::first()->id);
         $service->update(['billing' => 'quarterly']);
         $invoice = InvoiceService::createInvoiceFromService($service);
+        // 3 months renewal instead of 1
+        $now = (clone $service->expires_at)->addMonths(3);
         /** @var Customer $user */
         $user = $service->customer;
         $invoice->items[0]->type = 'renewal';
@@ -62,8 +64,6 @@ class ServiceTest extends TestCase
         $invoice->items[0]->data = [
             'months' => 3,
         ];
-        // 3 initial + 3 supplémentaires
-        $now = $service->expires_at->addMonths(3);
         $invoice->items[0]->save();
         $service->status = 'active';
         $service->renewals = 1;

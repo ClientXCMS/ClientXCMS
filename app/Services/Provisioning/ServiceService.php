@@ -76,10 +76,9 @@ class ServiceService
         if ($service->invoice_id != null) {
             $invoice = $service->invoice;
             $existing = $invoice->items()->where('type', 'renewal')->where('related_id', $service->id)->first();
-            if ($existing != null && ($existing->data['billing'] ?? '') != $service->billing) {
+            if ($existing != null && (($existing->data['billing'] ?? '') != $billing || $invoice->status != $service->billing)) {
                 $invoice->cancel();
                 $service->update(['invoice_id' => null]);
-
                 return self::createRenewalInvoice($service, $billing, $mode);
             }
             if ($existing != null) {
@@ -103,7 +102,7 @@ class ServiceService
 
             return $invoice;
         } else {
-            throw new \WrongPaymentException('Invalid mode for invoice creation');
+            throw new WrongPaymentException('Invalid mode for invoice creation');
         }
 
     }

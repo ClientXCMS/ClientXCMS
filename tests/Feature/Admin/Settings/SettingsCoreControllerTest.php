@@ -62,7 +62,7 @@ class SettingsCoreControllerTest extends \Tests\TestCase
             'app_env' => 'test',
             'app_debug' => true,
             'app_timezone' => 'test',
-            'app_default_locale' => 'test',
+            'app_default_locale' => 'fr_FR',
             'app_logo' => UploadedFile::fake()->image('logo.png'),
         ], ['admin.manage_settings']);
         $response->assertStatus(403);
@@ -75,7 +75,7 @@ class SettingsCoreControllerTest extends \Tests\TestCase
             'app_env' => 'test',
             'app_debug' => true,
             'app_timezone' => 'test',
-            'app_default_locale' => 'test',
+            'app_default_locale' => 'fr_FR',
             'app_logo' => UploadedFile::fake()->image('logo.png'),
         ]);
         $this->assertEquals('test', setting('app_name'));
@@ -88,7 +88,7 @@ class SettingsCoreControllerTest extends \Tests\TestCase
             'app_env' => 'test',
             'app_debug' => true,
             'app_timezone' => 'test',
-            'app_default_locale' => 'test',
+            'app_default_locale' => 'fr_FR',
             'app_logo' => UploadedFile::fake()->image('logo.png'),
         ]);
         $response->assertStatus(302);
@@ -98,7 +98,7 @@ class SettingsCoreControllerTest extends \Tests\TestCase
             'app_env' => 'test',
             'app_debug' => true,
             'app_timezone' => 'test',
-            'app_default_locale' => 'test',
+            'app_default_locale' => 'fr_FR',
             'app_logo' => UploadedFile::fake()->image('logo2.png'),
         ]);
         $response->assertStatus(302);
@@ -112,7 +112,7 @@ class SettingsCoreControllerTest extends \Tests\TestCase
             'app_env' => 'test',
             'app_debug' => true,
             'app_timezone' => 'test',
-            'app_default_locale' => 'test',
+            'app_default_locale' => 'fr_FR',
             'remove_logo' => true,
         ]);
         $response->assertStatus(302);

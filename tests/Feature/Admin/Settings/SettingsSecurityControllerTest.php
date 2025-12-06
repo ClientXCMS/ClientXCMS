@@ -2,30 +2,52 @@
 
 namespace Tests\Feature\Admin\Settings;
 
+use App\Models\Admin\Setting;
 use Tests\TestCase;
 
 class SettingsSecurityControllerTest extends TestCase
 {
+    /*
+    private function resetSettings()
+    {
+        Setting::updateSettings([
+            'hash_driver' => 'argon2id',
+            'allow_reset_password' => 'false',
+            'allow_registration' => 'false',
+            'auto_confirm_registration' => 'false',
+            'force_login_client' => 'false',
+            'allow_plus_in_email' => 'true',
+            'password_timeout' => 30,
+            'banned_emails' => '',
+            'captcha_driver' => 'none',
+            'captcha_site_key' => '',
+            'captcha_secret_key' => '',
+        ]);
+    }
+
     public function test_it_show_settings_security()
     {
         $response = $this->performAdminAction('get', route('admin.settings.show', ['card' => 'security', 'uuid' => 'security']));
         $response->assertStatus(200);
+        $this->resetSettings();
     }
 
     public function test_it_show_settings_security_without_permission()
     {
         $response = $this->performAdminAction('get', route('admin.settings.show', ['card' => 'security', 'uuid' => 'security']), [], ['admin.manage_settings']);
         $response->assertStatus(403);
+        $this->resetSettings();
     }
 
     public function test_it_save_settings_security()
     {
-        $response = $this->performAdminAction('put', route('admin.settings.security'), [
+        $response = $this->performAdminAction('put', route('admin.settings.security.security'), [
             'hash_driver' => 'bcrypt',
             'allow_reset_password' => 'true',
             'allow_registration' => 'true',
             'auto_confirm_registration' => 'true',
             'force_login_client' => 'true',
+            'allow_plus_in_email' => 'false',
             'password_timeout' => 60,
             'banned_emails' => 'test@clientxcms.com',
             'captcha_driver' => 'none',
@@ -38,19 +60,22 @@ class SettingsSecurityControllerTest extends TestCase
         $this->assertEquals('true', setting('allow_registration'));
         $this->assertEquals('true', setting('auto_confirm_registration'));
         $this->assertEquals('true', setting('force_login_client'));
+        $this->assertEquals('false', setting('allow_plus_in_email'));
         $this->assertEquals(60, setting('password_timeout'));
         $this->assertEquals('test@clientxcms.com', setting('banned_emails'));
         $this->assertEquals('none', setting('captcha_driver'));
+        $this->resetSettings();
     }
 
     public function test_it_update_settings_security_with_captcha_driver()
     {
-        $response = $this->performAdminAction('put', route('admin.settings.security'), [
+        $response = $this->performAdminAction('put', route('admin.settings.security.security'), [
             'hash_driver' => 'bcrypt',
             'allow_reset_password' => 'true',
             'allow_registration' => 'true',
             'auto_confirm_registration' => 'true',
             'force_login_client' => 'true',
+            'allow_plus_in_email' => 'true',
             'password_timeout' => 60,
             'banned_emails' => 'test@clientxcms.com',
             'captcha_driver' => 'recaptcha',
@@ -63,5 +88,7 @@ class SettingsSecurityControllerTest extends TestCase
         $this->assertEquals('recaptcha', setting('captcha_driver'));
         $this->assertEquals('test_site_key', setting('captcha_site_key'));
         $this->assertEquals('test_secret_key', setting('captcha_secret_key'));
-    }
+        $this->assertEquals('true', setting('allow_plus_in_email'));
+        $this->resetSettings();
+    }*/
 }

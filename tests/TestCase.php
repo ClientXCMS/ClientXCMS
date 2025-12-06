@@ -151,7 +151,7 @@ abstract class TestCase extends BaseTestCase
         return Customer::factory()->create();
     }
 
-    protected function createAdminModel()
+    protected function createAdminModel(): Admin
     {
         return Admin::factory()->create();
     }
@@ -163,7 +163,7 @@ abstract class TestCase extends BaseTestCase
         $service->type = 'none';
         $service->currency = 'USD';
         $service->status = $status;
-        $service->expires_at = \Carbon\Carbon::now()->addDays(30);
+        $service->expires_at = \Carbon\Carbon::now()->addMonth();
         $service->customer_id = $customer_id;
         $service->save();
         if (! empty($prices)) {

@@ -18,13 +18,12 @@ class InvoiceFactory extends Factory
      */
     public function definition(): array
     {
-        $start = Customer::first()->id;
-        $end = $start + 10;
+        $customerId = Customer::inRandomOrder()->first()->id;
         $subtotal = 1;
         $tax = $subtotal * 0.2;
 
         return [
-            'customer_id' => $this->faker->numberBetween($start, $end),
+            'customer_id' => $customerId,
             'due_date' => $this->faker->dateTimeBetween('-1 year', '+1 year'),
             'status' => 'pending',
             'total' => $subtotal + $tax,

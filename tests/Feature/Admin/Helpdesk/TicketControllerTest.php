@@ -65,12 +65,15 @@ class TicketControllerTest extends TestCase
     {
         $user = $this->createCustomerModel();
         $department = $this->createDepartmentModel();
-        $response = $this->performAdminAction('post', self::API_URL.'/create?department_id='.$department->id.'&customer_id='.$user->id, [
+        $response = $this->performAdminAction('post', self::API_URL.'?department_id='.$department->id.'&customer_id='.$user->id, [
             'department_id' => $department->id,
             'subject' => 'Test Subject',
             'content' => 'Test content',
             'priority' => 'low',
-        ])->assertSessionHas('success')->assertRedirect();
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
         $this->assertCount(1, $user->tickets);
     }
 
@@ -109,8 +112,8 @@ class TicketControllerTest extends TestCase
         $ticket = $this->createTicketModel();
         $department = $this->createDepartmentModel();
         $ticket->addMessage('Test content', null, $admin->id);
-        $message = $ticket->messages()->first();
-        $response = $this->performAdminAction('POST', self::API_URL.'/'.$ticket->uuid.'/messages/'.$message->id.'/update', [
+        $message = $ticket->messages()->latest()->first();
+        $response = $this->be($admin, 'admin')->post(self::API_URL.'/'.$ticket->uuid.'/messages/'.$message->id.'/update', [
             'content' => 'Test content2',
         ]);
         $response->assertSessionHas('success');
@@ -138,12 +141,27 @@ class TicketControllerTest extends TestCase
     public function test_admin_support_delete_message(): void
     {
         $admin = $this->createAdminModel();
+        /** @var SupportTicket */
         $ticket = $this->createTicketModel();
         $department = $this->createDepartmentModel();
         $ticket->addMessage('Test content', null, $admin->id);
-        $message = $ticket->messages()->first();
-        $response = $this->performAdminAction('DELETE', self::API_URL.'/'.$ticket->uuid.'/messages/'.$message->id.'/delete');
+        $message = $ticket->messages()->latest()->first();
+        $response = $this->be($admin, 'admin')->delete(self::API_URL.'/'.$ticket->uuid.'/messages/'.$message->id.'/delete');
         $response->assertSessionHas('success');
+    }
+
+    public function test_admin_support_delete_message_with_invalid_permission(): void
+    {
+        $admin = $this->createAdminModel();
+        $clone = $this->createAdminModel();
+        $ticket = $this->createTicketModel();
+        $department = $this->createDepartmentModel();
+        $ticket->addMessage('Test content', null, $clone->id);
+        $message = $ticket->messages()->first();
+        $other = $this->createAdminModel();
+        $response = $this->be($other, 'admin')->delete(self::API_URL.'/'.$ticket->uuid.'/messages/'.$message->id.'/delete');
+        $response->assertSessionHas('error');
+        $response->assertStatus(403);
     }
 
     public function test_admin_support_update(): void
@@ -160,6 +178,7 @@ class TicketControllerTest extends TestCase
             'assigned_to' => $other->id,
         ]);
         $response->assertRedirect();
+        $response->assertSessionHas('success');
         $this->assertDatabaseHas('support_tickets', [
             'id' => $ticket->id,
             'department_id' => $department->id,

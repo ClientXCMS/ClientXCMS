@@ -122,6 +122,9 @@ class ExtensionManager extends ExtensionCollectionsManager
 
     private static function makeRequest()
     {
+        if (app()->environment('testing')) {
+            return [];
+        }
         try {
             $response = \Http::timeout(10)->get(LicenseGateway::getDomain() . '/api/resources');
             return $response->json('data', []);

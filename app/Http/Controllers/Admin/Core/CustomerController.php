@@ -25,6 +25,7 @@ use App\Http\Requests\Customer\StoreCustomerRequest;
 use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Models\Account\Customer;
 use App\Models\Billing\Invoice;
+use App\Addons\SupportID\SupportIdHelper;
 use App\Models\Helpdesk\SupportTicket;
 use App\Models\Provisioning\Service;
 use App\Providers\RouteServiceProvider;
@@ -260,7 +261,10 @@ class CustomerController extends AbstractCrudController
                 && app('extension')->extensionIsEnabled('supportid')
                 && \Schema::hasColumn('customers', 'support_id')
             ) {
-                $customer = Customer::where('support_id', $request->get('q'))->first();
+                $customer = Customer::where(
+                    'support_id',
+                    SupportIdHelper::normalize($request->get('q'))
+                )->first();
                 if ($customer) {
                     $this->routePath = 'admin.customers';
 
