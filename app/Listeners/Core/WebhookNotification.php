@@ -33,9 +33,22 @@ class WebhookNotification
 {
     private array $webhooks = [];
 
+    private static array $extensionWebhooks = [];
+
+    public static function addExtensionWebhook(WebhookDTO $webhook): void
+    {
+        self::$extensionWebhooks[] = $webhook;
+    }
+
+    public static function getExtensionWebhooks(): array
+    {
+        return self::$extensionWebhooks;
+    }
+
     public function handle($event): void
     {
         $this->registerWebhook();
+        $this->webhooks = array_merge($this->webhooks, self::$extensionWebhooks);
         if ($this->inWebhookList($event)) {
             $this->sendWebhook($event);
         }

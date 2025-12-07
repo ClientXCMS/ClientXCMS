@@ -41,7 +41,7 @@ Route::middleware(['ability:license,*'])->get('/license', [ApiController::class,
 
 Route::middleware(['ability:customers:index,*'])->get('/customers', [CustomerController::class, 'index'])->name('customers.index');
 Route::middleware(['ability:customers:store,*'])->post('/customers', [CustomerController::class, 'store'])->name('customers.store');
-Route::middleware(['ability:customers:show,*'])->get('/customers/{product}', [CustomerController::class, 'show'])->name('customers.show');
+Route::middleware(['ability:customers:show,*'])->get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
 Route::middleware(['ability:customers:update,*'])->post('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
 Route::middleware(['ability:customers:delete,*'])->delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.delete');
 Route::middleware(['ability:customers:update,*'])->post('/customers/{customer}/resend_confirmation', [CustomerController::class, 'resendConfirmation'])->name('customers.resend_confirmation');
