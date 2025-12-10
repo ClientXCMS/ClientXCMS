@@ -46,7 +46,7 @@ class RegisteredUserController extends Controller
         }
         $data = $request->all();
         $data['email'] = strtolower($request->email);
-        $data['phone'] = $this->formatPhone($request->phone, $request->country);
+        $data['phone'] = $this->formatPhone($request->phone, $request->country ?? '');
         $validator = \Validator::make($data, $rules);
         if ($validator->fails()) {
             if ($request->has('redirect')) {
@@ -102,14 +102,14 @@ class RegisteredUserController extends Controller
 
     }
 
-    private function formatPhone(?string $phone = null, ?string $country = null): ?string
+    private function formatPhone(?string $phone = null, string $country): ?string
     {
         try {
             if ($phone === null || $phone === '') {
                 return null;
             }
 
-            return (new PhoneNumber($phone))->format(libPhoneNumberFormat::E164);
+            return (new PhoneNumber($phone, $country))->format(libPhoneNumberFormat::INTERNATIONAL);
         } catch (NumberParseException $e) {
             return 'invalid';
         }

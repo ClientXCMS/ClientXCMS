@@ -18,17 +18,12 @@
 $pricing = $product->getPriceByCurrency(currency(), $billing ?? null);
 $showSetup = $pricing->hasSetup() && (isset($showSetup) ? $showSetup : true);
 ?>
-@includeWhen(app('extension')->extensionIsEnabled('customers_reviews'), 'customers_reviews::partials.product_widgets')
 <div class="flex flex-col border border-gray-200 text-center rounded-xl p-8 dark:border-gray-700">
-    @stack('product-badges-top')
 
     @if ($product->image)
         <img src="{{ Storage::url($product->image) }}" alt="{{ $product->trans('name') }}" class="w-16 h-16 mx-auto rounded-lg mb-2">
     @endif
     <h4 class="font-medium text-lg text-gray-800 dark:text-gray-200">{{ $product->trans('name') }}</h4>
-    @stack('product-after-title')
-    @stack('product-before-price')
-
     @if ($pricing->isFree())
 
         <span class="mt-5 font-bold text-5xl text-gray-800 dark:text-gray-200">
@@ -48,6 +43,7 @@ $showSetup = $pricing->hasSetup() && (isset($showSetup) ? $showSetup : true);
         <p class="mt-2 text-sm text-gray-500">{{ $pricing->pricingMessage() }}</p>
     @endif
     @endif
+    @includeWhen(app('extension')->extensionIsEnabled('customers_reviews'), 'customers_reviews::partials.product_widgets', ['product' => $product])
     <ul class="mt-7 space-y-2.5 text-sm">
         {!!  $product->trans('description') !!}
     </ul>

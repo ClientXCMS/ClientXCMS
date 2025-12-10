@@ -102,5 +102,5 @@ jobs:
         run: php artisan migrate --force --no-interaction --no-ansi --seed
       - name: Build assets
         run: npm install && npm run build
-      # - name: Run PHPUnit
-      #   run: ./vendor/bin/phpunit --configuration phpunit_github.xml -d date.timezone=Europe/Paris
+      - name: Run PHPUnit
+        run: ./vendor/bin/phpunit --configuration phpunit_github.xml -d date.timezone=Europe/Paris

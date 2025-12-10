@@ -15,18 +15,18 @@
  *
  * Year: 2025
  */
-?>
+$pricing = $product->getPriceByCurrency(currency());
+$showSetup = $pricing->hasSetup() && (isset($showSetup) ? $showSetup : true);
 
-@php($pricing = $product->getPriceByCurrency(currency()))
+?>
 
 @includeWhen(app('extension')->extensionIsEnabled('customers_reviews'), 'customers_reviews::partials.product_widgets')
 <div class="flex flex-col border-2 border-blue-600 text-center shadow-xl rounded-xl p-8 dark:border-blue-700">
-    @stack('product-badges-top')
-
     <p class="mb-3"><span class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-xs uppercase font-semibold bg-blue-100 text-blue-800 dark:bg-blue-600 dark:text-white">{{ $product->hasMetadata('pinned_label') ? $product->getMetadata('pinned_label') : __('store.mustpopular') }}</span></p>
+    @if ($product->image)
+        <img src="{{ Storage::url($product->image) }}" alt="{{ $product->trans('name') }}" class="w-16 h-16 mx-auto rounded-lg mb-2">
+    @endif
     <h4 class="font-medium text-lg text-gray-800 dark:text-gray-200">{{ $product->trans('name') }}</h4>
-    @stack('product-after-title')
-    @stack('product-before-price')
 
     @if ($product->isPersonalized())
     <span class="mt-5 font-bold text-5xl text-gray-800 dark:text-gray-200">
@@ -40,13 +40,12 @@
         <span class="mt-5 font-bold text-5xl text-gray-800 dark:text-gray-200">
         {{ $pricing->getPriceByDisplayMode() }}
         <span class="font-bold text-2xl -me-2">{{ $pricing->getSymbol() }} {{ $pricing->taxTitle() }}</span>
-
       </span>
-
-        @if ($pricing->hasSetup())
+        @if ($showSetup)
             <p class="mt-2 text-sm text-gray-500">{{ $pricing->pricingMessage() }}</p>
         @endif
     @endif
+    @includeWhen(app('extension')->extensionIsEnabled('customers_reviews'), 'customers_reviews::partials.product_widgets', ['product' => $product])
     <ul class="mt-7 space-y-2.5 text-sm">
         {!!  $product->trans('description') !!}
     </ul>

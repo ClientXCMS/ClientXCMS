@@ -735,7 +735,10 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public function notifyExpiration(): bool
     {
-        $remaining = $this->expires_at->diffInDays(now());
+        if (!$this->expires_at){
+            return false;
+        }
+        $remaining = abs((int)\Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $this->expires_at)->diffInDays());
         if ($remaining <= 0) {
             return false;
         }
