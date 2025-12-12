@@ -279,10 +279,9 @@ class ExtensionManager extends ExtensionCollectionsManager
         }
         if ($type == 'themes'){
             app('theme')->setTheme($extension, true);
-            return;
         }
         if (collect($extensions[$type] ?? [])->where('uuid', $extension)->isEmpty()) {
-            $extensions[$type][] = ['uuid' => $extension, 'version' => 'v1.0', 'type' => $type, 'enabled' => true, 'installed' => true, 'api' => $api];
+            $extensions[$type][] = ['uuid' => $extension, 'version' => $api['version'] ?? 'v1.0', 'type' => $type, 'enabled' => true, 'installed' => true, 'api' => $api];
         }
         $extensions[$type] = collect($extensions[$type])->map(function ($item) use ($extension, $api) {
             if ($item['uuid'] == $extension) {
