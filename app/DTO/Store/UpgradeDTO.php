@@ -68,7 +68,7 @@ class UpgradeDTO
             return $product->getPriceByCurrency($this->service->currency, 'onetime');
         }
         if ($billing == 'weekly' && ! $product->hasBilling('weekly')) {
-            return $product->getPriceByCurrency($this->service->currency, 'monthly');
+            return $product->getPriceByCurrency($this->service->currency, 'weekly');
         }
         if ($this->service->isOneTime()) {
             return $product->getPriceByCurrency($this->service->currency, $billing);

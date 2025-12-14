@@ -34,6 +34,8 @@ class ExtensionManager extends ExtensionCollectionsManager
 
     private array $extensions = [];
 
+    private static ?array $testExtensions = null;
+
     public function __construct()
     {
         $this->files = new Filesystem;
@@ -49,6 +51,13 @@ class ExtensionManager extends ExtensionCollectionsManager
 
     public static function readExtensionJson(): array
     {
+        if (app()->environment('testing')) {
+            if (self::$testExtensions === null) {
+                self::$testExtensions = [];
+            }
+            return self::$testExtensions;
+        }
+
         $path = base_path('bootstrap/cache/extensions.json');
         if (! file_exists($path)) {
             self::writeExtensionJson([]);
@@ -66,6 +75,11 @@ class ExtensionManager extends ExtensionCollectionsManager
      */
     public static function writeExtensionJson(array $extensions): void
     {
+        if (app()->environment('testing')) {
+            self::$testExtensions = $extensions;
+            return;
+        }
+
         try {
             $path = base_path('bootstrap/cache');
             if (! file_exists($path)) {

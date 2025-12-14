@@ -24,7 +24,6 @@ class UpgradeDTOTest extends TestCase
             'add_setupfee_on_upgrade' => 'false',
             'store_currency' => 'USD'
         ]);
-
     }
 
     public function test_must_force_renewal_returns_true_for_trial(): void
@@ -162,6 +161,7 @@ class UpgradeDTOTest extends TestCase
         $this->assertArrayHasKey('unit_price_ht', $item);
         $this->assertArrayHasKey('unit_setup_ht', $item);
         $this->assertIsNumeric($item['unit_price_ttc']);
+        $upgradeRecord->delete();
     }
 
 

@@ -84,12 +84,12 @@ class GroupController extends AbstractCrudController
     public function destroy(Group $group)
     {
         $this->checkPermission('delete');
-        $group->groups->map(function ($group) {
-            $group->update(['parent_id' => null]);
-        });
         if ($group->products->isNotEmpty()) {
             return redirect()->back()->with('error', __($this->translatePrefix.'.groupcannotdeleted'));
         }
+        $group->groups->map(function ($group) {
+            $group->update(['parent_id' => null]);
+        });
         $group->delete();
 
         return $this->deleteRedirect($group);

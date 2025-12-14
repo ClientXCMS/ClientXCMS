@@ -12,9 +12,9 @@ class SupportDepartmentSeeder extends Seeder
      */
     public function run(): void
     {
-        // if (SupportDepartment::count() !== 0) {
-        //     return;
-        // }
+        if (SupportDepartment::count() !== 0) {
+            return;
+        }
         $departments = [
             [
                 'name' => __('install.departmentsseeder.general.name'),
@@ -37,7 +37,6 @@ class SupportDepartmentSeeder extends Seeder
                 'icon' => 'bi bi-cart',
             ],
         ];
-        dd($departments);
         SupportDepartment::insert($departments);
     }
 }

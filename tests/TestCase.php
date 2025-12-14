@@ -129,6 +129,7 @@ abstract class TestCase extends BaseTestCase
         $price->currency = $currency;
         $price->onetime = $prices['onetime'] ?? null;
         $price->monthly = $prices['monthly'] ?? null;
+        $price->weekly = $prices['weekly'] ?? null;
         $price->quarterly = $prices['quarterly'] ?? null;
         $price->semiannually = $prices['semiannually'] ?? null;
         $price->annually = $prices['annually'] ?? null;
@@ -141,6 +142,7 @@ abstract class TestCase extends BaseTestCase
         $price->setup_annually = $prices['setup_annually'] ?? null;
         $price->setup_biennially = $prices['setup_biennially'] ?? null;
         $price->setup_triennially = $prices['setup_triennially'] ?? null;
+        $price->setup_weekly = $prices['setup_weekly'] ?? null;
         $price->save();
 
         return $price;
