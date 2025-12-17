@@ -1,0 +1,57 @@
+name: Deploy Production
+on:
+  release:
+    types: [published]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        server: ['01', '02', '03']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Deploy on server ${{ matrix.server }}
+        env:
+          COMMIT_MSG: ${{ github.event.release.tag_name }}
+          SKIP_LIST: ${{ vars.WEBSITE_UAT }}
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host:     ${{ secrets[ format('VPS_HOST_{0}', matrix.server) ] }}
+          username: ${{ secrets[ format('VPS_USER_{0}', matrix.server) ] }}
+          password: ${{ secrets[ format('VPS_PASSWORD_{0}', matrix.server) ] }}
+          port:     ${{ secrets[ format('VPS_PORT_{0}', matrix.server) ] }}
+          script: |
+            SKIP_LIST=($SKIP_LIST)
+            for site_dir in /var/www/*; do
+              if [ ! -d "$site_dir/storage/app/invoices" ]; then
+                 site=$(basename "$site_dir")
+                 echo "Adding $site to skip list (oldest version)"
+                 SKIP_LIST+=("$site")
+              fi
+            done
+
+            for site_dir in /var/www/*; do
+              site=$(basename "$site_dir")
+              skip=false
+              for skip_site in "${SKIP_LIST[@]}"; do
+                if [[ "$site" == "$skip_site" ]]; then
+                  skip=true
+                  break
+                fi
+              done
+              if [[ "$skip" == true ]]; then
+                echo "→ Ignoring $site"
+                continue
+              fi
+              echo "Deploying $site on $HOST..."
+              cd "/var/www/$site" || continue
+              git pull origin --force $COMMIT_MSG
+              ./composer.phar install --no-interaction --prefer-dist
+              npm install
+              npm run build
+              php artisan migrate --force --no-interaction --seed
+              php artisan clientxcms:db-extension --all
+              php artisan cache:clear
+              php artisan clientxcms:on-update
+            done
