@@ -107,7 +107,6 @@ class ProductControllerTest extends TestCase
             'related_type' => 'product',
             'monthly' => 10,
             'setup_monthly' => null,
-            'currency' => 'USD',
         ]);
     }
 
@@ -149,7 +148,6 @@ class ProductControllerTest extends TestCase
             'setup_monthly' => null,
             'quarterly' => 20,
             'setup_quarterly' => null,
-            'currency' => 'USD',
         ]);
     }
 

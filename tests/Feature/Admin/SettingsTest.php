@@ -1,9 +1,10 @@
 <?php
 
 namespace Admin;
-
+use Illuminate\Foundation\Testing\RefreshDatabase;
 class SettingsTest extends \Tests\TestCase
 {
+    use RefreshDatabase;
     public function show_settings(): void
     {
         $this->seed(\Database\Seeders\AdminSeeder::class);

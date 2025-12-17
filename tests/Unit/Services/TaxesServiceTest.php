@@ -5,9 +5,12 @@ namespace Tests\Unit\Services;
 use App\Services\SettingsService;
 use App\Services\Store\TaxesService;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class TaxesServiceTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_get_vat_price(): void
     {
         $settings = app(SettingsService::class);

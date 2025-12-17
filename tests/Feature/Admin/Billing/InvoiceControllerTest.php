@@ -8,9 +8,11 @@ use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceItem;
 use App\Services\Store\TaxesService;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class InvoiceControllerTest extends \Tests\TestCase
 {
+    use RefreshDatabase;
     public function test_admin_invoice_index(): void
     {
         $this->seed(\Database\Seeders\GatewaySeeder::class);

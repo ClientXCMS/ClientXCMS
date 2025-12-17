@@ -5,9 +5,12 @@ namespace Admin\Personalization;
 use App\Models\Admin\Setting;
 use App\Services\Core\LocaleService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class AdminLocaleControllerTest extends \Tests\TestCase
 {
+    use RefreshDatabase;
+
     public function test_admin_locale_index(): void
     {
         $this->seed(\Database\Seeders\AdminSeeder::class);

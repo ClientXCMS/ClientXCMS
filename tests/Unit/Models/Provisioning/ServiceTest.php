@@ -3,15 +3,20 @@
 namespace Tests\Unit\Models\Provisioning;
 
 use App\Models\Account\Customer;
+use App\Models\Provisioning\Service;
 use App\Services\Billing\InvoiceService;
 use Carbon\Carbon;
 use Database\Seeders\EmailTemplateSeeder;
 use Database\Seeders\GatewaySeeder;
 use Database\Seeders\StoreSeeder;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ServiceTest extends TestCase
 {
+
+    use RefreshDatabase;
+    
     public function test_renew_simple_service_if_active()
     {
         $this->seed(StoreSeeder::class);
@@ -138,5 +143,62 @@ class ServiceTest extends TestCase
         $service->save();
         $service->refresh();
         $this->assertEquals($service->getPricing()->semiannually, $product->getPriceByCurrency('USD', 'semiannually')->price);
+    }
+
+    public function test_can_renew_logic()
+    {
+        $this->seed(StoreSeeder::class);
+        Customer::factory(1)->create();
+        $service = $this->createServiceModel(Customer::first()->id, 'active', []);
+        $service->expires_at = now()->addMonth();
+        $service->billing = 'monthly';
+        $service->save();
+
+        // Test normal active case
+        $this->assertTrue($service->canRenew());
+
+        // Test max renewals check
+        $service->max_renewals = 5;
+        $service->renewals = 4;
+        $service->save();
+        $this->assertTrue($service->canRenew());
+
+        $service->renewals = 5;
+        $service->save();
+        $this->assertFalse($service->canRenew());
+
+        // Reset for subsequent tests
+        $service->max_renewals = null;
+        $service->save();
+
+        // Test suspended with correct reason
+        $service->status = Service::STATUS_SUSPENDED;
+        $service->suspend_reason = 'client.alerts.suspended_reason_expired';
+        $service->save();
+        $this->assertTrue($service->canRenew());
+
+        // Test suspended with WRONG reason
+        $service->suspend_reason = 'abuse';
+        $service->save();
+        $this->assertFalse($service->canRenew());
+
+        // Test other statuses
+        $service->status = Service::STATUS_PENDING;
+        $service->save();
+        $this->assertFalse($service->canRenew());
+
+        $service->status = Service::STATUS_CANCELLED;
+        $service->save();
+        $this->assertFalse($service->canRenew());
+        
+        // Test billing types
+        $service->status = Service::STATUS_ACTIVE;
+        $service->billing = 'free';
+        $service->save();
+        $this->assertFalse($service->canRenew());
+
+        $service->billing = 'onetime';
+        $service->save();
+        $this->assertFalse($service->canRenew());
     }
 }

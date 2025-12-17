@@ -8,11 +8,13 @@ use App\Services\Store\TaxesService;
 use App\Models\Billing\Upgrade as UpgradeModel;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Setting;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Carbon\Carbon;
 
 class UpgradeDTOTest extends TestCase
 {
+    use RefreshDatabase;
     protected function setUp(): void
     {
         parent::setUp();

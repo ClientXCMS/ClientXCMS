@@ -108,7 +108,7 @@ class GroupControllerTest extends TestCase
     public function test_admin_store_group_destroy(): void
     {
         $group = $this->createGroupModel();
-        $group->products->detach();
+        $group->products()->delete();
         $response = $this->performAdminAction('DELETE', self::ROUTE_PREFIX.'/'.$group->id);
         $response->assertStatus(302);
         $response->assertSessionHas('success');
@@ -117,9 +117,9 @@ class GroupControllerTest extends TestCase
     public function test_admin_store_group_destroy_with_children(): void
     {
         $parent = $this->createGroupModel();
-        $parent->products->detach();
         $child = $this->createGroupModel('active', $parent->id);
-        $child->products->detach();
+        $parent->products()->delete();
+        $child->products()->delete();
         $response = $this->performAdminAction('DELETE', self::ROUTE_PREFIX.'/'.$parent->id);
         $response->assertStatus(302);
         $response->assertSessionHas('success');
