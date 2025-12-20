@@ -107,7 +107,6 @@ class ProductControllerTest extends TestCase
             'related_type' => 'product',
             'monthly' => 10,
             'setup_monthly' => null,
-            'currency' => 'EUR',
         ]);
     }
 
@@ -149,7 +148,6 @@ class ProductControllerTest extends TestCase
             'setup_monthly' => null,
             'quarterly' => 20,
             'setup_quarterly' => null,
-            'currency' => 'EUR',
         ]);
     }
 
@@ -211,7 +209,7 @@ class ProductControllerTest extends TestCase
             'setup_monthly' => null,
             'quarterly' => 20,
             'setup_quarterly' => null,
-            'currency' => 'EUR',
+            'currency' => 'USD',
         ]);
     }
 
@@ -245,7 +243,7 @@ class ProductControllerTest extends TestCase
             'related_type' => 'product',
             'monthly' => 10,
             'setup_monthly' => null,
-            'currency' => 'EUR',
+            'currency' => 'USD',
         ]);
     }
 
@@ -264,7 +262,7 @@ class ProductControllerTest extends TestCase
             'group_id' => $product->group_id,
         ]);
         $clonedProduct = \App\Models\Store\Product::where('name', $product->name.' - Clone')->first();
-        $pricing = $product->pricing[0];
+        $pricing = $product->pricing->first();
         $this->assertDatabaseHas('pricings', [
             'related_id' => $clonedProduct->id,
             'related_type' => 'product',

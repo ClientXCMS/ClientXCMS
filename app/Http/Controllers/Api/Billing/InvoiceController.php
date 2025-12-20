@@ -369,4 +369,27 @@ class InvoiceController extends AbstractApiController
             'invoice' => $invoice,
         ], 200);
     }
+
+    /**
+     * @OA\Get(
+     *     path="/application/invoices/{invoice}/download",
+     *     summary="Download an invoice as PDF",
+     *     tags={"Invoices"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="PDF file download"
+     *     ),
+     *     @OA\Parameter(
+     *         name="invoice",
+     *         in="path",
+     *         description="ID or UUID of the invoice",
+     *         required=true,
+     *         @OA\Schema(type="string")
+     *     )
+     * )
+     */
+    public function download(Invoice $invoice)
+    {
+        return $invoice->download();
+    }
 }

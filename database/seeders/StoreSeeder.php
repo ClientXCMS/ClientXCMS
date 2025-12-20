@@ -16,10 +16,9 @@ class StoreSeeder extends Seeder
      */
     public function run(): void
     {
-        if (Group::count() > 0) {
+        if (!app()->runningUnitTests() || Group::count() > 0) {
             return;
         }
-
         $id = Group::create([
             'name' => 'Minecraft',
             'slug' => 'minecraft',
@@ -34,7 +33,7 @@ class StoreSeeder extends Seeder
             'sort_order' => 1,
             'pinned' => 1,
             'stock' => 10,
-            'type' => 'pterodactyl',
+            'type' => 'none',
         ])->id;
         Pricing::create([
             'related_id' => $product,
@@ -52,7 +51,6 @@ class StoreSeeder extends Seeder
         app('extension')->autoload(app());
         \Artisan::call('migrate');
 
-        return;
         if (class_exists(PterodactylConfig::class)) {
 
             PterodactylConfig::insert([

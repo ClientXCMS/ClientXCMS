@@ -35,6 +35,8 @@ class SubdomainHostController extends AbstractCrudController
 
     protected string $translatePrefix = 'provisioning.admin.subdomains_hosts';
 
+    protected ?string $managedPermission = Permission::MANAGE_SUBDOMAINS_HOSTS;
+
     public function getIndexParams($items, string $translatePrefix, $filter = null, $filters = [])
     {
         $card = app('settings')->getCards()->firstWhere('uuid', 'provisioning');

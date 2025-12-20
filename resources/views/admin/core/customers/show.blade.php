@@ -287,6 +287,9 @@
                                         </div>
                                     </div>
                                 @endif
+                            @if (app('extension')->extensionIsEnabled('supportid'))
+                                @include('supportid_admin::customer/card', ['customer' => $item])
+                            @endif
                             </div>
                         </div>
 

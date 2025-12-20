@@ -108,9 +108,23 @@ class GroupControllerTest extends TestCase
     public function test_admin_store_group_destroy(): void
     {
         $group = $this->createGroupModel();
+        $group->products()->delete();
         $response = $this->performAdminAction('DELETE', self::ROUTE_PREFIX.'/'.$group->id);
         $response->assertStatus(302);
         $response->assertSessionHas('success');
+    }
+
+    public function test_admin_store_group_destroy_with_children(): void
+    {
+        $parent = $this->createGroupModel();
+        $child = $this->createGroupModel('active', $parent->id);
+        $parent->products()->delete();
+        $child->products()->delete();
+        $response = $this->performAdminAction('DELETE', self::ROUTE_PREFIX.'/'.$parent->id);
+        $response->assertStatus(302);
+        $response->assertSessionHas('success');
+        $child->refresh();
+        $this->assertNull($child->parent_id);
     }
 
     public function test_admin_store_group_destroy_with_products(): void
@@ -145,7 +159,7 @@ class GroupControllerTest extends TestCase
         $group = $this->createGroupModel();
         $product = $this->createProductModel('active', 1, ['monthly' => 10]);
         $product->update(['group_id' => $group->id]);
-        $response = $this->performAdminAction('PUT', self::ROUTE_PREFIX.'/'.$group->id.'/clone', ['with' => true]);
+        $response = $this->performAdminAction('PUT', self::ROUTE_PREFIX.'/'.$group->id.'/clone', ['with_products' => true]);
         $response->assertStatus(302);
         $second = Group::orderBy('id', 'desc')->first();
         $this->assertEquals($group->name.' - '.__('global.clone'), $second->name);

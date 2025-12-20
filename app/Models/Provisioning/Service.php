@@ -623,14 +623,20 @@ class Service extends Model implements HasNotifiableVariablesInterface
         if ($this->getMetadata('free_trial_type', null) == 'simple') {
             return false;
         }
-        if (! is_null($this->max_renewals)) {
-            return $this->renewals < $this->max_renewals;
-        }
-        if (in_array($this->status, [self::STATUS_ACTIVE, self::STATUS_SUSPENDED])) {
-            return true;
+
+        if (!in_array($this->status, [self::STATUS_ACTIVE, self::STATUS_SUSPENDED])) {
+            return false;
         }
 
-        return false;
+        if ($this->status == self::STATUS_SUSPENDED && $this->suspend_reason !== 'client.alerts.suspended_reason_expired') {
+            return false;
+        }
+
+        if (! is_null($this->max_renewals) && $this->renewals >= $this->max_renewals) {
+            return false;
+        }
+
+        return true;
     }
 
     public function isFree()

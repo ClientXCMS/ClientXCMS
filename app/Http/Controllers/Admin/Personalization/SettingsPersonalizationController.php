@@ -175,7 +175,6 @@ class SettingsPersonalizationController extends Controller
         file_put_contents($file, json_encode($theme));
         Setting::updateSettings([
             'theme_switch_mode' => $request->get('theme_switch_mode'),
-            'theme_header_logo' => $request->get('theme_header_logo') ?? 'false',
         ]);
         try {
             app('license')->restartNPM();

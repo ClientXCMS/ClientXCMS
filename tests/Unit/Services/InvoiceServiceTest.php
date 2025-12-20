@@ -712,6 +712,98 @@ class InvoiceServiceTest extends TestCase
         ]);
     }
 
+    public function test_create_invoice_from_discounted_service()
+    {
+        $user = $this->createCustomerModel();
+        $this->seed(EmailTemplateSeeder::class);
+        $coupon = $this->createCouponModel('percent', ['monthly' => 10]);
+        $service = $this->createServiceModel($user->id, 'active'); // 10% discount
+        $service->attachMetadata('coupon_id', $coupon->id);
+        $this->be($user);
+        $gateway = $this->createGatewayModel();
+        $invoice = InvoiceService::createInvoiceFromService($service, $gateway);
+        $this->assertDatabaseCount('invoices', 1);
+        $this->assertDatabaseCount('invoice_items', 1);
+        /** @var InvoiceItem $item */
+        $item = $invoice->items->first();
+        $this->assertEquals($item->related_id, $service->id);
+        $this->assertEquals($item->type, 'renewal');
+        $this->assertEquals($item->quantity, 1);
+        $this->assertEquals($item->unit_price_ht, 9); // 10 - 10%
+        $this->assertEquals($item->unit_price_ttc, 10.8); // 9 + 20%
+    }
+
+    public function test_create_invoice_from_service_with_no_applied_month()
+    {
+        $user = $this->createCustomerModel();
+        $this->seed(EmailTemplateSeeder::class);
+        $coupon = $this->createCouponModel('percent', ['monthly' => 10]);
+        $coupon->applied_month = 0; // No discount applied
+        $coupon->save();
+        $service = $this->createServiceModel($user->id, 'active');
+        $service->attachMetadata('coupon_id', $coupon->id);
+        $this->be($user);
+        $gateway = $this->createGatewayModel();
+        $invoice = InvoiceService::createInvoiceFromService($service, $gateway);
+        $this->assertDatabaseCount('invoices', 1);
+        $this->assertDatabaseCount('invoice_items', 1);
+        /** @var InvoiceItem $item */
+        $item = $invoice->items->first();
+        $this->assertEquals($item->related_id, $service->id);
+        $this->assertEquals($item->type, 'renewal');
+        $this->assertEquals($item->quantity, 1);
+        $this->assertEquals($item->unit_price_ht, 10); // No discount
+        $this->assertEquals($item->unit_price_ttc, 12); // No discount
+    }
+
+    public function test_create_invoice_from_service_with_applied_month()
+    {
+        $user = $this->createCustomerModel();
+        $this->seed(EmailTemplateSeeder::class);
+        $coupon = $this->createCouponModel('percent', ['monthly' => 10]);
+        $coupon->applied_month = 3; // Discount applied for 3 months
+        $coupon->save();
+        $service = $this->createServiceModel($user->id, 'active');
+        $service->attachMetadata('coupon_id', $coupon->id);
+        $this->be($user);
+        $gateway = $this->createGatewayModel();
+        $invoice = InvoiceService::createInvoiceFromService($service, $gateway);
+        $this->assertDatabaseCount('invoices', 1);
+        $this->assertDatabaseCount('invoice_items', 1);
+        /** @var InvoiceItem $item */
+        $item = $invoice->items->first();
+        $this->assertEquals($item->related_id, $service->id);
+        $this->assertEquals($item->type, 'renewal');
+        $this->assertEquals($item->quantity, 1);
+        $this->assertEquals($item->unit_price_ht, 9); // 10 - 10%
+        $this->assertEquals($item->unit_price_ttc, 10.8); // 9 + 20%
+    }
+
+    public function test_create_invoice_from_service_with_applied_month_exceeding_renewal_period()
+    {
+        $user = $this->createCustomerModel();
+        $this->seed(EmailTemplateSeeder::class);
+        $coupon = $this->createCouponModel('percent', ['monthly' => 10]);
+        $coupon->applied_month = 2; // Discount applied for 6 months
+        $coupon->save();
+        $service = $this->createServiceModel($user->id, 'active');
+        $service->attachMetadata('coupon_id', $coupon->id);
+        $service->renewals = 2;
+        $service->save();
+        $this->be($user);
+        $gateway = $this->createGatewayModel();
+        $invoice = InvoiceService::createInvoiceFromService($service, $gateway);
+        $this->assertDatabaseCount('invoices', 1);
+        $this->assertDatabaseCount('invoice_items', 1);
+        /** @var InvoiceItem $item */
+        $item = $invoice->items->first();
+        $this->assertEquals($item->related_id, $service->id);
+        $this->assertEquals($item->type, 'renewal');
+        $this->assertEquals($item->quantity, 1);
+        $this->assertEquals($item->unit_price_ht, 10); // No discount
+        $this->assertEquals($item->unit_price_ttc, 12); // No discount
+    }
+
     public function test_create_invoice_from_product()
     {
         $user = $this->createCustomerModel();

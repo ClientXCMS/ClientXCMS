@@ -18,7 +18,6 @@ class ProfileControllerTest extends \Tests\TestCase
             'password' => \Hash::make('password123'),
         ]);
         $this->actingAs($this->user, 'web');
-        $this->migrateExtension('socialauth');
     }
 
     public function test_profil_show()

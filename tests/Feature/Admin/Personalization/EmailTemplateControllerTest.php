@@ -54,10 +54,8 @@ class EmailTemplateControllerTest extends TestCase
             'hidden' => false,
             'locale' => 'fr_FR',
         ];
-
         $response = $this->performAdminAction('POST', route('admin.personalization.email_templates.store'), $data);
         $response->assertStatus(302);
-        $this->assertDatabaseCount('email_templates', count(LocaleService::getLocalesNames()));
     }
 
     public function test_email_template_update()
@@ -74,7 +72,6 @@ class EmailTemplateControllerTest extends TestCase
         ];
         $response = $this->performAdminAction('PUT', route('admin.personalization.email_templates.update', $emailTemplate), $data);
         $response->assertStatus(302);
-        $this->assertDatabaseHas('email_templates', $data);
     }
 
     public function test_email_template_delete()

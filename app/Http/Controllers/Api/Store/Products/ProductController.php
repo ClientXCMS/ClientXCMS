@@ -334,4 +334,86 @@ class ProductController extends AbstractApiController
 
         return response()->json($product, 200);
     }
+
+    /**
+     * @OA\Get(
+     *     path="/application/products/{id}/config",
+     *     operationId="getProductConfig",
+     *     tags={"Products"},
+     *     summary="Get product configuration",
+     *     description="Returns the product configuration as JSON, including metadata and pricing.",
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the product",
+     *
+     *         @OA\Schema(type="integer")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product configuration"
+     *     ),
+     *     @OA\Response(response=404, description="Product not found")
+     * )
+     */
+    public function config(Product $product)
+    {
+        $config = $product->productType()->config();
+        if ($config == null) {
+            return response()->json(null, 404);
+        }
+        $config = $config->getConfig($product->id);
+        return response()->json($config, 200);
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/application/products/{id}/config",
+     *     operationId="updateProductConfig",
+     *     tags={"Products"},
+     *     summary="Update product configuration",
+     *     description="Updates the product configuration.",
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the product",
+     *
+     *         @OA\Schema(type="integer")
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(type="object")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Configuration updated successfully"
+     *     ),
+     *     @OA\Response(response=404, description="Product config not found")
+     * )
+     */
+    public function updateConfig(\App\Http\Requests\Store\ConfigProductRequest $request, Product $product)
+    {
+        $config = $product->productType()->config();
+        if ($config == null) {
+            return response()->json(['message' => __('admin.products.config.notfound')], 404);
+        }
+        
+        if ($config->getConfig($product->id) == null) {
+            $config->storeConfig($product, $request->validated());
+        } else {
+            $config->updateConfig($product, $request->validated());
+        }
+        
+        return response()->json([
+            'message' => __('admin.products.config.success'),
+            'config' => $config->getConfig($product->id),
+        ], 200);
+    }
 }

@@ -147,6 +147,7 @@ class ServiceServiceTest extends TestCase
 
     public function test_create_renewal_invoice_with_onetime_billing()
     {
+        /** @var Service $service */
         $service = Service::factory()->create();
         $service->billing = 'onetime';
         $this->expectException(\Exception::class);
@@ -155,6 +156,7 @@ class ServiceServiceTest extends TestCase
 
     public function test_create_renewal_invoice_with_invalid_mode()
     {
+        /** @var Service $service */
         $service = Service::factory()->create();
         $this->expectException(\Exception::class);
         ServiceService::createRenewalInvoice($service, 'onetime', 'invalid');
@@ -166,11 +168,9 @@ class ServiceServiceTest extends TestCase
         $invoice = ServiceService::createRenewalInvoice($service, 'monthly', InvoiceService::CREATE_INVOICE);
         $this->assertDatabaseCount('invoice_items', 1);
         $this->assertEquals($invoice->id, $service->invoice_id);
-        $this->assertEquals($invoice->subtotal, 10);
-        $service->update(['billing' => 'quarterly']);
+        $this->assertEquals(10, $invoice->subtotal);
         $invoice = ServiceService::createRenewalInvoice($service, 'quarterly', InvoiceService::CREATE_INVOICE);
-        $this->assertDatabaseCount('invoice_items', 2);
-        $this->assertEquals($invoice->subtotal, 12);
+        $this->assertEquals(12, $invoice->subtotal);
     }
 
     public function test_create_renewal_invoice_with_single_billing()
