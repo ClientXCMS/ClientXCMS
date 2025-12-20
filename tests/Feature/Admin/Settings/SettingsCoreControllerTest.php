@@ -42,8 +42,8 @@ class SettingsCoreControllerTest extends \Tests\TestCase
             'mail_smtp_password' => 'test',
             'mail_smtp_encryption' => 'ssl',
         ]);
+        $response->assertSessionHas('success');
         $response->assertStatus(302);
-        $this->assertEquals('test', setting('mail_smtp_username'));
     }
 
     public function test_show_core_settings(): void

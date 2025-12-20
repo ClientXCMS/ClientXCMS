@@ -19,6 +19,8 @@
 
 use App\Http\Controllers\Api\Billing\InvoiceController;
 use App\Http\Controllers\Api\Customers\CustomerController;
+use App\Http\Controllers\Api\Helpdesk\DepartmentController;
+use App\Http\Controllers\Api\Helpdesk\TicketController;
 use App\Http\Controllers\Api\Provisioning\ServiceController;
 use App\Http\Controllers\Api\Store\Groups\GroupController;
 use App\Http\Controllers\Api\Store\Pricings\PricingController;
@@ -84,3 +86,20 @@ Route::middleware(['ability:invoices:show,*'])->get('/invoices/{invoice}/pdf', [
 Route::middleware(['ability:invoices:index,*'])->post('/invoices/{invoice}/export', [InvoiceController::class, 'excel'])->name('invoices.export');
 Route::middleware(['ability:invoices:update,*'])->post('/invoices/{invoice}/validate', [InvoiceController::class, 'validate'])->name('invoices.validate');
 Route::middleware(['ability:invoices:update,*'])->post('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
+
+// Departments
+Route::middleware(['ability:departments:index,*'])->get('/departments', [DepartmentController::class, 'index'])->name('departments.index');
+Route::middleware(['ability:departments:store,*'])->post('/departments', [DepartmentController::class, 'store'])->name('departments.store');
+Route::middleware(['ability:departments:show,*'])->get('/departments/{department}', [DepartmentController::class, 'show'])->name('departments.show');
+Route::middleware(['ability:departments:update,*'])->post('/departments/{department}', [DepartmentController::class, 'update'])->name('departments.update');
+Route::middleware(['ability:departments:delete,*'])->delete('/departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.delete');
+
+// Tickets
+Route::middleware(['ability:tickets:index,*'])->get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+Route::middleware(['ability:tickets:store,*'])->post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+Route::middleware(['ability:tickets:show,*'])->get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+Route::middleware(['ability:tickets:update,*'])->post('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
+Route::middleware(['ability:tickets:delete,*'])->delete('/tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.delete');
+Route::middleware(['ability:tickets:reply,*'])->post('/tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
+Route::middleware(['ability:tickets:close,*'])->post('/tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
+Route::middleware(['ability:tickets:reopen,*'])->post('/tickets/{ticket}/reopen', [TicketController::class, 'reopen'])->name('tickets.reopen');
