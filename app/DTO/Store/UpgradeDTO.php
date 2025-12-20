@@ -67,7 +67,7 @@ class UpgradeDTO
         if ($billing == 'onetime' || $this->service->expires_at == null) {
             return $product->getPriceByCurrency($this->service->currency, 'onetime');
         }
-        if ($billing == 'weekly' && ! $product->hasBilling('weekly')) {
+        if ($billing == 'weekly' && $product->hasBilling('weekly')) {
             return $product->getPriceByCurrency($this->service->currency, 'weekly');
         }
         if ($this->service->isOneTime()) {

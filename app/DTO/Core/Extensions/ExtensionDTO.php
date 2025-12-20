@@ -151,7 +151,7 @@ class ExtensionDTO implements Arrayable
     {
         if ($this->type == 'theme' && file_exists(base_path('resources/themes/'.$this->uuid.'/screenshot.png'))) {
             try {
-                \Vite::asset('resources/themes/'.$this->uuid.'/screenshot.png');
+                return \Vite::asset('resources/themes/'.$this->uuid.'/screenshot.png');
             } catch (\Exception $e) {
             }
         }
