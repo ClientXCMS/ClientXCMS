@@ -103,6 +103,6 @@ jobs:
       - name: Build assets
         run: npm install && npm run build
       - name: Run translations
-        run: php artisan translations:import-file
+        run: php artisan translations:import
       - name: Run PHPUnit
         run: ./vendor/bin/phpunit --configuration phpunit_github.xml -d date.timezone=Europe/Paris
