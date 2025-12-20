@@ -158,7 +158,6 @@ class CheckoutTest extends TestCase
             'address2' => $user->address2,
             'city' => $user->city,
             'zipcode' => $user->zipcode,
-            'phone' => $user->phone,
             'region' => $user->region,
             'accept_tos' => 'on',
             'country' => $user->country,
