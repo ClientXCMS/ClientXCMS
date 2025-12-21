@@ -116,6 +116,8 @@ class ActionLog extends Model
 
     const FAILED_LOGIN = 'failed_login';
 
+    const ACCOUNT_DELETED = 'account_deleted';
+
     const ALL_ACTIONS = [
         self::SETTINGS_UPDATED,
         self::RESOURCE_CREATED,
@@ -144,6 +146,7 @@ class ActionLog extends Model
         self::TWO_FACTOR_DISABLED,
         self::TWO_FACTOR_RECOVERY_CODES_GENERATED,
         self::FAILED_LOGIN,
+        self::ACCOUNT_DELETED,
     ];
 
     protected static array $ignoreKeys = [];
@@ -238,6 +241,8 @@ class ActionLog extends Model
             case self::TWO_FACTOR_DISABLED:
             case self::FAILED_LOGIN:
                 return 'bi bi-shield-slash';
+            case self::ACCOUNT_DELETED:
+                return 'bi bi-person-x';
             case self::TWO_FACTOR_RECOVERY_CODES_GENERATED:
                 return 'bi bi-shield-check';
             default:

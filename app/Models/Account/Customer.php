@@ -367,6 +367,11 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         return $this->hasMany(SupportTicket::class, 'customer_id');
     }
 
+    public function customerNotes()
+    {
+        return $this->hasMany(CustomerNote::class, 'customer_id');
+    }
+
     protected static function newFactory()
     {
         return \Database\Factories\Core\CustomerFactory::new();

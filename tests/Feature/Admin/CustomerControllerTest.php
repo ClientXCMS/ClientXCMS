@@ -31,7 +31,7 @@ class CustomerControllerTest extends TestCase
         Customer::factory(15)->create([]);
         $firstCustomer = Customer::first();
         $firstCustomer->update(['firstname' => 'Martin']);
-        $response = $this->performAdminAction('GET', self::API_URL.'?filter[firstname]='.$firstCustomer->firstname);
+        $response = $this->performAdminAction('GET', self::API_URL . '?filter[firstname]=' . $firstCustomer->firstname);
         $response->assertStatus(200);
         $response->assertSee($firstCustomer->firstname);
         $response->assertSee($firstCustomer->lastname);
@@ -51,8 +51,8 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456789',
             'password' => 'password',
         ])->id;
-        $response = $this->performAdminAction('GET', self::API_URL.'/'.$id, ['admin.manage_products']);
-        $response->assertStatus(200);
+        $response = $this->performAdminAction('GET', self::API_URL . '/' . $id, [], ['admin.manage_products']);
+        $response->assertStatus(403);
     }
 
     public function test_admin_customer_get(): void
@@ -69,7 +69,7 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456789',
             'password' => 'password',
         ])->id;
-        $response = $this->performAdminAction('GET', self::API_URL.'/'.$id, []);
+        $response = $this->performAdminAction('GET', self::API_URL . '/' . $id, []);
         $response->assertStatus(200);
     }
 
@@ -87,7 +87,7 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456789',
             'password' => 'password',
         ]);
-        $response = $this->performAdminAction('PUT', self::API_URL.'/'.$customer->id, [
+        $response = $this->performAdminAction('PUT', self::API_URL . '/' . $customer->id, [
             'firstname' => 'Martin',
             'lastname' => 'Test User',
             'zipcode' => '59100',
@@ -97,9 +97,17 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456710',
             'id' => $customer->id,
             'email' => 'admin@administration.com',
+            'address' => 'test',
         ]);
         $response->assertRedirect();
         $this->assertEquals('Martin', $customer->fresh()->firstname);
+        $this->assertEquals('roubaix', $customer->fresh()->city);
+        $this->assertEquals('admin@administration.com', $customer->fresh()->email);
+        $this->assertEquals('test', $customer->fresh()->address);
+        $this->assertEquals('0323456710', $customer->fresh()->phone);
+        $this->assertEquals('FR', $customer->fresh()->country);
+        $this->assertEquals('Test User', $customer->fresh()->region);
+        $this->assertEquals('59100', $customer->fresh()->zipcode);
     }
 
     public function test_admin_customer_update_with_invalid_data()
@@ -117,7 +125,7 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456789',
             'password' => 'password',
         ]);
-        $response = $this->performAdminAction('PUT', self::API_URL.'/'.$customer->id, [
+        $response = $this->performAdminAction('PUT', self::API_URL . '/' . $customer->id, [
             'firstname' => 'Martin',
             'lastname' => 'Test User',
             'zipcode' => '59100',
@@ -144,8 +152,12 @@ class CustomerControllerTest extends TestCase
             'city' => 'test',
             'phone' => '0323456789',
             'password' => 'password',
+            'address' => 'test',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'zipcode' => '59100',
         ]);
-        $response = $this->performAdminAction('PUT', self::API_URL.'/'.$customer->id, [
+        $response = $this->performAdminAction('PUT', self::API_URL . '/' . $customer->id, [
             'firstname' => 'Martin',
             'lastname' => 'Test User',
             'zipcode' => '59100',
@@ -175,8 +187,12 @@ class CustomerControllerTest extends TestCase
             'city' => 'test',
             'phone' => '0323456789',
             'password' => 'password',
+            'address' => 'test',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'zipcode' => '59100',
         ])->id;
-        $response = $this->performAdminAction('PUT', self::API_URL.'/'.$id, [
+        $response = $this->performAdminAction('PUT', self::API_URL . '/' . $id, [
             'firstname' => 'Martin',
             'lastname' => 'Test User',
             'zipcode' => '59100',
@@ -204,7 +220,7 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456789',
             'password' => 'password',
         ])->id;
-        $response = $this->performAdminAction('delete', self::API_URL.'/'.$id, [
+        $response = $this->performAdminAction('delete', self::API_URL . '/' . $id, [
             'firstname' => 'Martin',
             'lastname' => 'Test User',
             'zipcode' => '59100',
@@ -235,7 +251,7 @@ class CustomerControllerTest extends TestCase
         ]);
         $id = $customer->id;
 
-        $response = $this->performAdminAction('get', self::API_URL.'/'.$id.'/confirm');
+        $response = $this->performAdminAction('get', self::API_URL . '/' . $id . '/confirm');
         $response->assertStatus(302);
         $response->assertSessionHas('success');
         $this->assertEquals(1, $customer->fresh()->is_confirmed);
@@ -258,7 +274,7 @@ class CustomerControllerTest extends TestCase
         $customer->markEmailAsVerified();
         $id = $customer->id;
 
-        $response = $this->performAdminAction('get', self::API_URL.'/'.$id.'/confirm');
+        $response = $this->performAdminAction('get', self::API_URL . '/' . $id . '/confirm');
         $response->assertStatus(302);
         $response->assertSessionHas('error');
     }
@@ -280,7 +296,7 @@ class CustomerControllerTest extends TestCase
         ]);
         $id = $customer->id;
 
-        $response = $this->performAdminAction('get', self::API_URL.'/'.$id.'/send_password');
+        $response = $this->performAdminAction('get', self::API_URL . '/' . $id . '/send_password');
         $response->assertStatus(302);
         $response->assertSessionHas('success');
         $this->assertDatabaseCount('email_messages', 1);
@@ -302,7 +318,7 @@ class CustomerControllerTest extends TestCase
             'password' => 'password',
         ]);
         $id = $customer->id;
-        $response = $this->performAdminAction('get', self::API_URL.'/'.$id.'/autologin');
+        $response = $this->performAdminAction('get', self::API_URL . '/' . $id . '/autologin');
         $response->assertSessionHas('autologin');
         $response->assertSessionHas('autologin_customer');
         $this->assertEquals($customer->id, session('autologin_customer'));
@@ -323,7 +339,7 @@ class CustomerControllerTest extends TestCase
             'password' => 'password',
         ]);
         $id = $customer->id;
-        $response = $this->performAdminAction('post', self::API_URL.'/'.$id.'/action/suspend');
+        $response = $this->performAdminAction('post', self::API_URL . '/' . $id . '/action/suspend');
         $response->assertStatus(302);
         $response->assertSessionHas('success');
         $this->assertEquals(1, $customer->fresh()->isSuspended());
@@ -345,7 +361,7 @@ class CustomerControllerTest extends TestCase
         ]);
         $customer->suspend('Test reason', false, false);
         $id = $customer->id;
-        $response = $this->performAdminAction('post', self::API_URL.'/'.$id.'/action/reactivate');
+        $response = $this->performAdminAction('post', self::API_URL . '/' . $id . '/action/reactivate');
         $response->assertStatus(302);
         $response->assertSessionHas('success');
         $this->assertEquals(0, $customer->fresh()->isSuspended());
@@ -368,7 +384,7 @@ class CustomerControllerTest extends TestCase
         ]);
         $customer->ban('Test reason', false, false);
         $id = $customer->id;
-        $response = $this->performAdminAction('post', self::API_URL.'/'.$id.'/action/ban');
+        $response = $this->performAdminAction('post', self::API_URL . '/' . $id . '/action/ban');
         $response->assertStatus(302);
         $response->assertSessionHas('success');
         $this->assertEquals(1, $customer->fresh()->isBanned());
@@ -391,7 +407,7 @@ class CustomerControllerTest extends TestCase
         ]);
         $customer->twoFactorEnable('Test secret');
         $id = $customer->id;
-        $response = $this->performAdminAction('post', self::API_URL.'/'.$id.'/action/disable2FA');
+        $response = $this->performAdminAction('post', self::API_URL . '/' . $id . '/action/disable2FA');
         $response->assertStatus(302);
         $response->assertSessionHas('success');
         $this->assertEquals(0, $customer->fresh()->twoFactorEnabled());

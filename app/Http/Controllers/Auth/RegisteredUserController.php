@@ -99,7 +99,6 @@ class RegisteredUserController extends Controller
         } else {
             return redirect()->route('front.client.onboarding');
         }
-
     }
 
     private function formatPhone(?string $phone = null, string $country): ?string

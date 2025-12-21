@@ -144,19 +144,27 @@ class CustomerController extends AbstractApiController
      *     summary="Delete customer",
      *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="force", in="query", description="Force deletion even with active services", @OA\Schema(type="boolean")),
      *
      *     @OA\Response(response=200, description="Customer deleted"),
-     *     @OA\Response(response=400, description="Customer has invoices")
+     *     @OA\Response(response=400, description="Customer cannot be deleted")
      * )
      */
-    public function destroy(Customer $customer)
+    public function destroy(Request $request, Customer $customer)
     {
-        if ($customer->invoices()->count() > 0) {
-            return response()->json(['error' => 'Customer has invoices'], 400);
+        $deletionService = new \App\Services\Account\AccountDeletionService();
+        $force = $request->boolean('force', false);
+        
+        try {
+            $deletionService->delete($customer, $force);
+            return response()->json(['message' => 'Customer deleted successfully'], 200);
+        } catch (\App\Services\Account\AccountDeletionException $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'blocking_reasons' => $e->getBlockingReasons(),
+                'message' => $e->getFormattedReasons(),
+            ], 400);
         }
-        $customer->delete();
-
-        return response()->json($customer, 200);
     }
 
     /**

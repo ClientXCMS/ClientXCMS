@@ -20,13 +20,16 @@
 namespace App\Http\Controllers\Front;
 
 use App\Helpers\Countries;
+use App\Http\Requests\Profile\DeleteAccountRequest;
 use App\Http\Requests\Profile\ProfilePasswordRequest;
 use App\Http\Requests\Profile\ProfileUpdateRequest;
 use App\Models\Account\Customer;
 use App\Models\ActionLog;
+use App\Services\Account\AccountDeletionService;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 use PragmaRX\Google2FAQRCode\Google2FA;
 
 class ProfileController extends \App\Http\Controllers\Controller
@@ -87,7 +90,6 @@ class ProfileController extends \App\Http\Controllers\Controller
         try {
             \Auth::logoutOtherDevices($request->password);
         } catch (AuthenticationException $e) {
-
         }
 
         return redirect()->route('front.profile.index')->with('success', __('client.profile.changepassword'));
@@ -121,6 +123,25 @@ class ProfileController extends \App\Http\Controllers\Controller
                 return $code;
             });
             echo $codes->join("\n");
-        }, '2fa_recovery_codes_'.\Str::slug(config('app.name')).'.txt');
+        }, '2fa_recovery_codes_' . \Str::slug(config('app.name')) . '.txt');
+    }
+
+    public function deleteAccount(DeleteAccountRequest $request): RedirectResponse
+    {
+        $customer = $request->user('web');
+        $deletionService = new AccountDeletionService();
+
+        try {
+            $deletionService->delete($customer);
+            auth('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('front.index')
+                ->with('success', __('client.profile.delete.success'));
+        } catch (\Exception $e) {
+            return redirect()->route('front.profile.delete')
+                ->with('error', $e->getMessage());
+        }
     }
 }
