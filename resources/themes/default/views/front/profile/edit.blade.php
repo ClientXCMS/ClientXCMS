@@ -171,5 +171,77 @@
                 @endforeach
             </div>
         </div>
+@php
+    $deletionService = new \App\Services\Account\AccountDeletionService();
+    $canDelete = $deletionService->canDelete($user);
+    $blockingReasons = $deletionService->getBlockingReasons($user);
+@endphp
+
+<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+    <div class="flex items-start gap-4">
+        <div class="flex-shrink-0">
+            <svg class="w-8 h-8 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+        </div>
+        <div class="flex-1">
+            <h3 class="text-xl font-bold text-red-700 dark:text-red-400">{{ __('client.profile.delete.danger_zone') }}</h3>
+            <p class="mt-2 text-red-600 dark:text-red-300">{{ __('client.profile.delete.warning_message') }}</p>
+            
+            @if(!$canDelete)
+                <div class="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <p class="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">{{ __('client.profile.delete.cannot_delete') }}</p>
+                    @if(isset($blockingReasons['active_services']))
+                        <p class="text-yellow-700 dark:text-yellow-300">
+                            {{ __('client.profile.delete.has_active_services', ['count' => $blockingReasons['active_services']['count']]) }}
+                        </p>
+                    @endif
+                    @if(isset($blockingReasons['pending_invoices']))
+                        <p class="text-yellow-700 dark:text-yellow-300 mt-1">
+                            {{ __('client.profile.delete.has_pending_invoices', ['count' => $blockingReasons['pending_invoices']['count']]) }}
+                        </p>
+                    @endif
+                </div>
+            @else
+                <form action="{{ route('front.profile.delete.confirm') }}" method="POST" class="mt-4" onsubmit="return confirm('{{ __('client.profile.delete.final_confirm') }}')">
+                    @csrf
+                    @method('DELETE')
+                    
+                    <div class="space-y-4">
+                        <div>
+                            @include('shared/input', [
+                                'name' => 'password',
+                                'type' => 'password',
+                                'label' => __('client.profile.delete.password_label')
+                            ])
+                        </div>
+
+                        @if($user->twoFactorEnabled())
+                            <div>
+                                @include('shared/input', [
+                                    'name' => '2fa_code',
+                                    'type' => 'text',
+                                    'label' => __('client.profile.delete.2fa_label')
+                                ])
+                            </div>
+                        @endif
+
+                        <div>
+                            @include('shared/checkbox', [
+                                'name' => 'confirm_deletion',
+                                'label' => __('client.profile.delete.confirm_checkbox'),
+                                'checked' => false
+                            ])
+                        </div>
+                    </div>
+
+                    <button type="submit" class="mt-4 w-full btn btn-danger">
+                        {{ __('client.profile.delete.submit_button') }}
+                    </button>
+                </form>
+            @endif
+        </div>
+    </div>
+</div>
     </div>
 @endsection
