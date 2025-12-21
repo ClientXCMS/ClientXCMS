@@ -105,7 +105,7 @@ class ProductController extends AbstractCrudController
             return $this->storeRedirect($product);
         }
 
-        return redirect()->to(route($this->routePath.'.show', ['product' => $product]).'#config')->with('success', __($this->flashs['created']));
+        return redirect()->to(route($this->routePath . '.show', ['product' => $product]) . '#config')->with('success', __($this->flashs['created']));
     }
 
     public function config(ConfigProductRequest $request, Product $product)
@@ -113,7 +113,7 @@ class ProductController extends AbstractCrudController
         $this->checkPermission('update');
         $config = $product->productType()->config();
         if ($config == null) {
-            return redirect()->route($this->routePath.'.show', ['product' => $product->id])->with('error', __('admin.products.config.notfound'));
+            return redirect()->route($this->routePath . '.show', ['product' => $product->id])->with('error', __('admin.products.config.notfound'));
         }
         if ($config->getConfig($product->id) == null) {
             $config->storeConfig($product, $request->validated());
@@ -121,14 +121,14 @@ class ProductController extends AbstractCrudController
             $config->updateConfig($product, $request->validated());
         }
 
-        return redirect()->route($this->routePath.'.show', ['product' => $product->id])->with('success', __('admin.products.config.success'));
+        return redirect()->route($this->routePath . '.show', ['product' => $product->id])->with('success', __('admin.products.config.success'));
     }
 
     public function clone(Product $product)
     {
         $this->checkPermission('create');
         $newProduct = $product->replicate();
-        $newProduct->name = $product->name.' - Clone';
+        $newProduct->name = $product->name . ' - Clone';
         $newProduct->save();
         $pricing = Pricing::where('related_id', $product->id)->where('related_type', 'product')->first();
         if ($pricing != null) {

@@ -211,17 +211,15 @@ class CustomerController extends AbstractCrudController
     public function destroy(Request $request, Customer $customer)
     {
         $this->checkPermission('delete', $customer);
-
-        $deletionService = new \App\Services\Account\AccountDeletionService;
+        
+        $deletionService = new \App\Services\Account\AccountDeletionService();
         $force = $request->boolean('force', false);
-
+        
         try {
             $deletionService->delete($customer, $force);
-
             return $this->deleteRedirect($customer);
         } catch (\App\Services\Account\AccountDeletionException $e) {
             \Session::flash('error', $e->getFormattedReasons());
-
             return redirect()->back();
         }
     }
