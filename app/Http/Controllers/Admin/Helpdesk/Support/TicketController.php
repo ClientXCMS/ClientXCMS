@@ -258,8 +258,9 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
 
     public function destroyMessage(SupportTicket $ticket, SupportMessage $message): \Illuminate\Http\RedirectResponse
     {
+        abort_if(! $ticket->staffCanView(auth('admin')->user()), 403);
         if ($message->admin_id != auth('admin')->id() || $ticket->id != $message->ticket_id || $message->isCustomer()) {
-            return redirect()->route($this->routePath.'.show', $ticket)->with('error', 'You are not allowed to edit this message');
+            return redirect()->route($this->routePath.'.show', $ticket)->with('error', 'You are not allowed to destroy this message');
         }
         $message->delete();
 

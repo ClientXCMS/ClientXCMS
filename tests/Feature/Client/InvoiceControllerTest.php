@@ -54,7 +54,14 @@ class InvoiceControllerTest extends TestCase
         $invoice = $invoiceItem->invoice;
         /** @var Customer $user */
         $user = $invoice->customer;
-        $this->actingAs($user)->get(route('front.invoices.show', ['invoice' => $invoice]))->assertOk();
+        
+        $response = $this->actingAs($user)->get(route('front.invoices.show', ['invoice' => $invoice]));
+    
+        while (ob_get_level() > 1) {
+            ob_end_clean();
+        }
+        
+        $response->assertOk();
     }
 
     public function test_invoices_can_download(): void

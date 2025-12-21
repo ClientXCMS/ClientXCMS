@@ -329,7 +329,9 @@ class Pricing extends Model
     public function updateFromArray(array $data, string $type = 'product'): void
     {
         $tmp = [];
-        $tmp['currency'] = currency();
+        if ($this->currency === null) {
+            $this->currency = currency();
+        }
         $tmp['related_type'] = $type;
         foreach ($data['pricing'] as $recurring => $price) {
             $tmp[$recurring] = $price['price'];

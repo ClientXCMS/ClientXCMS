@@ -30,7 +30,7 @@ class ProductFactory extends Factory
             'status' => $this->faker->randomElement(['active', 'hidden']),
             'description' => $this->faker->sentence,
             'sort_order' => $this->faker->randomDigit,
-            'type' => 'pterodactyl',
+            'type' => 'none',
             'stock' => $this->faker->randomDigit,
         ];
     }

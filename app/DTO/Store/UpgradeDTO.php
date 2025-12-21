@@ -64,11 +64,11 @@ class UpgradeDTO
             return new ProductPriceDTO(0, 0, $this->service->currency, $this->service->billing, 0);
         }
         $billing = $this->service->billing;
-        if ($billing == 'onetime') {
+        if ($billing == 'onetime' || $this->service->expires_at == null) {
             return $product->getPriceByCurrency($this->service->currency, 'onetime');
         }
-        if ($billing == 'weekly') {
-            return $product->getPriceByCurrency($this->service->currency, 'monthly');
+        if ($billing == 'weekly' && $product->hasBilling('weekly')) {
+            return $product->getPriceByCurrency($this->service->currency, 'weekly');
         }
         if ($this->service->isOneTime()) {
             return $product->getPriceByCurrency($this->service->currency, $billing);

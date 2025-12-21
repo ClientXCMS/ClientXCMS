@@ -47,9 +47,6 @@ class ProvisioningServiceProvider extends ServiceProvider
 
     private function registerWidgets()
     {
-        if (app()->runningInConsole()) {
-            return;
-        }
         $customerWidgets = new AdminCountWidget('customers', 'bi bi-person-vcard', 'admin.customers.title', function () {
             return Service::countCustomers();
         }, 'admin.manage_customers');

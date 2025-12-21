@@ -98,9 +98,14 @@ jobs:
         run: cp .env.testing .env
       - name: Generate application key
         run: php artisan key:generate
+      - name: Generate OpenAPI documentation
+        run: php artisan l5-swagger:generate
       - name: Run migrations
         run: php artisan migrate --force --no-interaction --no-ansi --seed
       - name: Build assets
         run: npm install && npm run build
+      - name: Run translations
+        run: php artisan translations:import
+        
       - name: Run PHPUnit
         run: ./vendor/bin/phpunit --configuration phpunit_github.xml -d date.timezone=Europe/Paris

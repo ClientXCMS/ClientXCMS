@@ -7,9 +7,12 @@ use App\Models\Helpdesk\SupportTicket;
 use Database\Seeders\SupportDepartmentSeeder;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
 
 class SupportControllerTest extends TestCase
 {
+    use RefreshDatabase;
     public function test_client_support_index(): void
     {
         $user = $this->createCustomerModel();

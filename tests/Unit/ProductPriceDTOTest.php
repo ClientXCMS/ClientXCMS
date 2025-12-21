@@ -164,7 +164,7 @@ class ProductPriceDTOTest extends TestCase
             firstpayment: 40.0,   // HT diff du récurrent
         );
 
-        $this->assertSame(80.0, $dto->billableAmount()); // 40 + 30 + 10
+        $this->assertSame(40.0, $dto->billableAmount()); // firstpayment override is treated as montant facturé
     }
 
 
@@ -201,7 +201,7 @@ class ProductPriceDTOTest extends TestCase
 
     public function testDisplayPriceWithTtcInputDoesNotAddVatTwice()
     {
-        // Prix saisi en TTC (mode TAX_INCLUDED) et on veut l’afficher TTC :
+        // Prix saisi en TTC (mode TAX_INCLUDED) et on veut l’afficher TTC :
         Setting::updateSettings([
             'store_mode_tax'         => TaxesService::MODE_TAX_INCLUDED,
             'display_product_price'  => TaxesService::PRICE_TTC,
@@ -211,6 +211,29 @@ class ProductPriceDTOTest extends TestCase
 
         // L’affichage TTC doit rester 120 et ne pas passer à 144.
         $this->assertEquals(120.0, $dto->displayPrice(), 0.01);
+    }
+
+    public function testCanHydrateWithHtAmountsEvenWhenStoreIsTtc(): void
+    {
+        Setting::updateSettings([
+            'store_mode_tax' => TaxesService::MODE_TAX_INCLUDED,
+            'store_vat_enabled' => true,
+        ]);
+
+        $dto = new ProductPriceDTO(
+            recurringprice: 100.0, // Montant HT fourni directement
+            setup: 10.0,
+            currency: 'EUR',
+            recurring: 'monthly',
+            firstpayment: null,
+            mode: TaxesService::MODE_TAX_INCLUDED,
+            amountsAreHt: true,
+        );
+
+        $this->assertSame(100.0, $dto->priceHT());
+        $this->assertSame(10.0, $dto->setupHT());
+        $this->assertSame(120.0, $dto->priceTTC());
+        $this->assertSame(12.0, $dto->setupTTC());
     }
 
     /* ------------------------------------------------------------------ */

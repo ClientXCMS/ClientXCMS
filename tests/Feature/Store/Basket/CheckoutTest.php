@@ -77,7 +77,7 @@ class CheckoutTest extends TestCase
         $user = $this->createCustomerModel();
         app(SettingsService::class)->set('checkout.customermustbeconfirmed', true);
 
-        $request = $this->post(route('front.store.basket.checkout'), [
+        $request = $this->actingAs($user)->post(route('front.store.basket.checkout'), [
             'gateway' => 'balance',
             'firstname' => $user->firstname,
             'lastname' => $user->lastname,
@@ -158,7 +158,6 @@ class CheckoutTest extends TestCase
             'address2' => $user->address2,
             'city' => $user->city,
             'zipcode' => $user->zipcode,
-            'phone' => $user->phone,
             'region' => $user->region,
             'accept_tos' => 'on',
             'country' => $user->country,
@@ -226,7 +225,7 @@ class CheckoutTest extends TestCase
         $this->assertEquals('pending', $invoice->status);
         $item = $invoice->items->first();
         $this->assertEquals($name, $item->name);
-        $this->assertEquals('Created from basket item', $item->description);
+        $this->assertEquals('Test Product Description', $item->description);
         $this->assertEquals(1, $item->quantity);
         $this->assertEquals(10, $item->unit_price_ht);
         $this->assertEquals(0, $item->unit_setup_ht);

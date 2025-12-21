@@ -198,7 +198,6 @@ class ServiceControllerTest extends TestCase
         $this->assertEquals('renewal', $first->type);
         $this->assertEquals($first->unit_price_ht, $service->getBillingPrice()->price);
         $second = InvoiceItem::where('invoice_id', $invoice->id)->where('type', 'upgrade')->first();
-        dump($second->unit_price_ht);
     }
 
     public function test_services_change_name(): void

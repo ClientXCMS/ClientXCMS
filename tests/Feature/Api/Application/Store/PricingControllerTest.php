@@ -31,18 +31,22 @@ class PricingControllerTest extends TestCase
 
     public function test_api_application_pricing_filter(): void
     {
-        $id = $this->createPricing();
-        $response = $this->performAction('GET', self::API_URL.'?filter[related_id]='.$id, [self::ABILITY_INDEX]);
+        $product = $this->createProduct();
+        $id = $this->createPricing($product);
+        $response = $this->performAction('GET', self::API_URL.'?filter[related_id]='.$product->id, [self::ABILITY_INDEX]);
         $response->assertStatus(200);
         $this->assertNotEmpty($response->json('data'));
+        $this->assertCount(1, $response->json('data'));
     }
 
     public function test_api_application_pricing_filter_with_related_type(): void
     {
-        $id = $this->createPricing();
-        $response = $this->performAction('GET', self::API_URL.'?filter[related_id]='.$id.'&filter[related_type]=product', [self::ABILITY_INDEX]);
+        $product = $this->createProduct();
+        $id = $this->createPricing($product);
+        $response = $this->performAction('GET', self::API_URL.'?filter[related_id]='.$product->id.'&filter[related_type]=product', [self::ABILITY_INDEX]);
         $response->assertStatus(200);
         $this->assertNotEmpty($response->json('data'));
+        $this->assertCount(1, $response->json('data'));
     }
 
     public function test_api_application_pricing_sort(): void

@@ -44,7 +44,7 @@ class DatabaseExtensionCommand extends Command
     {
         $folders = [base_path('modules'), base_path('addons')];
         $extensions = [];
-        $extension = null;
+        $extension = $this->option('extension');
         foreach ($folders as $folder) {
             $directories = \File::directories($folder);
             foreach ($directories as $directory) {

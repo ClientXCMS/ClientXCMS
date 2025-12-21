@@ -62,7 +62,7 @@ class UpdateServiceRequest extends FormRequest
             'data' => ['nullable', 'array'],
             'description' => ['nullable', 'string', 'max:1000'],
             'resync' => ['nullable'],
-        ], $this->pricingRules());
+        ], $this->pricingRules(!$this->has('resync')));
 
     }
 

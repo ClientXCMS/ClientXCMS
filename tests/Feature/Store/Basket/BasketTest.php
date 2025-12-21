@@ -60,6 +60,7 @@ class BasketTest extends TestCase
     {
         $product1 = $this->createProductModel();
         $product2 = $this->createProductModel();
+        Basket::getBasket()->clear();
 
         $response = $this->post(route('front.store.basket.config', $product1), ['quantity' => 1, 'currency' => 'USD', 'billing' => 'monthly']);
         $response->assertRedirect(route('front.store.basket.show'));

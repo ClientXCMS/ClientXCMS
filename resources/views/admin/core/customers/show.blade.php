@@ -329,6 +329,7 @@
                             </div>
                             @endif
 
+                            @includeWhen('supportid', 'supportid_admin::customer/card', ['customer' => $item])
 
                         </div>
                     </div>

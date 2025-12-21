@@ -27,7 +27,7 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'address' => 'test',
             'city' => 'test',
-            'phone' => '0123456789',
+            'phone' => '0176010380',
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
@@ -38,7 +38,7 @@ class RegistrationTest extends TestCase
 
     public function test_show_register_form(): void
     {
-        $this->migrateExtension('socialauth');
+        //$this->migrateExtension('socialauth');
         $response = $this->get('/register');
         $response->assertOk();
     }
@@ -54,7 +54,7 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'address' => 'test',
             'city' => 'test',
-            'phone' => '0123456789',
+            'phone' => '0176010380',
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
@@ -76,7 +76,7 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'address' => 'test',
             'city' => 'test',
-            'phone' => '0123456789',
+            'phone' => '0176010380',
             'accept_tos' => 'on',
             'password' => 'password',
             'password_confirmation' => 'password',
@@ -96,7 +96,7 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'address' => 'test',
             'city' => 'test',
-            'phone' => '0123456789',
+            'phone' => '0176010380',
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
@@ -128,7 +128,7 @@ class RegistrationTest extends TestCase
             'email' => 'admin@admin.com',
             'address' => 'test',
             'city' => 'test',
-            'phone' => '0123456789',
+            'phone' => '0176010380',
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
@@ -147,7 +147,7 @@ class RegistrationTest extends TestCase
             'email' => 'banned@clientxcms.com',
             'address' => 'test',
             'city' => 'test',
-            'phone' => '0123456789',
+            'phone' => '0176010380',
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
@@ -167,7 +167,7 @@ class RegistrationTest extends TestCase
             'email' => 'banned@clientxcms.com',
             'address' => 'test',
             'city' => 'test',
-            'phone' => '0123456789',
+            'phone' => '0176010380',
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
@@ -187,7 +187,7 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'address' => 'test',
             'city' => 'test',
-            'phone' => '0123456789',
+            'phone' => '0176010380',
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);

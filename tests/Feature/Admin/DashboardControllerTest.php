@@ -4,10 +4,12 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Admin\Admin;
 use Database\Seeders\AdminSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class DashboardControllerTest extends TestCase
 {
+    use RefreshDatabase;
     public function test_dashboard()
     {
         $response = $this->performAdminAction('GET', '/admin/dashboard');
