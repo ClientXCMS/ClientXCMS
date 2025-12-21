@@ -36,10 +36,12 @@ class ApiController extends Controller
      * @OA\Info(
      *      version="1.0.2",
      *      title="CLIENTXCMS New Gen API",
-     *      description="This is the API documentation for the CLIENTXCMS New Gen API",
+     *      description="This is the API documentation for the CLIENTXCMS New Gen API. ",
      *
      *      @OA\Contact(
-     *          email="contact@clientxcms.com"
+     *          email="contact@clientxcms.com",
+     *         name="CLIENTXCMS Support",
+     *         url="https://clientxcms.com/client/support"
      *      ),
      * )
      *
