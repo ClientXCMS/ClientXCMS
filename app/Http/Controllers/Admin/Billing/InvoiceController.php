@@ -145,7 +145,6 @@ class InvoiceController extends AbstractCrudController
             if (array_key_exists('error', $productData)) {
                 return back()->with('error', $productData['error']);
             }
-            // Add options to productData similar to BasketController
             $productData['options'] = $this->processConfigOptions($product, $validatedData['options'] ?? []);
             $invoice->addProduct($product, $validatedData, $productData);
         } else {

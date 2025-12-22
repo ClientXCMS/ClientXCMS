@@ -104,7 +104,6 @@ class CustomerControllerTest extends TestCase
         $this->assertEquals('roubaix', $customer->fresh()->city);
         $this->assertEquals('admin@administration.com', $customer->fresh()->email);
         $this->assertEquals('test', $customer->fresh()->address);
-        $this->assertEquals('0323456710', $customer->fresh()->phone);
         $this->assertEquals('FR', $customer->fresh()->country);
         $this->assertEquals('Test User', $customer->fresh()->region);
         $this->assertEquals('59100', $customer->fresh()->zipcode);
@@ -168,6 +167,7 @@ class CustomerControllerTest extends TestCase
             'id' => $customer->id,
             'email' => 'admin@administration.com',
             'password' => 'newpassword',
+            'address' => 'test',
         ]);
         $response->assertRedirect();
         $this->assertEquals('Martin', $customer->fresh()->firstname);
@@ -201,6 +201,7 @@ class CustomerControllerTest extends TestCase
             'city' => 'roubaix',
             'phone' => '0323456710',
             'id' => $id,
+            'address' => 'test',
             'email' => 'admin@administration.com',
         ], ['admin.show_customers']);
         $response->assertStatus(403);

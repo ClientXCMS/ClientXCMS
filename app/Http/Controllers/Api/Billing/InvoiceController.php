@@ -15,6 +15,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Http\Controllers\Api\Billing;
 
 use App\Events\Core\Invoice\InvoiceCreated;
@@ -124,7 +125,7 @@ class InvoiceController extends AbstractApiController
     public function store(StoreInvoiceRequest $request)
     {
         $validatedData = $request->validated();
-        $invoice = InvoiceService::createFreshInvoice($validatedData['customer_id'], $validatedData['currency'], 'Created manually by '.auth('admin')->user()->username);
+        $invoice = InvoiceService::createFreshInvoice($validatedData['customer_id'], $validatedData['currency'], 'Created manually by ' . (auth('admin')->user()->username ?? 'API'));
         return response()->json($invoice, 201);
     }
 
@@ -319,9 +320,9 @@ class InvoiceController extends AbstractApiController
      *     )
      * )
      */
-    public function editInvoice(Invoice $invoice)
+    public function edit(Invoice $invoice)
     {
-        if ($invoice->status != Invoice::STATUS_PENDING){
+        if ($invoice->status != Invoice::STATUS_PENDING) {
             return response()->json([
                 'message' => __('admin.invoices.edit.not_pending'),
             ], 400);
@@ -363,7 +364,7 @@ class InvoiceController extends AbstractApiController
                 'message' => __('admin.invoices.notify.not_pending'),
             ], 400);
         }
-        $invoice->notify();
+        $invoice->notifyCustomer();
         return response()->json([
             'message' => __('admin.invoices.notify.sent'),
             'invoice' => $invoice,

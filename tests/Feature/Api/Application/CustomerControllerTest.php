@@ -146,11 +146,13 @@ class CustomerControllerTest extends TestCase
             'city' => 'test',
             'phone' => '0323456789',
             'password' => 'password',
+            'address' => 'test',
         ])->id;
         $response = $this->performAction('POST', self::API_URL . '/' . $id, [self::ABILITY_UPDATE], [
             'email' => 'admin@administration.com',
             'city' => 'roubaix',
             'firstname' => 'Martin',
+            'lastname' => 'Delebecque',
             'zipcode' => '59100',
             'region' => 'Test User',
             'country' => 'FR',
