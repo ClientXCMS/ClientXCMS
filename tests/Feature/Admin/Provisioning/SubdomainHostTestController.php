@@ -12,7 +12,8 @@
  *
  * Year: 2025
  */
-namespace Admin\Provisioning;
+
+namespace Tests\Feature\Admin\Provisioning;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -40,7 +41,7 @@ class SubdomainHostTestController extends \Tests\TestCase
         $subdomainHost = \App\Models\Provisioning\SubdomainHost::create([
             'domain' => 'test.com',
         ]);
-        $response = $this->actingAs($admin, 'admin')->get(self::API_URL.'/'.$subdomainHost->id);
+        $response = $this->actingAs($admin, 'admin')->get(self::API_URL . '/' . $subdomainHost->id);
         $response->assertStatus(200);
     }
 
@@ -51,7 +52,7 @@ class SubdomainHostTestController extends \Tests\TestCase
         $subdomainHost = \App\Models\Provisioning\SubdomainHost::create([
             'domain' => 'test.com',
         ]);
-        $response = $this->actingAs($admin, 'admin')->put(self::API_URL.'/'.$subdomainHost->id, [
+        $response = $this->actingAs($admin, 'admin')->put(self::API_URL . '/' . $subdomainHost->id, [
             'domain' => 'test2.com',
         ]);
         $response->assertRedirect();
@@ -64,7 +65,7 @@ class SubdomainHostTestController extends \Tests\TestCase
         $subdomainHost = \App\Models\Provisioning\SubdomainHost::create([
             'domain' => 'test.com',
         ]);
-        $response = $this->actingAs($admin, 'admin')->delete(self::API_URL.'/'.$subdomainHost->id);
+        $response = $this->actingAs($admin, 'admin')->delete(self::API_URL . '/' . $subdomainHost->id);
         $response->assertRedirect();
     }
 }

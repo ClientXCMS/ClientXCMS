@@ -1,6 +1,6 @@
 <?php
 
-namespace Admin\Personalization;
+namespace Tests\Feature\Admin\Personalization;
 
 use App\Models\Admin\Setting;
 use App\Services\Core\LocaleService;
