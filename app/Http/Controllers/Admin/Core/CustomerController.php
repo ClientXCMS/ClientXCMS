@@ -145,12 +145,12 @@ class CustomerController extends AbstractCrudController
     {
         $this->checkPermission('update', $customer);
         if ($customer->hasVerifiedEmail()) {
-            return redirect()->back()->with('error', __($this->translatePrefix.'.show.email_already_confirmed'));
+            return redirect()->back()->with('error', __($this->translatePrefix . '.show.email_already_confirmed'));
         }
         $customer->markEmailAsVerified();
         $customer->save();
 
-        return redirect()->back()->with('success', __($this->translatePrefix.'.show.email_confirmed'));
+        return redirect()->back()->with('success', __($this->translatePrefix . '.show.email_confirmed'));
     }
 
     public function sendForgotPassword(Customer $customer)
@@ -158,18 +158,18 @@ class CustomerController extends AbstractCrudController
         $this->checkPermission('update', $customer);
         Password::broker('users')->sendResetLink($customer->only('email'));
 
-        return redirect()->back()->with('success', __($this->translatePrefix.'.show.password_reset_sent'));
+        return redirect()->back()->with('success', __($this->translatePrefix . '.show.password_reset_sent'));
     }
 
     public function resendConfirmation(Customer $customer)
     {
         $this->checkPermission('update', $customer);
         if ($customer->hasVerifiedEmail()) {
-            return redirect()->back()->with('error', __($this->translatePrefix.'.show.email_already_confirmed'));
+            return redirect()->back()->with('error', __($this->translatePrefix . '.show.email_already_confirmed'));
         }
         $customer->sendEmailVerificationNotification();
 
-        return redirect()->back()->with('success', __($this->translatePrefix.'.show.email_sent'));
+        return redirect()->back()->with('success', __($this->translatePrefix . '.show.email_sent'));
     }
 
     public function update(UpdateCustomerRequest $request, Customer $customer)
@@ -212,10 +212,10 @@ class CustomerController extends AbstractCrudController
     public function destroy(Request $request, Customer $customer)
     {
         $this->checkPermission('delete', $customer);
-        
+
         $deletionService = new \App\Services\Account\AccountDeletionService();
         $force = $request->boolean('force', false);
-        
+
         try {
             $deletionService->delete($customer, $force);
             return $this->deleteRedirect($customer);
@@ -319,11 +319,14 @@ class CustomerController extends AbstractCrudController
             case 'disable2FA':
                 $customer->twoFactorDisable();
                 break;
+            case 'resetSecurityQuestion':
+                $customer->resetSecurityQuestion();
+                break;
             default:
                 break;
         }
 
-        return redirect()->back()->with('success', __($this->translatePrefix.'.show.action_success'));
+        return redirect()->back()->with('success', __($this->translatePrefix . '.show.action_success'));
     }
 
     public function addNote(Request $request, Customer $customer)
@@ -338,6 +341,6 @@ class CustomerController extends AbstractCrudController
             'content' => $validated['content'],
         ]);
 
-        return redirect()->back()->with('success', __($this->translatePrefix.'.show.note_added'));
+        return redirect()->back()->with('success', __($this->translatePrefix . '.show.note_added'));
     }
 }
