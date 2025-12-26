@@ -58,4 +58,25 @@ return [
         'favorite_movie' => 'Quel est votre film préféré ?',
         'childhood_nickname' => 'Quel était votre surnom d\'enfance ?',
     ],
+    'billing' => [
+      'name' => 'Facturation',
+      'description' => 'Département de la facturation',
+    ],
+    'technical' => [
+      'name' => 'Technique',
+      'description' => 'Département technique',
+    ],
+    'sales' => [
+      'name' => 'Commercial',
+      'description' => 'Département commercial',
+    ],
+  ],
+  'security_questions' => [
+    'pet_name' => 'Quel est le nom de votre premier animal de compagnie ?',
+    'birth_city' => 'Dans quelle ville êtes-vous né(e) ?',
+    'mother_maiden_name' => 'Quel est le nom de jeune fille de votre mère ?',
+    'first_school' => 'Quel est le nom de votre première école ?',
+    'favorite_movie' => 'Quel est votre film préféré ?',
+    'childhood_nickname' => 'Quel était votre surnom d\'enfance ?',
+  ],
 ];

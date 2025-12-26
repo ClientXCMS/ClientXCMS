@@ -1,5 +1,4 @@
 <?php
-
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -71,7 +70,6 @@ class SecurityQuestion extends Model
 
     /**
      * Check if the security questions feature is enabled.
-     * Returns true if at least one active question exists.
      */
     public static function isFeatureEnabled(): bool
     {

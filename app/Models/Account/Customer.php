@@ -385,7 +385,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
 
     public function getFullNameAttribute(): string
     {
-        return $this->firstname.' '.$this->lastname;
+        return $this->firstname . ' ' . $this->lastname;
     }
 
     public function excerptFullName(int $length = 24): string
@@ -413,13 +413,13 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public function supportRelatedItems()
     {
         return $this->invoices->merge($this->services)->mapWithKeys(function ($item) {
-            return [$item->relatedType().'-'.$item->relatedId() => $item->relatedName()];
+            return [$item->relatedType() . '-' . $item->relatedId() => $item->relatedName()];
         })->put('none', __('helpdesk.support.create.relatednone'));
     }
 
     public function initials()
     {
-        return $this->firstname[0].$this->lastname[0];
+        return $this->firstname[0] . $this->lastname[0];
     }
 
     public function notify($instance)
@@ -428,7 +428,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
             app(Dispatcher::class)->send($this, $instance);
             \Cache::forget('notification_error');
         } catch (\Exception $e) {
-            \Cache::put('notification_error', $e->getMessage().' | Date : '.date('Y-m-d H:i:s'), 3600 * 24);
+            \Cache::put('notification_error', $e->getMessage() . ' | Date : ' . date('Y-m-d H:i:s'), 3600 * 24);
         }
     }
 
@@ -505,7 +505,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     {
         return $this->getPendingInvoices()->mapWithKeys(function (Invoice $invoice) {
             return [
-                $invoice->id => __('global.invoice').' - '.$invoice->invoice_number,
+                $invoice->id => __('global.invoice') . ' - ' . $invoice->invoice_number,
             ];
         });
     }
