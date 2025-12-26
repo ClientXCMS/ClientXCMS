@@ -41,7 +41,7 @@
 
             @csrf
 
-            <div class="grid grid-cols-1 gap-4 p-6">
+            <div class="grid grid-cols-1 gap-4">
                 <div>
                     @include('admin/shared/input', ['name' => 'reason', 'label' => __($translatePrefix . '.reason'), 'value' => $item->reason])
                 </div>

@@ -15,6 +15,7 @@
  *
  * Year: 2025
  */
+
 use App\Http\Controllers\Admin\Core\AdminController;
 use App\Http\Controllers\Admin\Core\AdminLocalesController;
 use App\Http\Controllers\Admin\Core\DashboardController;
@@ -30,6 +31,7 @@ Route::get('/profile', [AdminController::class, 'profile'])->name('staffs.profil
 Route::put('/profile', [AdminController::class, 'updateProfile']);
 Route::post('/profile/2fa', [AdminController::class, 'save2fa'])->name('profile.2fa');
 Route::get('/profile/download_codes', [AdminController::class, 'downloadCodes'])->name('profile.2fa_codes');
+Route::post('/profile/security_question', [AdminController::class, 'saveSecurityQuestion'])->name('profile.security_question');
 Route::resource('/roles', RoleController::class)->names('roles')->except('edit');
 
 Route::resource('/emails', EmailController::class)->names('emails')->except('edit');

@@ -67,4 +67,23 @@ class SecurityQuestion extends Model
             ->pluck('question', 'id')
             ->toArray();
     }
+
+    /**
+     * Check if the security questions feature is enabled.
+     * Returns true if at least one active question exists.
+     */
+    public static function isFeatureEnabled(): bool
+    {
+        return \Cache::remember('security_questions_enabled', 3600, function () {
+            return self::active()->exists();
+        });
+    }
+
+    /**
+     * Clear the feature enabled cache (call when questions are created/updated/deleted).
+     */
+    public static function clearFeatureCache(): void
+    {
+        \Cache::forget('security_questions_enabled');
+    }
 }

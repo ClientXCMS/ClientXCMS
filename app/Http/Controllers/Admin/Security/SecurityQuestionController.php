@@ -103,6 +103,8 @@ class SecurityQuestionController extends AbstractCrudController
 
         $item = SecurityQuestion::create($data);
 
+        SecurityQuestion::clearFeatureCache();
+
         return $this->storeRedirect($item);
     }
 
@@ -130,6 +132,8 @@ class SecurityQuestionController extends AbstractCrudController
 
         $security_question->update($data);
 
+        SecurityQuestion::clearFeatureCache();
+
         return $this->updateRedirect($security_question);
     }
 
@@ -138,6 +142,8 @@ class SecurityQuestionController extends AbstractCrudController
         $this->checkPermission('delete');
 
         $security_question->delete();
+
+        SecurityQuestion::clearFeatureCache();
 
         return $this->destroyRedirect($security_question);
     }
