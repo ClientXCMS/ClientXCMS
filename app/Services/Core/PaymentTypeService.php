@@ -21,11 +21,14 @@ namespace App\Services\Core;
 
 use App\Core\Gateway\BalanceType;
 use App\Core\Gateway\BankTransfertType;
+use App\Core\Gateway\MollieType;
 use App\Core\Gateway\NoneGatewayType;
 use App\Core\Gateway\PayPalExpressCheckoutType;
 use App\Core\Gateway\PayPalMethodType;
+use App\Core\Gateway\SquareType;
 use App\Core\Gateway\StancerType;
 use App\Core\Gateway\StripeType;
+use App\Core\Gateway\SumUpType;
 use Illuminate\Support\Collection;
 
 class PaymentTypeService
@@ -42,6 +45,9 @@ class PaymentTypeService
             BankTransfertType::UUID => BankTransfertType::class,
             NoneGatewayType::UUID => NoneGatewayType::class,
             StancerType::UUID => StancerType::class,
+            MollieType::UUID => MollieType::class,
+            SumUpType::UUID => SumUpType::class,
+            SquareType::UUID => SquareType::class,
         ]);
     }
 

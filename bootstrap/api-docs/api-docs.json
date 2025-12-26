@@ -12,7 +12,7 @@
     },
     "servers": [
         {
-            "url": "test/api",
+            "url": "http://clientxcms.app/api",
             "description": "Endpoint"
         }
     ],
@@ -314,7 +314,7 @@
                     "Invoices"
                 ],
                 "summary": "Edit an invoice",
-                "operationId": "8f1bd67da2237b6135ea2f99b4eb4484",
+                "operationId": "5fb33a8f85185dc43f2d44f7788e527f",
                 "parameters": [
                     {
                         "name": "invoice",
@@ -1413,6 +1413,84 @@
                     },
                     "400": {
                         "description": "Ticket is not closed"
+                    }
+                }
+            }
+        },
+        "/api/cancellation_reasons": {
+            "get": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "List all cancellation reasons",
+                "operationId": "d78fd632b09b0f9315912f9bc70e39ae",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Create a new cancellation reason",
+                "operationId": "361c57951d113f1ceb588f21f52a8c30",
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/api/cancellation_reasons/{id}": {
+            "get": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Get a specific cancellation reason",
+                "operationId": "5ae253acef5a78b6949b0b5df4bce45f",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Update a cancellation reason",
+                "operationId": "5a6a43c1e64a9aa31702003272a58776",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Delete a cancellation reason",
+                "operationId": "e3b19423af9e9e82219d2778586b5bf7",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            }
+        },
+        "/api/cancellation_reasons_analytics": {
+            "get": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Get cancellation analytics data",
+                "operationId": "2d67eb6bfa07e1a37a098ed4ccfda908",
+                "responses": {
+                    "200": {
+                        "description": "Success"
                     }
                 }
             }
@@ -5698,6 +5776,10 @@
         {
             "name": "Tickets",
             "description": "Tickets"
+        },
+        {
+            "name": "Cancellation Reasons",
+            "description": "Cancellation Reasons"
         },
         {
             "name": "Servers",
