@@ -301,7 +301,17 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm text-gray-500 dark:text-gray-400">{{ __($translatePrefix . '.analytics.period') }}</p>
-                    <p class="text-sm font-medium text-gray-800 dark:text-white">{{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}</p>
+                    <p class="text-sm font-medium text-gray-800 dark:text-white">
+                        @if($startDate && $endDate)
+                        {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}
+                        @elseif($startDate)
+                        {{ __('global.from') }} {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }}
+                        @elseif($endDate)
+                        {{ __('global.until') }} {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}
+                        @else
+                        {{ __($translatePrefix . '.analytics.all_data') }}
+                        @endif
+                    </p>
                 </div>
             </div>
         </div>
@@ -402,7 +412,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ $reasons->get($service->cancelled_reason)?->reason ?? __('global.unknown') }}
+                                {{ $reasons->firstWhere('reason', $service->cancelled_reason)?->reason ?? $service->cancelled_reason }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

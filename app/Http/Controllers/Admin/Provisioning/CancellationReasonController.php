@@ -65,15 +65,22 @@ class CancellationReasonController extends AbstractCrudController
             }
         }
 
-        $startDate = $request->get('start_date', now()->subMonths(6)->format('Y-m-d'));
-        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
 
-        $stats = Service::selectRaw('cancelled_reason, COUNT(*) as count')
+        $statsQuery = Service::selectRaw('cancelled_reason, COUNT(*) as count')
             ->whereNotNull('cancelled_reason')
-            ->whereNotNull('cancelled_at')
-            ->whereBetween('cancelled_at', [$startDate, $endDate . ' 23:59:59'])
-            ->groupBy('cancelled_reason')
-            ->get();
+            ->whereNotNull('cancelled_at');
+
+        if ($startDate && $endDate) {
+            $statsQuery->whereBetween('cancelled_at', [$startDate, $endDate . ' 23:59:59']);
+        } elseif ($startDate) {
+            $statsQuery->where('cancelled_at', '>=', $startDate);
+        } elseif ($endDate) {
+            $statsQuery->where('cancelled_at', '<=', $endDate . ' 23:59:59');
+        }
+
+        $stats = $statsQuery->groupBy('cancelled_reason')->get();
 
         $reasons = CancellationReason::all()->keyBy('id');
 
@@ -87,18 +94,26 @@ class CancellationReasonController extends AbstractCrudController
         $i = 0;
 
         foreach ($stats as $stat) {
-            $reason = $reasons->get($stat->cancelled_reason);
+            $reason = $reasons->firstWhere('reason', $stat->cancelled_reason);
             $chartData['labels'][] = $reason ? $reason->reason : __('global.unknown');
             $chartData['data'][] = $stat->count;
             $chartData['colors'][] = $colors[$i % count($colors)];
             $i++;
         }
 
-        $cancelledServices = Service::with(['customer', 'product'])
+        $cancelledServicesQuery = Service::with(['customer', 'product'])
             ->whereNotNull('cancelled_reason')
-            ->whereNotNull('cancelled_at')
-            ->whereBetween('cancelled_at', [$startDate, $endDate . ' 23:59:59'])
-            ->orderBy('cancelled_at', 'desc')
+            ->whereNotNull('cancelled_at');
+
+        if ($startDate && $endDate) {
+            $cancelledServicesQuery->whereBetween('cancelled_at', [$startDate, $endDate . ' 23:59:59']);
+        } elseif ($startDate) {
+            $cancelledServicesQuery->where('cancelled_at', '>=', $startDate);
+        } elseif ($endDate) {
+            $cancelledServicesQuery->where('cancelled_at', '<=', $endDate . ' 23:59:59');
+        }
+
+        $cancelledServices = $cancelledServicesQuery->orderBy('cancelled_at', 'desc')
             ->limit(10)
             ->get();
 
