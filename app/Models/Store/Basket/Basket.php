@@ -258,7 +258,6 @@ class Basket extends Model
                 ->whereNull('completed_at')
                 ->first();
         }
-
         return self::$basket;
     }
 
@@ -382,7 +381,8 @@ class Basket extends Model
             }, 0);
 
             return $initial - $discount;
-        } if ($type == BasketRow::SETUP_FEES) {
+        }
+        if ($type == BasketRow::SETUP_FEES) {
             $initial = $this->rows->reduce(function ($total, BasketRow $row) {
                 return $total + $row->setupWithoutCoupon();
             }, 0);

@@ -144,4 +144,24 @@ class ProfileController extends \App\Http\Controllers\Controller
                 ->with('error', $e->getMessage());
         }
     }
+
+    /**
+     * Save or update the security question for the current user.
+     */
+    public function saveSecurityQuestion(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'security_question_id' => ['required', 'exists:security_questions,id'],
+            'security_answer' => ['required', 'string', 'min:2', 'max:100'],
+            'currentpassword' => ['required', 'current_password'],
+        ]);
+
+        $request->user('web')->setSecurityQuestion(
+            (int) $request->security_question_id,
+            $request->security_answer
+        );
+
+        return redirect()->route('front.profile.index')
+            ->with('success', __('client.profile.security_question_saved'));
+    }
 }

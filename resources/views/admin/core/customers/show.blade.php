@@ -148,6 +148,11 @@
                                 <i class="bi bi-shield-lock-fill"></i>{{ __($translatePrefix.'.show.disable2fa') }}
                             </button>
                             @endif
+                            @if ($item->hasSecurityQuestion())
+                            <button type="button" id="resetSecurityQuestionButton" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/30">
+                                <i class="bi bi-question-circle"></i>{{ __($translatePrefix.'.show.reset_security_question') }}
+                            </button>
+                            @endif
                             <button type="button" id="deleteButton" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30">
                                 <i class="bi bi-trash"></i>{{ __('global.delete') }}
                             </button>
@@ -522,11 +527,25 @@
         @csrf
     </form>
     @endif
+    @if ($item->hasSecurityQuestion())
+    <form method="POST" action="{{ route($routePath . '.action', ['customer' => $item, 'action' => 'resetSecurityQuestion']) }}" id="resetSecurityQuestionForm">
+        @csrf
+    </form>
+    @endif
 
     @if($item->twoFactorEnabled())
     <script>
         document.getElementById('disabled2faButton').addEventListener('click', function() {
             document.getElementById('disable2faForm').submit();
+        });
+    </script>
+    @endif
+    @if($item->hasSecurityQuestion())
+    <script>
+        document.getElementById('resetSecurityQuestionButton').addEventListener('click', function() {
+            if (confirm('{{ __($translatePrefix . ".show.confirm_reset_security_question") }}')) {
+                document.getElementById('resetSecurityQuestionForm').submit();
+            }
         });
     </script>
     @endif
