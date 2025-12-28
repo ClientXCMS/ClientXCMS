@@ -70,7 +70,7 @@ class ProvisioningServiceProvider extends ServiceProvider
         /** @var SettingsService $setting */
         $setting = app('settings');
 
-        $setting->addCard('provisioning', 'provisioning.admin.title', 'provisioning.admin.subheading', 2);
+        $setting->addCard('provisioning', 'provisioning.admin.title', 'provisioning.admin.subheading', 2, null, true, 2, 'bi bi-boxes');
         $setting->addCardItem('provisioning', 'services', 'provisioning.admin.settings.services.title', 'provisioning.admin.settings.services.description', 'bi bi-box2', [SettingsProvisioningController::class, 'showServicesSettings'], Permission::MANAGE_SETTINGS);
         $setting->addCardItem('provisioning', 'servers', 'provisioning.admin.servers.title', 'provisioning.admin.servers.subheading', 'bi bi-hdd-rack', route('admin.servers.index'), 'admin.manage_servers');
         $setting->addCardItem('provisioning', 'subdomains_hosts', 'provisioning.admin.subdomains_hosts.title', 'provisioning.admin.subdomains_hosts.subheading', 'bi bi-list-stars', route('admin.subdomains_hosts.index'), 'admin.manage_subdomains_hosts');

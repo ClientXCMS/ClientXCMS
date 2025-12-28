@@ -57,7 +57,7 @@ class StoreServiceProvider extends ServiceProvider
         }
         /** @var SettingsService $setting */
         $setting = app('settings');
-        $setting->addCard('store', 'admin.settings.store.title', 'admin.settings.store.description', 2);
+        $setting->addCard('store', 'admin.settings.store.title', 'admin.settings.store.description', 2, null, true, 2, 'bi bi-shop-window');
         $setting->addCardItem('store', 'product', 'admin.products.title', 'admin.products.description', 'bi bi-box', action([ProductController::class, 'index']), 'admin.manage_products');
         $setting->addCardItem('store', 'group', 'admin.groups.title', 'admin.groups.description', 'bi bi-shop', action([GroupController::class, 'index']), 'admin.manage_groups');
         $setting->addCardItem('store', 'coupon', 'coupon.coupons', 'coupon.admin.description', 'bi bi-percent', action([CouponController::class, 'index']), 'admin.manage_coupons');
