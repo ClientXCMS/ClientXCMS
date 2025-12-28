@@ -119,21 +119,20 @@
                             </div>
                             <div>
                                 @include('shared/input', [
-                                    'name' => 'security_answer',
-                                    'label' => __('client.profile.security_question.answer'),
-                                    'type' => 'text',
-                                    'placeholder' => __('client.profile.security_question.answer_placeholder'),
-                                    'required' => true,
+                                'name' => 'security_answer',
+                                'label' => __('client.profile.security_question.answer'),
+                                'type' => 'text',
+                                'placeholder' => __('client.profile.security_question.answer_placeholder'),
+                                'required' => true,
                                 ])
                             </div>
                         </div>
                         <div class="mt-4">
-                            @include('shared/password', ['name' => 'currentpassword_sq', 'label' => __('client.profile.currentpassword')])
+                            @include('shared/password', ['name' => 'currentpassword_sq', 'label' => __('client.profile.security.currentpassword')])
 
                         </div>
                         <div class="mt-4">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save2 mr-2"></i>
                                 {{ $user->hasSecurityQuestion() ? __('client.profile.security_question.update') : __('client.profile.security_question.save') }}
                             </button>
                         </div>
