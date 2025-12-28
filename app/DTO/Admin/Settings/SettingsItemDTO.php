@@ -68,3 +68,4 @@ class SettingsItemDTO
         return str_contains($this->url(), admin_prefix('settings'));
     }
 }
+    
