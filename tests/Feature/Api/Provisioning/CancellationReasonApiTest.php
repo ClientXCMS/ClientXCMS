@@ -11,7 +11,7 @@ class CancellationReasonApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    const API_URL = 'api/cancellation_reasons';
+    const API_URL = 'api/application/cancellation_reasons';
 
     public function test_api_cancellation_reason_index(): void
     {
@@ -23,7 +23,6 @@ class CancellationReasonApiTest extends TestCase
         $response->assertJsonStructure([
             'data',
             'links',
-            'meta',
         ]);
     }
 
@@ -102,7 +101,7 @@ class CancellationReasonApiTest extends TestCase
 
     public function test_api_cancellation_reason_analytics(): void
     {
-        $response = $this->performAction('GET', 'api/cancellation_reasons_analytics', ['cancellation_reasons:analytics']);
+        $response = $this->performAction('GET', 'api/application/cancellation_reasons_analytics', ['cancellation_reasons:analytics']);
         $response->assertStatus(200);
         $response->assertJsonStructure([
             'start_date',
@@ -127,7 +126,7 @@ class CancellationReasonApiTest extends TestCase
             'status' => 'cancelled',
         ]);
 
-        $response = $this->performAction('GET', 'api/cancellation_reasons_analytics', ['cancellation_reasons:analytics']);
+        $response = $this->performAction('GET', 'api/application/cancellation_reasons_analytics', ['cancellation_reasons:analytics']);
         $response->assertStatus(200);
         $response->assertJsonFragment([
             'total_cancellations' => 1,

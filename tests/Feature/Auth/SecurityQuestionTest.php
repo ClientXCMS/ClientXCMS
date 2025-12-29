@@ -44,7 +44,7 @@ class SecurityQuestionTest extends TestCase
         $admin = $this->createAdminModel();
 
         $response = $this->actingAs($admin, 'admin')
-            ->post(route('admin.settings.security_questions.store'), [
+            ->post(route('admin.security_questions.store'), [
                 'question' => 'What is your pet\'s name?',
                 'is_active' => true,
                 'sort_order' => 1,
@@ -68,7 +68,7 @@ class SecurityQuestionTest extends TestCase
 
         // To deactivate a checkbox, we don't include it in the request (simulating unchecked box)
         $response = $this->actingAs($admin, 'admin')
-            ->put(route('admin.settings.security_questions.update', $question), [
+            ->put(route('admin.security_questions.update', $question), [
                 'question' => 'Updated question',
                 // is_active not included = checkbox unchecked = false
                 'sort_order' => 5,
@@ -92,7 +92,7 @@ class SecurityQuestionTest extends TestCase
         ]);
 
         $response = $this->actingAs($admin, 'admin')
-            ->delete(route('admin.settings.security_questions.destroy', $question));
+            ->delete(route('admin.security_questions.destroy', $question));
 
         $response->assertRedirect();
         $this->assertDatabaseMissing('security_questions', [

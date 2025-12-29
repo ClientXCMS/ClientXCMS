@@ -181,8 +181,8 @@ class MollieType extends AbstractGatewayType
                 'customerId' => $mollieCustomerId,
                 'sequenceType' => 'first',
                 'description' => 'Setup payment method',
-                'redirectUrl' => route('gateways.source.return', ['gateway' => self::UUID]),
-                'webhookUrl' => route('gateways.notification', ['gateway' => self::UUID]),
+                'redirectUrl' => "https://a25ab4d977b1.ngrok-free.app" . route('gateways.source.return', ['gateway' => self::UUID], false),
+                'webhookUrl' => "https://a25ab4d977b1.ngrok-free.app" . route('gateways.notification', ['gateway' => self::UUID], false),
             ]);
 
             return redirect($payment->getCheckoutUrl(), 303);
@@ -239,12 +239,13 @@ class MollieType extends AbstractGatewayType
         $sources = [];
         foreach ($mandates as $mandate) {
             if ($mandate->status === 'valid') {
+                [$year, $month] = explode('-', $mandate->details->cardExpiryDate);
                 $sources[] = new PaymentMethodSourceDTO(
                     $mandate->id,
                     $mandate->method ?? 'SEPA',
-                    $mandate->details->consumerAccount ?? '****',
-                    '-',
-                    '-',
+                    $mandate->details->cardNumber ?? '****',
+                    substr($year, -2),
+                    $month,
                     $customer->id,
                     self::UUID,
                     $mandate->details->consumerName ?? null
@@ -274,7 +275,7 @@ class MollieType extends AbstractGatewayType
                 'sequenceType' => 'recurring',
                 'mandateId' => $sourceDTO->id,
                 'description' => __('global.invoice') . ' #' . $invoice->id,
-                'webhookUrl' => route('gateways.notification', ['gateway' => self::UUID]),
+                'webhookUrl' => 'https://a25ab4d977b1.ngrok-free.app' . route('gateways.notification', ['gateway' => self::UUID]),
                 'metadata' => [
                     'invoice_id' => $invoice->id,
                     'customer_id' => $invoice->customer->id,
