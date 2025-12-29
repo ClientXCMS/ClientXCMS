@@ -65,7 +65,7 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('app_name', config('app.name'));
             $service->setDefaultValue('app_url', request()->getSchemeAndHttpHost());
             $service->setDefaultValue('app_timezone', 'Europe/Paris');
-            $service->setDefaultValue('app_address', config('app.name').', You can set your address in the settings');
+            $service->setDefaultValue('app_address', config('app.name') . ', You can set your address in the settings');
             $service->setDefaultValue('app_debug', config('app.debug', 'false'));
             $service->setDefaultValue('app_env', config('app.env', 'production'));
             $service->setDefaultValue('app_license_refresh_token', setting('app.license.refresh_token'));
@@ -91,10 +91,10 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('mail_smtp_encryption', env('MAIL_ENCRYPTION'));
             $service->setDefaultValue('mail_smtp_enable', env('MAIL_MAILER') == 'smtp');
             $service->setDefaultValue('mail_domain', env('APP_URL', request()->getSchemeAndHttpHost()));
-            $service->setDefaultValue('theme_footer_description', config('app.name').' You can modify this text in the settings. Powered By CLIENTXCMS');
+            $service->setDefaultValue('theme_footer_description', config('app.name') . ' You can modify this text in the settings. Powered By CLIENTXCMS');
             $service->setDefaultValue('theme_home_enabled', true);
             $service->setDefaultValue('theme_switch_mode', 'both');
-            $service->setDefaultValue('seo_site_title', ' - '.setting('app_name'));
+            $service->setDefaultValue('seo_site_title', ' - ' . setting('app_name'));
             $service->setDefaultValue('theme_home_title_meta', setting('app_name'));
             $service->setDefaultValue('helpdesk_ticket_auto_close_days', 7);
             $service->setDefaultValue('helpdesk_attachments_max_size', 5);
@@ -112,7 +112,7 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('captcha_driver', 'none');
             $service->setDefaultValue('maintenance_enabled', false);
             $service->setDefaultValue('maintenance_message', __('maintenance.in_maintenance_message'));
-            $service->setDefaultValue('maintenance_url', '/maintenancebypass/'.md5(\Str::random(12)));
+            $service->setDefaultValue('maintenance_url', '/maintenancebypass/' . md5(\Str::random(12)));
             $service->setDefaultValue('maintenance_button_link', null);
             $service->setDefaultValue('maintenance_button_text', null);
             $service->setDefaultValue('maintenance_button_icon', 'bi bi-box-arrow-up-right');
@@ -152,8 +152,8 @@ class SettingServiceProvider extends ServiceProvider
     protected function loadCards(SettingsService $service)
     {
         $service->addCard('core', 'admin.settings.core.title', 'admin.settings.core.description', 1);
-        $service->addCard('extensions', 'extensions.settings.title', 'extensions.settings.description', 3);
-        $service->addCard('security', 'admin.security.title', 'admin.security.description', 4);
+        $service->addCard('extensions', 'extensions.settings.title', 'extensions.settings.description', 3, null, true, 2, 'bi bi-plugin');
+        $service->addCard('security', 'admin.security.title', 'admin.security.description', 4, null, true, 2, 'bi bi-lock');
         $service->addCardItem('core', 'app', 'admin.settings.core.app.title', 'admin.settings.core.app.description', 'bi bi-app-indicator', [SettingsCoreController::class, 'showAppSettings'], Permission::MANAGE_SETTINGS);
         $service->set('app.cron.last_run', setting('app.cron.last_run', null));
         $service->addCardItem('core', 'mail', 'admin.settings.core.mail.title', 'admin.settings.core.mail.description', 'bi bi-envelope-at', [SettingsCoreController::class, 'showEmailSettings'], Permission::MANAGE_SETTINGS);
@@ -163,12 +163,13 @@ class SettingServiceProvider extends ServiceProvider
         $service->addCardItem('security', 'apikeys', 'admin.api_keys.title', 'admin.api_keys.subheading', 'bi bi-key', action([ApiKeysController::class, 'index']), 'admin.manage_api_keys');
         $service->addCardItem('core', 'license', 'admin.license.title', 'admin.license.subheading', 'bi bi-key', action([LicenseController::class, 'index']), 'admin.manage_license');
         $service->addCardItem('security', 'database', 'admin.database.title', 'admin.database.description', 'bi bi-database', action([DatabaseController::class, 'index']), 'admin.manage_database');
-        //$service->addCardItem('security', 'update', 'admin.update.title', 'admin.update.subheading', 'bi bi-cloud-arrow-up-fill', action([UpdateController::class, 'index']), 'admin.manage_update');
+        $service->addCardItem('security', 'update', 'admin.update.title', 'admin.update.subheading', 'bi bi-cloud-arrow-up-fill', action([UpdateController::class, 'index']), 'admin.manage_update');
         $service->addCardItem('security', 'security', 'admin.settings.core.security.title', 'admin.settings.core.security.description', 'bi bi-shield-lock', [SettingsSecurityController::class, 'showSecuritySettings'], Permission::MANAGE_SETTINGS);
+        $service->addCardItem('security', 'security_questions', 'admin.security_questions.title', 'admin.security_questions.description', 'bi bi-question-circle', route('admin.security_questions.index'), Permission::MANAGE_SETTINGS);
         $service->addCardItem('extensions', 'extensions', 'extensions.title', 'extensions.description', 'bi bi-palette2', [SettingsExtensionController::class, 'showExtensions'], Permission::MANAGE_EXTENSIONS);
         $service->addCardItem('security', 'history', 'admin.history.title', 'admin.history.description', 'bi bi-archive', action([HistoryController::class, 'index']), 'admin.show_logs');
         $service->addCardItem('security', 'logs', 'actionslog.settings.title', 'actionslog.settings.description', 'bi bi-clock', action([ActionsLogController::class, 'index']), 'admin.show_logs');
-        $this->app['extension']->addAdminMenuItem((new AdminMenuItem('settings', 'admin.settings.index', 'bi bi-gear', 'admin.settings.title', 10, Permission::ALLOWED)));
+        $this->app['extension']->addAdminMenuItem((new AdminMenuItem('settings', 'admin.settings.index', 'bi bi-gear', 'admin.settings.title', 100, \App\Models\Admin\Permission::ALLOWED)));
     }
 
     protected function loadSettings(): array

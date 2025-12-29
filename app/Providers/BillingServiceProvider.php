@@ -62,12 +62,11 @@ class BillingServiceProvider extends ServiceProvider
         }, 'admin.manage_customers', true);
         $this->app['extension']->addAdminCountWidget($balanceWidgets);
 
-        $this->app['settings']->addCard('billing', 'billing.admin.title', 'billing.admin.subheading', 4, null, true);
+        $this->app['settings']->addCard('billing', 'billing.admin.title', 'billing.admin.subheading', 4, null, true, 2, 'bi bi-credit-card-2-front');
         $this->app['settings']->addCardItem('billing', 'subscriptions', 'billing.admin.subscriptions.title', 'billing.admin.subscriptions.description', 'bi bi-credit-card-2-front', action([SubscriptionController::class, 'index']), 'admin.manage_invoices');
         $this->app['settings']->addCardItem('billing', 'billing', 'billing.admin.settings.title', 'billing.admin.settings.description', 'bi bi-basket2-fill', [SettingsBillingController::class, 'showBilling'], Permission::MANAGE_SETTINGS);
         $this->app['settings']->addCardItem('billing', 'upgrades', 'billing.admin.upgrades.title', 'billing.admin.upgrades.description', 'bi bi-arrows-angle-expand', action([UpgradeController::class, 'index']), 'admin.manage_services');
         $this->app['extension']->addFrontMenuItem((new \App\Core\Menu\FrontMenuItem('payment-methods', 'front.payment-methods.index', 'bi bi-credit-card', 'client.payment-methods.index', 5)));
         $this->app['extension']->addFrontMenuItem((new \App\Core\Menu\FrontMenuItem('invoices', 'front.invoices.index', 'bi bi-receipt', 'client.invoices.index', 3)));
-
     }
 }

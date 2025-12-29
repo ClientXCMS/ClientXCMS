@@ -15,10 +15,12 @@
  *
  * Year: 2025
  */
+
 use App\Http\Controllers\Admin\Security\ActionsLogController;
 use App\Http\Controllers\Admin\Security\DatabaseController;
 use App\Http\Controllers\Admin\Security\HistoryController;
 use App\Http\Controllers\Admin\Security\LicenseController;
+use App\Http\Controllers\Admin\Security\SecurityQuestionController;
 use App\Http\Controllers\Admin\Settings\SettingsSecurityController;
 use App\Http\Controllers\Admin\Security\UpdateController;
 use Illuminate\Support\Facades\Route;
@@ -42,3 +44,4 @@ Route::put('/api-keys/{apiKey}', [\App\Http\Controllers\Admin\Security\ApiKeysCo
 Route::name('settings.')->prefix('settings')->group(function () {
     Route::put('/security/security', [SettingsSecurityController::class, 'storeSecurity'])->name('security.security');
 });
+Route::resource('/security_questions', SecurityQuestionController::class)->names('security_questions')->except('edit');

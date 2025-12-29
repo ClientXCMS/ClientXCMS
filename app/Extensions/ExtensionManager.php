@@ -116,18 +116,18 @@ class ExtensionManager extends ExtensionCollectionsManager
         $items = $this->getAllExtensions();
         $return = [];
         foreach ($groups as $group) {
-            $return[$group['name']] = collect($items)->filter(function (ExtensionDTO $item) use ($group) {
+            $return[$group['name']] = ['items' => collect($items)->filter(function (ExtensionDTO $item) use ($group) {
                 if (! array_key_exists('group_uuid', $item->api)) {
                     return false;
                 }
                 return $item->api['group_uuid'] == $group['uuid'];
-            });
+            }), 'icon' => $group['icon']];
         }
-        $return['Un Official'] = collect($items)->filter(function (ExtensionDTO $item) {
+        $return['Un Official'] = ['items' => collect($items)->filter(function (ExtensionDTO $item) {
             return $item->isUnofficial();
-        });
+        }), 'icon' => 'bi bi-star'];
         foreach ($return as $key => $group) {
-            if ($group->isEmpty()) {
+            if ($group['items']->isEmpty()) {
                 unset($return[$key]);
             }
         }
@@ -171,7 +171,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         $versions = array_merge($versions, [$theme->version]);
         if (setting('email_template_name') != null)
             $enabled = array_merge($enabled, [\setting('email_template_name')]);
-        $return = collect($this->fetch()['items'] ?? [])->filter(function(array $extensionDTO) use ($withTheme){
+        $return = collect($this->fetch()['items'] ?? [])->filter(function (array $extensionDTO) use ($withTheme) {
             $allowedTypes = ['module', 'addon', 'email_template', 'invoice_template'];
             if ($withTheme) {
                 $allowedTypes[] = 'theme';
@@ -250,25 +250,24 @@ class ExtensionManager extends ExtensionCollectionsManager
         try {
             (new UpdaterManager())->update($api['uuid']);
             self::writeExtensionJson($extensions);
-
         } catch (\Exception $e) {
-            throw new ExtensionException('Error in UpdaterManager: '.$e->getMessage());
+            throw new ExtensionException('Error in UpdaterManager: ' . $e->getMessage());
         }
     }
 
     public function checkPrerequisitesForEnable(string $type, string $extension): array
     {
         if ($type == 'themes') {
-            $file = base_path('resources/themes/'.$extension.'/theme.json');
+            $file = base_path('resources/themes/' . $extension . '/theme.json');
         } else if ($type == 'addons' || $type == 'modules') {
-            $file = base_path($type.'/'.$extension.'/composer.json');
+            $file = base_path($type . '/' . $extension . '/composer.json');
         } else {
             return [];
         }
         if (! file_exists($file)) {
             throw new ExtensionException(__('extensions.flash.composer_not_found'));
         }
-        if ($type == 'themes'){
+        if ($type == 'themes') {
             return [];
         }
         $composerJson = json_decode((new Filesystem)->get($file), true);
@@ -291,10 +290,10 @@ class ExtensionManager extends ExtensionCollectionsManager
             }
             $api = $api->api;
         }
-        if ($type == 'email_templates'){
+        if ($type == 'email_templates') {
             Setting::updateSettings(['email_template_name' => $extension]);
         }
-        if ($type == 'themes'){
+        if ($type == 'themes') {
             app('theme')->setTheme($extension, true);
         }
         if (collect($extensions[$type] ?? [])->where('uuid', $extension)->isEmpty()) {
@@ -311,7 +310,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         try {
             self::writeExtensionJson($extensions);
         } catch (\Exception $e) {
-            throw new ExtensionException('Unable to write extensions.json file: '.$e->getMessage());
+            throw new ExtensionException('Unable to write extensions.json file: ' . $e->getMessage());
         }
     }
 
@@ -325,7 +324,7 @@ class ExtensionManager extends ExtensionCollectionsManager
 
             return $item;
         })->toArray();
-        if ($type == 'email_templates'){
+        if ($type == 'email_templates') {
             Setting::updateSettings(['email_template_name' => null]);
         }
         try {
@@ -395,7 +394,7 @@ class ExtensionManager extends ExtensionCollectionsManager
             if (in_array($pathinfo['basename'], $extensions)) {
                 continue;
             }
-            $extensionFile = $extension.'/'.$type.'.json';
+            $extensionFile = $extension . '/' . $type . '.json';
             if (! file_exists($extensionFile)) {
                 continue;
             }
@@ -426,6 +425,5 @@ class ExtensionManager extends ExtensionCollectionsManager
         }
 
         return $unofficial;
-
     }
 }

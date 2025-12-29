@@ -1,4 +1,5 @@
 <?php
+
 namespace Tests\Feature\Admin\Billing;
 
 use App\Models\Account\Customer;
@@ -7,6 +8,7 @@ use App\Models\Billing\CustomItem;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceItem;
 use App\Services\Store\TaxesService;
+use App\Abstracts\PaymentMethodSourceDTO;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -150,5 +152,122 @@ class InvoiceControllerTest extends \Tests\TestCase
         $this->assertEqualsWithDelta(0, $invoice->subtotal, 0.01);
         $this->assertEqualsWithDelta(0, $invoice->tax, 0.01);
         $this->assertEqualsWithDelta(0, $invoice->total, 0.01);
+    }
+
+    public function test_admin_can_notify_invoice(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $admin = Admin::first();
+        $customer = Customer::factory()->create();
+        $invoice = Invoice::factory()->create(['customer_id' => $customer->id, 'status' => Invoice::STATUS_PENDING]);
+
+        $response = $this->actingAs($admin, 'admin')->get(route('admin.invoices.notify', ['invoice' => $invoice->id]));
+        $response->assertStatus(302)->assertSessionHas('success');
+    }
+
+    public function test_admin_can_validate_invoice(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $admin = Admin::first();
+        $customer = Customer::factory()->create();
+        $invoice = Invoice::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => Invoice::STATUS_DRAFT,
+        ]);
+        InvoiceItem::factory()->create(['invoice_id' => $invoice->id]);
+
+        $response = $this->actingAs($admin, 'admin')->post(route('admin.invoices.validate', ['invoice' => $invoice->id]));
+
+        $response->assertStatus(302)->assertSessionHas('success');
+        $this->assertSame(Invoice::STATUS_PENDING, $invoice->refresh()->status);
+    }
+
+    public function test_admin_can_set_invoice_to_draft(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $admin = Admin::first();
+        $customer = Customer::factory()->create();
+        $invoice = Invoice::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => Invoice::STATUS_PENDING,
+        ]);
+
+        $response = $this->actingAs($admin, 'admin')->post(route('admin.invoices.edit', ['invoice' => $invoice->id]));
+
+        $response->assertStatus(302)->assertSessionHas('success');
+        $this->assertSame(Invoice::STATUS_DRAFT, $invoice->refresh()->status);
+    }
+
+    public function test_admin_can_cancel_invoice_item(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $admin = Admin::first();
+        $customer = Customer::factory()->create();
+        $invoice = Invoice::factory()->create(['customer_id' => $customer->id]);
+        $invoiceItem = InvoiceItem::factory()->create(['invoice_id' => $invoice->id]);
+
+        $response = $this->actingAs($admin, 'admin')->post(route('admin.invoices.cancelitem', [
+            'invoice' => $invoice->id,
+            'invoiceItem' => $invoiceItem->id,
+        ]));
+
+        $response->assertStatus(302)->assertSessionHas('success');
+    }
+
+    public function test_admin_can_pay_invoice(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $this->seed(\Database\Seeders\GatewaySeeder::class);
+        $admin = Admin::first();
+        $customer = Customer::factory()->create();
+        $invoice = Invoice::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => Invoice::STATUS_PENDING,
+            'total' => 10,
+        ]);
+
+        $sourceId = 'test-source';
+        $sourceIdInCache = 'payment_methods_' . $customer->id;
+        $sourceDTO = new PaymentMethodSourceDTO($sourceId, 'Visa', '1234', '12', '2025', $customer->id, 'balance');
+
+        \Illuminate\Support\Facades\Cache::forever($sourceIdInCache, collect([$sourceId => $sourceDTO]));
+
+        // We need to ensure GatewayService::getAvailable() is not cached or includes our balance gateway
+        \App\Services\Store\GatewayService::forgotAvailable();
+
+        $response = $this->actingAs($admin, 'admin')->post(route('admin.invoices.pay', ['invoice' => $invoice->id]), [
+            'source' => $sourceId,
+        ]);
+
+        $response->assertStatus(302);
+    }
+
+    public function test_admin_can_deliver_item(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $admin = Admin::first();
+        $customer = Customer::factory()->create();
+        $invoice = Invoice::factory()->create(['customer_id' => $customer->id]);
+        $invoiceItem = InvoiceItem::factory()->create(['invoice_id' => $invoice->id]);
+
+        $response = $this->actingAs($admin, 'admin')->post(route('admin.invoices.deliver', [
+            'invoice' => $invoice->id,
+            'invoiceItem' => $invoiceItem->id,
+        ]));
+
+        $response->assertStatus(302)->assertSessionHas('success');
+    }
+
+    public function test_admin_can_view_pdf(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $this->seed(\Database\Seeders\GatewaySeeder::class);
+        $admin = Admin::first();
+        $customer = Customer::factory()->create();
+        $invoice = Invoice::factory()->create(['customer_id' => $customer->id, 'invoice_number' => 'CTX-2024-05-0001']);
+
+        $response = $this->actingAs($admin, 'admin')->get(route('admin.invoices.pdf', ['invoice' => $invoice->id]));
+
+        $response->assertStatus(200)->assertHeader('Content-Type', 'application/pdf');
     }
 }

@@ -80,20 +80,20 @@ class SettingsService
         Setting::updateSettings($this->settings->all());
     }
 
-    public function addCard(string $uuid, string $name, string $description, int $order, ?Collection $items = null, bool $is_active = true, int $columns = 2): void
+    public function addCard(string $uuid, string $name, string $description, int $order, ?Collection $items = null, bool $is_active = true, int $columns = 2, string $icon = 'bi bi-gear'): void
     {
-        $this->cards->push(new SettingsCardDTO($uuid, $name, $description, $order, $items ?? collect(), $is_active, $columns));
+        $this->cards->push(new SettingsCardDTO($uuid, $name, $description, $order, $items ?? collect(), $is_active, $columns, $icon));
     }
 
     public function getCards(): Collection
     {
-        return collect($this->cards)->sort(fn ($a, $b) => $a->order <=> $b->order);
+        return collect($this->cards)->sort(fn($a, $b) => $a->order <=> $b->order);
     }
 
     public function addCardItem(string $card_uuid, string $uuid, string $name, string $description, string $icon, $action, ?string $permission = null): void
     {
         if ($permission == null) {
-            $permission = 'admin.settings.'.$card_uuid.'_'.$uuid;
+            $permission = 'admin.settings.' . $card_uuid . '_' . $uuid;
         }
         $card = $this->cards->firstWhere('uuid', $card_uuid);
         if ($card) {

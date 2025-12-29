@@ -28,7 +28,7 @@ class SettingsExtensionController
     public function showExtensions()
     {
         $groups = app('extension')->getGroupsWithExtensions();
-        return view('admin.settings.extensions.index', ['groups' => $groups]);
+        return view('admin.settings.extensions.index', ['groups' => $groups, 'tags' => app('extension')->fetch()['tags'] ?? []]);
     }
 
     public function enable(string $type, string $extension)

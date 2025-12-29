@@ -2,15 +2,17 @@
     "openapi": "3.0.0",
     "info": {
         "title": "CLIENTXCMS New Gen API",
-        "description": "This is the API documentation for the CLIENTXCMS New Gen API",
+        "description": "This is the API documentation for the CLIENTXCMS New Gen API. ",
         "contact": {
+            "name": "CLIENTXCMS Support",
+            "url": "https://clientxcms.com/client/support",
             "email": "contact@clientxcms.com"
         },
         "version": "1.0.2"
     },
     "servers": [
         {
-            "url": "test/api",
+            "url": "http://clientxcms.app/api",
             "description": "Endpoint"
         }
     ],
@@ -131,10 +133,10 @@
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -190,10 +192,10 @@
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -218,10 +220,10 @@
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -250,10 +252,10 @@
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -282,10 +284,10 @@
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -312,15 +314,15 @@
                     "Invoices"
                 ],
                 "summary": "Edit an invoice",
-                "operationId": "8f1bd67da2237b6135ea2f99b4eb4484",
+                "operationId": "5fb33a8f85185dc43f2d44f7788e527f",
                 "parameters": [
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -352,10 +354,10 @@
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -372,6 +374,31 @@
                     },
                     "400": {
                         "description": "Validation errors"
+                    }
+                }
+            }
+        },
+        "/application/invoices/{invoice}/download": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Download an invoice as PDF",
+                "operationId": "e9611f48f43e09ce83ff800e309d7ab7",
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "description": "ID or UUID of the invoice",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF file download"
                     }
                 }
             }
@@ -524,6 +551,14 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "force",
+                        "in": "query",
+                        "description": "Force deletion even with active services",
+                        "schema": {
+                            "type": "boolean"
+                        }
                     }
                 ],
                 "responses": {
@@ -531,7 +566,7 @@
                         "description": "Customer deleted"
                     },
                     "400": {
-                        "description": "Customer has invoices"
+                        "description": "Customer cannot be deleted"
                     }
                 }
             }
@@ -703,65 +738,1162 @@
                 }
             }
         },
-        "/application/services": {
+        "/application/departments": {
             "get": {
                 "tags": [
-                    "Services"
+                    "Departments"
                 ],
-                "summary": "Get list of service",
-                "description": "Returns list of service",
-                "operationId": "getServicesList",
+                "summary": "Get a list of support departments",
+                "operationId": "ba7029296ac0236ec5cc62fd9d82e647",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
                     {
                         "name": "per_page",
                         "in": "query",
-                        "description": "Number of pricings per page",
+                        "description": "Number of items per page",
+                        "required": false,
                         "schema": {
-                            "type": "number",
-                            "format": "int64",
-                            "default": 12
+                            "type": "integer",
+                            "default": 10
                         }
                     },
                     {
                         "name": "sort",
                         "in": "query",
-                        "description": "Sort fields, e.g. sort=id or sort=-id",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "created_at"
+                        }
+                    },
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "description": "Filter departments",
+                        "required": false,
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Related resources to include",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "tickets"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of support departments",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SupportDepartment"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Departments"
+                ],
+                "summary": "Create a new support department",
+                "operationId": "b8f766300f92165ee857dcb2bca60925",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "description",
+                                    "icon"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Technical Support"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Handles all technical issues"
+                                    },
+                                    "icon": {
+                                        "type": "string",
+                                        "example": "bi bi-question-circle"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Department created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportDepartment"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/application/departments/{department}": {
+            "get": {
+                "tags": [
+                    "Departments"
+                ],
+                "summary": "Get a single support department",
+                "operationId": "0f89d1b194fff44b6a16ebe24d9edd1d",
+                "parameters": [
+                    {
+                        "name": "department",
+                        "in": "path",
+                        "description": "ID of the department",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single support department",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportDepartment"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Departments"
+                ],
+                "summary": "Update an existing support department",
+                "operationId": "97b08b776cdc1fa3a810459ff9ef3494",
+                "parameters": [
+                    {
+                        "name": "department",
+                        "in": "path",
+                        "description": "ID of the department",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "description",
+                                    "icon"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Technical Support"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Handles all technical issues"
+                                    },
+                                    "icon": {
+                                        "type": "string",
+                                        "example": "bi bi-question-circle"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Department updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportDepartment"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Departments"
+                ],
+                "summary": "Delete an existing support department",
+                "operationId": "1b8717ea5218bac4b1c4fffd72f148aa",
+                "parameters": [
+                    {
+                        "name": "department",
+                        "in": "path",
+                        "description": "ID of the department",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Department deleted successfully"
+                    },
+                    "403": {
+                        "description": "Department cannot be deleted (has tickets)"
+                    }
+                }
+            }
+        },
+        "/application/tickets": {
+            "get": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Get a list of support tickets",
+                "operationId": "ca3fb08fe4f01691e984b38d73f94471",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "created_at"
+                        }
+                    },
+                    {
+                        "name": "filter[status]",
+                        "in": "query",
+                        "description": "Filter by status (open, closed, answered)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[priority]",
+                        "in": "query",
+                        "description": "Filter by priority (low, medium, high)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[department_id]",
+                        "in": "query",
+                        "description": "Filter by department ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
                         }
                     },
                     {
                         "name": "filter[customer_id]",
                         "in": "query",
                         "description": "Filter by customer ID",
+                        "required": false,
                         "schema": {
                             "type": "integer"
                         }
                     },
                     {
-                        "name": "filter[status]",
+                        "name": "include",
                         "in": "query",
-                        "description": "Filter by service status",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[created_at]",
-                        "in": "query",
-                        "description": "Filter by creation date",
+                        "description": "Related resources to include",
+                        "required": false,
                         "schema": {
                             "type": "string",
-                            "format": "date-time"
+                            "default": "customer,department,messages"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Show pricings list"
+                        "description": "A list of support tickets",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SupportTicket"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Create a new support ticket",
+                "operationId": "d5c58d680d404bcff28a8b98876b1171",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "department_id",
+                                    "customer_id",
+                                    "subject",
+                                    "priority",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "department_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "customer_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "subject": {
+                                        "type": "string",
+                                        "example": "Issue with my service"
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high"
+                                        ],
+                                        "example": "medium"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "I'm having issues with my service..."
+                                    },
+                                    "related_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "service",
+                                            "invoice"
+                                        ],
+                                        "nullable": true
+                                    },
+                                    "related_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ticket created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportTicket"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/application/tickets/{ticket}": {
+            "get": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Get a single support ticket",
+                "operationId": "777f58f2548c6706fcb3a550bf80cfc2",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID or UUID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single support ticket",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportTicket"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Update an existing support ticket",
+                "operationId": "5aeb39e5a514197bee8697e1ef7970a3",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID or UUID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "department_id",
+                                    "subject",
+                                    "priority"
+                                ],
+                                "properties": {
+                                    "department_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "subject": {
+                                        "type": "string",
+                                        "example": "Updated subject"
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high"
+                                        ],
+                                        "example": "high"
+                                    },
+                                    "assigned_to": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "close_reason": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ticket updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportTicket"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Delete/Close an existing support ticket",
+                "operationId": "77e5172941565be3122dfef6323fd265",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID or UUID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket closed/deleted successfully"
+                    }
+                }
+            }
+        },
+        "/application/tickets/{ticket}/reply": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Reply to a support ticket",
+                "operationId": "eeb6afb01b6719e2f6a6b51f1da25022",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID or UUID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "content"
+                                ],
+                                "properties": {
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Thank you for contacting us..."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reply added successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportTicket"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/application/tickets/{ticket}/close": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Close a support ticket",
+                "operationId": "08b30793024f61b5600b00d2a476af4a",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID or UUID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "example": "Issue resolved",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ticket closed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportTicket"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/application/tickets/{ticket}/reopen": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Reopen a closed support ticket",
+                "operationId": "84b8683d10eeb2a7b980b0a47d4890d7",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID or UUID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket reopened successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportTicket"
+                                }
+                            }
+                        }
                     },
-                    "403": {
-                        "description": "Key is invalid"
+                    "400": {
+                        "description": "Ticket is not closed"
+                    }
+                }
+            }
+        },
+        "/api/cancellation_reasons": {
+            "get": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "List all cancellation reasons",
+                "operationId": "d78fd632b09b0f9315912f9bc70e39ae",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Create a new cancellation reason",
+                "operationId": "361c57951d113f1ceb588f21f52a8c30",
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/api/cancellation_reasons/{id}": {
+            "get": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Get a specific cancellation reason",
+                "operationId": "5ae253acef5a78b6949b0b5df4bce45f",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Update a cancellation reason",
+                "operationId": "5a6a43c1e64a9aa31702003272a58776",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Delete a cancellation reason",
+                "operationId": "e3b19423af9e9e82219d2778586b5bf7",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            }
+        },
+        "/api/cancellation_reasons_analytics": {
+            "get": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Get cancellation analytics data",
+                "operationId": "2d67eb6bfa07e1a37a098ed4ccfda908",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            }
+        },
+        "/application/servers": {
+            "get": {
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Get a list of servers",
+                "operationId": "097e6898d25406e28b113628f78ef9d9",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[type]",
+                        "in": "query",
+                        "description": "Filter by server type (pterodactyl, plesk, etc.)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[status]",
+                        "in": "query",
+                        "description": "Filter by status",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of servers",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ProvisioningServer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Create a new server",
+                "operationId": "b9685ad3634a0c74b050ee1b4d27970f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "address",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Node-Paris-01"
+                                    },
+                                    "hostname": {
+                                        "type": "string",
+                                        "example": "paris01.example.com"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "192.168.0.10"
+                                    },
+                                    "port": {
+                                        "type": "integer",
+                                        "example": 443
+                                    },
+                                    "username": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "pterodactyl"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "hidden",
+                                            "unreferenced"
+                                        ],
+                                        "example": "active"
+                                    },
+                                    "maxaccounts": {
+                                        "type": "integer",
+                                        "example": 100,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Server created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProvisioningServer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/application/servers/{server}": {
+            "get": {
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Get a single server",
+                "operationId": "b9957141a36f96deb6019f3686710c2b",
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "description": "ID of the server",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single server",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProvisioningServer"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Update an existing server",
+                "operationId": "5e490fca2fa45676391b899976d18e23",
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "description": "ID of the server",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "hostname": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "port": {
+                                        "type": "integer"
+                                    },
+                                    "username": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "maxaccounts": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Server updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProvisioningServer"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Delete an existing server",
+                "operationId": "6438d6f99a153b01ac8f38261763c3c1",
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "description": "ID of the server",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Server deleted successfully"
+                    }
+                }
+            }
+        },
+        "/application/servers/test": {
+            "post": {
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Test server connection",
+                "operationId": "609de3b2fa0fddbbff3d07fd2acc70af",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "address",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "port": {
+                                        "type": "integer"
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "username": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "hostname": {
+                                        "type": "string"
+                                    },
+                                    "server_id": {
+                                        "description": "Existing server ID to use credentials from",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connection test result"
+                    }
+                }
+            }
+        },
+        "/application/services": {
+            "get": {
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Get a list of services",
+                "description": "Returns a list of services",
+                "operationId": "getAllServices",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "created_at"
+                        }
+                    },
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "description": "Filter services",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Related resources to include",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "customer,metadata,pricings,configoptions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
                     }
                 }
             }
@@ -778,10 +1910,10 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "service id",
+                        "description": "service id or uuid",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -815,10 +1947,10 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "service id",
+                        "description": "service id or uuid",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -854,10 +1986,10 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "service id",
+                        "description": "service id or uuid",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -910,10 +2042,10 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "service id",
+                        "description": "service id or uuid",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -970,10 +2102,10 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "service id",
+                        "description": "service id or uuid",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -993,6 +2125,532 @@
                     },
                     "404": {
                         "description": "service not found"
+                    }
+                }
+            }
+        },
+        "/application/subdomains": {
+            "get": {
+                "tags": [
+                    "Subdomain Hosts"
+                ],
+                "summary": "Get a list of subdomain hosts",
+                "operationId": "f9eaaa2763ec838a177718d1e503c323",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of subdomain hosts"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Subdomain Hosts"
+                ],
+                "summary": "Create a new subdomain host",
+                "operationId": "f7705da3bcf4440c6b1297e06c1c1e85",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "domain"
+                                ],
+                                "properties": {
+                                    "domain": {
+                                        "type": "string",
+                                        "example": ".example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Subdomain host created successfully"
+                    }
+                }
+            }
+        },
+        "/application/subdomains/{subdomain}": {
+            "get": {
+                "tags": [
+                    "Subdomain Hosts"
+                ],
+                "summary": "Get a single subdomain host",
+                "operationId": "3f01f5e502e0515368a0594dc1fad3f0",
+                "parameters": [
+                    {
+                        "name": "subdomain",
+                        "in": "path",
+                        "description": "ID of the subdomain host",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single subdomain host"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Subdomain Hosts"
+                ],
+                "summary": "Update an existing subdomain host",
+                "operationId": "1d39e4d9f59af712ad58c7f80d743269",
+                "parameters": [
+                    {
+                        "name": "subdomain",
+                        "in": "path",
+                        "description": "ID of the subdomain host",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "domain"
+                                ],
+                                "properties": {
+                                    "domain": {
+                                        "type": "string",
+                                        "example": ".newdomain.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Subdomain host updated successfully"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Subdomain Hosts"
+                ],
+                "summary": "Delete an existing subdomain host",
+                "operationId": "5b6b80bd2cb5a03a63a8b29475adcd56",
+                "parameters": [
+                    {
+                        "name": "subdomain",
+                        "in": "path",
+                        "description": "ID of the subdomain host",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subdomain host deleted successfully"
+                    }
+                }
+            }
+        },
+        "/application/logs": {
+            "get": {
+                "tags": [
+                    "Action Logs"
+                ],
+                "summary": "Get a list of action logs",
+                "operationId": "90bf469ec6cb805439a038222a48a93f",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 50
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order (default: -created_at)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[action]",
+                        "in": "query",
+                        "description": "Filter by action type",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[model]",
+                        "in": "query",
+                        "description": "Filter by model name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[staff_id]",
+                        "in": "query",
+                        "description": "Filter by staff ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[customer_id]",
+                        "in": "query",
+                        "description": "Filter by customer ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Related resources to include",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "customer,staff,entries"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of action logs"
+                    }
+                }
+            }
+        },
+        "/application/logs/{log}": {
+            "get": {
+                "tags": [
+                    "Action Logs"
+                ],
+                "summary": "Get a single action log",
+                "operationId": "7f8701503ee0ab54c6d70825124e62c1",
+                "parameters": [
+                    {
+                        "name": "log",
+                        "in": "path",
+                        "description": "ID of the action log",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single action log with details"
+                    }
+                }
+            }
+        },
+        "/application/coupons": {
+            "get": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Get a list of coupons",
+                "operationId": "d353400d2f716be4bbe016cc2b731635",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Related resources to include",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "products,pricing"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of coupons"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Create a new coupon",
+                "operationId": "b2d1fafa8137aff9996b0ab50a9018c7",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "code": {
+                                        "type": "string",
+                                        "example": "SUMMER25"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "fixed",
+                                            "percent"
+                                        ],
+                                        "example": "percent"
+                                    },
+                                    "applied_month": {
+                                        "type": "integer",
+                                        "example": -1
+                                    },
+                                    "free_setup": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "start_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    },
+                                    "end_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    },
+                                    "first_order_only": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "max_uses": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "max_uses_per_customer": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "minimum_order_amount": {
+                                        "type": "number",
+                                        "example": 0
+                                    },
+                                    "is_global": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "products": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "pricing": {
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Coupon created successfully"
+                    }
+                }
+            }
+        },
+        "/application/coupons/{coupon}": {
+            "get": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Get a single coupon",
+                "operationId": "06fd0751848fe4f9848fc37c963c5497",
+                "parameters": [
+                    {
+                        "name": "coupon",
+                        "in": "path",
+                        "description": "ID of the coupon",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single coupon"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Update an existing coupon",
+                "operationId": "2e906dc6076052fd2a0ba3ab6bd0c9e7",
+                "parameters": [
+                    {
+                        "name": "coupon",
+                        "in": "path",
+                        "description": "ID of the coupon",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "fixed",
+                                            "percent"
+                                        ]
+                                    },
+                                    "is_global": {
+                                        "type": "boolean"
+                                    },
+                                    "products": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Coupon updated successfully"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Delete an existing coupon",
+                "operationId": "51475c3b39bb9ff36e937f15bdb7ccf4",
+                "parameters": [
+                    {
+                        "name": "coupon",
+                        "in": "path",
+                        "description": "ID of the coupon",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Coupon deleted successfully"
                     }
                 }
             }
@@ -1731,6 +3389,72 @@
                 }
             }
         },
+        "/application/products/{id}/config": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Get product configuration",
+                "description": "Returns the product configuration as JSON, including metadata and pricing.",
+                "operationId": "getProductConfig",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the product",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product configuration"
+                    },
+                    "404": {
+                        "description": "Product not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Update product configuration",
+                "description": "Updates the product configuration.",
+                "operationId": "updateProductConfig",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the product",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Configuration updated successfully"
+                    },
+                    "404": {
+                        "description": "Product config not found"
+                    }
+                }
+            }
+        },
         "/application/health": {
             "get": {
                 "tags": [
@@ -2104,12 +3828,6 @@
                         "type": "number",
                         "format": "float",
                         "example": 250.5
-                    },
-                    "notes": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "example": "Client fidèle",
-                        "nullable": true
                     },
                     "country": {
                         "type": "string",
@@ -4050,6 +5768,34 @@
         {
             "name": "Invoices",
             "description": "Invoices"
+        },
+        {
+            "name": "Departments",
+            "description": "Departments"
+        },
+        {
+            "name": "Tickets",
+            "description": "Tickets"
+        },
+        {
+            "name": "Cancellation Reasons",
+            "description": "Cancellation Reasons"
+        },
+        {
+            "name": "Servers",
+            "description": "Servers"
+        },
+        {
+            "name": "Subdomain Hosts",
+            "description": "Subdomain Hosts"
+        },
+        {
+            "name": "Action Logs",
+            "description": "Action Logs"
+        },
+        {
+            "name": "Coupons",
+            "description": "Coupons"
         }
     ],
     "security": [

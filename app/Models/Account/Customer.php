@@ -279,6 +279,8 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'billing_details',
         'company_name',
         'gdpr_compliment',
+        'security_question_id',
+        'security_answer',
     ];
 
     protected $attributes = [
@@ -299,6 +301,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'remember_token',
         'updated_at',
         'last_ip',
+        'security_answer',
     ];
 
     /**
@@ -310,7 +313,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'last_login' => 'datetime',
-        'phone' => CustomRawPhoneNumberCast::class.':FR',
+        'phone' => CustomRawPhoneNumberCast::class . ':FR',
         'balance' => 'decimal:2'
     ];
 
@@ -367,6 +370,11 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         return $this->hasMany(SupportTicket::class, 'customer_id');
     }
 
+    public function customerNotes()
+    {
+        return $this->hasMany(CustomerNote::class, 'customer_id');
+    }
+
     protected static function newFactory()
     {
         return \Database\Factories\Core\CustomerFactory::new();
@@ -374,7 +382,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
 
     public function getFullNameAttribute(): string
     {
-        return $this->firstname.' '.$this->lastname;
+        return $this->firstname . ' ' . $this->lastname;
     }
 
     public function excerptFullName(int $length = 24): string
@@ -402,13 +410,13 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public function supportRelatedItems()
     {
         return $this->invoices->merge($this->services)->mapWithKeys(function ($item) {
-            return [$item->relatedType().'-'.$item->relatedId() => $item->relatedName()];
+            return [$item->relatedType() . '-' . $item->relatedId() => $item->relatedName()];
         })->put('none', __('helpdesk.support.create.relatednone'));
     }
 
     public function initials()
     {
-        return $this->firstname[0].$this->lastname[0];
+        return $this->firstname[0] . $this->lastname[0];
     }
 
     public function notify($instance)
@@ -417,7 +425,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
             app(Dispatcher::class)->send($this, $instance);
             \Cache::forget('notification_error');
         } catch (\Exception $e) {
-            \Cache::put('notification_error', $e->getMessage().' | Date : '.date('Y-m-d H:i:s'), 3600 * 24);
+            \Cache::put('notification_error', $e->getMessage() . ' | Date : ' . date('Y-m-d H:i:s'), 3600 * 24);
         }
     }
 
@@ -470,7 +478,18 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public static function getNotificationContextVariables(): array
     {
         return [
-            '%customer_name%', '%customer_email%', '%customer_phone%', '%customer_address%', '%customer_address2%', '%customer_city%', '%customer_country%', '%customer_region%', '%customer_zipcode%', '%customer_locale%', '%customer_firstname%', '%customer_lastname%',
+            '%customer_name%',
+            '%customer_email%',
+            '%customer_phone%',
+            '%customer_address%',
+            '%customer_address2%',
+            '%customer_city%',
+            '%customer_country%',
+            '%customer_region%',
+            '%customer_zipcode%',
+            '%customer_locale%',
+            '%customer_firstname%',
+            '%customer_lastname%',
         ];
     }
 
@@ -483,7 +502,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     {
         return $this->getPendingInvoices()->mapWithKeys(function (Invoice $invoice) {
             return [
-                $invoice->id => __('global.invoice').' - '.$invoice->invoice_number,
+                $invoice->id => __('global.invoice') . ' - ' . $invoice->invoice_number,
             ];
         });
     }
@@ -541,5 +560,55 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         }
 
         return true;
+    }
+
+    /**
+     * Get the security question associated with the customer.
+     */
+    public function securityQuestion()
+    {
+        return $this->belongsTo(\App\Models\Admin\SecurityQuestion::class, 'security_question_id');
+    }
+
+    /**
+     * Check if the customer has a security question set.
+     */
+    public function hasSecurityQuestion(): bool
+    {
+        return $this->security_question_id !== null && $this->security_answer !== null;
+    }
+
+    /**
+     * Verify the security answer (case insensitive).
+     */
+    public function verifySecurityAnswer(string $answer): bool
+    {
+        if (!$this->hasSecurityQuestion()) {
+            return true;
+        }
+
+        return strtolower(trim($answer)) === strtolower(trim($this->security_answer));
+    }
+
+    /**
+     * Set the security question and answer.
+     */
+    public function setSecurityQuestion(int $questionId, string $answer): void
+    {
+        $this->update([
+            'security_question_id' => $questionId,
+            'security_answer' => strtolower(trim($answer)),
+        ]);
+    }
+
+    /**
+     * Reset the security question.
+     */
+    public function resetSecurityQuestion(): void
+    {
+        $this->update([
+            'security_question_id' => null,
+            'security_answer' => null,
+        ]);
     }
 }

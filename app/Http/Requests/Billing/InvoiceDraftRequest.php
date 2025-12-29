@@ -19,8 +19,11 @@
 
 namespace App\Http\Requests\Billing;
 
+use App\Contracts\Store\ProductTypeInterface;
+use App\Models\Store\Product;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+
 /**
  * @OA\Schema(
  *     title="InvoiceDraftRequest",
@@ -58,6 +61,18 @@ class InvoiceDraftRequest extends FormRequest
         ];
         if ($this->related_id && $this->related == 'product') {
             $rules['related_id'] = 'exists:products,id';
+            $product = Product::find($this->related_id);
+            if ($product) {
+                /** @var ProductTypeInterface $productType */
+                $productType = $product->productType();
+                if ($productType->data($product) !== null) {
+                    $rules = array_merge($rules, $productType->data($product)->validate());
+                }
+                $configOptions = $product->configoptions()->orderBy('sort_order')->get();
+                foreach ($configOptions as $configOption) {
+                    $rules['options.' . $configOption->key] = $configOption->validate();
+                }
+            }
         } elseif ($this->related_id && $this->related == 'service') {
             $rules['related_id'] = 'exists:services,id';
         }

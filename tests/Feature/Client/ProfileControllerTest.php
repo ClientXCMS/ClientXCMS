@@ -35,6 +35,11 @@ class ProfileControllerTest extends \Tests\TestCase
             'country' => 'FR',
             'company_name' => 'Doe Industries',
             'billing_details' => 'Billing details here',
+            'address' => 'test',
+            'city' => 'roubaix',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'zipcode' => '59100',
         ]);
 
         $response->assertRedirect(route('front.profile.index'));
@@ -45,6 +50,11 @@ class ProfileControllerTest extends \Tests\TestCase
             'country' => 'FR',
             'company_name' => 'Doe Industries',
             'billing_details' => 'Billing details here',
+            'address' => 'test',
+            'city' => 'roubaix',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'zipcode' => '59100',
         ]);
     }
 
@@ -132,7 +142,7 @@ class ProfileControllerTest extends \Tests\TestCase
         $response = $this->get(route('front.profile.2fa_codes'));
 
         $response->assertStatus(200);
-        $response->assertHeader('Content-Disposition', 'attachment; filename=2fa_recovery_codes_'.\Str::slug(config('app.name')).'.txt');
+        $response->assertHeader('Content-Disposition', 'attachment; filename=2fa_recovery_codes_' . \Str::slug(config('app.name')) . '.txt');
         $this->assertContains($codes[0], $this->user->twoFactorRecoveryCodes());
     }
 }

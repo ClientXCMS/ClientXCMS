@@ -59,7 +59,7 @@ class Kernel extends ConsoleKernel
             ->weekly()->mondays()
             ->name('clientxcms:purge-metadata')
             ->sendOutputTo(storage_path('logs/purge-metadata.log'))->sentryMonitor();
-        $schedule->command('clientxcms:purge-metadata')
+        $schedule->command('clientxcms:purge-basket')
             ->weekly()->thursdays()
             ->name('clientxcms:purge-basket')
             ->sendOutputTo(storage_path('logs/purge-basket.log'))->sentryMonitor();
@@ -74,7 +74,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

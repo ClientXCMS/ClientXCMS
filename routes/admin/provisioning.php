@@ -15,11 +15,14 @@
  *
  * Year: 2025
  */
+
+use App\Http\Controllers\Admin\Provisioning\CancellationReasonController;
 use App\Http\Controllers\Admin\Provisioning\ServerController;
 use App\Http\Controllers\Admin\Provisioning\ServiceController;
 use App\Http\Controllers\Admin\Provisioning\SubdomainHostController;
 use Illuminate\Support\Facades\Route;
 
+Route::resource('/cancellation_reasons', CancellationReasonController::class)->names('cancellation_reasons')->except('edit');
 Route::resource('/subdomains_hosts', SubdomainHostController::class)->names('subdomains_hosts')->except('edit');
 Route::get('/upgrades', [\App\Http\Controllers\Admin\Billing\UpgradeController::class, 'index'])->name('upgrades.index');
 Route::resource('/servers', ServerController::class)->names('servers')->except('edit');

@@ -56,6 +56,10 @@ class CancellationReason extends Model
         'status',
     ];
 
+    protected $attributes = [
+        'status' => 'active',
+    ];
+
     public static function getReasons()
     {
         return \App\Models\Provisioning\CancellationReason::getAvailable(false)->pluck('reason', 'id');

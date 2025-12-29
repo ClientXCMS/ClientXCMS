@@ -131,11 +131,14 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
         'expires_at',
         'role_id',
         'locale',
+        'security_question_id',
+        'security_answer',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'security_answer',
     ];
 
     protected $casts = [
@@ -167,7 +170,7 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
 
     public function initials()
     {
-        return $this->firstname[0].$this->lastname[0];
+        return $this->firstname[0] . $this->lastname[0];
     }
 
     public function can($abilities, $arguments = [])
@@ -184,13 +187,13 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
             if ($instance instanceof MailTested) {
                 throw $e;
             }
-            \Cache::put('notification_error', $e->getMessage().' | Date : '.date('Y-m-d H:i:s'), 3600 * 24);
+            \Cache::put('notification_error', $e->getMessage() . ' | Date : ' . date('Y-m-d H:i:s'), 3600 * 24);
         }
     }
 
     public function getFullNameAttribute(): string
     {
-        return $this->firstname.' '.$this->lastname;
+        return $this->firstname . ' ' . $this->lastname;
     }
 
     public function excerptFullName(int $length = 20): string
@@ -203,7 +206,7 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
         $greeting = setting('mail_greeting');
         $greeting = EmailTemplate::replacePlaceholders($greeting, $customer);
 
-        return $greeting.PHP_EOL.PHP_EOL.$this->signature ?? '';
+        return $greeting . PHP_EOL . PHP_EOL . $this->signature ?? '';
     }
 
     public static function newFactory()
@@ -214,5 +217,55 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
     public function getLocale(): string
     {
         return $this->locale;
+    }
+
+    /**
+     * Get the security question associated with the admin.
+     */
+    public function securityQuestion()
+    {
+        return $this->belongsTo(SecurityQuestion::class, 'security_question_id');
+    }
+
+    /**
+     * Check if the admin has a security question set.
+     */
+    public function hasSecurityQuestion(): bool
+    {
+        return $this->security_question_id !== null && $this->security_answer !== null;
+    }
+
+    /**
+     * Verify the security answer (case insensitive).
+     */
+    public function verifySecurityAnswer(string $answer): bool
+    {
+        if (!$this->hasSecurityQuestion()) {
+            return true;
+        }
+
+        return strtolower(trim($answer)) === strtolower(trim($this->security_answer));
+    }
+
+    /**
+     * Set the security question and answer.
+     */
+    public function setSecurityQuestion(int $questionId, string $answer): void
+    {
+        $this->update([
+            'security_question_id' => $questionId,
+            'security_answer' => strtolower(trim($answer)),
+        ]);
+    }
+
+    /**
+     * Reset the security question.
+     */
+    public function resetSecurityQuestion(): void
+    {
+        $this->update([
+            'security_question_id' => null,
+            'security_answer' => null,
+        ]);
     }
 }

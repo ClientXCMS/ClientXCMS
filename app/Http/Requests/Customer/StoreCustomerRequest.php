@@ -20,12 +20,12 @@
 namespace App\Http\Requests\Customer;
 
 use App\Helpers\Countries;
-use App\Rules\ZipCode;
+use App\Services\Account\AccountEditService;
+use App\Services\Core\LocaleService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
-use Propaganistas\LaravelPhone\Rules\Phone;
 
 /**
  * @OA\Schema(
@@ -68,24 +68,21 @@ class StoreCustomerRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:customers'],
+        // Use AccountEditService as base for common customer fields
+        $baseRules = AccountEditService::rules(
+            $this->input('country', 'FR'),
+            email: true,
+            password: false,
+            except: null
+        );
+
+        // Merge with admin-specific rules
+        return array_merge($baseRules, [
             'password' => ['nullable', Rules\Password::defaults()],
-            'firstname' => ['required', 'string', 'max:255'],
-            'lastname' => ['required', 'string', 'max:255'],
-            'address' => ['required', 'string', 'max:255'],
-            'address2' => ['nullable', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:255'],
-            'phone' => ['nullable', Countries::rule(), 'max:15', (new Phone)->country($this->input('country')), Rule::unique('customers', 'phone')->ignore($this->id)],
-            'zipcode' => ['required', 'string', 'max:255', new ZipCode($this->input('country'))],
-            'region' => ['required', 'string', 'max:255'],
             'verified' => ['nullable', 'boolean'],
             'balance' => ['numeric', 'min:0', 'max:9999999999'],
-            'company_name' => ['nullable', 'string', 'max:255'],
-            'billing_details' => ['nullable', 'string', 'max:255'],
-            'locale' => ['required', 'string', 'max:255', Rule::in(array_keys(\App\Services\Core\LocaleService::getLocalesNames()))],
-            'country' => ['required', 'string', 'max:255', Rule::in(array_keys(Countries::names()))],
-        ];
+            'locale' => ['required', 'string', 'max:255', Rule::in(array_keys(LocaleService::getLocalesNames()))],
+        ]);
     }
 
     public function store()

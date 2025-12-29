@@ -37,7 +37,9 @@ class SettingsCardDTO
 
     public int $columns;
 
-    public function __construct(string $uuid, string $name, string $description, int $order, Collection $items, bool $is_active = true, int $columns = 2)
+    public string $icon;
+
+    public function __construct(string $uuid, string $name, string $description, int $order, Collection $items, bool $is_active = true, int $columns = 2, string $icon = 'bi bi-gear')
     {
         $this->uuid = $uuid;
         $this->name = $name;
@@ -46,5 +48,6 @@ class SettingsCardDTO
         $this->order = $order;
         $this->is_active = $is_active;
         $this->columns = $columns;
+        $this->icon = $icon;
     }
 }

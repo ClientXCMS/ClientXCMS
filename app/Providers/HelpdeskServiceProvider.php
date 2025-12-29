@@ -58,7 +58,7 @@ class HelpdeskServiceProvider extends ServiceProvider
 
             return view('admin.helpdesk.cards.tickets', ['tickets' => $tickets]);
         }, 'admin.manage_tickets', 2));
-        $this->app['settings']->addCard('helpdesk', 'helpdesk.admin.title', 'helpdesk.admin.description', 5, null, true);
+        $this->app['settings']->addCard('helpdesk', 'helpdesk.admin.title', 'helpdesk.admin.description', 5, null, true, 2, 'bi bi-chat-left-text');
         $this->app['settings']->addCardItem('helpdesk', 'helpdesk_settings', 'helpdesk.admin.settings.title', 'helpdesk.admin.settings.description', 'bi bi-gear', [HelpdeskSettingsController::class, 'showSettings'], Permission::MANAGE_SETTINGS);
         $this->app['settings']->addCardItem('helpdesk', 'helpdesk_departments', 'helpdesk.admin.departments.title', 'helpdesk.admin.departments.description', 'bi bi-building', action([DepartmentController::class, 'index']), 'admin.manage_departments');
         $this->app['extension']->addAdminMenuItem(new AdminMenuItem('helpdesk', 'admin.helpdesk.tickets.index', 'bi bi-chat-left-text', 'helpdesk.admin.title', 6, Permission::MANAGE_TICKETS));

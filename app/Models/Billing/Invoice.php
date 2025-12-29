@@ -263,7 +263,18 @@ class Invoice extends Model implements SupportRelateItemInterface
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withTrashed();
+    }
+
+    /**
+     * Get the customer name or placeholder for deleted users.
+     */
+    public function getCustomerNameAttribute(): string
+    {
+        if ($this->customer_id === null || $this->customer === null) {
+            return __('client.profile.delete.deleted_user_placeholder');
+        }
+        return $this->customer->fullName;
     }
 
     public function logs()

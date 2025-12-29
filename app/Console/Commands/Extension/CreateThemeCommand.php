@@ -62,7 +62,7 @@ class CreateThemeCommand extends Command
             'name' => $name,
             'uuid' => $uuid,
             'description' => $description,
-            'version' => '1.0.0',
+            'version' => '1.0',
             'author' => [
                 'name' => $author_name,
                 'email' => $author_email,
@@ -121,7 +121,7 @@ import.meta.glob([
         $files = File::files($source);
         $directories = File::directories($source);
         foreach ($files as $file) {
-            $destFilePath = $destination.'/'.File::basename($file);
+            $destFilePath = $destination . '/' . File::basename($file);
             File::copy($file, $destFilePath);
             $content = File::get($destFilePath);
             $content = str_replace('$THEME_NAME', $uuid, $content);
@@ -129,7 +129,7 @@ import.meta.glob([
         }
 
         foreach ($directories as $directory) {
-            $destDirPath = $destination.'/'.File::basename($directory);
+            $destDirPath = $destination . '/' . File::basename($directory);
             $this->copyDirectory($directory, $destDirPath, $uuid);
         }
 

@@ -56,6 +56,30 @@ class OnUpdateCommand extends Command
 
     public function handle()
     {
+        if (Schema::hasColumn('customers', 'notes') && Schema::hasTable('customer_notes')) {
+            $migratedCount = 0;
+            \App\Models\Account\Customer::whereNotNull('notes')
+                ->where('notes', '!=', '')
+                ->chunk(100, function ($customers) use (&$migratedCount) {
+                    foreach ($customers as $customer) {
+                        if (\App\Models\Account\CustomerNote::where('customer_id', $customer->id)->exists()) {
+                            continue;
+                        }
+                        \App\Models\Account\CustomerNote::create([
+                            'customer_id' => $customer->id,
+                            'author_id' => null, // Unknown author
+                            'content' => $customer->notes,
+                            'created_at' => $customer->updated_at ?? now(),
+                            'updated_at' => $customer->updated_at ?? now(),
+                        ]);
+                        $migratedCount++;
+                    }
+                });
+            if ($migratedCount > 0) {
+                $this->info("Migrated {$migratedCount} customer notes to the new table.");
+            }
+        }
+
         $this->info('CLIENTXCMS is up to date.');
     }
 
