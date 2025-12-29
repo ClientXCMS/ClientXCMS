@@ -48,4 +48,9 @@ class Countries
 
         return "phone:{$names}";
     }
+
+    public static function getName(string $code): string
+    {
+        return self::names()[$code] ?? '';
+    }
 }

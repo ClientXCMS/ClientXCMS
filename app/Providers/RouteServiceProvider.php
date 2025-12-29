@@ -47,13 +47,13 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
         Route::middleware(['api', 'auth:sanctum'])
-            ->prefix('api/customer')
-            ->name('api.customer.')
-            ->group(base_path('routes/api-customer.php'));
-        Route::middleware(['api', 'auth:sanctum'])
             ->prefix('api/application')
             ->name('api.application.')
             ->group(base_path('routes/api-application.php'));
+        Route::middleware('api')
+            ->prefix('api/client')
+            ->name('api.client.')
+            ->group(base_path('routes/api-client.php'));
         Route::middleware(['web', 'admin'])
             ->prefix(admin_prefix())
             ->name('admin.')
