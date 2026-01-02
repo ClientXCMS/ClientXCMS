@@ -165,8 +165,8 @@
     @else
     <div class="card text-center py-12">
         <i class="bi bi-cloud-slash text-4xl text-gray-400"></i>
-        <h3 class="mt-4 text-lg font-semibold text-gray-800 dark:text-white">__('admin.update.error_fetching')</h3>
-        <p class="mt-1 text-gray-500 dark:text-gray-400">__('admin.update.error_fetching_message')</p>
+        <h3 class="mt-4 text-lg font-semibold text-gray-800 dark:text-white">{{ __('admin.update.error_fetching') }}</h3>
+        <p class="mt-1 text-gray-500 dark:text-gray-400">{{ __('admin.update.error_fetching_message') }}</p>
     </div>
     @endif
 </div>

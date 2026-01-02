@@ -89,9 +89,9 @@ class AuthControllerTest extends TestCase
             'country' => 'FR',
             'address' => '123 Main St',
             'city' => 'Anytown',
-            'state' => 'CA',
-            'zip' => '12345',
-            'phone' => '123-456-7890',
+            'zipcode' => '85000',
+            'phone' => '0612345678',
+            'region' => 'Test',
         ]);
 
         $response->assertCreated()

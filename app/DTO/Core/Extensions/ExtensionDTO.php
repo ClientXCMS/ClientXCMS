@@ -87,7 +87,7 @@ class ExtensionDTO implements Arrayable
 
     public function hasPadding()
     {
-        return !$this->type === 'theme';
+        return $this->type !== 'theme';
     }
 
     public function toArray()
