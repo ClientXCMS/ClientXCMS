@@ -50,15 +50,15 @@ class WebHostingProductData extends AbstractProductData
             ],
 
             'domain_subdomain' => ['nullable', 'string', 'max:255', new DomainIsNotRegisted(true),
-            new RequiredIf(function () {
-                return request()->input('domain') == null && SubdomainHost::count() > 0;
-            }),
-            'regex:/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/',
+                new RequiredIf(function () {
+                    return request()->input('domain') == null && SubdomainHost::count() > 0;
+                }),
+                'regex:/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/',
             ],
             'subdomain' => ['nullable', 'string', 'max:255', Rule::in(SubdomainHost::all()->pluck('domain')->toArray()),
-            new RequiredIf(function () {
-                return request()->input('domain') == null && SubdomainHost::count() > 0;
-            }),
+                new RequiredIf(function () {
+                    return request()->input('domain') == null && SubdomainHost::count() > 0;
+                }),
             ],
 
         ];
