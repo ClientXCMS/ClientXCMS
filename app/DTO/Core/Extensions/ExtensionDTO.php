@@ -71,7 +71,6 @@ class ExtensionDTO implements Arrayable
 
     public function supportMigration(): bool
     {
-        dump(in_array($this->type, ['addon', 'theme', 'module']) . ' ' . $this->uuid . ' ' . $this->type);
         return in_array($this->type, ['addon', 'theme', 'module']);
     }
 
@@ -88,7 +87,7 @@ class ExtensionDTO implements Arrayable
 
     public function hasPadding()
     {
-        return $this->type === 'theme';
+        return !$this->type === 'theme';
     }
 
     public function toArray()

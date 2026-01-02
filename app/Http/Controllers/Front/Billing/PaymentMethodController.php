@@ -49,7 +49,7 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
             return $service->canSubscribe();
         });
         $paidInvoicesWithPaymentMethod = $customer->invoices()->where('status', 'paid')->whereNotNull('payment_method_id')->get();
-        return view('front.billing.payment-methods.index', compact('paidInvoicesWithPaymentMethod','subscribableServices', 'gateways', 'sources', 'gatewaysOptions'));
+        return view('front.billing.payment-methods.index', compact('paidInvoicesWithPaymentMethod', 'subscribableServices', 'gateways', 'sources', 'gatewaysOptions'));
     }
 
     public function add(Gateway $gateway, Request $request)
@@ -59,10 +59,10 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
         }
         try {
             $add = $gateway->paymentType()->addSource($request);
-            if ($add instanceof RedirectResponse){
+            if ($add instanceof RedirectResponse) {
                 return $add;
             }
-            Cache::delete('payment_methods_'.auth()->user()->id);
+            Cache::delete('payment_methods_' . auth('web')->id());
 
             return back()->with('success', __('client.payment-methods.success'));
         } catch (\Exception $e) {
@@ -121,7 +121,7 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
         }
         $gateway->paymentType()->removeSource($source);
         try {
-            Cache::delete('payment_methods_'.$customer->id);
+            Cache::delete('payment_methods_' . $customer->id);
         } catch (InvalidArgumentException $e) {
         }
 
