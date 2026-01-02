@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Admin\Helpdesk\Support;
 
 use App\Core\Admin\Dashboard\AdminCountWidget;
@@ -32,7 +32,6 @@ use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class TicketController extends \App\Http\Controllers\Admin\AbstractCrudController
@@ -40,10 +39,15 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
     protected string $viewPath = 'admin.helpdesk.tickets';
 
     protected string $routePath = 'admin.helpdesk.tickets';
+
     protected string $translatePrefix = 'helpdesk.admin.tickets';
+
     protected string $model = \App\Models\Helpdesk\SupportTicket::class;
+
     protected string $searchField = 'subject';
+
     protected string $filterField = 'department_id';
+
     protected array $relations = ['customer', 'messages'];
 
     public function getIndexFilters()
@@ -59,7 +63,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
     public function getIndexParams($items, string $translatePrefix): array
     {
         $params = parent::getIndexParams($items, $translatePrefix);
-        $ticketStatsService = new TicketStatisticsService();
+        $ticketStatsService = new TicketStatisticsService;
         $pending_tickets = SupportTicket::where('status', SupportTicket::STATUS_OPEN)->count();
         $active_tickets = SupportTicket::whereIn('status', [SupportTicket::STATUS_ANSWERED, SupportTicket::STATUS_OPEN])->count();
         $total_tickets = SupportTicket::count();
@@ -81,6 +85,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         $params['department_ticket_counts'] = $ticketStatsService->getDepartmentTicketCounts();
         $params['graph_labels'] = $ticketStatsService->getWeeklyGraphLabels();
         $params['graph_data'] = $ticketStatsService->getWeeklyGraphData();
+
         return $params;
     }
 
@@ -138,6 +143,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         }
         $data['currentCustomer'] = (bool) $customerId;
         $data['item']->customer_id = $customerId;
+
         return $data;
     }
 

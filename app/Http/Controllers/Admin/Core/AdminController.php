@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Admin\Core;
 
@@ -134,7 +134,7 @@ class AdminController extends AbstractCrudController
 
             $qrcode = $google->getQRCodeInline(
                 config('app.name'),
-                $request->user('admin')->email . ' (Admin)',
+                $request->user('admin')->email.' (Admin)',
                 $secret
             );
             $request->session()->put('2fa_secret_admin', $secret);
@@ -152,7 +152,7 @@ class AdminController extends AbstractCrudController
         $params['securityQuestions'] = SecurityQuestion::getActiveQuestionsForSelect();
         $params['securityQuestionsEnabled'] = SecurityQuestion::isFeatureEnabled();
 
-        return view($this->viewPath . '.profile', $params);
+        return view($this->viewPath.'.profile', $params);
     }
 
     public function save2fa(Request $request)
@@ -179,7 +179,7 @@ class AdminController extends AbstractCrudController
                 return $code;
             });
             echo $codes->join("\n");
-        }, '2fa_recovery_codes_' . \Str::slug(config('app.name')) . '.txt');
+        }, '2fa_recovery_codes_'.\Str::slug(config('app.name')).'.txt');
     }
 
     public function updateProfile(Request $request)
@@ -211,6 +211,7 @@ class AdminController extends AbstractCrudController
         // Si l'admin veut supprimer sa question de sécurité
         if ($request->has('remove_security_question')) {
             $admin->resetSecurityQuestion();
+
             return back()->with('success', __('client.profile.security_question_removed'));
         }
 

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * This is the Client API InvoiceController.
@@ -31,20 +32,25 @@ class InvoiceController extends Controller
      *     summary="List customer's invoices",
      *     tags={"Customer Invoices"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="filter",
      *         in="query",
      *         description="Filter by status (pending, paid, cancelled, refunded)",
      *         required=false,
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
      *         description="Items per page",
      *         required=false,
+     *
      *         @OA\Schema(type="integer", default=10)
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="List of invoices"
@@ -64,7 +70,7 @@ class InvoiceController extends Controller
         $invoices = $query->paginate($request->input('per_page', 10));
 
         return response()->json([
-            'data' => $invoices->map(fn($invoice) => $this->formatInvoice($invoice)),
+            'data' => $invoices->map(fn ($invoice) => $this->formatInvoice($invoice)),
             'meta' => [
                 'current_page' => $invoices->currentPage(),
                 'last_page' => $invoices->lastPage(),
@@ -81,12 +87,15 @@ class InvoiceController extends Controller
      *     summary="Get invoice details",
      *     tags={"Customer Invoices"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="invoice",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Invoice details with items"
@@ -108,7 +117,7 @@ class InvoiceController extends Controller
 
         return response()->json([
             'data' => $this->formatInvoice($invoice, true),
-            'available_gateways' => collect($gateways)->map(fn($g) => [
+            'available_gateways' => collect($gateways)->map(fn ($g) => [
                 'uuid' => $g->uuid,
                 'name' => $g->name,
                 'minimal_amount' => $g->minimal_amount,
@@ -122,12 +131,15 @@ class InvoiceController extends Controller
      *     summary="Stream invoice PDF",
      *     tags={"Customer Invoices"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="invoice",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="PDF stream"
@@ -149,12 +161,15 @@ class InvoiceController extends Controller
      *     summary="Download invoice PDF",
      *     tags={"Customer Invoices"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="invoice",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="PDF download"
@@ -176,26 +191,34 @@ class InvoiceController extends Controller
      *     summary="Pay an invoice",
      *     tags={"Customer Invoices"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="invoice",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="gateway",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Payment initiated",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="redirect_url", type="string"),
      *             @OA\Property(property="message", type="string")
      *         )
      *     ),
+     *
      *     @OA\Response(response=400, description="Cannot pay invoice")
      * )
      */
@@ -223,7 +246,7 @@ class InvoiceController extends Controller
                 ], 400);
             }
 
-            if (!$invoice->canPay()) {
+            if (! $invoice->canPay()) {
                 return response()->json([
                     'error' => __('client.invoices.invoice_not_payable'),
                 ], 400);
@@ -245,6 +268,7 @@ class InvoiceController extends Controller
             ]);
         } catch (WrongPaymentException $e) {
             logger()->error($e->getMessage());
+
             return response()->json([
                 'error' => __('store.checkout.wrong_payment'),
             ], 400);
@@ -257,19 +281,25 @@ class InvoiceController extends Controller
      *     summary="Add balance to invoice",
      *     tags={"Customer Invoices"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="invoice",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"amount"},
+     *
      *             @OA\Property(property="amount", type="number")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Balance added"
@@ -283,7 +313,7 @@ class InvoiceController extends Controller
             return response()->json(['error' => __('client.invoices.not_found')], 404);
         }
 
-        if (!setting('allow_add_balance_to_invoices')) {
+        if (! setting('allow_add_balance_to_invoices')) {
             return response()->json(['error' => __('client.invoices.balance.disabled')], 403);
         }
 
@@ -319,7 +349,7 @@ class InvoiceController extends Controller
             'uuid' => $invoice->uuid,
             'external_id' => $invoice->external_id,
             'status' => $invoice->status,
-            'status_label' => __('billing.invoices.status.' . $invoice->status),
+            'status_label' => __('billing.invoices.status.'.$invoice->status),
             'subtotal' => $invoice->subtotal,
             'tax' => $invoice->tax,
             'total' => $invoice->total,
@@ -336,7 +366,7 @@ class InvoiceController extends Controller
         ];
 
         if ($withItems) {
-            $data['items'] = $invoice->items->map(fn($item) => [
+            $data['items'] = $invoice->items->map(fn ($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'description' => $item->description,

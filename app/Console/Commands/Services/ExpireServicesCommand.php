@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Console\Commands\Services;
 
@@ -49,18 +49,18 @@ class ExpireServicesCommand extends Command
         foreach ($services as $service) {
             $result = $service->expire();
             if ($result->success) {
-                $this->info($service->id . ' : ' . $result->message);
+                $this->info($service->id.' : '.$result->message);
             } else {
-                $this->error($service->id . ' : ' . $result->message);
+                $this->error($service->id.' : '.$result->message);
             }
         }
         $services = Service::getShouldSuspend();
         foreach ($services as $service) {
             $result = $service->suspend(__('client.alerts.suspended_reason_expired'));
             if ($result->success) {
-                $this->info($service->id . ' : ' . $result->message);
+                $this->info($service->id.' : '.$result->message);
             } else {
-                $this->error($service->id . ' : ' . $result->message);
+                $this->error($service->id.' : '.$result->message);
             }
         }
         $services = Service::getShouldCancel();

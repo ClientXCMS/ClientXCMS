@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -23,7 +24,7 @@ use App\Http\Controllers\Admin\Personalization\SocialCrudController;
 use App\Http\Controllers\Admin\Personalization\ThemeController;
 use Illuminate\Support\Facades\Route;
 
-if (!is_installed() || app()->runningInConsole()) {
+if (! is_installed() || app()->runningInConsole()) {
     $types = ['front', 'bottom'];
 } else {
     $types = \App\Models\Personalization\MenuLink::pluck('type')->unique()->toArray();

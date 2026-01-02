@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -56,12 +57,12 @@ class CancellationReasonController extends AbstractCrudController
                 return $items;
             }
             if (count($items) == 1) {
-                return redirect()->route($this->routePath . '.show', $items->first());
+                return redirect()->route($this->routePath.'.show', $items->first());
             }
         } else {
             $items = $this->queryIndex();
             if ($items->currentPage() > $items->lastPage()) {
-                return redirect()->route($this->routePath . '.index', array_merge(request()->query(), ['page' => $items->lastPage()]));
+                return redirect()->route($this->routePath.'.index', array_merge(request()->query(), ['page' => $items->lastPage()]));
             }
         }
 
@@ -73,11 +74,11 @@ class CancellationReasonController extends AbstractCrudController
             ->whereNotNull('cancelled_at');
 
         if ($startDate && $endDate) {
-            $statsQuery->whereBetween('cancelled_at', [$startDate, $endDate . ' 23:59:59']);
+            $statsQuery->whereBetween('cancelled_at', [$startDate, $endDate.' 23:59:59']);
         } elseif ($startDate) {
             $statsQuery->where('cancelled_at', '>=', $startDate);
         } elseif ($endDate) {
-            $statsQuery->where('cancelled_at', '<=', $endDate . ' 23:59:59');
+            $statsQuery->where('cancelled_at', '<=', $endDate.' 23:59:59');
         }
 
         $stats = $statsQuery->groupBy('cancelled_reason')->get();
@@ -106,11 +107,11 @@ class CancellationReasonController extends AbstractCrudController
             ->whereNotNull('cancelled_at');
 
         if ($startDate && $endDate) {
-            $cancelledServicesQuery->whereBetween('cancelled_at', [$startDate, $endDate . ' 23:59:59']);
+            $cancelledServicesQuery->whereBetween('cancelled_at', [$startDate, $endDate.' 23:59:59']);
         } elseif ($startDate) {
             $cancelledServicesQuery->where('cancelled_at', '>=', $startDate);
         } elseif ($endDate) {
-            $cancelledServicesQuery->where('cancelled_at', '<=', $endDate . ' 23:59:59');
+            $cancelledServicesQuery->where('cancelled_at', '<=', $endDate.' 23:59:59');
         }
 
         $cancelledServices = $cancelledServicesQuery->orderBy('cancelled_at', 'desc')
@@ -125,7 +126,7 @@ class CancellationReasonController extends AbstractCrudController
         $params['endDate'] = $endDate;
         $params['totalCancellations'] = $stats->sum('count');
 
-        return view($this->viewPath . '.index', $params);
+        return view($this->viewPath.'.index', $params);
     }
 
     public function show(CancellationReason $cancellationReason)

@@ -7,8 +7,6 @@ use App\Models\Store\Basket\Basket;
 use App\Models\Store\Basket\BasketRow;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Ramsey\Uuid\Nonstandard\Uuid;
 use Tests\TestCase;
 
 class BasketTest extends TestCase

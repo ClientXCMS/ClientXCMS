@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Admin;
 
@@ -34,14 +34,12 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="Admin",
  *     title="Admin",
  *     description="Administrator user model",
  *     required={"email", "password", "username", "firstname", "lastname"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="email", type="string", format="email", example="admin@example.com"),
  *     @OA\Property(property="username", type="string", example="adminmaster"),
@@ -62,6 +60,7 @@ use Laravel\Sanctum\HasApiTokens;
  *         ref="#/components/schemas/Role"
  *     )
  * )
+ *
  * @property int $id
  * @property string $username
  * @property string $password
@@ -87,6 +86,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property-read \App\Models\Admin\Role|null $role
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Sanctum\PersonalAccessToken> $tokens
  * @property-read int|null $tokens_count
+ *
  * @method static \Database\Factories\Admin\AdminFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin newQuery()
@@ -111,6 +111,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin whereUsername($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Admin withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Admin extends Authenticatable implements NotifiablePlaceholderInterface
@@ -170,7 +171,7 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
 
     public function initials()
     {
-        return $this->firstname[0] . $this->lastname[0];
+        return $this->firstname[0].$this->lastname[0];
     }
 
     public function can($abilities, $arguments = [])
@@ -187,13 +188,13 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
             if ($instance instanceof MailTested) {
                 throw $e;
             }
-            \Cache::put('notification_error', $e->getMessage() . ' | Date : ' . date('Y-m-d H:i:s'), 3600 * 24);
+            \Cache::put('notification_error', $e->getMessage().' | Date : '.date('Y-m-d H:i:s'), 3600 * 24);
         }
     }
 
     public function getFullNameAttribute(): string
     {
-        return $this->firstname . ' ' . $this->lastname;
+        return $this->firstname.' '.$this->lastname;
     }
 
     public function excerptFullName(int $length = 20): string
@@ -206,7 +207,7 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
         $greeting = setting('mail_greeting');
         $greeting = EmailTemplate::replacePlaceholders($greeting, $customer);
 
-        return $greeting . PHP_EOL . PHP_EOL . $this->signature ?? '';
+        return $greeting.PHP_EOL.PHP_EOL.$this->signature ?? '';
     }
 
     public static function newFactory()
@@ -240,7 +241,7 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
      */
     public function verifySecurityAnswer(string $answer): bool
     {
-        if (!$this->hasSecurityQuestion()) {
+        if (! $this->hasSecurityQuestion()) {
             return true;
         }
 

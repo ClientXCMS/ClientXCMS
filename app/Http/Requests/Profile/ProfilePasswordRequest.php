@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Requests\Profile;
 
@@ -47,7 +47,7 @@ class ProfilePasswordRequest extends FormRequest
             $user = $this->user('web');
 
             if ($user->hasSecurityQuestion() && $this->filled('security_answer')) {
-                if (!$user->verifySecurityAnswer($this->security_answer)) {
+                if (! $user->verifySecurityAnswer($this->security_answer)) {
                     $validator->errors()->add('security_answer', __('client.profile.security_answer_invalid'));
                 }
             }

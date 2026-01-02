@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Billing;
 
 use App\Abstracts\PaymentMethodSourceDTO;
@@ -30,20 +30,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="Gateway",
  *     title="Gateway",
  *     description="A payment gateway available for customer payments",
  *     required={"uuid", "name"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="uuid", type="string", example="stripe"),
  *     @OA\Property(property="name", type="string", example="Stripe"),
  *     @OA\Property(property="status", type="string", example="active"),
  *     @OA\Property(property="minimal_amount", type="number", format="float", example=1.00)
  * )
+ *
  * @property int $id
  * @property string $name
  * @property string $status
@@ -54,6 +53,7 @@ use Illuminate\Http\Request;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Billing\Invoice> $invoices
  * @property-read int|null $invoices_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gateway newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gateway newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gateway onlyTrashed()
@@ -68,6 +68,7 @@ use Illuminate\Http\Request;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gateway whereUuid($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gateway withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Gateway withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Gateway extends Model

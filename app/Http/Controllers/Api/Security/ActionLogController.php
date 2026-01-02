@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Http\Controllers\Api\Security;
 
 use App\Http\Controllers\Api\AbstractApiController;
@@ -58,64 +60,81 @@ class ActionLogController extends AbstractApiController
      *     path="/application/logs",
      *     summary="Get a list of action logs",
      *     tags={"Action Logs"},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="A list of action logs"
      *     ),
+     *
      *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         description="Page number",
      *         required=false,
+     *
      *         @OA\Schema(type="integer", default=1)
      *     ),
+     *
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
      *         description="Number of items per page",
      *         required=false,
+     *
      *         @OA\Schema(type="integer", default=50)
      *     ),
+     *
      *     @OA\Parameter(
      *         name="sort",
      *         in="query",
      *         description="Sort order (default: -created_at)",
      *         required=false,
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="filter[action]",
      *         in="query",
      *         description="Filter by action type",
      *         required=false,
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="filter[model]",
      *         in="query",
      *         description="Filter by model name",
      *         required=false,
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="filter[staff_id]",
      *         in="query",
      *         description="Filter by staff ID",
      *         required=false,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="filter[customer_id]",
      *         in="query",
      *         description="Filter by customer ID",
      *         required=false,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="include",
      *         in="query",
      *         description="Related resources to include",
      *         required=false,
+     *
      *         @OA\Schema(type="string", default="customer,staff,entries")
      *     )
      * )
@@ -130,15 +149,18 @@ class ActionLogController extends AbstractApiController
      *     path="/application/logs/{log}",
      *     summary="Get a single action log",
      *     tags={"Action Logs"},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="A single action log with details"
      *     ),
+     *
      *     @OA\Parameter(
      *         name="log",
      *         in="path",
      *         description="ID of the action log",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     )
      * )

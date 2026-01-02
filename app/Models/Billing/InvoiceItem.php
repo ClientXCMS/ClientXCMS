@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Billing;
 
@@ -40,14 +40,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="InvoiceItem",
  *     title="Invoice Item",
  *     description="A product or service included in an invoice",
  *     required={"invoice_id", "name", "quantity", "unit_price_ht"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=3001),
  *     @OA\Property(property="invoice_id", type="integer", example=1001),
  *     @OA\Property(property="name", type="string", example="Web Hosting - Premium"),
@@ -66,6 +64,7 @@ use Illuminate\Support\Str;
  *     @OA\Property(property="discount", type="object", description="Optional discount structure for the item"),
  *     @OA\Property(property="parent_id", type="integer", nullable=true, example=null)
  * )
+ *
  * @property int $id
  * @property string $name
  * @property string $description
@@ -94,6 +93,7 @@ use Illuminate\Support\Str;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Metadata> $metadata
  * @property-read int|null $metadata_count
  * @property-read InvoiceItem|null $parent
+ *
  * @method static \Database\Factories\Core\InvoiceItemFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem newQuery()
@@ -123,6 +123,7 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class InvoiceItem extends Model
@@ -300,6 +301,7 @@ class InvoiceItem extends Model
             if ($force) {
                 return $default;
             }
+
             return null;
         }
         if (is_object($this->discount)) {
@@ -307,8 +309,10 @@ class InvoiceItem extends Model
                 if ($force) {
                     return $default;
                 }
+
                 return null;
             }
+
             return $this->discount;
         }
         $decoded = json_decode($this->discount);
@@ -316,6 +320,7 @@ class InvoiceItem extends Model
             if ($force) {
                 return $default;
             }
+
             return null;
         }
         if (property_exists($decoded, 'value_price')) {
@@ -371,11 +376,13 @@ class InvoiceItem extends Model
             $this->invoice->customer->addFund($this->unit_price_ht, 'Add funds from invoice #'.$this->invoice->id);
             $this->delivered_at = now();
             $this->save();
+
             return true;
         }
         if ($this->type == 'custom_item') {
             $this->delivered_at = now();
             $this->save();
+
             return true;
         }
         if ($this->type == 'gift_card') {
@@ -383,7 +390,7 @@ class InvoiceItem extends Model
             if ($giftCard == null) {
                 throw new \Exception("Gift card not found for invoice item {$this->id}");
             }
-            if ($giftCard->customer != null){
+            if ($giftCard->customer != null) {
                 $customer = $giftCard->customer;
             } else {
                 $customer = $this->invoice->customer;
@@ -395,6 +402,7 @@ class InvoiceItem extends Model
                 $customer->notify(new RedeemGiftcardMail($giftCard, $this->data['message']));
                 $this->delivered_at = now();
                 $this->save();
+
                 return true;
             } else {
                 throw new \Exception("Gift card {$giftCard->code} is not valid for invoice item {$this->id}");

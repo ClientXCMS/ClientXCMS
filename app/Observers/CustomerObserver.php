@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Observers;
 
 use App\Models\Account\Customer;
@@ -22,15 +24,15 @@ use App\Models\ActionLog;
 
 class CustomerObserver
 {
-
     public function updated(Customer $customer)
     {
         if ($customer->isDirty('balance') && auth('admin')->check()) {
             $old = $customer->getOriginal('balance');
-            $reason = strtolower(__('global.by')) . ' ' . auth('admin')->user()->username;
+            $reason = strtolower(__('global.by')).' '.auth('admin')->user()->username;
             ActionLog::log(ActionLog::BALANCE_CHANGED, Customer::class, $customer->id, auth('admin')->id(), $customer->id, ['old' => formatted_price($old), 'new' => formatted_price($customer->balance), 'reason' => $reason], ['balance' => $old], ['balance' => $customer->balance]);
         }
     }
+
     public function deleting(Customer $customer)
     {
         $customer->services()->delete();

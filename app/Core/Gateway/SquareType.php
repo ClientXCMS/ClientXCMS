@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -32,6 +33,7 @@ class SquareType extends AbstractGatewayType
     const UUID = 'square';
 
     const API_URL_PRODUCTION = 'https://connect.squareup.com/v2';
+
     const API_URL_SANDBOX = 'https://connect.squareupsandbox.com/v2';
 
     protected string $name = 'Square';
@@ -46,10 +48,10 @@ class SquareType extends AbstractGatewayType
     {
         try {
             $response = Http::withHeaders($this->getHeaders())
-                ->post($this->getApiUrl() . '/online-checkout/payment-links', [
-                    'idempotency_key' => uniqid('inv_' . $invoice->id . '_', true),
+                ->post($this->getApiUrl().'/online-checkout/payment-links', [
+                    'idempotency_key' => uniqid('inv_'.$invoice->id.'_', true),
                     'quick_pay' => [
-                        'name' => __('global.invoice') . ' #' . $invoice->id,
+                        'name' => __('global.invoice').' #'.$invoice->id,
                         'price_money' => [
                             'amount' => (int) ($invoice->total * 100),
                             'currency' => strtoupper($invoice->currency),
@@ -63,7 +65,7 @@ class SquareType extends AbstractGatewayType
 
             if ($response->failed()) {
                 $errors = $response->json('errors');
-                throw new WrongPaymentException('Square error: ' . json_encode($errors));
+                throw new WrongPaymentException('Square error: '.json_encode($errors));
             }
 
             $paymentLink = $response->json('payment_link');
@@ -71,7 +73,7 @@ class SquareType extends AbstractGatewayType
 
             return redirect($paymentLink['url'], 303);
         } catch (\Exception $e) {
-            throw new WrongPaymentException('Square payment creation failed: ' . $e->getMessage());
+            throw new WrongPaymentException('Square payment creation failed: '.$e->getMessage());
         }
     }
 
@@ -81,7 +83,7 @@ class SquareType extends AbstractGatewayType
         if ($invoice->external_id) {
             try {
                 $response = Http::withHeaders($this->getHeaders())
-                    ->get($this->getApiUrl() . '/online-checkout/payment-links/' . $invoice->external_id);
+                    ->get($this->getApiUrl().'/online-checkout/payment-links/'.$invoice->external_id);
 
                 if ($response->successful()) {
                     $paymentLink = $response->json('payment_link');
@@ -89,19 +91,20 @@ class SquareType extends AbstractGatewayType
 
                     if ($orderId) {
                         $orderResponse = Http::withHeaders($this->getHeaders())
-                            ->get($this->getApiUrl() . '/orders/' . $orderId);
+                            ->get($this->getApiUrl().'/orders/'.$orderId);
 
                         if ($orderResponse->successful()) {
                             $order = $orderResponse->json('order');
                             if (($order['state'] ?? null) === 'COMPLETED') {
                                 $invoice->complete();
+
                                 return redirect()->route('front.invoices.show', $invoice)->with('success', __('store.checkout.success'));
                             }
                         }
                     }
                 }
             } catch (\Exception $e) {
-                logger()->error('Square processPayment error: ' . $e->getMessage());
+                logger()->error('Square processPayment error: '.$e->getMessage());
             }
         }
 
@@ -136,18 +139,19 @@ class SquareType extends AbstractGatewayType
     private function getApiUrl(): string
     {
         $environment = env('SQUARE_ENVIRONMENT', 'sandbox');
+
         return $environment === 'production' ? self::API_URL_PRODUCTION : self::API_URL_SANDBOX;
     }
 
     private function getHeaders(): array
     {
         $accessToken = env('SQUARE_ACCESS_TOKEN');
-        if (!$accessToken) {
+        if (! $accessToken) {
             throw new WrongPaymentException('Square access token not configured');
         }
 
         return [
-            'Authorization' => 'Bearer ' . $accessToken,
+            'Authorization' => 'Bearer '.$accessToken,
             'Content-Type' => 'application/json',
             'Square-Version' => '2024-01-18',
         ];
@@ -160,8 +164,10 @@ class SquareType extends AbstractGatewayType
             $baseUrl = $environment === 'production'
                 ? 'https://squareup.com/dashboard/sales/transactions/'
                 : 'https://squareupsandbox.com/dashboard/sales/transactions/';
-            return $baseUrl . $invoice->external_id;
+
+            return $baseUrl.$invoice->external_id;
         }
+
         return null;
     }
 }

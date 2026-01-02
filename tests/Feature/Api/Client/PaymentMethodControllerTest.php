@@ -3,7 +3,6 @@
 namespace Tests\Feature\Api\Client;
 
 use App\Models\Account\Customer;
-use App\Models\Billing\Gateway;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\RefreshExtensionDatabase;
 use Tests\TestCase;
@@ -24,7 +23,7 @@ class PaymentMethodControllerTest extends TestCase
     private function authHeaders(string $token): array
     {
         return [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'Accept' => 'application/json',
         ];
     }

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Account;
 
@@ -46,13 +46,12 @@ use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
- * 
- *
  * @OA\Schema (
  *      schema="Customer",
  *     title="Customer",
  *     description="Customer model"
  * )
+ *
  * @property int $id
  * @property string $firstname
  * @property string $lastname
@@ -94,6 +93,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property-read int|null $tickets_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Sanctum\PersonalAccessToken> $tokens
  * @property-read int|null $tokens_count
+ *
  * @method static \Database\Factories\Core\CustomerFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer newQuery()
@@ -128,12 +128,15 @@ use Laravel\Sanctum\HasApiTokens;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereZipcode($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer withoutTrashed()
+ *
  * @property string|null $company_name
  * @property string|null $billing_details
  * @property int $gdpr_compliment
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereBillingDetails($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereCompanyName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereGdprCompliment($value)
+ *
  * @mixin \Eloquent
  */
 class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\MustVerifyEmail, HasNotifiableVariablesInterface, NotifiablePlaceholderInterface
@@ -313,8 +316,8 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'last_login' => 'datetime',
-        'phone' => CustomRawPhoneNumberCast::class . ':FR',
-        'balance' => 'decimal:2'
+        'phone' => CustomRawPhoneNumberCast::class.':FR',
+        'balance' => 'decimal:2',
     ];
 
     public static function boot()
@@ -382,7 +385,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
 
     public function getFullNameAttribute(): string
     {
-        return $this->firstname . ' ' . $this->lastname;
+        return $this->firstname.' '.$this->lastname;
     }
 
     public function excerptFullName(int $length = 24): string
@@ -410,13 +413,13 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public function supportRelatedItems()
     {
         return $this->invoices->merge($this->services)->mapWithKeys(function ($item) {
-            return [$item->relatedType() . '-' . $item->relatedId() => $item->relatedName()];
+            return [$item->relatedType().'-'.$item->relatedId() => $item->relatedName()];
         })->put('none', __('helpdesk.support.create.relatednone'));
     }
 
     public function initials()
     {
-        return $this->firstname[0] . $this->lastname[0];
+        return $this->firstname[0].$this->lastname[0];
     }
 
     public function notify($instance)
@@ -425,7 +428,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
             app(Dispatcher::class)->send($this, $instance);
             \Cache::forget('notification_error');
         } catch (\Exception $e) {
-            \Cache::put('notification_error', $e->getMessage() . ' | Date : ' . date('Y-m-d H:i:s'), 3600 * 24);
+            \Cache::put('notification_error', $e->getMessage().' | Date : '.date('Y-m-d H:i:s'), 3600 * 24);
         }
     }
 
@@ -435,7 +438,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         $this->balance += $amount;
         $this->save();
         if ($reason !== null) {
-            $reason = " " . strtolower(__('global.for')) . " " . $reason;
+            $reason = ' '.strtolower(__('global.for')).' '.$reason;
             if (auth('admin')->check()) {
                 $adminId = auth('admin')->id();
             } else {
@@ -502,7 +505,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     {
         return $this->getPendingInvoices()->mapWithKeys(function (Invoice $invoice) {
             return [
-                $invoice->id => __('global.invoice') . ' - ' . $invoice->invoice_number,
+                $invoice->id => __('global.invoice').' - '.$invoice->invoice_number,
             ];
         });
     }
@@ -537,7 +540,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public function isTrustedForReviews(): bool
     {
         // If trusted client feature is disabled, always return false
-        if (!setting('reviews_trusted_client_enabled', false)) {
+        if (! setting('reviews_trusted_client_enabled', false)) {
             return false;
         }
 
@@ -583,7 +586,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
      */
     public function verifySecurityAnswer(string $answer): bool
     {
-        if (!$this->hasSecurityQuestion()) {
+        if (! $this->hasSecurityQuestion()) {
             return true;
         }
 

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,12 +17,10 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\Billing\Invoice;
-use App\Models\Helpdesk\SupportTicket;
 use App\Models\Provisioning\Service;
 use App\Services\Store\GatewayService;
 use Illuminate\Http\Request;

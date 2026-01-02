@@ -42,7 +42,7 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456789',
             'password' => 'password',
         ])->id;
-        $response = $this->performAction('GET', self::API_URL . '?filter[firstname]=Fake', [self::ABILITY_INDEX]);
+        $response = $this->performAction('GET', self::API_URL.'?filter[firstname]=Fake', [self::ABILITY_INDEX]);
         $response->assertStatus(200);
         $this->assertEmpty($response->json('data'));
     }
@@ -52,7 +52,7 @@ class CustomerControllerTest extends TestCase
 
         Customer::factory(15)->create();
         $lastCustomer = Customer::orderBy('id', 'desc')->first();
-        $response = $this->performAction('GET', self::API_URL . '?sort=-id', [self::ABILITY_INDEX]);
+        $response = $this->performAction('GET', self::API_URL.'?sort=-id', [self::ABILITY_INDEX]);
         $response->assertStatus(200);
         $this->assertNotEmpty($response->json('data'));
         $this->assertCount(15, $response->json('data'));
@@ -111,7 +111,7 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456789',
             'password' => 'password',
         ])->id;
-        $response = $this->performAction('GET', self::API_URL . '/' . $id, [self::ABILITY_SHOW]);
+        $response = $this->performAction('GET', self::API_URL.'/'.$id, [self::ABILITY_SHOW]);
         $response->assertStatus(200);
     }
 
@@ -129,7 +129,7 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456789',
             'password' => 'password',
         ])->id;
-        $response = $this->performAction('DELETE', self::API_URL . '/' . $id, [self::ABILITY_DELETE]);
+        $response = $this->performAction('DELETE', self::API_URL.'/'.$id, [self::ABILITY_DELETE]);
         $response->assertStatus(200);
     }
 
@@ -148,7 +148,7 @@ class CustomerControllerTest extends TestCase
             'password' => 'password',
             'address' => 'test',
         ])->id;
-        $response = $this->performAction('POST', self::API_URL . '/' . $id, [self::ABILITY_UPDATE], [
+        $response = $this->performAction('POST', self::API_URL.'/'.$id, [self::ABILITY_UPDATE], [
             'email' => 'admin@administration.com',
             'city' => 'roubaix',
             'firstname' => 'Martin',
@@ -169,7 +169,7 @@ class CustomerControllerTest extends TestCase
             'email_verified_at' => null,
         ]);
 
-        $response = $this->performAction('POST', self::API_URL . '/' . $customer->id . '/confirm', [self::ABILITY_UPDATE]);
+        $response = $this->performAction('POST', self::API_URL.'/'.$customer->id.'/confirm', [self::ABILITY_UPDATE]);
         $response->assertStatus(200);
         $this->assertTrue($customer->fresh()->hasVerifiedEmail());
     }
@@ -180,7 +180,7 @@ class CustomerControllerTest extends TestCase
             'email_verified_at' => null,
         ]);
 
-        $response = $this->performAction('post', self::API_URL . '/' . $customer->id . '/resend_confirmation', [self::ABILITY_UPDATE]);
+        $response = $this->performAction('post', self::API_URL.'/'.$customer->id.'/resend_confirmation', [self::ABILITY_UPDATE]);
         $response->assertStatus(200);
         $response->assertJsonFragment(['message' => 'Verification link sent']);
     }
@@ -191,7 +191,7 @@ class CustomerControllerTest extends TestCase
             'email_verified_at' => null,
         ]);
 
-        $response = $this->performAction('post', self::API_URL . '/' . $customer->id . '/send_password', [self::ABILITY_UPDATE]);
+        $response = $this->performAction('post', self::API_URL.'/'.$customer->id.'/send_password', [self::ABILITY_UPDATE]);
         $response->assertStatus(200);
         $response->assertJsonFragment(['message' => 'Reset link sent']);
     }
@@ -200,7 +200,7 @@ class CustomerControllerTest extends TestCase
     {
         $customer = Customer::factory()->create();
 
-        $response = $this->performAction('POST', self::API_URL . '/' . $customer->id . '/action/suspend', [self::ABILITY_UPDATE], [
+        $response = $this->performAction('POST', self::API_URL.'/'.$customer->id.'/action/suspend', [self::ABILITY_UPDATE], [
             'reason' => 'Violation',
             'force' => true,
             'notify' => false,
@@ -214,7 +214,7 @@ class CustomerControllerTest extends TestCase
     {
         $customer = Customer::factory()->create();
         $customer->suspend('Test reason', false, false);
-        $response = $this->performAction('POST', self::API_URL . '/' . $customer->id . '/action/reactivate', [self::ABILITY_UPDATE], [
+        $response = $this->performAction('POST', self::API_URL.'/'.$customer->id.'/action/reactivate', [self::ABILITY_UPDATE], [
             'notify' => true,
         ]);
 
@@ -226,7 +226,7 @@ class CustomerControllerTest extends TestCase
     {
         $customer = Customer::factory()->create();
         $customer->ban('Test reason', false, false);
-        $response = $this->performAction('POST', self::API_URL . '/' . $customer->id . '/action/ban', [self::ABILITY_UPDATE], [
+        $response = $this->performAction('POST', self::API_URL.'/'.$customer->id.'/action/ban', [self::ABILITY_UPDATE], [
             'reason' => 'Abuse',
             'force' => false,
             'notify' => true,
@@ -241,7 +241,7 @@ class CustomerControllerTest extends TestCase
         $customer = Customer::factory()->create();
         $customer->twoFactorEnable('Test secret');
 
-        $response = $this->performAction('POST', self::API_URL . '/' . $customer->id . '/action/disable2FA', [self::ABILITY_UPDATE]);
+        $response = $this->performAction('POST', self::API_URL.'/'.$customer->id.'/action/disable2FA', [self::ABILITY_UPDATE]);
         $response->assertStatus(200);
         $this->assertEquals(0, $customer->fresh()->twoFactorEnabled());
     }

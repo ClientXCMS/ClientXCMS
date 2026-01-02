@@ -21,7 +21,7 @@ class AccountDeletionServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new AccountDeletionService();
+        $this->service = new AccountDeletionService;
     }
 
     protected function createCustomer(array $attributes = []): Customer
@@ -43,7 +43,6 @@ class AccountDeletionServiceTest extends TestCase
     public function test_can_delete_customer_without_blocking_reasons(): void
     {
         $customer = $this->createCustomer();
-
 
         $this->assertTrue($this->service->canDelete($customer));
         $this->assertEmpty($this->service->getBlockingReasons($customer));

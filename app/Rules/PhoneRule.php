@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -21,9 +22,9 @@ namespace App\Rules;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Validation\Validator;
+use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberType as libPhoneNumberType;
 use libphonenumber\PhoneNumberUtil;
-use libphonenumber\NumberParseException;
 use Propaganistas\LaravelPhone\Concerns\PhoneNumberCountry;
 
 /**

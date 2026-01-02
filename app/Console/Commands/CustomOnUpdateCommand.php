@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,10 +17,8 @@
  * Year: 2025
  */
 
-
 namespace App\Console\Commands;
 
-use App\Core\License\LicenseCache;
 use App\Models\Admin\Permission;
 use App\Models\Billing\Invoice;
 use App\Models\Helpdesk\SupportTicket;
@@ -53,7 +52,6 @@ class CustomOnUpdateCommand extends Command
     /**
      * Execute the console command.
      */
-
     public function handle()
     {
         DB::beginTransaction();
@@ -94,17 +92,18 @@ class CustomOnUpdateCommand extends Command
     private function downloadExtensions()
     {
         $extensions = app('extension')->fetchInstalledExtensions();
-        if ($extensions == null){
+        if ($extensions == null) {
             return;
         }
 
-        $this->info('Updating extensions... (' . collect($extensions)->map(fn ($e) => $e['uuid'])->join(', ') . ')');
+        $this->info('Updating extensions... ('.collect($extensions)->map(fn ($e) => $e['uuid'])->join(', ').')');
         foreach ($extensions as $extension) {
             try {
                 app('extension')->update($extension['type'], $extension['uuid']);
                 $this->info("Extension {$extension['uuid']} has been updated.");
             } catch (\Exception $e) {
                 $this->error("Failed to download extension {$extension['uuid']}: {$e->getMessage()}");
+
                 continue;
             }
         }
@@ -117,11 +116,13 @@ class CustomOnUpdateCommand extends Command
             $uuids = $model::pluck('uuid', 'id')->toArray();
             if (empty($uuids)) {
                 $this->info("No UUIDs found in {$model}.");
+
                 continue;
             }
             $first = reset($uuids);
             if (strlen($first) === 8) {
                 $this->info("UUIDs in {$model} are already short. No changes needed.");
+
                 continue;
             }
             $this->info("Updating UUIDs in {$model}...");
@@ -151,7 +152,7 @@ class CustomOnUpdateCommand extends Command
 
     private function downloadLocales(): void
     {
-        $locales = ["es_ES", "en_GB"];
+        $locales = ['es_ES', 'en_GB'];
         foreach ($locales as $locale) {
             LocaleService::downloadFiles($locale);
         }
@@ -163,11 +164,13 @@ class CustomOnUpdateCommand extends Command
 
         if ($services->isEmpty()) {
             $this->info('There are no services without product.');
+
             return;
         }
 
         if (Pricing::where('related_type', 'service')->count() > 0) {
             $this->info('Service migration (without product) is already up to date.');
+
             return;
         }
 
@@ -187,11 +190,13 @@ class CustomOnUpdateCommand extends Command
 
         if ($services->isEmpty()) {
             $this->info('There are no services with product.');
+
             return;
         }
 
         if (Pricing::where('related_type', 'service')->count() > 0) {
             $this->info('Service migration (with product) is already up to date.');
+
             return;
         }
 
@@ -216,10 +221,12 @@ class CustomOnUpdateCommand extends Command
 
         if ($configOptions->isEmpty()) {
             $this->info('There are no config options.');
+
             return;
         }
         if (Pricing::where('related_type', 'config_options_service')->count() > 0) {
             $this->info('Config options migration is already up to date.');
+
             return;
         }
 
@@ -232,7 +239,7 @@ class CustomOnUpdateCommand extends Command
                 $configOption->setup_amount,
                 $configOption->onetime_amount
             );
-            $this->info("Service options {$configOption->id} has been updated.");       
+            $this->info("Service options {$configOption->id} has been updated.");
         }
     }
 
@@ -261,7 +268,7 @@ class CustomOnUpdateCommand extends Command
             base_path('resources/themes/**/views'),
         ];
 
-        $finder = new Finder();
+        $finder = new Finder;
         $finder
             ->files()
             ->in($paths)
@@ -275,6 +282,7 @@ class CustomOnUpdateCommand extends Command
             $realPath = $file->getRealPath();
             if ($realPath === false) {
                 $this->warn("Invalid path for: {$file->getRelativePathname()}");
+
                 continue;
             }
             $this->info("Updating section: {$file->getRelativePathname()}");
@@ -296,10 +304,9 @@ class CustomOnUpdateCommand extends Command
         $new = preg_replace('/^\s*<\?php[\s\S]*?\?>\s*/', '', $content, 1);
         $changed = ($new !== null) && ($new !== $content);
         if ($changed && substr($original, 0, 3) === "\xEF\xBB\xBF") {
-            $new = "\xEF\xBB\xBF" . $new;
+            $new = "\xEF\xBB\xBF".$new;
         }
+
         return [$changed, $new ?? $content];
     }
-
-
 }

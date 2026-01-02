@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Front\Store;
 
@@ -54,7 +54,8 @@ class StoreController extends Controller
         if ($products->count() == 0 && $groups->count() == 0) {
             \Session::flash('info', __('store.product.noproduct'));
         }
-        \View::share('meta_append', '<meta name="description" content="' . $subtitle . '">');
+        \View::share('meta_append', '<meta name="description" content="'.$subtitle.'">');
+
         return view('front.store.index', compact('group', 'groups', 'title', 'subtitle', 'products'));
     }
 
@@ -72,7 +73,8 @@ class StoreController extends Controller
         if ($products->count() == 0 && $groups->count() == 0) {
             \Session::flash('info', __('store.product.noproduct'));
         }
-        \View::share('meta_append', '<meta name="description" content="' . $subtitle . '">');
+        \View::share('meta_append', '<meta name="description" content="'.$subtitle.'">');
+
         return view('front.store.group', compact('group', 'title', 'subtitle', 'products', 'groups', 'subgroup'));
     }
 

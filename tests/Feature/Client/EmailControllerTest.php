@@ -32,7 +32,7 @@ class EmailControllerTest extends TestCase
         Customer::factory(15)->create();
         EmailMessage::factory(15)->create();
         $user = $this->createCustomerModel();
-        $this->actingAs($user)->get(route('front.emails.index') . '?search=notification')->assertOk();
+        $this->actingAs($user)->get(route('front.emails.index').'?search=notification')->assertOk();
     }
 
     public function test_email_can_show(): void

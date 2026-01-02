@@ -2,19 +2,19 @@
 
 namespace Tests\Feature\Admin\Billing;
 
+use App\Abstracts\PaymentMethodSourceDTO;
 use App\Models\Account\Customer;
 use App\Models\Admin\Admin;
 use App\Models\Billing\CustomItem;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceItem;
 use App\Services\Store\TaxesService;
-use App\Abstracts\PaymentMethodSourceDTO;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class InvoiceControllerTest extends \Tests\TestCase
 {
     use RefreshDatabase;
+
     public function test_admin_invoice_index(): void
     {
         $this->seed(\Database\Seeders\GatewaySeeder::class);
@@ -227,7 +227,7 @@ class InvoiceControllerTest extends \Tests\TestCase
         ]);
 
         $sourceId = 'test-source';
-        $sourceIdInCache = 'payment_methods_' . $customer->id;
+        $sourceIdInCache = 'payment_methods_'.$customer->id;
         $sourceDTO = new PaymentMethodSourceDTO($sourceId, 'Visa', '1234', '12', '2025', $customer->id, 'balance');
 
         \Illuminate\Support\Facades\Cache::forever($sourceIdInCache, collect([$sourceId => $sourceDTO]));

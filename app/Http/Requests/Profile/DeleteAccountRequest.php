@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -20,7 +21,6 @@ namespace App\Http\Requests\Profile;
 
 use App\Rules\Valid2FACodeRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Hash;
 
 class DeleteAccountRequest extends FormRequest
 {

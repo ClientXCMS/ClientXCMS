@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,20 +17,18 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Admin\Core;
 
+use App\Addons\SupportID\SupportIdHelper;
 use App\Helpers\Countries;
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Http\Requests\Customer\StoreCustomerRequest;
 use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Models\Account\Customer;
 use App\Models\Billing\Invoice;
-use App\Addons\SupportID\SupportIdHelper;
 use App\Models\Helpdesk\SupportTicket;
 use App\Models\Provisioning\Service;
 use App\Providers\RouteServiceProvider;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
@@ -90,7 +89,7 @@ class CustomerController extends AbstractCrudController
         $params['invoices'] = QueryBuilder::for(Invoice::class)
             ->allowedFilters(['status'])
             ->where(function ($query) {
-                if (!request()->has('filter.status')) {
+                if (! request()->has('filter.status')) {
                     $query->where('status', '!=', 'hidden');
                 }
             })
@@ -101,7 +100,7 @@ class CustomerController extends AbstractCrudController
         $params['services'] = QueryBuilder::for(Service::class)
             ->allowedFilters(['status'])
             ->where(function ($query) {
-                if (!request()->has('filter.status')) {
+                if (! request()->has('filter.status')) {
                     $query->where('status', '!=', 'hidden');
                 }
             })
@@ -145,12 +144,12 @@ class CustomerController extends AbstractCrudController
     {
         $this->checkPermission('update', $customer);
         if ($customer->hasVerifiedEmail()) {
-            return redirect()->back()->with('error', __($this->translatePrefix . '.show.email_already_confirmed'));
+            return redirect()->back()->with('error', __($this->translatePrefix.'.show.email_already_confirmed'));
         }
         $customer->markEmailAsVerified();
         $customer->save();
 
-        return redirect()->back()->with('success', __($this->translatePrefix . '.show.email_confirmed'));
+        return redirect()->back()->with('success', __($this->translatePrefix.'.show.email_confirmed'));
     }
 
     public function sendForgotPassword(Customer $customer)
@@ -158,18 +157,18 @@ class CustomerController extends AbstractCrudController
         $this->checkPermission('update', $customer);
         Password::broker('users')->sendResetLink($customer->only('email'));
 
-        return redirect()->back()->with('success', __($this->translatePrefix . '.show.password_reset_sent'));
+        return redirect()->back()->with('success', __($this->translatePrefix.'.show.password_reset_sent'));
     }
 
     public function resendConfirmation(Customer $customer)
     {
         $this->checkPermission('update', $customer);
         if ($customer->hasVerifiedEmail()) {
-            return redirect()->back()->with('error', __($this->translatePrefix . '.show.email_already_confirmed'));
+            return redirect()->back()->with('error', __($this->translatePrefix.'.show.email_already_confirmed'));
         }
         $customer->sendEmailVerificationNotification();
 
-        return redirect()->back()->with('success', __($this->translatePrefix . '.show.email_sent'));
+        return redirect()->back()->with('success', __($this->translatePrefix.'.show.email_sent'));
     }
 
     public function update(UpdateCustomerRequest $request, Customer $customer)
@@ -213,14 +212,16 @@ class CustomerController extends AbstractCrudController
     {
         $this->checkPermission('delete', $customer);
 
-        $deletionService = new \App\Services\Account\AccountDeletionService();
+        $deletionService = new \App\Services\Account\AccountDeletionService;
         $force = $request->boolean('force', false);
 
         try {
             $deletionService->delete($customer, $force);
+
             return $this->deleteRedirect($customer);
         } catch (\App\Services\Account\AccountDeletionException $e) {
             \Session::flash('error', $e->getFormattedReasons());
+
             return redirect()->back();
         }
     }
@@ -326,7 +327,7 @@ class CustomerController extends AbstractCrudController
                 break;
         }
 
-        return redirect()->back()->with('success', __($this->translatePrefix . '.show.action_success'));
+        return redirect()->back()->with('success', __($this->translatePrefix.'.show.action_success'));
     }
 
     public function addNote(Request $request, Customer $customer)
@@ -341,6 +342,6 @@ class CustomerController extends AbstractCrudController
             'content' => $validated['content'],
         ]);
 
-        return redirect()->back()->with('success', __($this->translatePrefix . '.show.note_added'));
+        return redirect()->back()->with('success', __($this->translatePrefix.'.show.note_added'));
     }
 }

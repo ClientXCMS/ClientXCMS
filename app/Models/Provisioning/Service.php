@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Provisioning;
 
@@ -44,13 +44,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 /**
- * 
- *
  * @OA\Schema (
  *      schema="ProvisioningService",
  *     title="Service",
  *     description="service model"
  * )
+ *
  * @property int $id
  * @property int $customer_id
  * @property string $uuid
@@ -92,6 +91,7 @@ use Illuminate\Support\Str;
  * @property-read int|null $service_renewals_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Upgrade> $upgrades
  * @property-read int|null $upgrades_count
+ *
  * @method static \Database\Factories\Provisioning\ServiceFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Service newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Service newQuery()
@@ -127,6 +127,7 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Service whereUuid($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Service withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Service withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Service extends Model implements HasNotifiableVariablesInterface
@@ -456,7 +457,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
             if ($pricing) {
                 return new ProductPriceDTO(
                     $pricing[$billing] ?? 0,
-                    $pricing['setup_' . $billing] ?? 0,
+                    $pricing['setup_'.$billing] ?? 0,
                     $this->currency,
                     $billing
                 );
@@ -466,13 +467,15 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
         return $pricing;
     }
+
     public function getPricing(): Pricing
     {
         if ($this->id == null) {
             if ($this->product_id != null) {
                 $pricing = PricingService::for($this->product_id, 'product')->first();
-                if ($pricing)
+                if ($pricing) {
                     return new Pricing($pricing);
+                }
             }
 
             return new Pricing(['related_type' => $this->pricing_key, 'currency' => $this->currency]);
@@ -483,8 +486,9 @@ class Service extends Model implements HasNotifiableVariablesInterface
             }
             if ($this->product_id != null) {
                 $pricing = PricingService::for($this->product_id, 'product')->first();
-                if ($pricing)
+                if ($pricing) {
                     return new Pricing($pricing);
+                }
             }
 
             return new Pricing(['related_type' => $this->pricing_key, 'related_id' => $this->id, 'currency' => $this->currency]);
@@ -624,7 +628,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
             return false;
         }
 
-        if (!in_array($this->status, [self::STATUS_ACTIVE, self::STATUS_SUSPENDED])) {
+        if (! in_array($this->status, [self::STATUS_ACTIVE, self::STATUS_SUSPENDED])) {
             return false;
         }
 
@@ -706,24 +710,27 @@ class Service extends Model implements HasNotifiableVariablesInterface
                 $price += $configOptionPrice->base_setup;
             }
         }
+
         return $price;
     }
 
     public function discountArray()
     {
-        if (!$this->couponId())
+        if (! $this->couponId()) {
             return null;
+        }
         /** @var Coupon $coupon */
         $coupon = Coupon::find($this->couponId());
         if ($coupon == null || ! $coupon->isValidForServiceRenewal($this)) {
             return null;
         }
+
         return $coupon->discountArray($this->getBillingPrice()->price_ht, 0, $this->billing);
     }
 
     public function discountAmount()
     {
-        if (!$this->couponId()) {
+        if (! $this->couponId()) {
             return 0;
         }
         /** @var Coupon $coupon */
@@ -731,6 +738,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         if ($coupon == null || ! $coupon->isValidForServiceRenewal($this)) {
             return 0;
         }
+
         return $coupon->applyAmount($this->getBillingPrice()->price_ht, $this->billing, BasketRow::PRICE);
     }
 
@@ -741,10 +749,10 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public function notifyExpiration(): bool
     {
-        if (!$this->expires_at){
+        if (! $this->expires_at) {
             return false;
         }
-        $remaining = abs((int)\Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $this->expires_at)->diffInDays());
+        $remaining = abs((int) \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $this->expires_at)->diffInDays());
         if ($remaining <= 0) {
             return false;
         }
@@ -855,6 +863,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         if (! $model) {
             $model = $this->where('id', $value)->first();
         }
+
         return $model ?? abort(404);
     }
 
@@ -874,6 +883,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
                 return $discount->id;
             }
         }
+
         return null;
     }
 }

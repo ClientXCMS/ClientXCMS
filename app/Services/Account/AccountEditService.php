@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Services\Account;
 
 use App\Helpers\Countries;
@@ -30,15 +30,14 @@ class AccountEditService
     /**
      * Get validation rules for customer data.
      *
-     * @param string $country The country code for phone/zipcode validation
-     * @param bool $email Whether to include email validation rules
-     * @param bool $password Whether to include password validation rules
-     * @param int|null $except Customer ID to exclude from unique checks
-     * @return array
+     * @param  string  $country  The country code for phone/zipcode validation
+     * @param  bool  $email  Whether to include email validation rules
+     * @param  bool  $password  Whether to include password validation rules
+     * @param  int|null  $except  Customer ID to exclude from unique checks
      */
     public static function rules(string $country, bool $email = false, bool $password = false, ?int $except = null): array
     {
-        $phoneRule = (new PhoneRule())->country(...array_keys(Countries::names()));
+        $phoneRule = (new PhoneRule)->country(...array_keys(Countries::names()));
 
         $rules = [
             'firstname' => ['required', 'string', 'max:50'],
@@ -63,7 +62,7 @@ class AccountEditService
                 'max:255',
                 Rule::unique('customers')->ignore($except),
                 function ($attribute, $value, $fail) {
-                    if (str_contains($value, '+') && !setting('allow_plus_in_email', false)) {
+                    if (str_contains($value, '+') && ! setting('allow_plus_in_email', false)) {
                         $fail('The :attribute must not contain the character "+".');
                     }
                 },

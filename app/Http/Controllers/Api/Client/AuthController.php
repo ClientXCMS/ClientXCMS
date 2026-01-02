@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * This is the Client API AuthController.
@@ -39,24 +40,31 @@ class AuthController extends Controller
      *     path="/client/auth/login",
      *     summary="Login to client account",
      *     tags={"Authentication"},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"email", "password"},
+     *
      *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
      *             @OA\Property(property="password", type="string", format="password", example="password123")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Login successful",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="token", type="string"),
      *             @OA\Property(property="token_type", type="string", example="Bearer"),
      *             @OA\Property(property="requires_2fa", type="boolean"),
      *             @OA\Property(property="customer", type="object")
      *         )
      *     ),
+     *
      *     @OA\Response(response=401, description="Invalid credentials"),
      *     @OA\Response(response=403, description="Account banned or disabled")
      * )
@@ -70,7 +78,7 @@ class AuthController extends Controller
 
         $customer = Customer::where('email', strtolower($request->email))->first();
 
-        if (!$customer || !Hash::check($request->password, $customer->password)) {
+        if (! $customer || ! Hash::check($request->password, $customer->password)) {
             throw ValidationException::withMessages([
                 'email' => [__('auth.failed')],
             ]);
@@ -119,21 +127,28 @@ class AuthController extends Controller
      *     summary="Verify 2FA code after login",
      *     tags={"Authentication"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"code"},
+     *
      *             @OA\Property(property="code", type="string", example="123456")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="2FA verification successful",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="token", type="string"),
      *             @OA\Property(property="token_type", type="string", example="Bearer")
      *         )
      *     ),
+     *
      *     @OA\Response(response=401, description="Invalid 2FA code")
      * )
      */
@@ -145,28 +160,28 @@ class AuthController extends Controller
 
         $customer = $request->user();
 
-        if (!$customer) {
+        if (! $customer) {
             return response()->json(['error' => __('auth.unauthenticated')], 401);
         }
 
-        $google2fa = new \PragmaRX\Google2FA\Google2FA();
+        $google2fa = new \PragmaRX\Google2FA\Google2FA;
         $valid = $google2fa->verifyKey($customer->two_factor_secret, $request->code);
 
         // Also check recovery codes
-        if (!$valid) {
+        if (! $valid) {
             $recoveryCodes = $customer->twoFactorRecoveryCodes();
             if (in_array($request->code, $recoveryCodes)) {
                 $valid = true;
                 // Remove used recovery code
                 $customer->update([
                     'two_factor_recovery_codes' => encrypt(
-                        json_encode(array_values(array_filter($recoveryCodes, fn($code) => $code !== $request->code)))
+                        json_encode(array_values(array_filter($recoveryCodes, fn ($code) => $code !== $request->code)))
                     ),
                 ]);
             }
         }
 
-        if (!$valid) {
+        if (! $valid) {
             throw ValidationException::withMessages([
                 'code' => [__('auth.2fa.invalid')],
             ]);
@@ -193,10 +208,13 @@ class AuthController extends Controller
      *     path="/client/auth/register",
      *     summary="Register a new client account",
      *     tags={"Authentication"},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"email", "password", "password_confirmation", "firstname", "lastname", "country"},
+     *
      *             @OA\Property(property="email", type="string", format="email"),
      *             @OA\Property(property="password", type="string", format="password"),
      *             @OA\Property(property="password_confirmation", type="string", format="password"),
@@ -211,15 +229,19 @@ class AuthController extends Controller
      *             @OA\Property(property="country", type="string", example="FR")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=201,
      *         description="Registration successful",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string"),
      *             @OA\Property(property="token", type="string"),
      *             @OA\Property(property="customer", type="object")
      *         )
      *     ),
+     *
      *     @OA\Response(response=422, description="Validation error"),
      *     @OA\Response(response=403, description="Registration disabled")
      * )
@@ -246,7 +268,7 @@ class AuthController extends Controller
             throw new ValidationException($validator);
         }
 
-        $bannedEmails = collect(explode(',', setting('banned_emails', '')))->map(fn($email) => trim($email));
+        $bannedEmails = collect(explode(',', setting('banned_emails', '')))->map(fn ($email) => trim($email));
         if ($bannedEmails->contains($request->email) || $bannedEmails->contains(explode('@', $request->email)[1] ?? '')) {
             return response()->json([
                 'error' => __('auth.register.error_banned_email'),
@@ -295,17 +317,23 @@ class AuthController extends Controller
      *     path="/client/auth/forgot-password",
      *     summary="Request password reset link",
      *     tags={"Authentication"},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"email"},
+     *
      *             @OA\Property(property="email", type="string", format="email")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Password reset link sent",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string")
      *         )
      *     )
@@ -336,23 +364,30 @@ class AuthController extends Controller
      *     path="/client/auth/reset-password",
      *     summary="Reset password with token",
      *     tags={"Authentication"},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"token", "email", "password", "password_confirmation"},
+     *
      *             @OA\Property(property="token", type="string"),
      *             @OA\Property(property="email", type="string", format="email"),
      *             @OA\Property(property="password", type="string", format="password"),
      *             @OA\Property(property="password_confirmation", type="string", format="password")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Password reset successful",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string")
      *         )
      *     ),
+     *
      *     @OA\Response(response=422, description="Invalid token or validation error")
      * )
      */
@@ -399,10 +434,13 @@ class AuthController extends Controller
      *     summary="Logout and revoke token",
      *     tags={"Authentication"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Logout successful",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string")
      *         )
      *     )
@@ -417,7 +455,7 @@ class AuthController extends Controller
         ]);
     }
 
-    private function formatPhone(?string $phone = null, string $country): ?string
+    private function formatPhone(?string $phone, string $country): ?string
     {
         try {
             if ($phone === null || $phone === '') {

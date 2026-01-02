@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,23 +17,10 @@
  * Year: 2025
  */
 
-
 namespace App\Console\Commands;
 
-use App\Core\License\LicenseCache;
-use App\Models\Admin\Permission;
-use App\Models\Billing\Invoice;
-use App\Models\Helpdesk\SupportTicket;
-use App\Models\Provisioning\ConfigOptionService;
-use App\Models\Provisioning\Service;
-use App\Models\Store\Pricing;
-use App\Services\Core\LocaleService;
-use App\Services\Store\PricingService;
 use Illuminate\Console\Command;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Symfony\Component\Finder\Finder;
 
 class OnUpdateCommand extends Command
 {
@@ -53,7 +41,6 @@ class OnUpdateCommand extends Command
     /**
      * Execute the console command.
      */
-
     public function handle()
     {
         if (Schema::hasColumn('customers', 'notes') && Schema::hasTable('customer_notes')) {
@@ -82,5 +69,4 @@ class OnUpdateCommand extends Command
 
         $this->info('CLIENTXCMS is up to date.');
     }
-
 }

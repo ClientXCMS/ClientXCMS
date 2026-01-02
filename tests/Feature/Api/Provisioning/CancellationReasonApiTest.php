@@ -3,7 +3,6 @@
 namespace Tests\Feature\Api\Provisioning;
 
 use App\Models\Provisioning\CancellationReason;
-use Database\Seeders\AdminSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -60,7 +59,7 @@ class CancellationReasonApiTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response = $this->performAction('GET', self::API_URL . '/' . $reason->id, ['cancellation_reasons:show']);
+        $response = $this->performAction('GET', self::API_URL.'/'.$reason->id, ['cancellation_reasons:show']);
         $response->assertStatus(200);
         $response->assertJson([
             'id' => $reason->id,
@@ -75,7 +74,7 @@ class CancellationReasonApiTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response = $this->performAction('POST', self::API_URL . '/' . $reason->id, ['cancellation_reasons:update'], [
+        $response = $this->performAction('POST', self::API_URL.'/'.$reason->id, ['cancellation_reasons:update'], [
             'reason' => 'Updated reason',
             'status' => 'hidden',
         ]);
@@ -94,7 +93,7 @@ class CancellationReasonApiTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response = $this->performAction('DELETE', self::API_URL . '/' . $reason->id, ['cancellation_reasons:delete']);
+        $response = $this->performAction('DELETE', self::API_URL.'/'.$reason->id, ['cancellation_reasons:delete']);
         $response->assertStatus(200);
         $this->assertSoftDeleted('cancellation_reasons', ['id' => $reason->id]);
     }
@@ -135,7 +134,7 @@ class CancellationReasonApiTest extends TestCase
 
     public function test_api_cancellation_reason_unauthorized(): void
     {
-        $response = $this->getJson('/' . self::API_URL);
+        $response = $this->getJson('/'.self::API_URL);
         $response->assertStatus(401);
     }
 }

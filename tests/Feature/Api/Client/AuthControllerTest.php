@@ -225,7 +225,7 @@ class AuthControllerTest extends TestCase
         $token = $customer->createToken('client-api', ['*']);
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token->plainTextToken,
+            'Authorization' => 'Bearer '.$token->plainTextToken,
             'Accept' => 'application/json',
         ])->postJson('/api/client/auth/logout');
 

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
@@ -28,6 +28,7 @@ class SettingsExtensionController
     public function showExtensions()
     {
         $groups = app('extension')->getGroupsWithExtensions();
+
         return view('admin.settings.extensions.index', ['groups' => $groups, 'tags' => app('extension')->fetch()['tags'] ?? []]);
     }
 
@@ -69,6 +70,7 @@ class SettingsExtensionController
             \Artisan::call('migrate', ['--force' => true, '--path' => $type.'/'.$extension.'/database/migrations']);
             ActionLog::log(ActionLog::EXTENSION_ENABLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
         }
+
         return redirect()->back()->with('success', __('extensions.flash.enabled'));
     }
 

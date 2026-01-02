@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * This migration makes customer_id nullable on related tables
      * to allow account deletion while preserving historical data.
      */

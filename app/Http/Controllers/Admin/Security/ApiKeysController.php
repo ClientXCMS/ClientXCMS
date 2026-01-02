@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -49,7 +50,7 @@ class ApiKeysController extends AbstractCrudController
                 'groups:update' => __('global.update'),
                 'groups:delete' => __('global.delete'),
             ],
-            __('admin.products.tariff') . 's' => [
+            __('admin.products.tariff').'s' => [
                 'pricing:index' => __('global.listing'),
                 'pricing:store' => __('global.store'),
                 'pricing:show' => __('global.show'),

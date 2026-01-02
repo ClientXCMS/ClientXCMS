@@ -38,7 +38,7 @@ class RegistrationTest extends TestCase
 
     public function test_show_register_form(): void
     {
-        //$this->migrateExtension('socialauth');
+        // $this->migrateExtension('socialauth');
         $response = $this->get('/register');
         $response->assertOk();
     }

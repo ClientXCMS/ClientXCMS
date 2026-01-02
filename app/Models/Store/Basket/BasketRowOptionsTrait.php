@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Store\Basket;
 
@@ -84,7 +84,7 @@ trait BasketRowOptionsTrait
         }, 0);
     }
 
-    public function optionsAmountBillable():float
+    public function optionsAmountBillable(): float
     {
         return collect($this->options)->reduce(function (float $total, ConfigOptionDTO $DTO) {
             return $total + $DTO->billableAmount($this->currency, $this->billing);

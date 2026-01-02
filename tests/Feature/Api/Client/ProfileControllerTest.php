@@ -24,7 +24,7 @@ class ProfileControllerTest extends TestCase
     private function authHeaders(string $token): array
     {
         return [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'Accept' => 'application/json',
         ];
     }

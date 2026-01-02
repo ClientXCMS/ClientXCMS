@@ -5,14 +5,14 @@ namespace Tests\Feature\Client;
 use App\Models\Helpdesk\SupportDepartment;
 use App\Models\Helpdesk\SupportTicket;
 use Database\Seeders\SupportDepartmentSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
 
 class SupportControllerTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_client_support_index(): void
     {
         $user = $this->createCustomerModel();

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Store;
 
 use App\Services\Store\PricingService;
@@ -26,13 +26,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @OA\Schema (
  *      schema="ShopPricing",
  *     title="Shop pricing",
  *     description="Shop pricing model"
  * )
+ *
  * @property int $id
  * @property int $related_id
  * @property string $related_type
@@ -55,6 +54,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property float|null $setup_triennially
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\Store\Product|null $product
+ *
  * @method static \Database\Factories\Store\PricingFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Pricing newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Pricing newQuery()
@@ -83,6 +83,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Pricing whereWeekly($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Pricing withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Pricing withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Pricing extends Model

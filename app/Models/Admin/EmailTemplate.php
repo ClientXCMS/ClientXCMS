@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Admin;
 
 use App\Contracts\Notifications\NotifiablePlaceholderInterface;
@@ -28,8 +28,6 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\HtmlString;
 
 /**
- * 
- *
  * @property int $id
  * @property string $name
  * @property string $content
@@ -39,6 +37,7 @@ use Illuminate\Support\HtmlString;
  * @property int $hidden
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailTemplate newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailTemplate newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailTemplate query()
@@ -51,6 +50,7 @@ use Illuminate\Support\HtmlString;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailTemplate whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailTemplate whereSubject($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailTemplate whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class EmailTemplate extends Model
@@ -100,7 +100,7 @@ class EmailTemplate extends Model
         ];
         if (setting('email_template_name') != null) {
             $colors = ThemeManager::getColorsArray();
-            $mail->view('notifications::' . str_replace('.blade', '', setting('email_template_name')), array_merge($mail->viewData, ['primaryColor' => $colors['600'], 'secondaryColor' => $colors['400']]));
+            $mail->view('notifications::'.str_replace('.blade', '', setting('email_template_name')), array_merge($mail->viewData, ['primaryColor' => $colors['600'], 'secondaryColor' => $colors['400']]));
         }
 
         return $mail;
@@ -115,7 +115,7 @@ class EmailTemplate extends Model
             'fullname' => $notifiable->FullName,
         ];
         foreach ($context as $key => $value) {
-            $content = str_replace('%' . $key . '%', $value, $content);
+            $content = str_replace('%'.$key.'%', $value, $content);
         }
 
         return $content;
@@ -125,9 +125,9 @@ class EmailTemplate extends Model
     {
         $folder = resource_path('views/vendor/notifications');
         $oldTemplate = setting('email_template_name');
-        $file->storeAs('', $name . '.php', ['disk' => 'email']);
+        $file->storeAs('', $name.'.php', ['disk' => 'email']);
         if ($oldTemplate != null && $oldTemplate != $name) {
-            $oldTemplate = $folder . '/' . $oldTemplate . '.blade.php';
+            $oldTemplate = $folder.'/'.$oldTemplate.'.blade.php';
             if (file_exists($oldTemplate)) {
                 unlink($oldTemplate);
             }
@@ -139,7 +139,7 @@ class EmailTemplate extends Model
         $folder = resource_path('views/vendor/notifications');
         $oldTemplate = setting('email_template_name');
         if ($oldTemplate != null) {
-            $oldTemplate = $folder . '/' . $oldTemplate . '.blade.php';
+            $oldTemplate = $folder.'/'.$oldTemplate.'.blade.php';
             if (file_exists($oldTemplate)) {
                 unlink($oldTemplate);
             }

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Theme;
 
@@ -139,7 +139,7 @@ class ThemeManager
             return collect();
         }
         $support = $this->getTheme()->supportOption('menu_dropdown');
-        $items = $this->getSetting()[$type . '_links'] ?? collect();
+        $items = $this->getSetting()[$type.'_links'] ?? collect();
 
         return $items->filter(function (MenuLink $item) use ($support) {
             return $item->canShowed($support);
@@ -175,8 +175,9 @@ class ThemeManager
         return Cache::remember('theme_configuration', 60 * 60 * 24 * 7, function () {
             $types = \App\Models\Personalization\MenuLink::pluck('type')->unique()->toArray();
             $links = collect($types)->mapWithKeys(function ($type) {
-                return [$type . '_links' => MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get()];
+                return [$type.'_links' => MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get()];
             });
+
             return $links->merge([
                 'socials' => SocialNetwork::all()->where('hidden', false),
                 'sections_pages' => $this->getSectionsPages(),

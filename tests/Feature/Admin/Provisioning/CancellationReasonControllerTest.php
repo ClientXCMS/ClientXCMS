@@ -3,7 +3,6 @@
 namespace Tests\Feature\Admin\Provisioning;
 
 use App\Models\Provisioning\CancellationReason;
-use App\Models\Provisioning\Service;
 use Database\Seeders\AdminSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -24,7 +23,7 @@ class CancellationReasonControllerTest extends TestCase
     public function test_admin_cancellation_reason_create(): void
     {
         $this->seed(AdminSeeder::class);
-        $request = $this->performAdminAction('GET', self::API_URL . '/create');
+        $request = $this->performAdminAction('GET', self::API_URL.'/create');
         $request->assertStatus(200);
     }
 
@@ -59,7 +58,7 @@ class CancellationReasonControllerTest extends TestCase
             'reason' => 'Test reason',
             'status' => 'active',
         ]);
-        $request = $this->performAdminAction('GET', self::API_URL . '/' . $reason->id);
+        $request = $this->performAdminAction('GET', self::API_URL.'/'.$reason->id);
         $request->assertStatus(200);
         $request->assertSee('Test reason');
     }
@@ -71,7 +70,7 @@ class CancellationReasonControllerTest extends TestCase
             'reason' => 'Old reason',
             'status' => 'active',
         ]);
-        $request = $this->performAdminAction('PUT', self::API_URL . '/' . $reason->id, [
+        $request = $this->performAdminAction('PUT', self::API_URL.'/'.$reason->id, [
             'reason' => 'Updated reason',
             'status' => 'hidden',
         ]);
@@ -90,7 +89,7 @@ class CancellationReasonControllerTest extends TestCase
             'reason' => 'To be deleted',
             'status' => 'active',
         ]);
-        $request = $this->performAdminAction('DELETE', self::API_URL . '/' . $reason->id);
+        $request = $this->performAdminAction('DELETE', self::API_URL.'/'.$reason->id);
         $request->assertStatus(302);
         $this->assertSoftDeleted('cancellation_reasons', [
             'id' => $reason->id,
@@ -131,7 +130,7 @@ class CancellationReasonControllerTest extends TestCase
         CancellationReason::create(['reason' => 'Active reason', 'status' => 'active']);
         CancellationReason::create(['reason' => 'Hidden reason', 'status' => 'hidden']);
 
-        $request = $this->performAdminAction('GET', self::API_URL . '?filter[status]=active');
+        $request = $this->performAdminAction('GET', self::API_URL.'?filter[status]=active');
         $request->assertStatus(200);
     }
 

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * This is the Client API ProfileController.
@@ -33,10 +34,13 @@ class ProfileController extends Controller
      *     summary="Get current user profile",
      *     tags={"Customer Profile"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Profile data",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="id", type="integer"),
      *                 @OA\Property(property="email", type="string"),
@@ -89,9 +93,12 @@ class ProfileController extends Controller
      *     summary="Update profile information",
      *     tags={"Customer Profile"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="firstname", type="string"),
      *             @OA\Property(property="lastname", type="string"),
      *             @OA\Property(property="address", type="string"),
@@ -103,10 +110,13 @@ class ProfileController extends Controller
      *             @OA\Property(property="phone", type="string")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Profile updated successfully",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string"),
      *             @OA\Property(property="data", type="object")
      *         )
@@ -154,15 +164,19 @@ class ProfileController extends Controller
      *     summary="Change password",
      *     tags={"Customer Profile"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"current_password", "password", "password_confirmation"},
+     *
      *             @OA\Property(property="current_password", type="string"),
      *             @OA\Property(property="password", type="string"),
      *             @OA\Property(property="password_confirmation", type="string")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Password changed successfully"
@@ -189,18 +203,24 @@ class ProfileController extends Controller
      *     summary="Enable or disable 2FA",
      *     tags={"Customer Profile"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"code"},
+     *
      *             @OA\Property(property="code", type="string", example="123456"),
      *             @OA\Property(property="secret", type="string", description="Required when enabling 2FA")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="2FA toggled successfully",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="message", type="string"),
      *             @OA\Property(property="enabled", type="boolean"),
      *             @OA\Property(property="recovery_codes", type="array", @OA\Items(type="string"))
@@ -249,10 +269,13 @@ class ProfileController extends Controller
      *     summary="Get 2FA setup information (secret and QR code)",
      *     tags={"Customer Profile"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="2FA setup data",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="secret", type="string"),
      *             @OA\Property(property="qr_code", type="string", description="SVG QR code")
      *         )
@@ -269,11 +292,11 @@ class ProfileController extends Controller
             ], 400);
         }
 
-        $google = new Google2FA();
+        $google = new Google2FA;
         $secret = $google->generateSecretKey();
         $google->setQrcodeService(
             new \PragmaRX\Google2FAQRCode\QRCode\Bacon(
-                new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+                new \BaconQrCode\Renderer\Image\SvgImageBackEnd
             )
         );
 
@@ -295,10 +318,13 @@ class ProfileController extends Controller
      *     summary="Get 2FA recovery codes",
      *     tags={"Customer Profile"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Recovery codes",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="recovery_codes", type="array", @OA\Items(type="string"))
      *         )
      *     )
@@ -308,7 +334,7 @@ class ProfileController extends Controller
     {
         $customer = $request->user();
 
-        if (!$customer->twoFactorEnabled()) {
+        if (! $customer->twoFactorEnabled()) {
             return response()->json([
                 'error' => __('client.profile.2fa.not_enabled'),
             ], 400);
@@ -327,15 +353,19 @@ class ProfileController extends Controller
      *     summary="Save security question",
      *     tags={"Customer Profile"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"security_question_id", "security_answer", "current_password"},
+     *
      *             @OA\Property(property="security_question_id", type="integer"),
      *             @OA\Property(property="security_answer", type="string"),
      *             @OA\Property(property="current_password", type="string")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Security question saved"
@@ -366,13 +396,17 @@ class ProfileController extends Controller
      *     summary="Delete account",
      *     tags={"Customer Profile"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"password"},
+     *
      *             @OA\Property(property="password", type="string")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Account deleted"
@@ -390,7 +424,7 @@ class ProfileController extends Controller
         ]);
 
         $customer = $request->user();
-        $deletionService = new AccountDeletionService();
+        $deletionService = new AccountDeletionService;
 
         try {
             $deletionService->delete($customer);

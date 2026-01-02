@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Services;
 
 use App\Models\Account\Customer;
@@ -27,14 +29,12 @@ use App\Providers\AppServiceProvider;
 
 class TelemetryService
 {
-
     const TELEMETRY_ENDPOINT = 'http://telemetry.clientxcms.com:8081/ping';
 
     /**
      * Send telemetry data to the server.
      *
-     * @param array $data
-     * @return bool
+     * @param  array  $data
      */
     public function sendTelemetry(): bool
     {
@@ -42,58 +42,63 @@ class TelemetryService
             return true;
         }
         $response = \Http::post(self::TELEMETRY_ENDPOINT, $this->getTelemetryData());
+
         return $response->successful();
     }
 
     private function getHostingType()
     {
-        if (str_contains(base_path(), "httpdocs")) {
-            return "plesk";
+        if (str_contains(base_path(), 'httpdocs')) {
+            return 'plesk';
         }
-        if (str_contains(base_path(), "public_html")) {
-            return "cpanel";
+        if (str_contains(base_path(), 'public_html')) {
+            return 'cpanel';
         }
         try {
             if (app('license')->getLicense()->getServer() != null) {
-                return "cloud";
+                return 'cloud';
             }
         } catch (\Exception $e) {
 
         }
-        if (str_contains(base_path(), "var/www")) {
-            return "vps";
+        if (str_contains(base_path(), 'var/www')) {
+            return 'vps';
         }
-        return "unknown";
+
+        return 'unknown';
     }
 
     private function getInstallId()
     {
         $installId = setting('app_install_id');
-        if (!$installId) {
+        if (! $installId) {
             $bytes = random_bytes(12);
             $installId = rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
             $installId = substr($installId, 0, 16);
             Setting::updateSettings(['app_install_id' => $installId]);
         }
+
         return $installId;
     }
 
     private function getCreatedAt()
     {
-        if (file_exists(storage_path('installed'))){
+        if (file_exists(storage_path('installed'))) {
             $installed = file_get_contents(storage_path('installed'));
             if ($installed) {
                 $explode = explode(';time=', $installed);
                 $createdAt = $explode[1] ?? null;
-                if ($createdAt == null){
+                if ($createdAt == null) {
                     $admin = Admin::whereNotNull('created_at')->first();
                     if ($admin && $admin->created_at) {
                         return $admin->created_at->format('Y-m-d H:i:s');
                     }
                 }
-                return date('Y-m-d H:i:s', (int)$createdAt);
+
+                return date('Y-m-d H:i:s', (int) $createdAt);
             }
         }
+
         return date('Y-m-d H:i:s');
     }
 
@@ -113,17 +118,17 @@ class TelemetryService
             'invoices' => \App\Models\Billing\Invoice::count(),
             'tickets' => SupportTicket::count(),
             'invoices_paid' => \App\Models\Billing\Invoice::where('status', 'paid')->count(),
-            'gateways' => (object)Invoice::groupBy('paymethod')->where('status', 'paid')->selectRaw('paymethod, count(*) as count')
+            'gateways' => (object) Invoice::groupBy('paymethod')->where('status', 'paid')->selectRaw('paymethod, count(*) as count')
                 ->get()
                 ->mapWithKeys(function ($item) {
                     return [$item->paymethod => $item->count];
                 })->toArray(),
-            'servers' => (object)Server::groupBy('type')->selectRaw('type, count(*) as count')
+            'servers' => (object) Server::groupBy('type')->selectRaw('type, count(*) as count')
                 ->get()
                 ->mapWithKeys(function ($item) {
                     return [$item->type => $item->count];
                 })->toArray(),
-            'services' => (object)\App\Models\Provisioning\Service::groupBy('type')->selectRaw('type, count(*) as count')
+            'services' => (object) \App\Models\Provisioning\Service::groupBy('type')->selectRaw('type, count(*) as count')
                 ->get()
                 ->mapWithKeys(function ($item) {
                     return [$item->type => $item->count];
@@ -136,6 +141,7 @@ class TelemetryService
     {
         try {
             $license = app('license')->getLicense();
+
             return 'entreprise';
         } catch (\Exception $e) {
             return 'inactive';

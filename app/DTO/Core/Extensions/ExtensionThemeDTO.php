@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\DTO\Core\Extensions;
 
@@ -178,8 +178,9 @@ class ExtensionThemeDTO
             throw new ValidationException($validator);
         }
         $this->config = $validator->validated();
-        if ($this->configRulesFile != null)
+        if ($this->configRulesFile != null) {
             file_put_contents($this->path.'/config/config.json', json_encode($validator->validated(), JSON_PRETTY_PRINT));
+        }
     }
 
     public function hasScreenshot(): bool
@@ -259,6 +260,7 @@ class ExtensionThemeDTO
             ];
         }
         $translations = $this->api['translations'];
+
         return [
             'name' => $translations['name'][$locale] ?? ($this->api['name'] ?? $this->uuid),
             'description' => $translations['short_description'][$locale] ?? ($this->api['short_description'] ?? $this->uuid),

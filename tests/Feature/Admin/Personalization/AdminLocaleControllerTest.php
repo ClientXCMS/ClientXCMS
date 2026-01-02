@@ -3,9 +3,8 @@
 namespace Tests\Feature\Admin\Personalization;
 
 use App\Models\Admin\Setting;
-use App\Services\Core\LocaleService;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 
 class AdminLocaleControllerTest extends \Tests\TestCase
 {
@@ -59,7 +58,7 @@ class AdminLocaleControllerTest extends \Tests\TestCase
         $response->assertRedirect();
     }
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
         Setting::where('name', 'default_enabled_locales')->delete();

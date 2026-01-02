@@ -142,7 +142,7 @@ class ProfileControllerTest extends \Tests\TestCase
         $response = $this->get(route('front.profile.2fa_codes'));
 
         $response->assertStatus(200);
-        $response->assertHeader('Content-Disposition', 'attachment; filename=2fa_recovery_codes_' . \Str::slug(config('app.name')) . '.txt');
+        $response->assertHeader('Content-Disposition', 'attachment; filename=2fa_recovery_codes_'.\Str::slug(config('app.name')).'.txt');
         $this->assertContains($codes[0], $this->user->twoFactorRecoveryCodes());
     }
 }

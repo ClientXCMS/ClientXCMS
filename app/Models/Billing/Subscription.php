@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Billing;
 
 use App\Abstracts\PaymentMethodSourceDTO;
@@ -33,8 +33,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @property int $id
  * @property int|null $customer_id
  * @property string $state
@@ -48,6 +46,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Customer|null $customer
  * @property-read Service|null $service
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription onlyTrashed()
@@ -65,8 +64,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription withoutTrashed()
+ *
  * @property int $billing_day
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Subscription whereBillingDay($value)
+ *
  * @mixin \Eloquent
  */
 class Subscription extends Model
@@ -207,7 +209,9 @@ class Subscription extends Model
         $retry = $service->getMetadata('renewal_tries', 0) >= setting('max_subscription_tries') && setting('max_subscription_tries') > 0;
         $service->customer->notify(new SubscriptionFailedEmail($service->invoice, $this, $sourceDTO, $retry));
     }
-    public function getNextPaymentDate(): ?string {
+
+    public function getNextPaymentDate(): ?string
+    {
         if ($this->service && $this->service->expires_at instanceof Carbon) {
             $billingDay = $this->billing_day ?? 5;
 
@@ -220,6 +224,7 @@ class Subscription extends Model
             if ($billingDate->greaterThan($expiration)) {
                 return null;
             }
+
             return $billingDate->format('d/j');
         }
 
@@ -247,6 +252,7 @@ class Subscription extends Model
             if ($billingDate->greaterThan($this->service->expires_at)) {
                 return false;
             }
+
             return true;
         }
 
@@ -264,9 +270,10 @@ class Subscription extends Model
                     return 1;
                 }
             }
+
             return $billingDay;
         }
+
         return 5;
     }
-
 }
