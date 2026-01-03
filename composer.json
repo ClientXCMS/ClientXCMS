@@ -1,14 +1,17 @@
 {
-    "name": "laravel/laravel",
+    "name": "clientxcms/clientxcms",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "ClientXCMS is a powerful and configurable CMS designed for hosting companies.",
     "keywords": [
         "laravel",
-        "framework"
+        "framework",
+        "cms",
+        "hosting",
+        "clientxcms"
     ],
-    "license": "MIT",
+    "license": "Proprietary",
     "require": {
-        "php": "^8.1",
+        "php": "^8.3",
         "ext-dom": "*",
         "ext-gd": "*",
         "ext-intl": "*",
@@ -105,6 +108,9 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "platform": {
+            "php": "8.3.28"
         }
     },
     "minimum-stability": "stable",
