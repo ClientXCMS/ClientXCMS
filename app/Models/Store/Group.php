@@ -258,10 +258,10 @@ class Group extends Model
             return $this->getMetadata('group_url');
         }
         if ($this->parent_id) {
-            return route('front.store.subgroup', [$this->group()->trans('slug'), $this->trans('slug')], $absolute);
+            return route('front.store.subgroup', [$this->group()->trans('slug', $this->group()->slug), $this->trans('slug', $this->slug)], $absolute);
         }
 
-        return route('front.store.group', $this->trans('slug'), $absolute);
+        return route('front.store.group', $this->trans('slug', $this->slug), $absolute);
     }
 
     public function isSubgroup()

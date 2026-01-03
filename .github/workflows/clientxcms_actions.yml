@@ -22,9 +22,7 @@ jobs:
           - '8.3'
           - '8.4'
         database:
-          - mariadb:10
           - mariadb:11
-          - mysql:8
           - mysql:9
     services:
       database:
