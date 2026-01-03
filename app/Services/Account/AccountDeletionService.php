@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -36,7 +37,7 @@ class AccountDeletionService
 
     /**
      * Get the list of reasons blocking account deletion.
-     * 
+     *
      * @return array<string, mixed>
      */
     public function getBlockingReasons(Customer $customer): array
@@ -73,7 +74,7 @@ class AccountDeletionService
 
     /**
      * Delete a customer account.
-     * 
+     *
      * This will:
      * - Close all open tickets
      * - Set customer_id to NULL on invoices
@@ -82,14 +83,15 @@ class AccountDeletionService
      * - Clear payment method preferences
      * - Revoke all API tokens
      * - Soft delete the customer
-     * 
-     * @param Customer $customer The customer to delete
-     * @param bool $force Force deletion even if blocking reasons exist (admin only)
+     *
+     * @param  Customer  $customer  The customer to delete
+     * @param  bool  $force  Force deletion even if blocking reasons exist (admin only)
+     *
      * @throws \Exception if the account cannot be deleted and force is false
      */
     public function delete(Customer $customer, bool $force = false): bool
     {
-        if (!$force && !$this->canDelete($customer)) {
+        if (! $force && ! $this->canDelete($customer)) {
             throw new AccountDeletionException(
                 __('client.profile.delete.has_blocking_reasons'),
                 $this->getBlockingReasons($customer)
@@ -134,7 +136,7 @@ class AccountDeletionService
             }
 
             // Clear payment method cache
-            Cache::forget('payment_methods_' . $customer->id);
+            Cache::forget('payment_methods_'.$customer->id);
 
             // Revoke all API tokens
             $customer->tokens()->delete();
@@ -158,13 +160,13 @@ class AccountDeletionService
 
         if (isset($reasons['active_services'])) {
             $messages[] = __('client.profile.delete.has_active_services', [
-                'count' => $reasons['active_services']['count']
+                'count' => $reasons['active_services']['count'],
             ]);
         }
 
         if (isset($reasons['pending_invoices'])) {
             $messages[] = __('client.profile.delete.has_pending_invoices', [
-                'count' => $reasons['pending_invoices']['count']
+                'count' => $reasons['pending_invoices']['count'],
             ]);
         }
 

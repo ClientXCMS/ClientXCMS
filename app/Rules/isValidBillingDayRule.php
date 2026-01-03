@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Rules;
 
 use App\Models\Billing\Subscription;
@@ -26,14 +28,11 @@ class isValidBillingDayRule implements ValidationRule
 {
     /**
      * The subscription instance.
-     *
-     * @var Subscription
      */
     protected Subscription $subscription;
+
     /**
      * The service instance.
-     *
-     * @var Service
      */
     protected Service $service;
 
@@ -42,6 +41,7 @@ class isValidBillingDayRule implements ValidationRule
         $this->service = $service;
         $this->subscription = ($service->subscription) ? $service->subscription : (new Subscription(['service_id' => $service->id]));
     }
+
     /**
      * Run the validation rule.
      *
@@ -49,7 +49,7 @@ class isValidBillingDayRule implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!$this->subscription->isValidBillingDay($value)) {
+        if (! $this->subscription->isValidBillingDay($value)) {
             $fail(__('client.services.subscription.invalid_billing_day', ['day' => $this->service->expires_at->format('d/m'), 'now' => now()->format('d/m')]));
         }
 

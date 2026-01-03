@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * This is the Client API ServiceController.
@@ -27,20 +28,25 @@ class ServiceController extends Controller
      *     summary="List customer's services",
      *     tags={"Customer Services"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="status",
      *         in="query",
      *         description="Filter by status (active, suspended, cancelled, expired, pending)",
      *         required=false,
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
      *         description="Items per page",
      *         required=false,
+     *
      *         @OA\Schema(type="integer", default=10)
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="List of services"
@@ -59,7 +65,7 @@ class ServiceController extends Controller
         $services = $query->paginate($request->input('per_page', 10));
 
         return response()->json([
-            'data' => $services->map(fn($service) => $this->formatService($service)),
+            'data' => $services->map(fn ($service) => $this->formatService($service)),
             'meta' => [
                 'current_page' => $services->currentPage(),
                 'last_page' => $services->lastPage(),
@@ -75,12 +81,15 @@ class ServiceController extends Controller
      *     summary="Get service details",
      *     tags={"Customer Services"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="service",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Service details"
@@ -106,7 +115,7 @@ class ServiceController extends Controller
             'name' => $service->name,
             'type' => $service->type,
             'status' => $service->status,
-            'status_label' => __('provisioning.services.status.' . $service->status),
+            'status_label' => __('provisioning.services.status.'.$service->status),
             'currency' => $service->currency,
             'billing_cycle' => $service->billing,
             'price_ht' => $service->getBillingPrice()->priceHT(),

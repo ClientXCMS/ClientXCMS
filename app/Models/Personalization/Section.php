@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Personalization;
 
 use App\DTO\Core\Extensions\ExtensionSectionTrait;
@@ -25,8 +25,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @property int $id
  * @property string $uuid
  * @property string $theme_uuid
@@ -37,6 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Section newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Section newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Section onlyTrashed()
@@ -53,6 +52,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereUuid($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Section withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Section withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Section extends Model
@@ -65,7 +65,7 @@ class Section extends Model
 
     const TAGS_DISABLED = [
         '<?php', '?>', '@php', '@endphp', '@shell', '<?=',
-        'env(', '$_ENV', '$_SERVER', '$_GET', '.env', '.__DIR__', 
+        'env(', '$_ENV', '$_SERVER', '$_GET', '.env', '.__DIR__',
         '$_POST', '$_REQUEST', '$_SESSION', '$_COOKIE', 'exec(',
         'shell_exec(', 'system(', 'passthru(', 'proc_open(', 'popen(',
         'pcntl_exec(', 'eval(', 'assert(', 'preg_replace(', 'create_function(',
@@ -78,7 +78,7 @@ class Section extends Model
         'exit(', 'phpinfo(', 'php_uname(', 'getenv(', 'get_current_user(',
         'getmyuid(', 'getmygid(', 'getmypid(', 'getmyinode(', 'getlastmod(',
         'getprotobyname(', 'getprotobynumber(', 'getservbyname(', 'getservbyport(',
-        
+
     ];
 
     protected $fillable = [
@@ -123,7 +123,7 @@ class Section extends Model
 
     public function saveContent(string $content)
     {
-        if ($this->toDTO()->isProtected()){
+        if ($this->toDTO()->isProtected()) {
             return;
         }
         $theme = app('theme')->getTheme();

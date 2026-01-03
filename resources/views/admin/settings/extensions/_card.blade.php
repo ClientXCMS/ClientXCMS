@@ -7,7 +7,6 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
     data-tags="{{ $tagSlugs }}"
     data-name="{{ $extension->name() }}"
     data-description="{{ $extension->api['short_description'] ?? '' }}">
-
     <div class="relative h-36 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center {{ $extension->hasPadding() ? 'p-4' : '' }}">
         @if ($extension->thumbnail())
         <img src="{{ $extension->thumbnail() }}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" alt="{{ $extension->name() }}">

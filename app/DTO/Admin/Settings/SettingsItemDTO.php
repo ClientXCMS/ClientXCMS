@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\DTO\Admin\Settings;
 
@@ -68,4 +68,3 @@ class SettingsItemDTO
         return str_contains($this->url(), admin_prefix('settings'));
     }
 }
-    

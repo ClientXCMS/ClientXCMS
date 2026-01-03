@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Exceptions;
 
@@ -66,6 +66,7 @@ class Handler extends ExceptionHandler
                 return response()->view('errors.500', [], 500);
             }
         }
+
         return parent::render($request, $exception);
     }
 

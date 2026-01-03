@@ -22,7 +22,7 @@ class CustomerFactory extends Factory
      */
     public function definition(): array
     {
-        $phone = '07' . random_int(10000000, 99999999);
+        $phone = '07'.random_int(10000000, 99999999);
 
         return [
             'firstname' => fake()->firstName(),
@@ -47,7 +47,7 @@ class CustomerFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
     }

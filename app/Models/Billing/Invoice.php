@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Billing;
 
@@ -46,14 +46,12 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="Invoice",
  *     title="Invoice",
  *     description="A billing invoice issued to a customer",
  *     required={"customer_id", "total", "currency", "status"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=1001),
  *     @OA\Property(property="uuid", type="string", example="123e4567-e89b-12d3-a456-426614174000"),
  *     @OA\Property(property="customer_id", type="integer", example=5),
@@ -78,15 +76,16 @@ use Symfony\Component\HttpFoundation\Response;
  *     @OA\Property(
  *         property="items",
  *         type="array",
- * 
+ *
  *         @OA\Items(ref="#/components/schemas/InvoiceItem")
  *     ),
- * 
+ *
  *     @OA\Property(
  *         property="customer",
  *         ref="#/components/schemas/Customer"
  *     )
  * )
+ *
  * @property int $id
  * @property string|null $uuid
  * @property \Illuminate\Support\Carbon $due_date
@@ -117,6 +116,7 @@ use Symfony\Component\HttpFoundation\Response;
  * @property-read int|null $logs_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Metadata> $metadata
  * @property-read int|null $metadata_count
+ *
  * @method static \Database\Factories\Core\InvoiceFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice newQuery()
@@ -146,6 +146,7 @@ use Symfony\Component\HttpFoundation\Response;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice whereUuid($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Invoice withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Invoice extends Model implements SupportRelateItemInterface
@@ -274,6 +275,7 @@ class Invoice extends Model implements SupportRelateItemInterface
         if ($this->customer_id === null || $this->customer === null) {
             return __('client.profile.delete.deleted_user_placeholder');
         }
+
         return $this->customer->fullName;
     }
 
@@ -321,6 +323,7 @@ class Invoice extends Model implements SupportRelateItemInterface
         }
 
         $pdf = $this->generatePdf();
+
         return $pdf->download($this->identifier().'.pdf');
     }
 
@@ -331,6 +334,7 @@ class Invoice extends Model implements SupportRelateItemInterface
         }
 
         $pdf = $this->generatePdf();
+
         return $pdf->output();
     }
 
@@ -338,34 +342,37 @@ class Invoice extends Model implements SupportRelateItemInterface
     {
         if (Storage::disk('local')->exists($this->getPdfPath())) {
             $fullPath = Storage::disk('local')->path($this->getPdfPath());
+
             return response()->file($fullPath, [
-                'Content-Type'        => 'application/pdf',
+                'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="'.$this->identifier().'.pdf"',
             ]);
         }
         $pdf = $this->generatePdf();
+
         return $pdf->stream($this->identifier().'.pdf');
     }
 
     public function getPdfPath(): string
     {
-        return 'invoices/' . $this->getPdfName();
+        return 'invoices/'.$this->getPdfName();
     }
 
     public function getPdfName(): string
     {
         $date = $this->created_at ? $this->created_at : now();
-        return $date->format('Y') . '/' . $date->format('m') . '/' . $this->invoice_number . '.pdf';
+
+        return $date->format('Y').'/'.$date->format('m').'/'.$this->invoice_number.'.pdf';
     }
 
     public function generatePdf(): PDF
     {
-        $filename = 'invoices/' . $this->getPdfName();
+        $filename = 'invoices/'.$this->getPdfName();
         $domain = request()->getSchemeAndHttpHost();
         if (str_contains($domain, 'localhost')) {
-            $logoSrc = '/' . setting('app_logo_text');
+            $logoSrc = '/'.setting('app_logo_text');
         } else {
-            $logoSrc = $domain .setting('app_logo_text');
+            $logoSrc = $domain.setting('app_logo_text');
         }
 
         $primaryColor = ThemeManager::getColorsArray()['600'];
@@ -489,6 +496,7 @@ class Invoice extends Model implements SupportRelateItemInterface
         if (! $model) {
             $model = $this->where('id', $value)->first();
         }
+
         return $model ?? abort(404);
     }
 
@@ -499,7 +507,7 @@ class Invoice extends Model implements SupportRelateItemInterface
 
     public function addBalance(float $amount)
     {
-        if ($amount <= 0 || !$this->canPay()) {
+        if ($amount <= 0 || ! $this->canPay()) {
             return;
         }
         if ($amount >= ($this->total - $this->balance)) {
@@ -507,6 +515,7 @@ class Invoice extends Model implements SupportRelateItemInterface
             $this->customer->addFund(-$amount, 'Invoice payment for '.$this->id);
             $this->update(['paymethod' => 'balance']);
             $this->complete();
+
             return;
         }
         $this->customer->addFund(-$amount, 'Invoice payment for '.$this->id);
@@ -522,17 +531,18 @@ class Invoice extends Model implements SupportRelateItemInterface
         if ($address['company_name'] != null && $address['company_name'] != '') {
             $lines[] = $address['company_name'];
         } else {
-            if (!empty($address['firstname']) && !empty($address['lastname'])) {
-                $lines[] = $address['firstname'] . ' ' . $address['lastname'];
+            if (! empty($address['firstname']) && ! empty($address['lastname'])) {
+                $lines[] = $address['firstname'].' '.$address['lastname'];
             }
         }
         $lines[] = $address['email'];
-        $lines[] = $address['address'] . ' ' . ($address['address2'] != null ? $address['address2'] : '');
-        $lines[] = $address['region'] . ' ' . $address['city'] . ' ' . $address['zipcode'];
+        $lines[] = $address['address'].' '.($address['address2'] != null ? $address['address2'] : '');
+        $lines[] = $address['region'].' '.$address['city'].' '.$address['zipcode'];
         $lines[] = Countries::names()[$address['country']] ?? $address['country'];
-        if (!empty($address['billing_details'])) {
+        if (! empty($address['billing_details'])) {
             $lines = array_merge($lines, explode(PHP_EOL, $address['billing_details']));
         }
+
         return $lines;
     }
 
@@ -547,6 +557,7 @@ class Invoice extends Model implements SupportRelateItemInterface
             $address = $this->customer->generateBillingAddress();
             $this->save(['billing_address' => $address]);
         }
+
         return $address;
     }
 }

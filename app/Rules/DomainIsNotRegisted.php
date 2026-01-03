@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Rules;
 
 use App\Addons\CloudflareSubdomains\CloudflareDNSManager;
@@ -33,7 +33,7 @@ class DomainIsNotRegisted implements \Illuminate\Contracts\Validation\Rule
         if ($this->subdomain) {
             $value = $value.request()->input('subdomain');
         }
-        if (!preg_match('/^(?!:\/\/)(?=.{1,255}$)((.{1,63}\.){1,127}(?![0-9]*$)[a-z0-9-]+\.?)$/i', $value)) {
+        if (! preg_match('/^(?!:\/\/)(?=.{1,255}$)((.{1,63}\.){1,127}(?![0-9]*$)[a-z0-9-]+\.?)$/i', $value)) {
             return true;
         }
         $types = app('extension')->getProductTypes();
@@ -45,7 +45,7 @@ class DomainIsNotRegisted implements \Illuminate\Contracts\Validation\Rule
                 }
             }
         }
-        if (app('extension')->extensionIsEnabled('cloudflaresubdomains')){
+        if (app('extension')->extensionIsEnabled('cloudflaresubdomains')) {
             if (CloudflareDNSManager::existRecord($value)) {
                 return false;
             }

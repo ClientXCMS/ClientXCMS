@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Api\Customers;
 
@@ -152,11 +152,12 @@ class CustomerController extends AbstractApiController
      */
     public function destroy(Request $request, Customer $customer)
     {
-        $deletionService = new \App\Services\Account\AccountDeletionService();
+        $deletionService = new \App\Services\Account\AccountDeletionService;
         $force = $request->boolean('force', false);
-        
+
         try {
             $deletionService->delete($customer, $force);
+
             return response()->json(['message' => 'Customer deleted successfully'], 200);
         } catch (\App\Services\Account\AccountDeletionException $e) {
             return response()->json([

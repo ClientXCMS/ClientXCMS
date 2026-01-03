@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Front\Billing;
 
@@ -49,6 +49,7 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
             return $service->canSubscribe();
         });
         $paidInvoicesWithPaymentMethod = $customer->invoices()->where('status', 'paid')->whereNotNull('payment_method_id')->get();
+
         return view('front.billing.payment-methods.index', compact('paidInvoicesWithPaymentMethod', 'subscribableServices', 'gateways', 'sources', 'gatewaysOptions'));
     }
 
@@ -62,7 +63,7 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
             if ($add instanceof RedirectResponse) {
                 return $add;
             }
-            Cache::delete('payment_methods_' . auth('web')->id());
+            Cache::delete('payment_methods_'.auth('web')->id());
 
             return back()->with('success', __('client.payment-methods.success'));
         } catch (\Exception $e) {
@@ -121,7 +122,7 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
         }
         $gateway->paymentType()->removeSource($source);
         try {
-            Cache::delete('payment_methods_' . $customer->id);
+            Cache::delete('payment_methods_'.$customer->id);
         } catch (InvalidArgumentException $e) {
         }
 
@@ -136,6 +137,7 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
             $result = $invoice->customer->payInvoiceWithPaymentMethod($invoice, $source);
             if ($result->success) {
                 $result->invoice->update(['paymethod' => $source->gateway_uuid, 'payment_method_id' => $source->id]);
+
                 return back()->with('success', __('admin.invoices.paidsuccess'));
             } else {
                 return back()->with('error', $result->message);

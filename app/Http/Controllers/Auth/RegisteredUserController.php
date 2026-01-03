@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Auth;
 
@@ -122,7 +122,7 @@ class RegisteredUserController extends Controller
         }
     }
 
-    private function formatPhone(?string $phone = null, string $country): ?string
+    private function formatPhone(?string $phone, string $country): ?string
     {
         try {
             if ($phone === null || $phone === '') {

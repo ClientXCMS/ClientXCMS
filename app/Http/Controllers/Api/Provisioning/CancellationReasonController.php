@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -23,7 +24,6 @@ use App\Models\Provisioning\CancellationReason;
 use App\Models\Provisioning\Service;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class CancellationReasonController extends AbstractApiController
 {
@@ -38,6 +38,7 @@ class CancellationReasonController extends AbstractApiController
      *     path="/api/cancellation_reasons",
      *     summary="List all cancellation reasons",
      *     tags={"Cancellation Reasons"},
+     *
      *     @OA\Response(response=200, description="Success")
      * )
      */
@@ -53,6 +54,7 @@ class CancellationReasonController extends AbstractApiController
      *     path="/api/cancellation_reasons",
      *     summary="Create a new cancellation reason",
      *     tags={"Cancellation Reasons"},
+     *
      *     @OA\Response(response=201, description="Created")
      * )
      */
@@ -73,6 +75,7 @@ class CancellationReasonController extends AbstractApiController
      *     path="/api/cancellation_reasons/{id}",
      *     summary="Get a specific cancellation reason",
      *     tags={"Cancellation Reasons"},
+     *
      *     @OA\Response(response=200, description="Success")
      * )
      */
@@ -86,6 +89,7 @@ class CancellationReasonController extends AbstractApiController
      *     path="/api/cancellation_reasons/{id}",
      *     summary="Update a cancellation reason",
      *     tags={"Cancellation Reasons"},
+     *
      *     @OA\Response(response=200, description="Success")
      * )
      */
@@ -106,6 +110,7 @@ class CancellationReasonController extends AbstractApiController
      *     path="/api/cancellation_reasons/{id}",
      *     summary="Delete a cancellation reason",
      *     tags={"Cancellation Reasons"},
+     *
      *     @OA\Response(response=200, description="Success")
      * )
      */
@@ -121,6 +126,7 @@ class CancellationReasonController extends AbstractApiController
      *     path="/api/cancellation_reasons_analytics",
      *     summary="Get cancellation analytics data",
      *     tags={"Cancellation Reasons"},
+     *
      *     @OA\Response(response=200, description="Success")
      * )
      */
@@ -133,7 +139,7 @@ class CancellationReasonController extends AbstractApiController
         $stats = Service::selectRaw('cancelled_reason, COUNT(*) as count')
             ->whereNotNull('cancelled_reason')
             ->whereNotNull('cancelled_at')
-            ->whereBetween('cancelled_at', [$startDate, $endDate . ' 23:59:59'])
+            ->whereBetween('cancelled_at', [$startDate, $endDate.' 23:59:59'])
             ->groupBy('cancelled_reason')
             ->get();
 

@@ -25,7 +25,7 @@ class TicketControllerTest extends TestCase
     private function authHeaders(string $token): array
     {
         return [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'Accept' => 'application/json',
         ];
     }
@@ -40,7 +40,7 @@ class TicketControllerTest extends TestCase
 
     private function createTicket(Customer $customer, SupportDepartment $department, string $status = SupportTicket::STATUS_OPEN): SupportTicket
     {
-        $ticket = new SupportTicket();
+        $ticket = new SupportTicket;
         $ticket->customer_id = $customer->id;
         $ticket->department_id = $department->id;
         $ticket->subject = 'Test Ticket';
@@ -81,7 +81,7 @@ class TicketControllerTest extends TestCase
         $this->createTicket($customer, $department, SupportTicket::STATUS_CLOSED);
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->getJson('/api/client/tickets?filter=' . SupportTicket::STATUS_OPEN);
+            ->getJson('/api/client/tickets?filter='.SupportTicket::STATUS_OPEN);
 
         $response->assertOk()
             ->assertJsonCount(1, 'data');
@@ -108,7 +108,7 @@ class TicketControllerTest extends TestCase
         $ticket = $this->createTicket($customer, $department);
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->getJson('/api/client/tickets/' . $ticket->id);
+            ->getJson('/api/client/tickets/'.$ticket->id);
 
         $response->assertOk()
             ->assertJsonStructure([
@@ -140,7 +140,7 @@ class TicketControllerTest extends TestCase
         $ticket = $this->createTicket($otherCustomer, $department);
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->getJson('/api/client/tickets/' . $ticket->id);
+            ->getJson('/api/client/tickets/'.$ticket->id);
 
         $response->assertNotFound();
     }
@@ -178,7 +178,7 @@ class TicketControllerTest extends TestCase
         $ticket = $this->createTicket($customer, $department);
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->postJson('/api/client/tickets/' . $ticket->id . '/reply', [
+            ->postJson('/api/client/tickets/'.$ticket->id.'/reply', [
                 'content' => 'This is my reply message.',
             ]);
 
@@ -202,7 +202,7 @@ class TicketControllerTest extends TestCase
         $ticket->save();
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->postJson('/api/client/tickets/' . $ticket->id . '/reply', [
+            ->postJson('/api/client/tickets/'.$ticket->id.'/reply', [
                 'content' => 'Trying to reply to closed ticket.',
             ]);
 
@@ -216,7 +216,7 @@ class TicketControllerTest extends TestCase
         $ticket = $this->createTicket($customer, $department);
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->postJson('/api/client/tickets/' . $ticket->id . '/close');
+            ->postJson('/api/client/tickets/'.$ticket->id.'/close');
 
         $response->assertOk()
             ->assertJson([
@@ -236,7 +236,7 @@ class TicketControllerTest extends TestCase
         $ticket->save();
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->postJson('/api/client/tickets/' . $ticket->id . '/reopen');
+            ->postJson('/api/client/tickets/'.$ticket->id.'/reopen');
 
         $response->assertOk()
             ->assertJson([

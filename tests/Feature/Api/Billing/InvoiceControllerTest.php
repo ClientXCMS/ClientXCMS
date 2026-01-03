@@ -3,7 +3,6 @@
 namespace Tests\Feature\Api\Billing;
 
 use App\Models\Account\Customer;
-use App\Models\Admin\Admin;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -49,7 +48,7 @@ class InvoiceControllerTest extends TestCase
         $customer = Customer::factory()->create();
         $invoice = Invoice::factory()->create(['customer_id' => $customer->id]);
 
-        $response = $this->performAction('GET', '/api/application/invoices/' . $invoice->id);
+        $response = $this->performAction('GET', '/api/application/invoices/'.$invoice->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('data.0.id', $invoice->id);
@@ -61,7 +60,7 @@ class InvoiceControllerTest extends TestCase
         $customer = Customer::factory()->create();
         $invoice = Invoice::factory()->create(['customer_id' => $customer->id, 'notes' => 'Old note']);
 
-        $response = $this->performAction('POST', '/api/application/invoices/' . $invoice->id, ['*'], [
+        $response = $this->performAction('POST', '/api/application/invoices/'.$invoice->id, ['*'], [
             'notes' => 'New note',
             'status' => $invoice->status,
             'currency' => $invoice->currency,
@@ -81,7 +80,7 @@ class InvoiceControllerTest extends TestCase
         $customer = Customer::factory()->create();
         $invoice = Invoice::factory()->create(['customer_id' => $customer->id, 'status' => Invoice::STATUS_DRAFT]);
 
-        $response = $this->performAction('DELETE', '/api/application/invoices/' . $invoice->id);
+        $response = $this->performAction('DELETE', '/api/application/invoices/'.$invoice->id);
 
         $response->assertStatus(204);
         $this->assertSoftDeleted('invoices', ['id' => $invoice->id]);

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Admin\Settings;
 
@@ -55,6 +55,7 @@ class SettingsController
             if (count($item->action) != 2 || ! class_exists($item->action[0]) || ! method_exists($item->action[0], $item->action[1])) {
                 abort(404);
             }
+
             return app($item->action[0])->{$item->action[1]}($request);
         }
         abort(404);

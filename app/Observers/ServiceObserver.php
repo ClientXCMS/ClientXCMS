@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Observers;
 
@@ -72,23 +72,23 @@ class ServiceObserver
                 $model->cancelled_reason = null;
                 $model->save();
             }
-//            $server = $model->productType()->server();
-//            try {
-//                if ($server != null) {
-//                    $server->unsuspendAccount($model);
-//                }
-//            } catch (\Exception $e) {
-//            }
+            //            $server = $model->productType()->server();
+            //            try {
+            //                if ($server != null) {
+            //                    $server->unsuspendAccount($model);
+            //                }
+            //            } catch (\Exception $e) {
+            //            }
         }
 
         if ($model->status == 'active' && $model->isDirty('status')) {
-//            try {
-//                $server = $model->productType()->server();
-//                if ($server != null) {
-//                    $server->unsuspendAccount($model);
-//                }
-//            } catch (\Exception $e) {
-//            }
+            //            try {
+            //                $server = $model->productType()->server();
+            //                if ($server != null) {
+            //                    $server->unsuspendAccount($model);
+            //                }
+            //            } catch (\Exception $e) {
+            //            }
         }
         if ($model->status == 'cancelled' && $model->isDirty('status') && $model->cancelled_at == null) {
             $model->cancelled_at = now();

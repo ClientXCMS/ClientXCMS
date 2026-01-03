@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\DTO\Core\Extensions;
 
 use App\Core\License\LicenseCache;
@@ -24,7 +24,6 @@ use Illuminate\Contracts\Support\Arrayable;
 
 class ExtensionDTO implements Arrayable
 {
-
     public string $uuid;
 
     public ?string $version = null;
@@ -50,12 +49,13 @@ class ExtensionDTO implements Arrayable
     public function extensionPath(): string
     {
         if ($this->type == 'theme') {
-            return base_path('resources/themes/' . $this->uuid);
+            return base_path('resources/themes/'.$this->uuid);
         }
         if ($this->type == 'email_template' || $this->type == 'invoice_template') {
-            return base_path('resources/views/vendor/notifications/' . $this->uuid . '.blade.php');
+            return base_path('resources/views/vendor/notifications/'.$this->uuid.'.blade.php');
         }
-        return base_path($this->type() . '/' . $this->uuid);
+
+        return base_path($this->type().'/'.$this->uuid);
     }
 
     public static function fromArray(array $module)
@@ -82,12 +82,13 @@ class ExtensionDTO implements Arrayable
         if (array_key_exists('author', $this->api) && is_string($this->api['author'])) {
             return $this->api['author'];
         }
+
         return 'Unknown';
     }
 
     public function hasPadding()
     {
-        return !$this->type === 'theme';
+        return $this->type !== 'theme';
     }
 
     public function toArray()
@@ -121,7 +122,7 @@ class ExtensionDTO implements Arrayable
 
     public function type()
     {
-        return $this->type . 's';
+        return $this->type.'s';
     }
 
     public function name()
@@ -155,9 +156,9 @@ class ExtensionDTO implements Arrayable
 
     public function thumbnail()
     {
-        if ($this->type == 'theme' && file_exists(base_path('resources/themes/' . $this->uuid . '/screenshot.png'))) {
+        if ($this->type == 'theme' && file_exists(base_path('resources/themes/'.$this->uuid.'/screenshot.png'))) {
             try {
-                return \Vite::asset('resources/themes/' . $this->uuid . '/screenshot.png');
+                return \Vite::asset('resources/themes/'.$this->uuid.'/screenshot.png');
             } catch (\Exception $e) {
             }
         }
@@ -189,6 +190,7 @@ class ExtensionDTO implements Arrayable
             ];
         }
         $translations = $this->api['translations'];
+
         return [
             'name' => $translations['name'][$locale] ?? ($this->api['name'] ?? $this->uuid),
             'description' => $translations['short_description'][$locale] ?? ($this->api['short_description'] ?? $this->uuid),
@@ -198,6 +200,7 @@ class ExtensionDTO implements Arrayable
     public function price(bool $formatted = true)
     {
         $key = $formatted ? 'formatted_price' : 'price';
+
         return $this->api[$key] ?? ($formatted ? __('global.free') : 0);
     }
 
@@ -213,6 +216,7 @@ class ExtensionDTO implements Arrayable
         if (is_array($extensions) && in_array($this->uuid, $extensions)) {
             return true;
         }
+
         return false;
     }
 
@@ -235,13 +239,13 @@ class ExtensionDTO implements Arrayable
 
     public function getSections()
     {
-        $file = base_path($this->type . '/' . $this->uuid . '/views/default/sections');
+        $file = base_path($this->type.'/'.$this->uuid.'/views/default/sections');
         if (! \File::exists($file)) {
             return [];
         }
         $sectionFile = [];
-        if (file_exists(base_path($this->type . '/' . $this->uuid . '/views/default/sections/sections.json'))) {
-            $sectionFile = json_decode(file_get_contents(base_path($this->type . '/' . $this->uuid . '/views/default/sections/sections.json')), true);
+        if (file_exists(base_path($this->type.'/'.$this->uuid.'/views/default/sections/sections.json'))) {
+            $sectionFile = json_decode(file_get_contents(base_path($this->type.'/'.$this->uuid.'/views/default/sections/sections.json')), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 $sectionFile = [];
             }

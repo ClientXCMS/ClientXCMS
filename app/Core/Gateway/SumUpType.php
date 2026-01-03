@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -45,18 +46,18 @@ class SumUpType extends AbstractGatewayType
     {
         try {
             $response = Http::withHeaders($this->getHeaders())
-                ->post(self::API_URL . '/checkouts', [
-                    'checkout_reference' => 'INV-' . $invoice->id . '-' . uniqid(),
+                ->post(self::API_URL.'/checkouts', [
+                    'checkout_reference' => 'INV-'.$invoice->id.'-'.uniqid(),
                     'amount' => (float) $invoice->total,
                     'currency' => strtoupper($invoice->currency),
                     'merchant_code' => env('SUMUP_MERCHANT_CODE'),
-                    'description' => __('global.invoice') . ' #' . $invoice->id,
+                    'description' => __('global.invoice').' #'.$invoice->id,
                     'return_url' => $dto->returnUri,
                 ]);
 
             if ($response->failed()) {
                 $error = $response->json('error_message') ?? $response->body();
-                throw new WrongPaymentException('SumUp error: ' . $error);
+                throw new WrongPaymentException('SumUp error: '.$error);
             }
 
             $checkout = $response->json();
@@ -65,11 +66,11 @@ class SumUpType extends AbstractGatewayType
             $invoice->update(['external_id' => $checkoutId]);
 
             // Build hosted checkout URL
-            $checkoutUrl = 'https://api.sumup.com/v0.1/checkouts/' . $checkoutId;
+            $checkoutUrl = 'https://api.sumup.com/v0.1/checkouts/'.$checkoutId;
 
             return redirect($checkoutUrl, 303);
         } catch (\Exception $e) {
-            throw new WrongPaymentException('SumUp payment creation failed: ' . $e->getMessage());
+            throw new WrongPaymentException('SumUp payment creation failed: '.$e->getMessage());
         }
     }
 
@@ -79,7 +80,7 @@ class SumUpType extends AbstractGatewayType
         if ($invoice->external_id) {
             try {
                 $response = Http::withHeaders($this->getHeaders())
-                    ->get(self::API_URL . '/checkouts/' . $invoice->external_id);
+                    ->get(self::API_URL.'/checkouts/'.$invoice->external_id);
 
                 if ($response->successful()) {
                     $checkout = $response->json();
@@ -91,11 +92,12 @@ class SumUpType extends AbstractGatewayType
                             $invoice->update(['external_id' => $transactionId]);
                         }
                         $invoice->complete();
+
                         return redirect()->route('front.invoices.show', $invoice)->with('success', __('store.checkout.success'));
                     }
                 }
             } catch (\Exception $e) {
-                logger()->error('SumUp processPayment error: ' . $e->getMessage());
+                logger()->error('SumUp processPayment error: '.$e->getMessage());
             }
         }
 
@@ -126,12 +128,12 @@ class SumUpType extends AbstractGatewayType
     private function getHeaders(): array
     {
         $apiKey = env('SUMUP_API_KEY');
-        if (!$apiKey) {
+        if (! $apiKey) {
             throw new WrongPaymentException('SumUp API key not configured');
         }
 
         return [
-            'Authorization' => 'Bearer ' . $apiKey,
+            'Authorization' => 'Bearer '.$apiKey,
             'Content-Type' => 'application/json',
         ];
     }
@@ -139,8 +141,9 @@ class SumUpType extends AbstractGatewayType
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
     {
         if ($invoice->external_id) {
-            return 'https://me.sumup.com/transactions/' . $invoice->external_id;
+            return 'https://me.sumup.com/transactions/'.$invoice->external_id;
         }
+
         return null;
     }
 }

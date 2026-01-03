@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Admin\Settings;
 
@@ -87,7 +87,7 @@ class SettingsCoreController extends Controller
                 'mail_smtp_host' => 'required|string|max:1000',
                 'mail_smtp_port' => 'required|integer|between:1,65535',
                 'mail_smtp_username' => 'string|nullable|max:1000',
-                'mail_smtp_password' => ['string','nullable','max:1000', new NotContainRule(['"'])],
+                'mail_smtp_password' => ['string', 'nullable', 'max:1000', new NotContainRule(['"'])],
                 'mail_smtp_encryption' => 'required|string|in:tls,ssl,none',
             ]);
             EnvEditor::updateEnv([
@@ -132,9 +132,9 @@ class SettingsCoreController extends Controller
         staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $data = $request->validated();
         $fileFields = [
-            'app_logo' => 'public/app_logo' . rand(1000, 9999) . '.png',
-            'app_favicon' => 'public/app_favicon' . rand(1000, 9999) . '.png',
-            'app_logo_text' => 'public/app_logo_text' . rand(1000, 9999) . '.png',
+            'app_logo' => 'public/app_logo'.rand(1000, 9999).'.png',
+            'app_favicon' => 'public/app_favicon'.rand(1000, 9999).'.png',
+            'app_logo_text' => 'public/app_logo_text'.rand(1000, 9999).'.png',
         ];
         foreach ($fileFields as $field => $path) {
             if ($request->hasFile($field)) {
@@ -158,7 +158,7 @@ class SettingsCoreController extends Controller
             'APP_NAME' => $data['app_name'],
             'APP_ENV' => $data['app_env'] == 'production' ? 'production' : 'local',
             'APP_DEBUG' => $data['app_debug'] == 'true' ? 'true' : 'false',
-            'TELEMETRY_ENABLED' => $data['app_telemetry'] ?? 'false'
+            'TELEMETRY_ENABLED' => $data['app_telemetry'] ?? 'false',
         ]);
         unset($data['app_env'], $data['app_debug'], $data['app_telemetry']);
         Setting::updateSettings($data);

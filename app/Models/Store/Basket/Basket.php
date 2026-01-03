@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,21 +17,17 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Store\Basket;
 
 use App\Models\Account\Customer;
 use App\Models\Store\Coupon;
 use App\Models\Traits\HasMetadata;
-use App\Services\Store\TaxesService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
 /**
- * 
- *
  * @property int $id
  * @property string $uuid
  * @property string|null $user_id
@@ -43,6 +40,7 @@ use Illuminate\Support\Str;
  * @property-read int|null $metadata_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Store\Basket\BasketRow> $rows
  * @property-read int|null $rows_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Basket newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Basket newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Basket query()
@@ -53,6 +51,7 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Basket whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Basket whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Basket whereUuid($value)
+ *
  * @mixin \Eloquent
  */
 class Basket extends Model
@@ -118,6 +117,7 @@ class Basket extends Model
             return $total + $row->setup($withQuantity) + $row->optionSetup();
         }, 0);
     }
+
     public function amountBillable(): float
     {
         return $this->rows->reduce(function ($total, BasketRow $row) {
@@ -230,7 +230,7 @@ class Basket extends Model
         $uuid = self::getUUID();
 
         if ($force) {
-            if (self::$basket != null && !app()->environment('testing')) {
+            if (self::$basket != null && ! app()->environment('testing')) {
                 return self::$basket;
             }
 
@@ -258,6 +258,7 @@ class Basket extends Model
                 ->whereNull('completed_at')
                 ->first();
         }
+
         return self::$basket;
     }
 
@@ -338,8 +339,9 @@ class Basket extends Model
         if (! $coupon->isValid($this, true)) {
             return false;
         }
-        if (!$coupon->canBeAppliedToBasket($this)) {
+        if (! $coupon->canBeAppliedToBasket($this)) {
             Session::flash('error', __('coupon.coupon_not_applicable'));
+
             return false;
         }
         $this->update(['coupon_id' => $coupon->id]);

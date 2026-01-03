@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Requests\Billing;
 
 use App\Contracts\Store\ProductTypeInterface;
@@ -30,6 +30,7 @@ use Illuminate\Foundation\Http\FormRequest;
  *     description="Invoice draft request",
  *     type="object",
  *     required={"name", "description", "unit_price_ttc", "unit_setup_ttc", "quantity", "related_id", "related"},
+ *
  *     @OA\Property(property="name", type="string", maxLength=255),
  *     @OA\Property(property="description", type="string", maxLength=1000),
  *     @OA\Property(property="unit_price_ttc", type="number", format="float"),
@@ -70,7 +71,7 @@ class InvoiceDraftRequest extends FormRequest
                 }
                 $configOptions = $product->configoptions()->orderBy('sort_order')->get();
                 foreach ($configOptions as $configOption) {
-                    $rules['options.' . $configOption->key] = $configOption->validate();
+                    $rules['options.'.$configOption->key] = $configOption->validate();
                 }
             }
         } elseif ($this->related_id && $this->related == 'service') {

@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Admin\Settings;
 
-use Illuminate\Http\UploadedFile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 
 class SettingsCoreControllerTest extends \Tests\TestCase
 {
     use RefreshDatabase;
-    
+
     public function test_show_email_settings(): void
     {
         $response = $this->performAdminAction('get', route('admin.settings.show', ['card' => 'core', 'uuid' => 'mail']));

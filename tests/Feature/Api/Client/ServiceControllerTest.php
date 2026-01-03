@@ -3,7 +3,6 @@
 namespace Tests\Feature\Api\Client;
 
 use App\Models\Account\Customer;
-use App\Models\Provisioning\Service;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\RefreshExtensionDatabase;
 use Tests\TestCase;
@@ -24,7 +23,7 @@ class ServiceControllerTest extends TestCase
     private function authHeaders(string $token): array
     {
         return [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'Accept' => 'application/json',
         ];
     }
@@ -80,7 +79,7 @@ class ServiceControllerTest extends TestCase
         $service = $this->createServiceModel($customer->id, 'active');
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->getJson('/api/client/services/' . $service->id);
+            ->getJson('/api/client/services/'.$service->id);
 
         $response->assertOk()
             ->assertJsonStructure([
@@ -113,7 +112,7 @@ class ServiceControllerTest extends TestCase
         $service = $this->createServiceModel($otherCustomer->id, 'active');
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->getJson('/api/client/services/' . $service->id);
+            ->getJson('/api/client/services/'.$service->id);
 
         $response->assertNotFound();
     }
@@ -127,7 +126,7 @@ class ServiceControllerTest extends TestCase
         $service->save();
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->getJson('/api/client/services/' . $service->id);
+            ->getJson('/api/client/services/'.$service->id);
 
         $response->assertOk()
             ->assertJsonStructure([

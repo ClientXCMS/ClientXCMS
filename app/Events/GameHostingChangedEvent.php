@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Events;
 
 use App\Models\Provisioning\Service;
@@ -22,8 +24,11 @@ use App\Models\Provisioning\Service;
 class GameHostingChangedEvent
 {
     public Service $service;
+
     public string $action;
+
     public string $domain;
+
     protected string $name = 'gamehosting.event';
 
     public function __construct(Service $service, string $action, string $domain)

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,10 +17,8 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Requests\Customer;
 
-use App\Helpers\Countries;
 use App\Services\Account\AccountEditService;
 use App\Services\Core\LocaleService;
 use Illuminate\Foundation\Http\FormRequest;

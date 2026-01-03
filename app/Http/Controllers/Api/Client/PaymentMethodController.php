@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * This is the Client API PaymentMethodController.
@@ -29,6 +30,7 @@ class PaymentMethodController extends Controller
      *     summary="List customer's payment methods",
      *     tags={"Customer Payment Methods"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="List of payment methods"
@@ -47,7 +49,7 @@ class PaymentMethodController extends Controller
         $defaultPaymentMethod = $customer->default_payment_method;
 
         return response()->json([
-            'data' => $sources->map(fn($source) => [
+            'data' => $sources->map(fn ($source) => [
                 'id' => $source->id,
                 'gateway_uuid' => $source->gateway_uuid,
                 'type' => $source->type ?? 'card',
@@ -68,6 +70,7 @@ class PaymentMethodController extends Controller
      *     summary="List available gateways that support payment methods",
      *     tags={"Customer Payment Methods"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="List of gateways"
@@ -79,11 +82,11 @@ class PaymentMethodController extends Controller
         $gateways = GatewayService::getAvailable();
 
         $gatewaysWithSources = collect($gateways)->filter(function ($gateway) {
-            return !empty($gateway->paymentType()->sourceForm());
+            return ! empty($gateway->paymentType()->sourceForm());
         });
 
         return response()->json([
-            'data' => $gatewaysWithSources->map(fn($g) => [
+            'data' => $gatewaysWithSources->map(fn ($g) => [
                 'uuid' => $g->uuid,
                 'name' => $g->name,
             ])->values(),
@@ -96,16 +99,20 @@ class PaymentMethodController extends Controller
      *     summary="Add a new payment method",
      *     tags={"Customer Payment Methods"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="gateway",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\RequestBody(
      *         required=true,
      *         description="Gateway-specific payment method data"
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Payment method added"
@@ -125,7 +132,7 @@ class PaymentMethodController extends Controller
             $result = $gateway->paymentType()->addSource($request);
 
             // Clear cache
-            Cache::forget('payment_methods_' . $request->user()->id);
+            Cache::forget('payment_methods_'.$request->user()->id);
 
             // Check if result is a redirect (for 3DS, etc.)
             if ($result instanceof \Illuminate\Http\RedirectResponse) {
@@ -151,12 +158,15 @@ class PaymentMethodController extends Controller
      *     summary="Set default payment method",
      *     tags={"Customer Payment Methods"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="source",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Default payment method set"
@@ -173,7 +183,7 @@ class PaymentMethodController extends Controller
             return $gateway->paymentType()->getSource($customer, $source);
         });
 
-        if (!$gateway) {
+        if (! $gateway) {
             return response()->json([
                 'error' => __('client.payment-methods.errors.not_found'),
             ], 404);
@@ -192,12 +202,15 @@ class PaymentMethodController extends Controller
      *     summary="Delete a payment method",
      *     tags={"Customer Payment Methods"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="source",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Payment method deleted"
@@ -210,14 +223,14 @@ class PaymentMethodController extends Controller
         $customer = $request->user();
         $paymentMethod = $customer->paymentMethods()->where('id', $source)->first();
 
-        if (!$paymentMethod) {
+        if (! $paymentMethod) {
             return response()->json([
                 'error' => __('client.payment-methods.errors.not_found'),
             ], 404);
         }
 
         $gateway = Gateway::where('uuid', $paymentMethod->gateway_uuid)->first();
-        if (!$gateway) {
+        if (! $gateway) {
             return response()->json([
                 'error' => __('client.payment-methods.errors.not_found'),
             ], 404);
@@ -225,7 +238,7 @@ class PaymentMethodController extends Controller
 
         try {
             $gateway->paymentType()->removeSource($paymentMethod);
-            Cache::forget('payment_methods_' . $customer->id);
+            Cache::forget('payment_methods_'.$customer->id);
 
             return response()->json([
                 'message' => __('client.payment-methods.deleted'),

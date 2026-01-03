@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -121,7 +122,7 @@ import.meta.glob([
         $files = File::files($source);
         $directories = File::directories($source);
         foreach ($files as $file) {
-            $destFilePath = $destination . '/' . File::basename($file);
+            $destFilePath = $destination.'/'.File::basename($file);
             File::copy($file, $destFilePath);
             $content = File::get($destFilePath);
             $content = str_replace('$THEME_NAME', $uuid, $content);
@@ -129,7 +130,7 @@ import.meta.glob([
         }
 
         foreach ($directories as $directory) {
-            $destDirPath = $destination . '/' . File::basename($directory);
+            $destDirPath = $destination.'/'.File::basename($directory);
             $this->copyDirectory($directory, $destDirPath, $uuid);
         }
 

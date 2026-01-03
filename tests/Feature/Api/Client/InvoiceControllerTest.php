@@ -4,7 +4,6 @@ namespace Tests\Feature\Api\Client;
 
 use App\Models\Account\Customer;
 use App\Models\Billing\Invoice;
-use App\Models\Billing\InvoiceItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\RefreshExtensionDatabase;
 use Tests\TestCase;
@@ -25,7 +24,7 @@ class InvoiceControllerTest extends TestCase
     private function authHeaders(string $token): array
     {
         return [
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
             'Accept' => 'application/json',
         ];
     }
@@ -65,7 +64,7 @@ class InvoiceControllerTest extends TestCase
         $this->createInvoice($customer, Invoice::STATUS_PAID);
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->getJson('/api/client/invoices?filter=' . Invoice::STATUS_PENDING);
+            ->getJson('/api/client/invoices?filter='.Invoice::STATUS_PENDING);
 
         $response->assertOk()
             ->assertJsonCount(1, 'data');
@@ -102,7 +101,7 @@ class InvoiceControllerTest extends TestCase
         $invoice = $this->createInvoice($customer);
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->getJson('/api/client/invoices/' . $invoice->id);
+            ->getJson('/api/client/invoices/'.$invoice->id);
 
         $response->assertOk()
             ->assertJsonStructure([
@@ -135,7 +134,7 @@ class InvoiceControllerTest extends TestCase
         $invoice = $this->createInvoice($otherCustomer);
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->getJson('/api/client/invoices/' . $invoice->id);
+            ->getJson('/api/client/invoices/'.$invoice->id);
 
         $response->assertNotFound();
     }
@@ -146,7 +145,7 @@ class InvoiceControllerTest extends TestCase
         $invoice = $this->createInvoice($customer, Invoice::STATUS_DRAFT);
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->getJson('/api/client/invoices/' . $invoice->id);
+            ->getJson('/api/client/invoices/'.$invoice->id);
 
         $response->assertNotFound();
     }
@@ -157,7 +156,7 @@ class InvoiceControllerTest extends TestCase
         $invoice = $this->createInvoice($customer);
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->get('/api/client/invoices/' . $invoice->id . '/download');
+            ->get('/api/client/invoices/'.$invoice->id.'/download');
 
         $response->assertOk();
     }
@@ -169,7 +168,7 @@ class InvoiceControllerTest extends TestCase
         $invoice = $this->createInvoice($otherCustomer);
 
         $response = $this->withHeaders($this->authHeaders($token))
-            ->getJson('/api/client/invoices/' . $invoice->id . '/download');
+            ->getJson('/api/client/invoices/'.$invoice->id.'/download');
 
         $response->assertNotFound();
     }

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -46,6 +47,6 @@ class AccountDeletionException extends Exception
      */
     public function getFormattedReasons(): string
     {
-        return (new AccountDeletionService())->formatBlockingReasons($this->blockingReasons);
+        return (new AccountDeletionService)->formatBlockingReasons($this->blockingReasons);
     }
 }

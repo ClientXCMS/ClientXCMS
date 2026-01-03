@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Provisioning;
 
 use App\Casts\EncryptCast;
@@ -29,14 +29,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="ProvisioningServer",
  *     title="Provisioning Server",
  *     description="A server entity used for service provisioning, including credentials and technical specifications.",
  *     required={"name", "hostname", "address", "type"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="Node-Paris-01"),
  *     @OA\Property(property="hostname", type="string", example="paris01.clientx.local"),
@@ -50,6 +48,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-01-01T10:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-01-02T12:00:00Z")
  * )
+ *
  * @property int $id
  * @property string $name
  * @property int $port
@@ -67,6 +66,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $metadata_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Provisioning\Service> $services
  * @property-read int|null $services_count
+ *
  * @method static \Database\Factories\Provisioning\ServerFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Server newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Server newQuery()
@@ -87,6 +87,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Server whereUsername($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Server withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Server withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Server extends Model implements HasNotifiableVariablesInterface

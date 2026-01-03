@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * This is the Client API TicketController.
@@ -11,7 +12,6 @@ namespace App\Http\Controllers\Api\Client;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Helpdesk\ReplyTicketRequest;
 use App\Http\Requests\Helpdesk\SubmitTicketRequest;
-
 use App\Models\Helpdesk\SupportDepartment;
 use App\Models\Helpdesk\SupportTicket;
 use Illuminate\Http\JsonResponse;
@@ -32,23 +32,29 @@ class TicketController extends Controller
      *     summary="List customer's tickets",
      *     tags={"Customer Tickets"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="filter",
      *         in="query",
      *         description="Filter by status (open, answered, customer_reply, closed)",
      *         required=false,
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
      *         description="Items per page",
      *         required=false,
+     *
      *         @OA\Schema(type="integer", default=10)
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="List of tickets",
+     *
      *         @OA\JsonContent(type="object")
      *     )
      * )
@@ -65,14 +71,14 @@ class TicketController extends Controller
         $tickets = $query->paginate($request->input('per_page', 10));
 
         return response()->json([
-            'data' => $tickets->map(fn($ticket) => [
+            'data' => $tickets->map(fn ($ticket) => [
                 'id' => $ticket->id,
                 'uuid' => $ticket->uuid,
                 'subject' => $ticket->subject,
                 'status' => $ticket->status,
-                'status_label' => __('helpdesk.support.status.' . $ticket->status),
+                'status_label' => __('helpdesk.support.status.'.$ticket->status),
                 'priority' => $ticket->priority,
-                'priority_label' => __('helpdesk.support.priority.' . $ticket->priority),
+                'priority_label' => __('helpdesk.support.priority.'.$ticket->priority),
                 'department' => [
                     'id' => $ticket->department->id,
                     'name' => $ticket->department->name,
@@ -97,6 +103,7 @@ class TicketController extends Controller
      *     summary="List available departments",
      *     tags={"Customer Tickets"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="List of departments"
@@ -110,7 +117,7 @@ class TicketController extends Controller
         $related = $request->user()->supportRelatedItems();
 
         return response()->json([
-            'departments' => $departments->map(fn($dept) => [
+            'departments' => $departments->map(fn ($dept) => [
                 'id' => $dept->id,
                 'name' => $dept->name,
                 'description' => $dept->description,
@@ -126,10 +133,13 @@ class TicketController extends Controller
      *     summary="Create a new ticket",
      *     tags={"Customer Tickets"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"department_id", "subject", "content", "priority"},
+     *
      *             @OA\Property(property="department_id", type="integer"),
      *             @OA\Property(property="subject", type="string"),
      *             @OA\Property(property="content", type="string"),
@@ -138,16 +148,18 @@ class TicketController extends Controller
      *             @OA\Property(property="related_type", type="string")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=201,
      *         description="Ticket created",
+     *
      *         @OA\JsonContent(type="object")
      *     )
      * )
      */
     public function store(SubmitTicketRequest $request): JsonResponse
     {
-        $ticket = new SupportTicket();
+        $ticket = new SupportTicket;
         $ticket->fill($request->only(['department_id', 'priority', 'subject', 'related_id', 'related_type']));
         $ticket->customer_id = $request->user()->id;
         $ticket->status = SupportTicket::STATUS_OPEN;
@@ -173,17 +185,22 @@ class TicketController extends Controller
      *     summary="Get ticket details",
      *     tags={"Customer Tickets"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="ticket",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Ticket details with messages",
+     *
      *         @OA\JsonContent(type="object")
      *     ),
+     *
      *     @OA\Response(response=404, description="Ticket not found")
      * )
      */
@@ -206,19 +223,25 @@ class TicketController extends Controller
      *     summary="Reply to a ticket",
      *     tags={"Customer Tickets"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="ticket",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"content"},
+     *
      *             @OA\Property(property="content", type="string")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Reply added"
@@ -255,12 +278,15 @@ class TicketController extends Controller
      *     summary="Close a ticket",
      *     tags={"Customer Tickets"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="ticket",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Ticket closed"
@@ -286,12 +312,15 @@ class TicketController extends Controller
      *     summary="Reopen a closed ticket",
      *     tags={"Customer Tickets"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="ticket",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Ticket reopened"
@@ -328,18 +357,23 @@ class TicketController extends Controller
      *     summary="Download an attachment",
      *     tags={"Customer Tickets"},
      *     security={{"bearerAuth": {}}},
+     *
      *     @OA\Parameter(
      *         name="ticket",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="attachment",
      *         in="path",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="File download"
@@ -353,11 +387,11 @@ class TicketController extends Controller
         }
 
         $attachment = $ticket->attachments()->where('id', $attachment)->first();
-        if (!$attachment || $attachment->ticket_id !== $ticket->id) {
+        if (! $attachment || $attachment->ticket_id !== $ticket->id) {
             abort(404);
         }
 
-        return response()->download(storage_path('app/' . $attachment->path), $attachment->name);
+        return response()->download(storage_path('app/'.$attachment->path), $attachment->name);
     }
 
     private function formatTicket(SupportTicket $ticket, bool $withMessages = false): array
@@ -367,9 +401,9 @@ class TicketController extends Controller
             'uuid' => $ticket->uuid,
             'subject' => $ticket->subject,
             'status' => $ticket->status,
-            'status_label' => __('helpdesk.support.status.' . $ticket->status),
+            'status_label' => __('helpdesk.support.status.'.$ticket->status),
             'priority' => $ticket->priority,
-            'priority_label' => __('helpdesk.support.priority.' . $ticket->priority),
+            'priority_label' => __('helpdesk.support.priority.'.$ticket->priority),
             'department' => [
                 'id' => $ticket->department->id,
                 'name' => $ticket->department->name,
@@ -385,7 +419,7 @@ class TicketController extends Controller
         ];
 
         if ($withMessages) {
-            $data['messages'] = $ticket->messages->map(fn($msg) => [
+            $data['messages'] = $ticket->messages->map(fn ($msg) => [
                 'id' => $msg->id,
                 'content' => $msg->message,
                 'is_customer' => $msg->isCustomer(),
@@ -396,7 +430,7 @@ class TicketController extends Controller
                 'edited_at' => $msg->edited_at?->toIso8601String(),
             ]);
 
-            $data['attachments'] = $ticket->attachments->map(fn($att) => [
+            $data['attachments'] = $ticket->attachments->map(fn ($att) => [
                 'id' => $att->id,
                 'name' => $att->name,
                 'size' => $att->size,

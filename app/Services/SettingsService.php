@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Services;
 
@@ -87,13 +87,13 @@ class SettingsService
 
     public function getCards(): Collection
     {
-        return collect($this->cards)->sort(fn($a, $b) => $a->order <=> $b->order);
+        return collect($this->cards)->sort(fn ($a, $b) => $a->order <=> $b->order);
     }
 
     public function addCardItem(string $card_uuid, string $uuid, string $name, string $description, string $icon, $action, ?string $permission = null): void
     {
         if ($permission == null) {
-            $permission = 'admin.settings.' . $card_uuid . '_' . $uuid;
+            $permission = 'admin.settings.'.$card_uuid.'_'.$uuid;
         }
         $card = $this->cards->firstWhere('uuid', $card_uuid);
         if ($card) {

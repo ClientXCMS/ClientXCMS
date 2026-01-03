@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -52,7 +53,7 @@ class MollieType extends AbstractGatewayType
                     'currency' => strtoupper($invoice->currency),
                     'value' => number_format($invoice->total, 2, '.', ''),
                 ],
-                'description' => __('global.invoice') . ' #' . $invoice->id,
+                'description' => __('global.invoice').' #'.$invoice->id,
                 'redirectUrl' => $dto->returnUri,
                 'webhookUrl' => $dto->notificationUri,
                 'metadata' => [
@@ -65,7 +66,7 @@ class MollieType extends AbstractGatewayType
 
             return redirect($payment->getCheckoutUrl(), 303);
         } catch (\Exception $e) {
-            throw new WrongPaymentException('Mollie payment creation failed: ' . $e->getMessage());
+            throw new WrongPaymentException('Mollie payment creation failed: '.$e->getMessage());
         }
     }
 
@@ -79,24 +80,25 @@ class MollieType extends AbstractGatewayType
         $this->initMollie();
 
         $paymentId = $request->input('id');
-        if (!$paymentId) {
+        if (! $paymentId) {
             return response()->json(['error' => 'Missing payment ID'], 400);
         }
 
         try {
             $payment = Mollie::api()->payments->get($paymentId);
         } catch (\Exception $e) {
-            logger()->error('Mollie webhook error: ' . $e->getMessage());
+            logger()->error('Mollie webhook error: '.$e->getMessage());
+
             return response()->json(['error' => 'Payment not found'], 404);
         }
 
         $invoiceId = $payment->metadata->invoice_id ?? null;
-        if (!$invoiceId) {
+        if (! $invoiceId) {
             return response()->json(['error' => 'Missing invoice ID in metadata'], 400);
         }
 
         $invoice = Invoice::find($invoiceId);
-        if (!$invoice) {
+        if (! $invoice) {
             return response()->json(['error' => 'Invoice not found'], 404);
         }
 
@@ -104,14 +106,15 @@ class MollieType extends AbstractGatewayType
 
         if ($payment->isPaid()) {
             $invoice->complete();
+
             return response()->json(['success' => true, 'message' => 'Payment completed']);
         }
 
         if ($payment->isFailed() || $payment->isExpired() || $payment->isCanceled()) {
-            return response()->json(['success' => false, 'message' => 'Payment ' . $payment->status]);
+            return response()->json(['success' => false, 'message' => 'Payment '.$payment->status]);
         }
 
-        return response()->json(['success' => true, 'message' => 'Payment status: ' . $payment->status]);
+        return response()->json(['success' => true, 'message' => 'Payment status: '.$payment->status]);
     }
 
     public function validate(): array
@@ -138,7 +141,7 @@ class MollieType extends AbstractGatewayType
     private function initMollie(): void
     {
         $apiKey = env('MOLLIE_KEY');
-        if (!$apiKey) {
+        if (! $apiKey) {
             throw new WrongPaymentException('Mollie API key not configured');
         }
     }
@@ -154,7 +157,7 @@ class MollieType extends AbstractGatewayType
 
         /** @var Customer $customer */
         $customer = $request->user('web');
-        if (!$customer) {
+        if (! $customer) {
             return null;
         }
 
@@ -162,9 +165,9 @@ class MollieType extends AbstractGatewayType
             // Get or create Mollie customer
             $mollieCustomerId = $customer->getMetadata('mollie_customer_id');
 
-            if (!$mollieCustomerId) {
+            if (! $mollieCustomerId) {
                 $mollieCustomer = Mollie::api()->customers->create([
-                    'name' => $customer->firstname . ' ' . $customer->lastname,
+                    'name' => $customer->firstname.' '.$customer->lastname,
                     'email' => $customer->email,
                     'metadata' => ['customer_id' => $customer->id],
                 ]);
@@ -181,13 +184,14 @@ class MollieType extends AbstractGatewayType
                 'customerId' => $mollieCustomerId,
                 'sequenceType' => 'first',
                 'description' => 'Setup payment method',
-                'redirectUrl' => "https://a25ab4d977b1.ngrok-free.app" . route('gateways.source.return', ['gateway' => self::UUID], false),
-                'webhookUrl' => "https://a25ab4d977b1.ngrok-free.app" . route('gateways.notification', ['gateway' => self::UUID], false),
+                'redirectUrl' => 'https://a25ab4d977b1.ngrok-free.app'.route('gateways.source.return', ['gateway' => self::UUID], false),
+                'webhookUrl' => 'https://a25ab4d977b1.ngrok-free.app'.route('gateways.notification', ['gateway' => self::UUID], false),
             ]);
 
             return redirect($payment->getCheckoutUrl(), 303);
         } catch (\Exception $e) {
-            logger()->error('Mollie add source error: ' . $e->getMessage());
+            logger()->error('Mollie add source error: '.$e->getMessage());
+
             return null;
         }
     }
@@ -196,7 +200,7 @@ class MollieType extends AbstractGatewayType
     {
         /** @var Customer $customer */
         $customer = Auth::guard('web')->user();
-        if (!$customer) {
+        if (! $customer) {
             return redirect()->route('front.payment-methods.index')->with('error', __('client.payment-methods.errors.not_found'));
         }
 
@@ -216,7 +220,7 @@ class MollieType extends AbstractGatewayType
                 Mollie::api()->mandates->revokeForId($mollieCustomerId, $sourceDTO->id);
             }
         } catch (\Exception $e) {
-            logger()->error('Mollie remove source error: ' . $e->getMessage());
+            logger()->error('Mollie remove source error: '.$e->getMessage());
         }
     }
 
@@ -225,14 +229,15 @@ class MollieType extends AbstractGatewayType
         $this->initMollie();
 
         $mollieCustomerId = $customer->getMetadata('mollie_customer_id');
-        if (!$mollieCustomerId) {
+        if (! $mollieCustomerId) {
             return [];
         }
 
         try {
             $mandates = Mollie::api()->mandates->listForId($mollieCustomerId);
         } catch (\Exception $e) {
-            logger()->error('Mollie get sources error: ' . $e->getMessage());
+            logger()->error('Mollie get sources error: '.$e->getMessage());
+
             return [];
         }
 
@@ -261,7 +266,7 @@ class MollieType extends AbstractGatewayType
         $this->initMollie();
 
         $mollieCustomerId = $invoice->customer->getMetadata('mollie_customer_id');
-        if (!$mollieCustomerId) {
+        if (! $mollieCustomerId) {
             return new GatewayPayInvoiceResultDTO(false, 'Customer has no Mollie ID', $invoice, $sourceDTO);
         }
 
@@ -274,8 +279,8 @@ class MollieType extends AbstractGatewayType
                 'customerId' => $mollieCustomerId,
                 'sequenceType' => 'recurring',
                 'mandateId' => $sourceDTO->id,
-                'description' => __('global.invoice') . ' #' . $invoice->id,
-                'webhookUrl' => 'https://a25ab4d977b1.ngrok-free.app' . route('gateways.notification', ['gateway' => self::UUID]),
+                'description' => __('global.invoice').' #'.$invoice->id,
+                'webhookUrl' => 'https://a25ab4d977b1.ngrok-free.app'.route('gateways.notification', ['gateway' => self::UUID]),
                 'metadata' => [
                     'invoice_id' => $invoice->id,
                     'customer_id' => $invoice->customer->id,
@@ -287,12 +292,14 @@ class MollieType extends AbstractGatewayType
 
             if ($payment->isPaid()) {
                 $invoice->complete();
+
                 return new GatewayPayInvoiceResultDTO(true, 'Payment completed', $invoice, $sourceDTO);
             }
 
-            return new GatewayPayInvoiceResultDTO(true, 'Payment pending: ' . $payment->status, $invoice, $sourceDTO);
+            return new GatewayPayInvoiceResultDTO(true, 'Payment pending: '.$payment->status, $invoice, $sourceDTO);
         } catch (\Exception $e) {
-            logger()->error('Mollie payInvoice error: ' . $e->getMessage());
+            logger()->error('Mollie payInvoice error: '.$e->getMessage());
+
             return new GatewayPayInvoiceResultDTO(false, $e->getMessage(), $invoice, $sourceDTO);
         }
     }
@@ -304,8 +311,10 @@ class MollieType extends AbstractGatewayType
             $baseUrl = $testMode
                 ? 'https://my.mollie.com/dashboard/org_1/payments/'
                 : 'https://my.mollie.com/dashboard/payments/';
-            return $baseUrl . $invoice->external_id;
+
+            return $baseUrl.$invoice->external_id;
         }
+
         return null;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Extensions;
 
@@ -57,7 +57,7 @@ class AddonManager implements ExtensionInterface
         foreach ($autoload['files'] ?? [] as $file) {
             $this->files->getRequire($this->addonPath($uuid, $file));
         }
-        $providers = ($DTO->api['providers'] ?? []) + ($composerJson['providers'] ?? []);   
+        $providers = ($DTO->api['providers'] ?? []) + ($composerJson['providers'] ?? []);
         foreach ($providers as $provider) {
             $application->register($provider['provider']);
         }

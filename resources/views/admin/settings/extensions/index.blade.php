@@ -30,8 +30,8 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
 @endphp
 
 @section('setting')
-<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-8 mb-8 shadow-2xl">
+<div class="container mx-auto px-4 sm:px-6 lg:px-8  ">
+    <div class="relative overflow-hidden rounded-2xl bg-primary to-pink-500 p-8 mb-8 shadow-2xl">
         <div class="absolute inset-0 bg-black/10"></div>
         <div class="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
         <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
