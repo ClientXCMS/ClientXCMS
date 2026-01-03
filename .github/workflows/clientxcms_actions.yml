@@ -5,12 +5,12 @@ on:
     branches:
       - master
       - develop
-      - /^v2/ 
+      - "v2*" 
   pull_request:
     branches:
       - master
       - develop
-      - /^v2/ 
+      - "v2*"
 jobs:
   unit-test:
     name: Unit testing (PHP ${{ matrix.php }}, ${{ matrix.database }})
