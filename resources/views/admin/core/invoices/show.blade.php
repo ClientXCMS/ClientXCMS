@@ -165,6 +165,7 @@
             </div>
             @endif
 
+            @stack('invoice-sidebar')
 
             @if ($invoice->isDraft() && staff_has_permission('admin.create_invoices'))
             <form method="POST" action="{{ route($routePath . '.validate', ['invoice' => $invoice]) }}">
