@@ -39,6 +39,26 @@ class ViewServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register addon view overrides from current theme
+        $this->app->booted(function () {
+            $theme = app('theme')->getTheme();
+            if ($theme) {
+                $themePath = $theme->path . '/views';
+
+                // Scan for addon overrides in theme
+                $addonOverridesPath = $themePath;
+                if (is_dir($addonOverridesPath)) {
+                    foreach (scandir($addonOverridesPath) as $dir) {
+                        if ($dir === '.' || $dir === '..') continue;
+
+                        $addonViewPath = $addonOverridesPath . '/' . $dir;
+                        if (is_dir($addonViewPath) && str_contains($dir, '_')) {
+                            // This looks like an addon namespace (e.g., quote_manager)
+                            $this->app['view']->prependNamespace($dir, $addonViewPath);
+                        }
+                    }
+                }
+            }
+        });
     }
 }
