@@ -2,7 +2,17 @@
 
 /*
  * This file is part of the CLIENTXCMS project.
- * This is the Client API TicketController.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
  *
  * Year: 2025
  */
@@ -71,14 +81,14 @@ class TicketController extends Controller
         $tickets = $query->paginate($request->input('per_page', 10));
 
         return response()->json([
-            'data' => $tickets->map(fn ($ticket) => [
+            'data' => $tickets->map(fn($ticket) => [
                 'id' => $ticket->id,
                 'uuid' => $ticket->uuid,
                 'subject' => $ticket->subject,
                 'status' => $ticket->status,
-                'status_label' => __('helpdesk.support.status.'.$ticket->status),
+                'status_label' => __('helpdesk.support.status.' . $ticket->status),
                 'priority' => $ticket->priority,
-                'priority_label' => __('helpdesk.support.priority.'.$ticket->priority),
+                'priority_label' => __('helpdesk.support.priority.' . $ticket->priority),
                 'department' => [
                     'id' => $ticket->department->id,
                     'name' => $ticket->department->name,
@@ -117,7 +127,7 @@ class TicketController extends Controller
         $related = $request->user()->supportRelatedItems();
 
         return response()->json([
-            'departments' => $departments->map(fn ($dept) => [
+            'departments' => $departments->map(fn($dept) => [
                 'id' => $dept->id,
                 'name' => $dept->name,
                 'description' => $dept->description,
@@ -391,7 +401,7 @@ class TicketController extends Controller
             abort(404);
         }
 
-        return response()->download(storage_path('app/'.$attachment->path), $attachment->name);
+        return response()->download(storage_path('app/' . $attachment->path), $attachment->name);
     }
 
     private function formatTicket(SupportTicket $ticket, bool $withMessages = false): array
@@ -401,9 +411,9 @@ class TicketController extends Controller
             'uuid' => $ticket->uuid,
             'subject' => $ticket->subject,
             'status' => $ticket->status,
-            'status_label' => __('helpdesk.support.status.'.$ticket->status),
+            'status_label' => __('helpdesk.support.status.' . $ticket->status),
             'priority' => $ticket->priority,
-            'priority_label' => __('helpdesk.support.priority.'.$ticket->priority),
+            'priority_label' => __('helpdesk.support.priority.' . $ticket->priority),
             'department' => [
                 'id' => $ticket->department->id,
                 'name' => $ticket->department->name,
@@ -419,7 +429,7 @@ class TicketController extends Controller
         ];
 
         if ($withMessages) {
-            $data['messages'] = $ticket->messages->map(fn ($msg) => [
+            $data['messages'] = $ticket->messages->map(fn($msg) => [
                 'id' => $msg->id,
                 'content' => $msg->message,
                 'is_customer' => $msg->isCustomer(),
@@ -430,7 +440,7 @@ class TicketController extends Controller
                 'edited_at' => $msg->edited_at?->toIso8601String(),
             ]);
 
-            $data['attachments'] = $ticket->attachments->map(fn ($att) => [
+            $data['attachments'] = $ticket->attachments->map(fn($att) => [
                 'id' => $att->id,
                 'name' => $att->name,
                 'size' => $att->size,

@@ -2,7 +2,17 @@
 
 /*
  * This file is part of the CLIENTXCMS project.
- * This is the Client API AuthController.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
  *
  * Year: 2025
  */
@@ -175,7 +185,7 @@ class AuthController extends Controller
                 // Remove used recovery code
                 $customer->update([
                     'two_factor_recovery_codes' => encrypt(
-                        json_encode(array_values(array_filter($recoveryCodes, fn ($code) => $code !== $request->code)))
+                        json_encode(array_values(array_filter($recoveryCodes, fn($code) => $code !== $request->code)))
                     ),
                 ]);
             }
@@ -268,7 +278,7 @@ class AuthController extends Controller
             throw new ValidationException($validator);
         }
 
-        $bannedEmails = collect(explode(',', setting('banned_emails', '')))->map(fn ($email) => trim($email));
+        $bannedEmails = collect(explode(',', setting('banned_emails', '')))->map(fn($email) => trim($email));
         if ($bannedEmails->contains($request->email) || $bannedEmails->contains(explode('@', $request->email)[1] ?? '')) {
             return response()->json([
                 'error' => __('auth.register.error_banned_email'),

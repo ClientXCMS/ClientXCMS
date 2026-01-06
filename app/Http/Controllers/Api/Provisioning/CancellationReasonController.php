@@ -139,7 +139,7 @@ class CancellationReasonController extends AbstractApiController
         $stats = Service::selectRaw('cancelled_reason, COUNT(*) as count')
             ->whereNotNull('cancelled_reason')
             ->whereNotNull('cancelled_at')
-            ->whereBetween('cancelled_at', [$startDate, $endDate.' 23:59:59'])
+            ->whereBetween('cancelled_at', [$startDate, $endDate . ' 23:59:59'])
             ->groupBy('cancelled_reason')
             ->get();
 
@@ -150,7 +150,7 @@ class CancellationReasonController extends AbstractApiController
         $totalCancellations = 0;
 
         foreach ($stats as $stat) {
-            $reason = $reasons->get($stat->cancelled_reason);
+            $reason = $reasons->firstWhere('id', $stat->cancelled_reason);
             $distribution[] = [
                 'reason_id' => $stat->cancelled_reason,
                 'reason' => $reason ? $reason->reason : 'Unknown',
