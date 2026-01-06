@@ -121,7 +121,6 @@ class InvoiceService
             $item->unit_price_ttc = TaxesService::getVatPrice($item->unit_price_ht);
             $item->unit_setup_ht = $price->setup();
             $item->unit_setup_ttc = TaxesService::getVatPrice($item->unit_setup_ht);
-
         } else {
             $trial_ends_at = null;
         }
@@ -180,7 +179,7 @@ class InvoiceService
                     'quantity' => $_item->quantity,
                     'expires_at' => $_item->data['expires_at'] != null ? Carbon::createFromFormat('d-m-y H:i', $_item->data['expires_at']) : null,
                 ]);
-                $description .= $_item->description.' | ';
+                $description .= $_item->description . ' | ';
                 $pricing = $_item->relatedType()->getPricing();
                 if ($pricing != null) {
                     $pricing->replicate()->fill([
@@ -254,11 +253,11 @@ class InvoiceService
         $currency = $service->currency;
         $months = app(RecurringService::class)->get($billing ?? $service->billing)['months'];
         $days = setting('remove_pending_invoice', 0) != 0 ? setting('remove_pending_invoice') : 7;
-        $months_label = "{$months} ".__('recurring.month');
+        $months_label = "{$months} " . __('recurring.month');
         if ($months == 0.5) {
-            $months_label = '1 '.__('recurring.week');
+            $months_label = '1 ' . __('recurring.week');
         }
-        $service_label = sprintf('%s #%d (%s)', $service->product ? $service->product->trans('name').' ' : '', $service->uuid, $service->name);
+        $service_label = sprintf('%s #%d (%s)', $service->product ? $service->product->trans('name') . ' ' : '', $service->uuid, $service->name);
         $description = __('client.invoices.renewal_description', ['month_label' => $months_label, 'service_label' => $service_label]);
         $invoice = Invoice::create([
             'customer_id' => $service->customer_id,
@@ -334,18 +333,18 @@ class InvoiceService
         }
         $months = $service->recurring()['months'];
         $current = $service->expires_at->format('d/m/y');
-        $expiresAt = app(RecurringService::class)->addFrom($service->expires_at, $service->billing);
-        $nextBilling = app(RecurringService::class)->addFrom($expiresAt, $service->billing)->subDays(setting('core.services.days_before_creation_renewal_invoice'));
-        $months_label = "{$months} ".__('recurring.month');
+        $expiresAt = app(RecurringService::class)->addFrom($service->expires_at, $billing ?? $service->billing);
+        $nextBilling = app(RecurringService::class)->addFrom($expiresAt, $billing ?? $service->billing)->subDays(setting('core.services.days_before_creation_renewal_invoice'));
+        $months_label = "{$months} " . __('recurring.month');
         if ($months == 0.5) {
-            $months_label = '1 '.__('recurring.week');
+            $months_label = '1 ' . __('recurring.week');
         }
-        $service_label = sprintf('%s #%d (%s)', $service->product ? $service->product->trans('name').' ' : '', $service->uuid, $service->name);
+        $service_label = sprintf('%s #%d (%s)', $service->product ? $service->product->trans('name') . ' ' : '', $service->uuid, $service->name);
         $description = __('client.invoices.renewal_description', ['month_label' => $months_label, 'service_label' => $service_label]);
         $item = $invoice->items()->create([
             'invoice_id' => $invoice->id,
             'name' => $service->getInvoiceName(),
-            'description' => $description.($service->description != null ? ' | '.$service->description : ''),
+            'description' => $description . ($service->description != null ? ' | ' . $service->description : ''),
             'quantity' => 1,
             'unit_price_ttc' => TaxesService::getPriceWithVat($price),
             'unit_price_ht' => $price,
@@ -353,13 +352,13 @@ class InvoiceService
             'unit_setup_ht' => 0,
             'type' => 'renewal',
             'related_id' => $service->id,
-            'data' => ['months' => $months, 'billing' => $service->billing],
+            'data' => ['months' => $months, 'billing' => $billing ?? $service->billing],
         ]);
 
         foreach ($service->configoptions as $configoption) {
             $dto = new ConfigOptionDTO($configoption->option, $configoption->value, $configoption->expires_at, false);
             if ($dto->needRenewal($service)) {
-                self::createConfigOptionItem($configoption, $item, $service->billing, $service->currency);
+                self::createConfigOptionItem($configoption, $item, $billing ?? $service->billing, $service->currency);
             }
         }
         ServiceRenewals::insert([

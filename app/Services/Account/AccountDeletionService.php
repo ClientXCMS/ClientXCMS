@@ -27,24 +27,15 @@ use Illuminate\Support\Facades\DB;
 
 class AccountDeletionService
 {
-    /**
-     * Check if a customer account can be deleted.
-     */
     public function canDelete(Customer $customer): bool
     {
         return empty($this->getBlockingReasons($customer));
     }
 
-    /**
-     * Get the list of reasons blocking account deletion.
-     *
-     * @return array<string, mixed>
-     */
     public function getBlockingReasons(Customer $customer): array
     {
         $reasons = [];
 
-        // Check for active services
         $activeServices = $customer->services(true)
             ->whereIn('status', [
                 Service::STATUS_ACTIVE,
@@ -60,7 +51,6 @@ class AccountDeletionService
             ];
         }
 
-        // Check for pending invoices
         $pendingInvoices = $customer->getPendingInvoices();
         if ($pendingInvoices->isNotEmpty()) {
             $reasons['pending_invoices'] = [
@@ -72,23 +62,7 @@ class AccountDeletionService
         return $reasons;
     }
 
-    /**
-     * Delete a customer account.
-     *
-     * This will:
-     * - Close all open tickets
-     * - Set customer_id to NULL on invoices
-     * - Set customer_id to NULL on tickets
-     * - Disable 2FA
-     * - Clear payment method preferences
-     * - Revoke all API tokens
-     * - Soft delete the customer
-     *
-     * @param  Customer  $customer  The customer to delete
-     * @param  bool  $force  Force deletion even if blocking reasons exist (admin only)
-     *
-     * @throws \Exception if the account cannot be deleted and force is false
-     */
+
     public function delete(Customer $customer, bool $force = false): bool
     {
         if (! $force && ! $this->canDelete($customer)) {
@@ -99,7 +73,6 @@ class AccountDeletionService
         }
 
         return DB::transaction(function () use ($customer) {
-            // Log the deletion action
             ActionLog::log(
                 ActionLog::ACCOUNT_DELETED,
                 Customer::class,
@@ -109,7 +82,6 @@ class AccountDeletionService
                 ['email' => $customer->email, 'name' => $customer->fullName]
             );
 
-            // Close all open support tickets
             $customer->tickets()
                 ->where('status', 'open')
                 ->update([
@@ -117,43 +89,24 @@ class AccountDeletionService
                     'closed_at' => now(),
                 ]);
 
-            // Set customer_id to NULL on tickets (keep for history)
             $customer->tickets()->update(['customer_id' => null]);
 
-            // Set customer_id to NULL on invoices (keep for accounting)
             $customer->invoices()->update(['customer_id' => null]);
 
-            // Set customer_id to NULL on coupon usages
             \App\Models\Store\CouponUsage::where('customer_id', $customer->id)
                 ->update(['customer_id' => null]);
-
-            // Delete customer notes (they are internal admin notes)
             $customer->customerNotes()->delete();
-
-            // Disable 2FA if enabled
             if ($customer->twoFactorEnabled()) {
                 $customer->twoFactorDisable();
             }
-
-            // Clear payment method cache
-            Cache::forget('payment_methods_'.$customer->id);
-
-            // Revoke all API tokens
+            Cache::forget('payment_methods_' . $customer->id);
             $customer->tokens()->delete();
-
-            // Clear all metadata
             $customer->metadata()->delete();
-
-            // Soft delete the customer
             $customer->delete();
 
             return true;
         });
     }
-
-    /**
-     * Format blocking reasons as a human-readable message.
-     */
     public function formatBlockingReasons(array $reasons): string
     {
         $messages = [];
@@ -172,10 +125,6 @@ class AccountDeletionService
 
         return implode(' ', $messages);
     }
-
-    /**
-     * Get a placeholder name for deleted users.
-     */
     public static function getDeletedUserPlaceholder(): string
     {
         return __('client.profile.delete.deleted_user_placeholder');

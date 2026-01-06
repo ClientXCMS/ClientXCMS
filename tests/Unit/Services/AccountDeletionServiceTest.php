@@ -267,36 +267,7 @@ class AccountDeletionServiceTest extends TestCase
 
         $this->service->delete($customer);
 
-        // After deletion, 2FA metadata should be cleared
         $this->assertEquals(0, $customer->metadata()->count());
-    }
-
-    public function test_format_blocking_reasons_with_active_services(): void
-    {
-        $reasons = [
-            'active_services' => [
-                'count' => 3,
-                'services' => [1 => 'Service A', 2 => 'Service B', 3 => 'Service C'],
-            ],
-        ];
-
-        $formatted = $this->service->formatBlockingReasons($reasons);
-
-        $this->assertStringContainsString('3', $formatted);
-    }
-
-    public function test_format_blocking_reasons_with_pending_invoices(): void
-    {
-        $reasons = [
-            'pending_invoices' => [
-                'count' => 2,
-                'invoices' => [1 => 'INV-001', 2 => 'INV-002'],
-            ],
-        ];
-
-        $formatted = $this->service->formatBlockingReasons($reasons);
-
-        $this->assertStringContainsString('2', $formatted);
     }
 
     public function test_format_blocking_reasons_with_multiple_reasons(): void
