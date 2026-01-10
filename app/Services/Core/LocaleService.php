@@ -20,6 +20,7 @@
 namespace App\Services\Core;
 
 use App\Models\Admin\Setting;
+use App\Models\Personalization\Translation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
@@ -201,15 +202,23 @@ class LocaleService
         $settings = new Setting;
         foreach ($translations as $locale => $values) {
             foreach ($values as $key => $value) {
-                if ($value == null) {
-                    continue;
-                }
                 $model = Setting::where('name', $key)->first();
                 if (! $model) {
                     continue;
                 }
                 $settings->id = $model->id;
-                $settings->saveTranslation($key, $locale, $value);
+
+                // If value is empty, delete the translation
+                if ($value === null || $value === '') {
+                    Translation::where('model', Setting::class)
+                        ->where('model_id', $model->id)
+                        ->where('key', $key)
+                        ->where('locale', $locale)
+                        ->delete();
+                } else {
+                    $settings->saveTranslation($key, $locale, $value);
+                }
+
                 \Cache::forget('translations_setting_'.$key);
             }
         }
