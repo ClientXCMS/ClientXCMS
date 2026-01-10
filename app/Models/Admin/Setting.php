@@ -103,6 +103,11 @@ class Setting extends Model
 
         \Cache::forget('settings');
 
+        // Clear translation cache for updated settings
+        foreach ($keys as $name => $val) {
+            \Cache::forget('translations_setting_'.$name);
+        }
+
         return $old;
     }
 
