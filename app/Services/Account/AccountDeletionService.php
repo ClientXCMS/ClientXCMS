@@ -62,7 +62,6 @@ class AccountDeletionService
         return $reasons;
     }
 
-
     public function delete(Customer $customer, bool $force = false): bool
     {
         if (! $force && ! $this->canDelete($customer)) {
@@ -99,7 +98,7 @@ class AccountDeletionService
             if ($customer->twoFactorEnabled()) {
                 $customer->twoFactorDisable();
             }
-            Cache::forget('payment_methods_' . $customer->id);
+            Cache::forget('payment_methods_'.$customer->id);
             $customer->tokens()->delete();
             $customer->metadata()->delete();
             $customer->delete();
@@ -107,6 +106,7 @@ class AccountDeletionService
             return true;
         });
     }
+
     public function formatBlockingReasons(array $reasons): string
     {
         $messages = [];
@@ -125,6 +125,7 @@ class AccountDeletionService
 
         return implode(' ', $messages);
     }
+
     public static function getDeletedUserPlaceholder(): string
     {
         return __('client.profile.delete.deleted_user_placeholder');

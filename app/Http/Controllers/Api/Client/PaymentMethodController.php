@@ -59,7 +59,7 @@ class PaymentMethodController extends Controller
         $defaultPaymentMethod = $customer->default_payment_method;
 
         return response()->json([
-            'data' => $sources->map(fn($source) => [
+            'data' => $sources->map(fn ($source) => [
                 'id' => $source->id,
                 'gateway_uuid' => $source->gateway_uuid,
                 'type' => $source->type ?? 'card',
@@ -96,7 +96,7 @@ class PaymentMethodController extends Controller
         });
 
         return response()->json([
-            'data' => $gatewaysWithSources->map(fn($g) => [
+            'data' => $gatewaysWithSources->map(fn ($g) => [
                 'uuid' => $g->uuid,
                 'name' => $g->name,
             ])->values(),
@@ -142,7 +142,7 @@ class PaymentMethodController extends Controller
             $result = $gateway->paymentType()->addSource($request);
 
             // Clear cache
-            Cache::forget('payment_methods_' . $request->user()->id);
+            Cache::forget('payment_methods_'.$request->user()->id);
 
             // Check if result is a redirect (for 3DS, etc.)
             if ($result instanceof \Illuminate\Http\RedirectResponse) {
@@ -248,7 +248,7 @@ class PaymentMethodController extends Controller
 
         try {
             $gateway->paymentType()->removeSource($paymentMethod);
-            Cache::forget('payment_methods_' . $customer->id);
+            Cache::forget('payment_methods_'.$customer->id);
 
             return response()->json([
                 'message' => __('client.payment-methods.deleted'),

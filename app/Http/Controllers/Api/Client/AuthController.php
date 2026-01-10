@@ -185,7 +185,7 @@ class AuthController extends Controller
                 // Remove used recovery code
                 $customer->update([
                     'two_factor_recovery_codes' => encrypt(
-                        json_encode(array_values(array_filter($recoveryCodes, fn($code) => $code !== $request->code)))
+                        json_encode(array_values(array_filter($recoveryCodes, fn ($code) => $code !== $request->code)))
                     ),
                 ]);
             }
@@ -278,7 +278,7 @@ class AuthController extends Controller
             throw new ValidationException($validator);
         }
 
-        $bannedEmails = collect(explode(',', setting('banned_emails', '')))->map(fn($email) => trim($email));
+        $bannedEmails = collect(explode(',', setting('banned_emails', '')))->map(fn ($email) => trim($email));
         if ($bannedEmails->contains($request->email) || $bannedEmails->contains(explode('@', $request->email)[1] ?? '')) {
             return response()->json([
                 'error' => __('auth.register.error_banned_email'),

@@ -318,12 +318,12 @@ class Invoice extends Model implements SupportRelateItemInterface
     public function download(): Response
     {
         if (Storage::disk('local')->exists($this->getPdfPath())) {
-            return Storage::disk('local')->download($this->getPdfPath(), $this->identifier() . '.pdf');
+            return Storage::disk('local')->download($this->getPdfPath(), $this->identifier().'.pdf');
         }
 
         $pdf = $this->generatePdf();
 
-        return $pdf->download($this->identifier() . '.pdf');
+        return $pdf->download($this->identifier().'.pdf');
     }
 
     public function invoiceOutput(): string
@@ -344,34 +344,34 @@ class Invoice extends Model implements SupportRelateItemInterface
 
             return response()->file($fullPath, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="' . $this->identifier() . '.pdf"',
+                'Content-Disposition' => 'inline; filename="'.$this->identifier().'.pdf"',
             ]);
         }
         $pdf = $this->generatePdf(false);
 
-        return $pdf->stream($this->identifier() . '.pdf');
+        return $pdf->stream($this->identifier().'.pdf');
     }
 
     public function getPdfPath(): string
     {
-        return 'invoices/' . $this->getPdfName();
+        return 'invoices/'.$this->getPdfName();
     }
 
     public function getPdfName(): string
     {
         $date = $this->created_at ? $this->created_at : now();
 
-        return $date->format('Y') . '/' . $date->format('m') . '/' . $this->invoice_number . '.pdf';
+        return $date->format('Y').'/'.$date->format('m').'/'.$this->invoice_number.'.pdf';
     }
 
     public function generatePdf(bool $save = true): PDF
     {
-        $filename = 'invoices/' . $this->getPdfName();
+        $filename = 'invoices/'.$this->getPdfName();
         $domain = request()->getSchemeAndHttpHost();
         if (str_contains($domain, 'localhost')) {
-            $logoSrc = '/' . setting('app_logo_text');
+            $logoSrc = '/'.setting('app_logo_text');
         } else {
-            $logoSrc = $domain . setting('app_logo_text');
+            $logoSrc = $domain.setting('app_logo_text');
         }
 
         $primaryColor = ThemeManager::getColorsArray()['600'];
@@ -455,7 +455,7 @@ class Invoice extends Model implements SupportRelateItemInterface
 
     public function relatedName(): string
     {
-        return __('global.invoice') . ' #' . Str::limit($this->uuid, 5) . ' - ' . $this->total . ' ' . currency_symbol($this->currency);
+        return __('global.invoice').' #'.Str::limit($this->uuid, 5).' - '.$this->total.' '.currency_symbol($this->currency);
     }
 
     public function notifyCustomer(string $class = InvoiceCreatedEmail::class)
@@ -471,9 +471,9 @@ class Invoice extends Model implements SupportRelateItemInterface
         $prefix = setting('billing_invoice_prefix', 'CTX');
         $key = $date ?? now()->format('Y-m');
         if ($creation && InvoiceService::getBillingType() == InvoiceService::PRO_FORMA) {
-            $prefix = "$prefix-PROFORMA-" . str_pad(Invoice::withTrashed()->where('invoice_number', 'like', $prefix . '-PROFORMA-' . $key . '%')->count() + $add, 4, '0', STR_PAD_LEFT);
+            $prefix = "$prefix-PROFORMA-".str_pad(Invoice::withTrashed()->where('invoice_number', 'like', $prefix.'-PROFORMA-'.$key.'%')->count() + $add, 4, '0', STR_PAD_LEFT);
         } else {
-            $prefix = $prefix . '-' . $key . '-' . str_pad(Invoice::withTrashed()->where('invoice_number', 'like', $prefix . '-' . $key . '%')->count() + $add, 4, '0', STR_PAD_LEFT);
+            $prefix = $prefix.'-'.$key.'-'.str_pad(Invoice::withTrashed()->where('invoice_number', 'like', $prefix.'-'.$key.'%')->count() + $add, 4, '0', STR_PAD_LEFT);
         }
         if (Invoice::withTrashed()->where('invoice_number', $prefix)->exists()) {
             return self::generateInvoiceNumber($date, $creation, $add + 1);
@@ -484,7 +484,7 @@ class Invoice extends Model implements SupportRelateItemInterface
 
     public static function updateInvoicePrefix(string $new): void
     {
-        $all = Invoice::withTrashed()->where('invoice_number', 'like', setting('billing_invoice_prefix', 'CTX') . '%')->get();
+        $all = Invoice::withTrashed()->where('invoice_number', 'like', setting('billing_invoice_prefix', 'CTX').'%')->get();
         foreach ($all as $invoice) {
             $invoice->update(['invoice_number' => str_replace(setting('billing_invoice_prefix', 'CTX'), $new, $invoice->invoice_number)]);
         }
@@ -512,13 +512,13 @@ class Invoice extends Model implements SupportRelateItemInterface
         }
         if ($amount >= ($this->total - $this->balance)) {
             $amount = $this->total - $this->balance;
-            $this->customer->addFund(-$amount, 'Invoice payment for ' . $this->id);
+            $this->customer->addFund(-$amount, 'Invoice payment for '.$this->id);
             $this->update(['paymethod' => 'balance']);
             $this->complete();
 
             return;
         }
-        $this->customer->addFund(-$amount, 'Invoice payment for ' . $this->id);
+        $this->customer->addFund(-$amount, 'Invoice payment for '.$this->id);
         $this->balance = $amount;
         $this->save();
         $this->recalculate();
@@ -532,12 +532,12 @@ class Invoice extends Model implements SupportRelateItemInterface
             $lines[] = $address['company_name'];
         } else {
             if (! empty($address['firstname']) && ! empty($address['lastname'])) {
-                $lines[] = $address['firstname'] . ' ' . $address['lastname'];
+                $lines[] = $address['firstname'].' '.$address['lastname'];
             }
         }
         $lines[] = $address['email'];
-        $lines[] = $address['address'] . ' ' . ($address['address2'] != null ? $address['address2'] : '');
-        $lines[] = $address['region'] . ' ' . $address['city'] . ' ' . $address['zipcode'];
+        $lines[] = $address['address'].' '.($address['address2'] != null ? $address['address2'] : '');
+        $lines[] = $address['region'].' '.$address['city'].' '.$address['zipcode'];
         $lines[] = Countries::names()[$address['country']] ?? $address['country'];
         if (! empty($address['billing_details'])) {
             $lines = array_merge($lines, explode(PHP_EOL, $address['billing_details']));

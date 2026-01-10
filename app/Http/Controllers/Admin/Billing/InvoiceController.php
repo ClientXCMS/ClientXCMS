@@ -59,7 +59,7 @@ class InvoiceController extends AbstractCrudController
     public function getIndexFilters()
     {
         return collect(Invoice::FILTERS)->merge([Invoice::STATUS_DRAFT => Invoice::STATUS_DRAFT])->mapWithKeys(function ($k, $v) {
-            return [$k => __('global.states.' . $v)];
+            return [$k => __('global.states.'.$v)];
         })->toArray();
     }
 
@@ -111,7 +111,7 @@ class InvoiceController extends AbstractCrudController
     {
         $this->checkPermission('create');
         $validatedData = $request->validated();
-        $invoice = InvoiceService::createFreshInvoice($validatedData['customer_id'], $validatedData['currency'], 'Created manually by ' . auth('admin')->user()->username);
+        $invoice = InvoiceService::createFreshInvoice($validatedData['customer_id'], $validatedData['currency'], 'Created manually by '.auth('admin')->user()->username);
 
         return $this->storeRedirect($invoice);
     }
@@ -194,7 +194,7 @@ class InvoiceController extends AbstractCrudController
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:255',
             'coupon_id' => 'nullable',
-            'billing' => 'nullable|string|in:' . implode(',', app(RecurringService::class)->getRecurringTypes()),
+            'billing' => 'nullable|string|in:'.implode(',', app(RecurringService::class)->getRecurringTypes()),
         ];
 
         $product = null;
@@ -206,7 +206,7 @@ class InvoiceController extends AbstractCrudController
             }
             $configOptions = $product->configoptions()->orderBy('sort_order')->get();
             foreach ($configOptions as $configOption) {
-                $rules['options.' . $configOption->key] = $configOption->validate();
+                $rules['options.'.$configOption->key] = $configOption->validate();
             }
         }
 
@@ -306,7 +306,7 @@ class InvoiceController extends AbstractCrudController
         }
         $coupons = $this->coupons();
 
-        return view($this->viewPath . '.config', compact('coupons', 'relatedId', 'related', 'service', 'billing', 'invoice', 'translatePrefix', 'routePath', 'product', 'dataHTML'));
+        return view($this->viewPath.'.config', compact('coupons', 'relatedId', 'related', 'service', 'billing', 'invoice', 'translatePrefix', 'routePath', 'product', 'dataHTML'));
     }
 
     public function update(UpdateInvoiceRequest $request, Invoice $invoice)
@@ -439,10 +439,10 @@ class InvoiceController extends AbstractCrudController
     private function products(Invoice $invoice)
     {
         $products = Product::getAvailable(true)->pluck('name', 'id')->mapWithKeys(function ($name, $id) {
-            return ['product-' . $id => $name];
+            return ['product-'.$id => $name];
         });
         foreach (Service::where('customer_id', $invoice->customer_id)->whereNotNull('expires_at')->get() as $service) {
-            $products->put('service-' . $service->id, ' #' . $service->id . ' ' . $service->getInvoiceName());
+            $products->put('service-'.$service->id, ' #'.$service->id.' '.$service->getInvoiceName());
         }
         $products->put('product-none', __('admin.invoices.customproduct'));
 

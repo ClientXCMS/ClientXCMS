@@ -80,7 +80,7 @@ class InvoiceController extends Controller
         $invoices = $query->paginate($request->input('per_page', 10));
 
         return response()->json([
-            'data' => $invoices->map(fn($invoice) => $this->formatInvoice($invoice)),
+            'data' => $invoices->map(fn ($invoice) => $this->formatInvoice($invoice)),
             'meta' => [
                 'current_page' => $invoices->currentPage(),
                 'last_page' => $invoices->lastPage(),
@@ -127,7 +127,7 @@ class InvoiceController extends Controller
 
         return response()->json([
             'data' => $this->formatInvoice($invoice, true),
-            'available_gateways' => collect($gateways)->map(fn($g) => [
+            'available_gateways' => collect($gateways)->map(fn ($g) => [
                 'uuid' => $g->uuid,
                 'name' => $g->name,
                 'minimal_amount' => $g->minimal_amount,
@@ -359,7 +359,7 @@ class InvoiceController extends Controller
             'uuid' => $invoice->uuid,
             'external_id' => $invoice->external_id,
             'status' => $invoice->status,
-            'status_label' => __('billing.invoices.status.' . $invoice->status),
+            'status_label' => __('billing.invoices.status.'.$invoice->status),
             'subtotal' => $invoice->subtotal,
             'tax' => $invoice->tax,
             'total' => $invoice->total,
@@ -376,7 +376,7 @@ class InvoiceController extends Controller
         ];
 
         if ($withItems) {
-            $data['items'] = $invoice->items->map(fn($item) => [
+            $data['items'] = $invoice->items->map(fn ($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'description' => $item->description,

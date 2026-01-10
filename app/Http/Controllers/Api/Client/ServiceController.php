@@ -75,7 +75,7 @@ class ServiceController extends Controller
         $services = $query->paginate($request->input('per_page', 10));
 
         return response()->json([
-            'data' => $services->map(fn($service) => $this->formatService($service)),
+            'data' => $services->map(fn ($service) => $this->formatService($service)),
             'meta' => [
                 'current_page' => $services->currentPage(),
                 'last_page' => $services->lastPage(),
@@ -125,7 +125,7 @@ class ServiceController extends Controller
             'name' => $service->name,
             'type' => $service->type,
             'status' => $service->status,
-            'status_label' => __('provisioning.services.status.' . $service->status),
+            'status_label' => __('provisioning.services.status.'.$service->status),
             'currency' => $service->currency,
             'billing_cycle' => $service->billing,
             'price_ht' => $service->getBillingPrice()->priceHT(),
