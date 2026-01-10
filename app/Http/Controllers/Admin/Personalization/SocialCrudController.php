@@ -13,7 +13,7 @@
  * Learn more about CLIENTXCMS License at:
  * https://clientxcms.com/eula
  *
- * Year: 2025
+ * Year: 2026
  */
 
 
@@ -34,6 +34,20 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
 
     protected string $model = SocialNetwork::class;
 
+    public function index(Request $request)
+    {
+        $card = app('settings')->getCurrentCard('personalization');
+        $item = app('settings')->getCurrentItem('personalization', 'social');
+        $items = SocialNetwork::orderBy('position')->get();
+
+        return view($this->viewPath.'.index', [
+            'items' => $items,
+            'translatePrefix' => $this->translatePrefix,
+            'current_card' => $card,
+            'current_item' => $item,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -41,8 +55,17 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
             'icon' => 'required|string|max:255',
             'url' => 'required|string|max:255',
         ]);
+        $data['position'] = SocialNetwork::max('position') + 1;
         $model = $this->model::create($data);
         ThemeManager::clearCache();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'id' => $model->id,
+                'message' => __($this->flashs['created']),
+            ]);
+        }
 
         return $this->storeRedirect($model);
     }
@@ -57,7 +80,30 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
         $social->update($data);
         ThemeManager::clearCache();
 
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'id' => $social->id,
+                'message' => __($this->flashs['updated']),
+            ]);
+        }
+
         return $this->updateRedirect($social);
+    }
+
+    public function sort(Request $request)
+    {
+        $this->checkPermission('update');
+        $items = $request->items;
+        $position = 0;
+
+        foreach ($items as $id) {
+            SocialNetwork::where('id', $id)->update(['position' => $position]);
+            $position++;
+        }
+        ThemeManager::clearCache();
+
+        return response()->json(['success' => true]);
     }
 
     public function getCreateParams()
@@ -90,6 +136,13 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
     {
         $social->delete();
         ThemeManager::clearCache();
+
+        if (request()->expectsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => __($this->flashs['deleted']),
+            ]);
+        }
 
         event(new ResourceUpdatedEvent($social));
         return back()->with('success', __($this->flashs['deleted']));

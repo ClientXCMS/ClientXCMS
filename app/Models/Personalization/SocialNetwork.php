@@ -54,6 +54,7 @@ class SocialNetwork extends Model
         'icon',
         'name',
         'url',
+        'position',
     ];
 
     public static function getSvgFromResource(string $name): string

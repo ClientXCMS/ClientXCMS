@@ -1,187 +1,333 @@
 <?php
 /*
  * This file is part of the CLIENTXCMS project.
- * It is the property of the CLIENTXCMS association.
+ * Social networks management with inline editing and auto-save.
  *
- * Personal and non-commercial use of this source code is permitted.
- * However, any use in a project that generates profit (directly or indirectly),
- * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
- *
- * To request permission or for more information, please contact our support:
- * https://clientxcms.com/client/support
- *
- * Learn more about CLIENTXCMS License at:
- * https://clientxcms.com/eula
- *
- * Year: 2025
+ * Year: 2026
  */
 ?>
 
-@extends('admin/settings/sidebar')
+@extends('admin.settings.sidebar')
+@section('title', __($translatePrefix . '.title'))
 
-@section('title', __($translatePrefix .'.title'))
 @section('setting')
-    <div class="container mx-auto">
-
-    <div class="flex flex-col">
-            <div class="-m-1.5 overflow-x-auto">
-                <div class="p-1.5 min-w-full inline-block align-middle">
-                    <div class="card">
-                        <div class="card-heading">
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                                    {{ __($translatePrefix . '.title') }}
-                                </h2>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    {{ __($translatePrefix. '.subheading') }}
-                                </p>
-                            </div>
-
-                            <div class="flex">
-                                <form>
-                                <label for="hs-as-table-product-review-search" class="sr-only">{{ __('global.search') }}</label>
-                                <div class="relative">
-                                    <input type="text" value="{{ $search ?? '' }}" id="hs-as-table-product-review-search" name="q" class="py-2 px-3 ps-11 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600" placeholder="{{ __('global.search') }}">
-                                    <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-4">
-                                        <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                                        </svg>
-                                    </div>
-                                </div>
-                                </form>
-                                @if (!empty($filters))
-
-                                <div class="ml-4 hs-dropdown relative inline-block [--placement:bottom-right]" data-hs-dropdown-auto-close="inside">
-                                    <button id="hs-as-table-table-filter-dropdown" type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
-                                        <svg class="flex-shrink-0 w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
-                                        {{ __('global.filter') }}
-                                        @if ($filter)
-                                            <span class="ps-2 text-xs font-semibold text-blue-600 border-s border-gray-200 dark:border-gray-700 dark:text-blue-500">
-                      {{ count($items) }}
-                    </span>
-                                        @endif
-                                    </button>
-                                    <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden mt-2 divide-y divide-gray-200 min-w-[12rem] z-10 bg-white shadow-md rounded-lg mt-2 dark:divide-gray-700 dark:bg-gray-800 dark:border dark:border-gray-700" aria-labelledby="filter-items">
-                                        <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                                            @foreach ($filters as $current => $label)
-                                                <label for="filter-{{ $current }}" class="flex py-2.5 px-3">
-                                                    <input id="filter-{{ $current }}" value="{{ $current }}" type="checkbox" class="filter-checkbox shrink-0 mt-0.5 border-gray-300 rounded text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-600 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800" @if ($current == $filter) checked @endif>
-                                                    <span class="ms-3 text-sm text-gray-800 dark:text-gray-200">{{ $label  }}</span>
-                                                </label>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-                                @endif
-
-                                <a class="btn btn-primary text-sm ml-2" href="{{ route($routePath . '.create') }}">
-                                    {{ __('admin.create') }}
-                                </a>
-                            </div>
-                        </div>
-                        <div class="border rounded-lg overflow-hidden dark:border-gray-700">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead>
-
-                                <tr>
-
-                                    <th scope="col" class="px-6 py-3 text-start">
-                                        <div class="flex items-center gap-x-2">
-                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
-                      #
-                    </span>
-                                        </div>
-                                    </th>
-
-                                    <th scope="col" class="px-6 py-3 text-start">
-                                        <div class="flex items-center gap-x-2">
-                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
-                      {{ __('global.name') }}
-                    </span>
-                                        </div>
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-start">
-                                        <div class="flex items-center gap-x-2">
-                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
-                      {{ __('personalization.icon') }}
-                    </span>
-                                        </div>
-                                    </th>
-                                    <th scope="col" class="px-6 py-3 text-start">
-                                                            <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
-
-                                        {{ __('global.actions') }}
-                                                            </span>
-                                    </th>
-                                </tr>
-                                </thead>
-
-                                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                @if (count($items) == 0)
-                                    <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
-                                        <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center">
-                                            <div class="flex flex-auto flex-col justify-center items-center p-2 md:p-3">
-                                                <p class="text-sm text-gray-800 dark:text-gray-400">
-                                                    {{ __('global.no_results') }}
-                                                </p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endif
-                                @foreach($items as $item)
-
-                                    <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
-
-                                        <td class="h-px w-px whitespace-nowrap">
-                    <span class="block px-6 py-2">
-                      <span class="text-sm text-gray-600 dark:text-gray-400">{{ $item->id }}</span>
-                    </span>
-                                        </td>
-
-                                        <td class="h-px w-px whitespace-nowrap">
-                    <span class="block px-6 py-2">
-                      <span class="text-sm text-gray-600 dark:text-gray-400">{{ $item->name }}</span>
-                    </span>
-                                        </td>
-
-                                        <td class="h-px w-px whitespace-nowrap">
-                    <span class="block px-6 py-2">
-                      <span class="text-sm text-gray-600 dark:text-gray-400"><i class="{{ $item->icon }}"></i> {{ $item->icon }} </span>
-                    </span>
-                                        </td>
-                                        <td class="h-px w-px whitespace-nowrap">
-
-                                        <a href="{{ route($routePath . '.show', ['social' => $item]) }}">
-                                        <span class="px-1 py-1.5">
-                                          <span class="py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-gray-700 dark:text-gray-400 dark:hover:text-white dark:focus:ring-offset-gray-800">
-                                                <i class="bi bi-eye-fill"></i>
-                                            {{ __('global.show') }}
-                                          </span>
-                                        </span>
-                                        </a>
-                                            <form method="POST" action="{{ route($routePath . '.show', ['social' => $item]) }}" class="inline confirmation-popup">
-                                                @method('DELETE')
-                                                @csrf
-                                                <button>
-                                          <span class="py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-red text-red-700 shadow-sm align-middle hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-red-900 dark:hover:bg-red-800 dark:border-red-700 dark:text-white dark:hover:text-white dark:focus:ring-offset-gray-800">
-                                                                                            <i class="bi bi-trash"></i>
-                                            {{ __('global.delete') }}
-                                          </span>
-                                                </button>
-                                            </form>
-                                    </td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="py-1 px-4 mx-auto">
-                            {{ $items->links('admin.shared.layouts.pagination') }}
-                        </div>
-                    </div>
-                </div>
+    <div class="card">
+        <div class="card-heading">
+            <div>
+                <h4 class="font-semibold uppercase text-gray-600 dark:text-gray-400">
+                    {{ __($translatePrefix . '.title') }}
+                </h4>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ __($translatePrefix . '.subheading') }}
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <span id="saveStatus" class="text-sm text-gray-500 dark:text-gray-400 self-center hidden">
+                    <i class="bi bi-check-circle text-green-500"></i> Saved
+                </span>
+                <button type="button" class="btn btn-secondary text-sm" onclick="addSocialNetwork()">
+                    <i class="bi bi-plus-lg mr-1"></i>{{ __('admin.create') }}
+                </button>
             </div>
         </div>
+
+        @if ($errors->any())
+            <div class="alert text-red-700 bg-red-100 mt-2" role="alert">
+                @foreach ($errors->all() as $error)
+                    {!! $error !!}<br/>
+                @endforeach
+            </div>
+        @endif
+
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+            <p class="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                <i class="bi bi-info-circle mt-0.5"></i>
+                <span>Modifiez directement les reseaux sociaux. Les modifications sont sauvegardees automatiquement. Utilisez les icones Bootstrap Icons (ex: bi bi-facebook).</span>
+            </p>
+        </div>
+
+        <div id="social-networks-container" class="space-y-3">
+            @forelse ($items as $item)
+            <div class="social-item p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center gap-2" data-id="{{ $item->id }}">
+                <span class="item-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i class="bi bi-grip-vertical"></i>
+                </span>
+                <span class="item-number inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">{{ $loop->iteration }}</span>
+                <div class="item-icon-preview w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg">
+                    <i class="{{ $item->icon }} text-lg"></i>
+                </div>
+                <input type="text" value="{{ $item->icon }}"
+                       class="item-icon input-text text-sm py-1.5 w-32"
+                       placeholder="bi bi-facebook"
+                       onchange="markChanged(this)"
+                       oninput="updateIconPreview(this)">
+                <input type="text" value="{{ $item->name }}"
+                       class="item-name input-text text-sm py-1.5 w-32"
+                       placeholder="{{ __('global.name') }}"
+                       onchange="markChanged(this)">
+                <input type="text" value="{{ $item->url }}"
+                       class="item-url input-text text-sm py-1.5 flex-1"
+                       placeholder="https://..."
+                       onchange="markChanged(this)">
+                <div class="flex items-center gap-1 ml-auto">
+                    <button type="button" onclick="moveSocialNetwork(this, -1)" class="btn-move-up p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Monter">
+                        <i class="bi bi-chevron-up"></i>
+                    </button>
+                    <button type="button" onclick="moveSocialNetwork(this, 1)" class="btn-move-down p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Descendre">
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <button type="button" onclick="deleteSocialNetwork(this)" class="btn-delete p-1.5 text-red-400 hover:text-red-600" title="Supprimer">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            @empty
+            <div id="empty-state" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <i class="bi bi-share text-4xl mb-2"></i>
+                <p>Aucun reseau social configure.</p>
+                <p class="text-sm">Cliquez sur "{{ __('admin.create') }}" pour ajouter un reseau social.</p>
+            </div>
+            @endforelse
+        </div>
     </div>
+
+    {{-- Template for new social network --}}
+    <template id="social-item-template">
+        <div class="social-item p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center gap-2" data-id="">
+            <span class="item-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <i class="bi bi-grip-vertical"></i>
+            </span>
+            <span class="item-number inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">0</span>
+            <div class="item-icon-preview w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg">
+                <i class="bi bi-share text-lg"></i>
+            </div>
+            <input type="text" value=""
+                   class="item-icon input-text text-sm py-1.5 w-32"
+                   placeholder="bi bi-facebook"
+                   onchange="markChanged(this)"
+                   oninput="updateIconPreview(this)">
+            <input type="text" value=""
+                   class="item-name input-text text-sm py-1.5 w-32"
+                   placeholder="{{ __('global.name') }}"
+                   onchange="markChanged(this)">
+            <input type="text" value=""
+                   class="item-url input-text text-sm py-1.5 flex-1"
+                   placeholder="https://..."
+                   onchange="markChanged(this)">
+            <div class="flex items-center gap-1 ml-auto">
+                <button type="button" onclick="moveSocialNetwork(this, -1)" class="btn-move-up p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Monter">
+                    <i class="bi bi-chevron-up"></i>
+                </button>
+                <button type="button" onclick="moveSocialNetwork(this, 1)" class="btn-move-down p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Descendre">
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+                <button type="button" onclick="deleteSocialNetwork(this)" class="btn-delete p-1.5 text-red-400 hover:text-red-600" title="Supprimer">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    </template>
+@endsection
+
+@section('scripts')
+<script>
+    const csrfToken = '{{ csrf_token() }}';
+    const baseUrl = '{{ url("admin/personalization/socials") }}';
+    let saveTimeout = null;
+
+    function showSaveStatus(message = 'Saved', isError = false) {
+        const status = document.getElementById('saveStatus');
+        status.innerHTML = isError
+            ? '<i class="bi bi-exclamation-circle text-red-500"></i> ' + message
+            : '<i class="bi bi-check-circle text-green-500"></i> ' + message;
+        status.classList.remove('hidden');
+        setTimeout(() => status.classList.add('hidden'), 2000);
+    }
+
+    function updateIconPreview(input) {
+        const item = input.closest('.social-item');
+        const preview = item.querySelector('.item-icon-preview i');
+        preview.className = input.value + ' text-lg';
+    }
+
+    function updateNumbers() {
+        const items = document.querySelectorAll('#social-networks-container .social-item');
+        items.forEach((item, index) => {
+            const number = item.querySelector('.item-number');
+            if (number) number.textContent = index + 1;
+        });
+
+        // Hide empty state if items exist
+        const emptyState = document.getElementById('empty-state');
+        if (emptyState) {
+            emptyState.style.display = items.length > 0 ? 'none' : 'block';
+        }
+    }
+
+    function markChanged(input) {
+        const item = input.closest('.social-item');
+        const id = item.dataset.id;
+
+        if (!id) return; // New item not yet saved
+
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            saveSocialNetwork(item);
+        }, 500);
+    }
+
+    async function saveSocialNetwork(item) {
+        const id = item.dataset.id;
+        if (!id) return;
+
+        const data = {
+            icon: item.querySelector('.item-icon').value,
+            name: item.querySelector('.item-name').value,
+            url: item.querySelector('.item-url').value,
+        };
+
+        try {
+            const response = await fetch(`${baseUrl}/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (response.ok) {
+                showSaveStatus();
+            } else {
+                showSaveStatus('Error', true);
+            }
+        } catch (error) {
+            showSaveStatus('Error', true);
+            console.error('Save error:', error);
+        }
+    }
+
+    async function addSocialNetwork() {
+        const template = document.getElementById('social-item-template');
+        const container = document.getElementById('social-networks-container');
+        const clone = template.content.cloneNode(true);
+        const item = clone.querySelector('.social-item');
+
+        // Hide empty state
+        const emptyState = document.getElementById('empty-state');
+        if (emptyState) emptyState.style.display = 'none';
+
+        container.appendChild(clone);
+        updateNumbers();
+
+        // Focus on the icon input
+        const newItem = container.lastElementChild;
+        newItem.querySelector('.item-icon').focus();
+
+        // Create in database
+        try {
+            const response = await fetch(baseUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    icon: 'bi bi-share',
+                    name: 'New',
+                    url: '#',
+                }),
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                newItem.dataset.id = result.id;
+                showSaveStatus('Added');
+            } else {
+                showSaveStatus('Error', true);
+            }
+        } catch (error) {
+            showSaveStatus('Error', true);
+            console.error('Add error:', error);
+        }
+    }
+
+    async function deleteSocialNetwork(button) {
+        const item = button.closest('.social-item');
+        const id = item.dataset.id;
+
+        if (!confirm('Supprimer ce reseau social ?')) return;
+
+        if (id) {
+            try {
+                const response = await fetch(`${baseUrl}/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    showSaveStatus('Error', true);
+                    return;
+                }
+            } catch (error) {
+                showSaveStatus('Error', true);
+                console.error('Delete error:', error);
+                return;
+            }
+        }
+
+        item.remove();
+        updateNumbers();
+        showSaveStatus('Deleted');
+    }
+
+    function moveSocialNetwork(button, direction) {
+        const item = button.closest('.social-item');
+        const container = document.getElementById('social-networks-container');
+        const items = Array.from(container.querySelectorAll('.social-item'));
+        const index = items.indexOf(item);
+
+        if (direction === -1 && index > 0) {
+            container.insertBefore(item, items[index - 1]);
+        } else if (direction === 1 && index < items.length - 1) {
+            container.insertBefore(items[index + 1], item);
+        }
+
+        updateNumbers();
+        saveOrder();
+    }
+
+    async function saveOrder() {
+        const items = document.querySelectorAll('#social-networks-container .social-item');
+        const order = Array.from(items).map(item => item.dataset.id).filter(id => id);
+
+        try {
+            const response = await fetch(`${baseUrl}/sort`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ items: order }),
+            });
+
+            if (response.ok) {
+                showSaveStatus('Order saved');
+            }
+        } catch (error) {
+            console.error('Sort error:', error);
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        updateNumbers();
+    });
+</script>
 @endsection
