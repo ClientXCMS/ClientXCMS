@@ -53,7 +53,7 @@ class ViewServiceProvider extends ServiceProvider
 
                         $addonViewPath = $addonOverridesPath . '/' . $dir;
                         if (is_dir($addonViewPath) && str_contains($dir, '_')) {
-                            // This looks like an addon namespace (e.g., quote_manager)
+                            // This looks like an addon namespace
                             $this->app['view']->prependNamespace($dir, $addonViewPath);
                         }
                     }
