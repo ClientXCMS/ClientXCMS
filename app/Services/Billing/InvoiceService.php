@@ -331,7 +331,7 @@ class InvoiceService
         } else {
             $price = $service->getBillingPrice($billing ?? $service->billing)->price_ht;
         }
-        $months = $service->recurring()['months'];
+        $months = $billing ? app(RecurringService::class)->get($billing)['months'] : $service->recurring()['months'];
         $current = $service->expires_at->format('d/m/y');
         $expiresAt = app(RecurringService::class)->addFrom($service->expires_at, $billing ?? $service->billing);
         $nextBilling = app(RecurringService::class)->addFrom($expiresAt, $billing ?? $service->billing)->subDays(setting('core.services.days_before_creation_renewal_invoice'));
@@ -343,7 +343,7 @@ class InvoiceService
         $description = __('client.invoices.renewal_description', ['month_label' => $months_label, 'service_label' => $service_label]);
         $item = $invoice->items()->create([
             'invoice_id' => $invoice->id,
-            'name' => $service->getInvoiceName(),
+            'name' => $service->getInvoiceName($billing ?? $service->billing),
             'description' => $description . ($service->description != null ? ' | ' . $service->description : ''),
             'quantity' => 1,
             'unit_price_ttc' => TaxesService::getPriceWithVat($price),

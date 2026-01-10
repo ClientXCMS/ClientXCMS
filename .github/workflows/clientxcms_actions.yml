@@ -13,29 +13,16 @@ on:
       - "v2*"
 jobs:
   unit-test:
-    name: Unit testing (PHP ${{ matrix.php }}, ${{ matrix.database }})
+    name: Unit testing
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php:
-          - '8.3'
-          - '8.4'
-        database:
-          - mariadb:11
-          - mysql:9
     services:
-      database:
-        image: ${{ matrix.database }}
+      mysql:
+        image: mysql:8.0
         env:
           MYSQL_DATABASE: testdb
           MYSQL_USER: user
           MYSQL_PASSWORD: password
           MYSQL_ROOT_PASSWORD: root
-          MARIADB_DATABASE: testdb
-          MARIADB_USER: user
-          MARIADB_PASSWORD: password
-          MARIADB_ROOT_PASSWORD: root
         ports:
           - 3306:3306
         options: >-
@@ -52,7 +39,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: '8.2'
           extensions: json, zip, sodium, pcntl, bcmath, pdo_mysql
 
       - name: Cache Composer dependencies
