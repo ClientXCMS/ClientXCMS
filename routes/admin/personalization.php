@@ -24,9 +24,12 @@ use App\Http\Controllers\Admin\Personalization\ThemeController;
 use Illuminate\Support\Facades\Route;
 
 if (!is_installed() || app()->runningInConsole()) {
-    $types = ['front', 'bottom'];
+    $types = ['front', 'bottom', 'footer'];
 } else {
     $types = \App\Models\Personalization\MenuLink::pluck('type')->unique()->toArray();
+    if (!in_array('footer', $types)) {
+        $types[] = 'footer';
+    }
 }
 
 Route::name('personalization.')->prefix('/personalization')->group(function () {

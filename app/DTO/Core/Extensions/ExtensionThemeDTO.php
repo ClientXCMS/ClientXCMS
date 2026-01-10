@@ -59,6 +59,10 @@ class ExtensionThemeDTO
 
     public array $config = [];
 
+    public ?string $seederFile = null;
+
+    public ?string $seederClass = null;
+
     public static function fromJson(string $theme_file)
     {
         $json = json_decode(File::get($theme_file), true);
@@ -87,6 +91,15 @@ class ExtensionThemeDTO
             }
             if (file_exists($dto->path.'/config/config.json')) {
                 $dto->config = json_decode(file_get_contents($dto->path.'/config/config.json'), true);
+            }
+        }
+
+        // Load seeder configuration
+        if (isset($json['seeder'])) {
+            $seederPath = $dto->path.'/'.$json['seeder']['file'];
+            if (file_exists($seederPath)) {
+                $dto->seederFile = $seederPath;
+                $dto->seederClass = $json['seeder']['class'];
             }
         }
 
@@ -247,6 +260,35 @@ class ExtensionThemeDTO
     public function supportOption(string $key)
     {
         return $this->json['supported_options'][$key] ?? false;
+    }
+
+    /**
+     * Check if the theme has a seeder defined.
+     */
+    public function hasSeeder(): bool
+    {
+        return $this->seederFile !== null && $this->seederClass !== null;
+    }
+
+    /**
+     * Load and return the seeder class name.
+     * Returns null if no seeder is defined or file doesn't exist.
+     */
+    public function loadSeeder(): ?string
+    {
+        if (!$this->hasSeeder()) {
+            return null;
+        }
+
+        // Require the seeder file to make the class available
+        require_once $this->seederFile;
+
+        // Return the class name if it exists
+        if (class_exists($this->seederClass)) {
+            return $this->seederClass;
+        }
+
+        return null;
     }
 
     private function getTranslates()

@@ -62,6 +62,16 @@ class SettingsPersonalizationController extends Controller
         ]);
     }
 
+    public function showFooterMenu()
+    {
+        $menus = MenuLink::where('type', 'footer')->whereNull('parent_id')->orderBy('position')->get();
+
+        return view('admin.personalization.settings.footer', [
+            'menus' => $menus,
+            'supported' => true,
+        ]);
+    }
+
     public function storeBottomMenu(Request $request)
     {
         staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);

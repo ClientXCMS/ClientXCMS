@@ -62,10 +62,19 @@ class MenuLinkController extends AbstractCrudController
         $type = $request->type;
         $this->checkPermission('create');
         $validated = $request->validated();
-        $validated['position'] = MenuLink::where('type', $type)->count();
+        $validated['position'] = $validated['position'] ?? MenuLink::where('type', $type)->count();
         $validated['type'] = $type;
         $menulink = MenuLink::create($validated);
         ThemeManager::clearCache();
+
+        // Return JSON for AJAX requests
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'id' => $menulink->id,
+                'message' => __($this->flashs['created']),
+            ]);
+        }
 
         return $this->storeRedirect($menulink);
     }
@@ -120,6 +129,15 @@ class MenuLinkController extends AbstractCrudController
         $menulink->update($request->validated());
         ThemeManager::clearCache();
 
+        // Return JSON for AJAX requests
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'id' => $menulink->id,
+                'message' => __($this->flashs['updated']),
+            ]);
+        }
+
         return $this->updateRedirect($menulink);
     }
 
@@ -128,6 +146,14 @@ class MenuLinkController extends AbstractCrudController
         $this->checkPermission('delete');
         $menulink->delete();
         ThemeManager::clearCache();
+
+        // Return JSON for AJAX requests
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => __($this->flashs['deleted']),
+            ]);
+        }
 
         return $this->deleteRedirect($menulink);
     }
@@ -162,7 +188,7 @@ class MenuLinkController extends AbstractCrudController
             'current_item' => $item,
             'supportDropDropdown' => $supported,
         ];
-        if ($type == 'front' && $supported && ! $parentId) {
+        if (($type == 'front' || $type == 'footer') && $supported && ! $parentId) {
             $data['linkTypes']['dropdown'] = __($this->translatePrefix.'.dropdown');
         }
         if ($data['menus']->count() > 0 && $supported) {
@@ -180,6 +206,9 @@ class MenuLinkController extends AbstractCrudController
         if ($type == 'bottom') {
             return 'multi_footer_columns';
         }
+        if ($type == 'footer') {
+            return 'footer_sections';
+        }
 
         return '';
     }
@@ -189,7 +218,7 @@ class MenuLinkController extends AbstractCrudController
 
         event(new ResourceUpdatedEvent($model));
         $type = $model->type;
-        if (! in_array($type, ['front', 'bottom'])) {
+        if (! in_array($type, ['front', 'bottom', 'footer'])) {
             return redirect()->back()->with('success', __($this->flashs['updated']));
         }
         $method = $type.'_menu';
@@ -201,7 +230,7 @@ class MenuLinkController extends AbstractCrudController
     {
         event(new ResourceCreatedEvent($model));
         $type = $model->type;
-        if (! in_array($type, ['front', 'bottom'])) {
+        if (! in_array($type, ['front', 'bottom', 'footer'])) {
             return redirect()->back()->with('success', __($this->flashs['created']));
         }
         $method = $type.'_menu';
@@ -213,7 +242,7 @@ class MenuLinkController extends AbstractCrudController
     {
         event(new ResourceUpdatedEvent($model));
         $type = $model->type;
-        if (! in_array($type, ['front', 'bottom'])) {
+        if (! in_array($type, ['front', 'bottom', 'footer'])) {
             return redirect()->back()->with('success', __($this->flashs['deleted']));
         }
         $method = $type.'_menu';
