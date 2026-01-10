@@ -258,11 +258,8 @@ class Group extends Model
             return $this->getMetadata('group_url');
         }
         if ($this->parent_id) {
-            dump($this->group()->trans('slug', $this->group()->slug));
-
             return route('front.store.subgroup', [$this->group()->trans('slug', $this->group()->slug), $this->trans('slug', $this->slug)], $absolute);
         }
-        dump($this->trans('slug', $this->slug));
 
         return route('front.store.group', $this->trans('slug', $this->slug), $absolute);
     }
@@ -286,7 +283,11 @@ class Group extends Model
     {
         $attributes = parent::attributesToArray();
         $attributes['start_price'] = $this->startPrice();
-        $attributes['route'] = $this->route();
+        try {
+            $attributes['route'] = $this->route();
+        } catch (\Exception $e) {
+            $attributes['route'] = null;
+        }
 
         return $attributes;
     }
