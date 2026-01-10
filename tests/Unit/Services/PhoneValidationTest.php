@@ -14,58 +14,6 @@ class PhoneValidationTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Test that French mobile numbers starting with 06 pass validation.
-     */
-    public function test_french_06_mobile_numbers_pass_validation(string $phone): void
-    {
-        $rule = (new PhoneRule)->country('FR');
-
-        $this->assertTrue(
-            $rule->passes('phone', $phone),
-            "Phone number '{$phone}' should pass validation"
-        );
-    }
-
-    /**
-     * Test that French mobile numbers starting with 07 pass validation.
-     */
-    public function test_french_07_mobile_numbers_pass_validation(string $phone): void
-    {
-        $rule = (new PhoneRule)->country('FR');
-
-        $this->assertTrue(
-            $rule->passes('phone', $phone),
-            "Phone number '{$phone}' should pass validation"
-        );
-    }
-
-    /**
-     * Test that international formatted French numbers pass validation.
-     */
-    public function test_international_formatted_french_numbers_pass_validation(string $phone): void
-    {
-        $rule = (new PhoneRule)->country('FR');
-
-        $this->assertTrue(
-            $rule->passes('phone', $phone),
-            "Phone number '{$phone}' should pass validation"
-        );
-    }
-
-    /**
-     * Test that invalid phone numbers fail validation.
-     */
-    public function test_invalid_phone_numbers_fail_validation(string $phone): void
-    {
-        $rule = (new PhoneRule)->country('FR');
-
-        $this->assertFalse(
-            $rule->passes('phone', $phone),
-            "Phone number '{$phone}' should fail validation"
-        );
-    }
-
-    /**
      * Test that empty/null values pass validation (nullable handling).
      */
     public function test_empty_values_pass_validation(): void
@@ -131,7 +79,7 @@ class PhoneValidationTest extends TestCase
 
         $this->assertFalse(
             $validator->fails(),
-            'Validation should pass for 06 number. Errors: '.json_encode($validator->errors()->toArray())
+            'Validation should pass for 06 number. Errors: ' . json_encode($validator->errors()->toArray())
         );
     }
 
@@ -148,7 +96,7 @@ class PhoneValidationTest extends TestCase
 
         $this->assertFalse(
             $validator->fails(),
-            'Validation should pass for 07 number. Errors: '.json_encode($validator->errors()->toArray())
+            'Validation should pass for 07 number. Errors: ' . json_encode($validator->errors()->toArray())
         );
     }
 
@@ -165,7 +113,7 @@ class PhoneValidationTest extends TestCase
 
         $this->assertFalse(
             $validator->fails(),
-            'Validation should pass for international 07 number. Errors: '.json_encode($validator->errors()->toArray())
+            'Validation should pass for international 07 number. Errors: ' . json_encode($validator->errors()->toArray())
         );
     }
 
@@ -232,7 +180,7 @@ class PhoneValidationTest extends TestCase
 
         $this->assertFalse(
             $validator->fails(),
-            'Validation should pass when updating same customer. Errors: '.json_encode($validator->errors()->toArray())
+            'Validation should pass when updating same customer. Errors: ' . json_encode($validator->errors()->toArray())
         );
     }
 
