@@ -259,6 +259,7 @@ class Group extends Model
         }
         if ($this->parent_id) {
             dump($this->group()->trans('slug', $this->group()->slug));
+
             return route('front.store.subgroup', [$this->group()->trans('slug', $this->group()->slug), $this->trans('slug', $this->slug)], $absolute);
         }
         dump($this->trans('slug', $this->slug));
