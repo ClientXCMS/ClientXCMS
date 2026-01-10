@@ -20,6 +20,7 @@
 namespace App\DTO\Core\Extensions;
 
 use App\Exceptions\ThemeInvalidException;
+use App\Models\Admin\Setting;
 use File;
 use Illuminate\Validation\ValidationException;
 use Validator;
@@ -63,6 +64,10 @@ class ExtensionThemeDTO
 
     public ?string $seederClass = null;
 
+    public array $dbSettings = [];
+
+    public ?string $dbSettingsFile = null;
+
     public static function fromJson(string $theme_file)
     {
         $json = json_decode(File::get($theme_file), true);
@@ -101,6 +106,13 @@ class ExtensionThemeDTO
                 $dto->seederFile = $seederPath;
                 $dto->seederClass = $json['seeder']['class'];
             }
+        }
+
+        // Load DB settings configuration (fields to store in database for translation support)
+        $dbSettingsPath = $dto->path.'/config/db_settings.php';
+        if (file_exists($dbSettingsPath)) {
+            $dto->dbSettingsFile = $dbSettingsPath;
+            $dto->dbSettings = require $dbSettingsPath;
         }
 
         return $dto;
@@ -190,9 +202,30 @@ class ExtensionThemeDTO
         if ($validator->fails()) {
             throw new ValidationException($validator);
         }
-        $this->config = $validator->validated();
-        if ($this->configRulesFile != null)
-            file_put_contents($this->path.'/config/config.json', json_encode($validator->validated(), JSON_PRETTY_PRINT));
+        $validated = $validator->validated();
+        $this->config = $validated;
+
+        // Extract DB settings (fields that should be stored in database for translation support)
+        $dbSettingsData = [];
+        if (!empty($this->dbSettings)) {
+            foreach ($this->dbSettings as $key) {
+                if (array_key_exists($key, $validated)) {
+                    $dbSettingsData[$key] = $validated[$key];
+                    // Remove from config to avoid duplication in JSON
+                    unset($validated[$key]);
+                }
+            }
+        }
+
+        // Store DB settings in database
+        if (!empty($dbSettingsData)) {
+            Setting::updateSettings($dbSettingsData);
+        }
+
+        // Store remaining config in JSON file
+        if ($this->configRulesFile != null) {
+            file_put_contents($this->path.'/config/config.json', json_encode($validated, JSON_PRETTY_PRINT));
+        }
     }
 
     public function hasScreenshot(): bool
