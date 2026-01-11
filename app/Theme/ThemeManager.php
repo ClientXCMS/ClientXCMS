@@ -41,6 +41,8 @@ class ThemeManager
 
     private string $themesPublicPath;
 
+    private ?Section $currentRenderingSection = null;
+
     public function __construct()
     {
         $this->themesPath = resource_path('themes/');
@@ -53,12 +55,60 @@ class ThemeManager
             if (File::exists($this->themePath('lang'))) {
                 app('translator')->addNamespace('theme', $this->themePath('lang'));
             }
+            $this->registerThemeSeeders();
+            $this->bootTheme();
+        }
+    }
+
+    /**
+     * Boot the theme by loading its boot.php file if it exists.
+     * This allows themes to register services, inject data into addons, etc.
+     */
+    protected function bootTheme(): void
+    {
+        $bootFile = $this->themePath('boot.php');
+
+        if ($bootFile && File::exists($bootFile)) {
+            require $bootFile;
+        }
+    }
+
+    /**
+     * Register theme seeders with the extension manager.
+     * This allows themes to define seeders in theme.json that will be
+     * executed during db:seed like module seeders.
+     */
+    protected function registerThemeSeeders(): void
+    {
+        if (!$this->theme || !$this->theme->hasSeeder()) {
+            return;
+        }
+
+        $seederClass = $this->theme->loadSeeder();
+        if ($seederClass !== null) {
+            app('extension')->addSeeder($seederClass);
         }
     }
 
     public static function clearCache()
     {
         Cache::forget('theme_configuration');
+    }
+
+    /**
+     * Set the current rendering section for section_config() helper
+     */
+    public function setCurrentRenderingSection(?Section $section): void
+    {
+        $this->currentRenderingSection = $section;
+    }
+
+    /**
+     * Get the current rendering section
+     */
+    public function getCurrentRenderingSection(): ?Section
+    {
+        return $this->currentRenderingSection;
     }
 
     public function hasTheme(): bool

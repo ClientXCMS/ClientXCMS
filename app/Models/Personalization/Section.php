@@ -22,6 +22,7 @@ namespace App\Models\Personalization;
 use App\DTO\Core\Extensions\ExtensionSectionTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -145,6 +146,115 @@ class Section extends Model
         unset($newPath);
         $this->path = $path;
         $this->save();
+    }
+
+    /**
+     * Get all settings for this section
+     */
+    public function settings(): HasMany
+    {
+        return $this->hasMany(SectionSetting::class);
+    }
+
+    /**
+     * Get a setting value for this section
+     *
+     * @param string $key The setting key
+     * @param mixed $default Default value if not found
+     * @param string|null $locale Locale for translatable fields (null = current locale)
+     * @return mixed
+     */
+    public function getSetting(string $key, mixed $default = null, ?string $locale = null): mixed
+    {
+        $locale = $locale ?? app()->getLocale();
+        $fieldDef = $this->getFieldDefinition($key);
+
+        $query = $this->settings()->where('key', $key);
+
+        if ($fieldDef && ($fieldDef['translatable'] ?? false)) {
+            $setting = $query->where('locale', $locale)->first();
+            if (!$setting) {
+                $setting = $query->whereNull('locale')->first();
+            }
+        } else {
+            $setting = $query->whereNull('locale')->first();
+        }
+
+        if (!$setting) {
+            return $default;
+        }
+
+        $type = $fieldDef['type'] ?? 'text';
+        return $setting->getTypedValue($type);
+    }
+
+    /**
+     * Set a setting value for this section
+     */
+    public function setSetting(string $key, mixed $value, ?string $locale = null): void
+    {
+        $fieldDef = $this->getFieldDefinition($key);
+        $isTranslatable = $fieldDef && ($fieldDef['translatable'] ?? false);
+
+        if (is_array($value)) {
+            $value = json_encode($value);
+        } elseif (is_bool($value)) {
+            $value = $value ? 'true' : 'false';
+        }
+
+        $this->settings()->updateOrCreate(
+            [
+                'key' => $key,
+                'locale' => $isTranslatable ? ($locale ?? app()->getLocale()) : null,
+            ],
+            ['value' => $value]
+        );
+    }
+
+    /**
+     * Delete a setting value for this section
+     */
+    public function deleteSetting(string $key, ?string $locale = null): void
+    {
+        $fieldDef = $this->getFieldDefinition($key);
+        $isTranslatable = $fieldDef && ($fieldDef['translatable'] ?? false);
+
+        $this->settings()
+            ->where('key', $key)
+            ->where('locale', $isTranslatable ? ($locale ?? app()->getLocale()) : null)
+            ->delete();
+    }
+
+    /**
+     * Get all configurable fields from sections.json
+     */
+    public function getConfigurableFields(): array
+    {
+        $dto = $this->toDTO();
+        return $dto->json['fields'] ?? [];
+    }
+
+    /**
+     * Check if this section has configurable fields
+     */
+    public function isConfigurable(): bool
+    {
+        $dto = $this->toDTO();
+        return ($dto->json['configurable'] ?? false) && !empty($this->getConfigurableFields());
+    }
+
+    /**
+     * Get field definition by key
+     */
+    public function getFieldDefinition(string $key): ?array
+    {
+        $fields = $this->getConfigurableFields();
+        foreach ($fields as $field) {
+            if ($field['key'] === $key) {
+                return $field;
+            }
+        }
+        return null;
     }
 
     public function cloneSection()

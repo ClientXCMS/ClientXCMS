@@ -23,8 +23,10 @@ use App\DTO\Core\Extensions\ThemeSectionDTO;
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Models\Admin\Permission;
 use App\Models\Personalization\Section;
+use App\Services\Core\LocaleService;
 use App\Theme\ThemeManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SectionController extends AbstractCrudController
 {
@@ -171,5 +173,178 @@ class SectionController extends AbstractCrudController
         ThemeManager::clearCache();
 
         return back();
+    }
+
+    /**
+     * Show the section configuration page
+     */
+    public function showConfig(Section $section)
+    {
+        if (!$section->isConfigurable()) {
+            return back()->with('error', __('personalization.sections.errors.not_configurable'));
+        }
+
+        $fields = $section->getConfigurableFields();
+        $values = [];
+        $locales = LocaleService::getLocales();
+
+        try {
+            foreach ($fields as $field) {
+                if ($field['translatable'] ?? false) {
+                    foreach (array_keys($locales) as $locale) {
+                        $values[$field['key']][$locale] = $section->getSetting(
+                            $field['key'],
+                            $field['default'] ?? null,
+                            $locale
+                        );
+                    }
+                } else {
+                    $values[$field['key']] = $section->getSetting(
+                        $field['key'],
+                        $field['default'] ?? null
+                    );
+                }
+            }
+        } catch (\Exception $e) {
+            foreach ($fields as $field) {
+                $values[$field['key']] = $field['default'] ?? null;
+            }
+        }
+
+        return view('admin.personalization.sections.config', [
+            'section' => $section,
+            'fields' => $fields,
+            'values' => $values,
+            'locales' => $locales,
+        ]);
+    }
+
+    /**
+     * Update the section configuration
+     */
+    public function updateConfig(Request $request, Section $section)
+    {
+        if (!$section->isConfigurable()) {
+            return back()->with('error', __('personalization.sections.errors.not_configurable'));
+        }
+
+        $fields = $section->getConfigurableFields();
+        $locales = array_keys(LocaleService::getLocales());
+
+        $validationRules = $this->buildValidationRules($fields, $locales);
+        if (!empty($validationRules)) {
+            $request->validate($validationRules);
+        }
+
+        foreach ($fields as $field) {
+            $key = $field['key'];
+
+            if ($field['type'] === 'image') {
+                if ($request->hasFile($key)) {
+                    $oldValue = $section->getSetting($key);
+                    if ($oldValue && Storage::exists($oldValue)) {
+                        Storage::delete($oldValue);
+                    }
+                    $path = $request->file($key)->store('public/sections/' . $section->id);
+                    $section->setSetting($key, $path);
+                } elseif ($request->has('remove_' . $key)) {
+                    $oldValue = $section->getSetting($key);
+                    if ($oldValue && Storage::exists($oldValue)) {
+                        Storage::delete($oldValue);
+                    }
+                    $section->deleteSetting($key);
+                }
+                continue;
+            }
+
+            if ($field['type'] === 'repeater') {
+                $value = $request->input($key, []);
+                if (!is_array($value)) {
+                    $value = json_decode($value, true) ?? [];
+                }
+                $section->setSetting($key, $value);
+                continue;
+            }
+
+            if ($field['translatable'] ?? false) {
+                foreach ($locales as $locale) {
+                    $value = $request->input("{$key}.{$locale}");
+                    if ($value !== null && $value !== '') {
+                        $section->setSetting($key, $value, $locale);
+                    } elseif ($value === '' || $value === null) {
+                        $section->deleteSetting($key, $locale);
+                    }
+                }
+            } else {
+                $value = $request->input($key);
+                if ($field['type'] === 'boolean') {
+                    // Handle boolean from AJAX ('1'/'0') or form submission (presence)
+                    $value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $request->has($key);
+                }
+                if ($value !== null) {
+                    $section->setSetting($key, $value);
+                }
+            }
+        }
+
+        ThemeManager::clearCache();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('personalization.sections.config.success'),
+            ]);
+        }
+
+        return back()->with('success', __('personalization.sections.config.success'));
+    }
+
+    /**
+     * Build Laravel validation rules from field definitions
+     */
+    private function buildValidationRules(array $fields, array $locales): array
+    {
+        $rules = [];
+
+        foreach ($fields as $field) {
+            $key = $field['key'];
+            $fieldRules = [];
+
+            if ($field['required'] ?? false) {
+                $fieldRules[] = 'required';
+            } else {
+                $fieldRules[] = 'nullable';
+            }
+
+            if (isset($field['validation'])) {
+                $fieldRules = array_merge($fieldRules, (array) $field['validation']);
+            } else {
+                switch ($field['type']) {
+                    case 'number':
+                        $fieldRules[] = 'numeric';
+                        if (isset($field['min'])) {
+                            $fieldRules[] = 'min:' . $field['min'];
+                        }
+                        if (isset($field['max'])) {
+                            $fieldRules[] = 'max:' . $field['max'];
+                        }
+                        break;
+                    case 'image':
+                        $fieldRules[] = 'image';
+                        $fieldRules[] = 'max:2048';
+                        break;
+                }
+            }
+
+            if ($field['translatable'] ?? false) {
+                foreach ($locales as $locale) {
+                    $rules["{$key}.{$locale}"] = $fieldRules;
+                }
+            } else {
+                $rules[$key] = $fieldRules;
+            }
+        }
+
+        return $rules;
     }
 }
