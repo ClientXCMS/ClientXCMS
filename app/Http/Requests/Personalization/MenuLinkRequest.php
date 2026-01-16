@@ -47,6 +47,11 @@ class MenuLinkRequest extends FormRequest
             'allowed_role' => 'required|string',
             'parent_id' => 'nullable',
             'description' => 'nullable|string|max:255',
+            'status' => 'nullable|string|in:active,soon,maintenance,disabled',
+            'status_message' => 'nullable|string|max:255',
+            'status_icon' => 'nullable|string|max:255',
+            'status_starts_at' => 'nullable|date',
+            'status_ends_at' => 'nullable|date|after_or_equal:status_starts_at',
         ];
     }
 
