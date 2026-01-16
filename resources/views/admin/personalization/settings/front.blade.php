@@ -130,6 +130,12 @@
                                    placeholder="/url"
                                    data-field="url"
                                    onchange="markChanged(this)">
+                            <select class="child-status input-text text-xs py-1.5 w-24" data-field="status" onchange="markChanged(this)">
+                                <option value="active" {{ ($child->status ?? 'active') == 'active' ? 'selected' : '' }}>{{ __('personalization.menu_status.active') }}</option>
+                                <option value="soon" {{ ($child->status ?? 'active') == 'soon' ? 'selected' : '' }}>{{ __('personalization.menu_status.soon') }}</option>
+                                <option value="maintenance" {{ ($child->status ?? 'active') == 'maintenance' ? 'selected' : '' }}>{{ __('personalization.menu_status.maintenance') }}</option>
+                                <option value="disabled" {{ ($child->status ?? 'active') == 'disabled' ? 'selected' : '' }}>{{ __('personalization.menu_status.disabled') }}</option>
+                            </select>
                             <button type="button" onclick="deleteMenuChild(this)" class="p-1 text-red-400 hover:text-red-600" title="{{ __('global.delete') }}">
                                 <i class="bi bi-x-lg text-xs"></i>
                             </button>
@@ -163,6 +169,12 @@
                                        placeholder="/url"
                                        data-field="url"
                                        onchange="markChanged(this)">
+                                <select class="grandchild-status input-text text-xs py-1 w-20" data-field="status" onchange="markChanged(this)">
+                                    <option value="active" {{ ($grandchild->status ?? 'active') == 'active' ? 'selected' : '' }}>{{ __('personalization.menu_status.active') }}</option>
+                                    <option value="soon" {{ ($grandchild->status ?? 'active') == 'soon' ? 'selected' : '' }}>{{ __('personalization.menu_status.soon') }}</option>
+                                    <option value="maintenance" {{ ($grandchild->status ?? 'active') == 'maintenance' ? 'selected' : '' }}>{{ __('personalization.menu_status.maintenance') }}</option>
+                                    <option value="disabled" {{ ($grandchild->status ?? 'active') == 'disabled' ? 'selected' : '' }}>{{ __('personalization.menu_status.disabled') }}</option>
+                                </select>
                                 <button type="button" onclick="deleteGrandchild(this)" class="p-0.5 text-red-400 hover:text-red-600" title="{{ __('global.delete') }}">
                                     <i class="bi bi-x-lg text-xs"></i>
                                 </button>
@@ -420,6 +432,12 @@
                            placeholder="/url"
                            data-field="url"
                            onchange="markChanged(this)">
+                    <select class="child-status input-text text-xs py-1.5 w-24" data-field="status" onchange="markChanged(this)">
+                        <option value="active" selected>{{ __('personalization.menu_status.active') }}</option>
+                        <option value="soon">{{ __('personalization.menu_status.soon') }}</option>
+                        <option value="maintenance">{{ __('personalization.menu_status.maintenance') }}</option>
+                        <option value="disabled">{{ __('personalization.menu_status.disabled') }}</option>
+                    </select>
                     <button type="button" onclick="deleteMenuChild(this)" class="p-1 text-red-400 hover:text-red-600">
                         <i class="bi bi-x-lg text-xs"></i>
                     </button>
@@ -466,6 +484,12 @@
                        placeholder="/url"
                        data-field="url"
                        onchange="markChanged(this)">
+                <select class="grandchild-status input-text text-xs py-1 w-20" data-field="status" onchange="markChanged(this)">
+                    <option value="active" selected>{{ __('personalization.menu_status.active') }}</option>
+                    <option value="soon">{{ __('personalization.menu_status.soon') }}</option>
+                    <option value="maintenance">{{ __('personalization.menu_status.maintenance') }}</option>
+                    <option value="disabled">{{ __('personalization.menu_status.disabled') }}</option>
+                </select>
                 <button type="button" onclick="deleteGrandchild(this)" class="p-0.5 text-red-400 hover:text-red-600">
                     <i class="bi bi-x-lg text-xs"></i>
                 </button>
@@ -620,6 +644,7 @@
                     name: child.querySelector('.child-name').value,
                     url: child.querySelector('.child-url').value || '#',
                     icon: child.querySelector('.child-icon').value,
+                    status: child.querySelector('.child-status')?.value || 'active',
                     allowed_role: 'all',
                     link_type: hasGrandchildren ? 'dropdown' : 'link',
                     type: type,
@@ -658,6 +683,7 @@
                         name: grandchild.querySelector('.grandchild-name').value,
                         url: grandchild.querySelector('.grandchild-url').value || '#',
                         icon: grandchild.querySelector('.grandchild-icon').value,
+                        status: grandchild.querySelector('.grandchild-status')?.value || 'active',
                         allowed_role: 'all',
                         link_type: 'link',
                         type: type,
