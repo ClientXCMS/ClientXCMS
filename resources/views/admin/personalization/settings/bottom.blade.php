@@ -52,45 +52,65 @@
                 $menuName = $menu->trans('name', $menu->name);
                 $menuUrl = $menu->trans('url', $menu->url);
             @endphp
-            <div class="menu-item p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center gap-2" data-id="{{ $menu->id }}">
-                <span class="item-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <i class="bi bi-grip-vertical"></i>
-                </span>
-                <span class="item-number inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">{{ $loop->iteration }}</span>
-                <input type="text" value="{{ $menu->icon }}"
-                       class="item-icon input-text text-sm py-1.5 w-28"
-                       placeholder="bi bi-link"
-                       onchange="markChanged(this)">
-                <input type="text" value="{{ $menuName }}"
-                       class="item-name input-text text-sm py-1.5 w-40 min-w-[10rem]"
-                       placeholder="{{ __('global.name') }}"
-                       onchange="markChanged(this)">
-                <button type="button" class="btn-translate p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded" onclick="openTranslation({{ $menu->id }})" title="Traductions">
-                    <i class="bi bi-translate"></i>
-                </button>
-                <input type="text" value="{{ $menuUrl }}"
-                       class="item-url input-text text-sm py-1.5 w-48"
-                       placeholder="/url"
-                       onchange="markChanged(this)">
-                <select class="item-linktype input-text text-xs py-1.5 w-24" onchange="markChanged(this)">
-                    <option value="link" {{ $menu->link_type == 'link' ? 'selected' : '' }}>Link</option>
-                    <option value="new_tab" {{ $menu->link_type == 'new_tab' ? 'selected' : '' }}>New tab</option>
-                </select>
-                <select class="item-status input-text text-xs py-1.5 w-24" onchange="markChanged(this)">
-                    <option value="active" {{ ($menu->status ?? 'active') == 'active' ? 'selected' : '' }}>{{ __('personalization.menu_status.active') }}</option>
-                    <option value="soon" {{ ($menu->status ?? 'active') == 'soon' ? 'selected' : '' }}>{{ __('personalization.menu_status.soon') }}</option>
-                    <option value="maintenance" {{ ($menu->status ?? 'active') == 'maintenance' ? 'selected' : '' }}>{{ __('personalization.menu_status.maintenance') }}</option>
-                    <option value="disabled" {{ ($menu->status ?? 'active') == 'disabled' ? 'selected' : '' }}>{{ __('personalization.menu_status.disabled') }}</option>
-                </select>
-                <div class="flex items-center gap-1 ml-auto">
-                    <button type="button" onclick="moveMenuItem(this, -1)" class="btn-move-up p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Monter">
-                        <i class="bi bi-chevron-up"></i>
+            <div class="menu-item p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700" data-id="{{ $menu->id }}">
+                <div class="flex items-center gap-2">
+                    <span class="item-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="bi bi-grip-vertical"></i>
+                    </span>
+                    <span class="item-number inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">{{ $loop->iteration }}</span>
+                    <input type="text" value="{{ $menu->icon }}"
+                           class="item-icon input-text text-sm py-1.5 w-28"
+                           placeholder="bi bi-link"
+                           onchange="markChanged(this)">
+                    <input type="text" value="{{ $menuName }}"
+                           class="item-name input-text text-sm py-1.5 w-40 min-w-[10rem]"
+                           placeholder="{{ __('global.name') }}"
+                           onchange="markChanged(this)">
+                    <button type="button" class="btn-translate p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded" onclick="openTranslation({{ $menu->id }})" title="Traductions">
+                        <i class="bi bi-translate"></i>
                     </button>
-                    <button type="button" onclick="moveMenuItem(this, 1)" class="btn-move-down p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Descendre">
-                        <i class="bi bi-chevron-down"></i>
+                    <input type="text" value="{{ $menuUrl }}"
+                           class="item-url input-text text-sm py-1.5 w-48"
+                           placeholder="/url"
+                           onchange="markChanged(this)">
+                    <select class="item-linktype input-text text-xs py-1.5 w-24" onchange="markChanged(this)">
+                        <option value="link" {{ $menu->link_type == 'link' ? 'selected' : '' }}>Link</option>
+                        <option value="new_tab" {{ $menu->link_type == 'new_tab' ? 'selected' : '' }}>New tab</option>
+                    </select>
+                    <select class="item-status input-text text-xs py-1.5 w-24" onchange="markChanged(this)">
+                        <option value="active" {{ ($menu->status ?? 'active') == 'active' ? 'selected' : '' }}>{{ __('personalization.menu_status.active') }}</option>
+                        <option value="soon" {{ ($menu->status ?? 'active') == 'soon' ? 'selected' : '' }}>{{ __('personalization.menu_status.soon') }}</option>
+                        <option value="maintenance" {{ ($menu->status ?? 'active') == 'maintenance' ? 'selected' : '' }}>{{ __('personalization.menu_status.maintenance') }}</option>
+                        <option value="disabled" {{ ($menu->status ?? 'active') == 'disabled' ? 'selected' : '' }}>{{ __('personalization.menu_status.disabled') }}</option>
+                    </select>
+                    <button type="button" onclick="toggleScheduling(this)" class="btn-schedule p-1.5 text-gray-400 hover:text-blue-500 {{ $menu->status_starts_at || $menu->status_ends_at ? 'text-blue-500' : '' }}" title="{{ __('personalization.menu_status.schedule_help') }}">
+                        <i class="bi bi-clock"></i>
                     </button>
-                    <button type="button" onclick="deleteMenuItem(this)" class="btn-delete p-1.5 text-red-400 hover:text-red-600" title="{{ __('global.delete') }}">
-                        <i class="bi bi-trash"></i>
+                    <div class="flex items-center gap-1 ml-auto">
+                        <button type="button" onclick="moveMenuItem(this, -1)" class="btn-move-up p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Monter">
+                            <i class="bi bi-chevron-up"></i>
+                        </button>
+                        <button type="button" onclick="moveMenuItem(this, 1)" class="btn-move-down p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Descendre">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <button type="button" onclick="deleteMenuItem(this)" class="btn-delete p-1.5 text-red-400 hover:text-red-600" title="{{ __('global.delete') }}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                {{-- Scheduling row --}}
+                <div class="scheduling-row {{ $menu->status_starts_at || $menu->status_ends_at ? '' : 'hidden' }} flex items-center gap-3 mt-2 ml-8 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                    <i class="bi bi-calendar-event text-blue-500"></i>
+                    <div class="flex items-center gap-2">
+                        <label class="text-gray-600 dark:text-gray-400">{{ __('personalization.menu_status.starts_at') }}:</label>
+                        <input type="datetime-local" class="item-starts-at input-text text-xs py-1 w-44" value="{{ $menu->status_starts_at ? $menu->status_starts_at->format('Y-m-d\TH:i') : '' }}" onchange="markChanged(this)">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-gray-600 dark:text-gray-400">{{ __('personalization.menu_status.ends_at') }}:</label>
+                        <input type="datetime-local" class="item-ends-at input-text text-xs py-1 w-44" value="{{ $menu->status_ends_at ? $menu->status_ends_at->format('Y-m-d\TH:i') : '' }}" onchange="markChanged(this)">
+                    </div>
+                    <button type="button" onclick="clearScheduling(this)" class="text-gray-400 hover:text-red-500" title="Effacer les dates">
+                        <i class="bi bi-x-circle"></i>
                     </button>
                 </div>
             </div>
@@ -199,42 +219,61 @@
         const index = container.querySelectorAll('.menu-item').length + 1;
 
         const html = `
-            <div class="menu-item p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 border-primary flex items-center gap-2 has-changes" data-id="${tempId}" data-new="true">
-                <span class="item-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <i class="bi bi-grip-vertical"></i>
-                </span>
-                <span class="item-number inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">${index}</span>
-                <input type="text" value="bi bi-link"
-                       class="item-icon input-text text-sm py-1.5 w-28"
-                       placeholder="bi bi-link"
-                       onchange="markChanged(this)">
-                <input type="text" value=""
-                       class="item-name input-text text-sm py-1.5 w-40 min-w-[10rem]"
-                       placeholder="{{ __('global.name') }}"
-                       onchange="markChanged(this)">
-                <input type="text" value=""
-                       class="item-url input-text text-sm py-1.5 w-48"
-                       placeholder="/url"
-                       onchange="markChanged(this)">
-                <select class="item-linktype input-text text-xs py-1.5 w-24" onchange="markChanged(this)">
-                    <option value="link" selected>Link</option>
-                    <option value="new_tab">New tab</option>
-                </select>
-                <select class="item-status input-text text-xs py-1.5 w-24" onchange="markChanged(this)">
-                    <option value="active" selected>{{ __('personalization.menu_status.active') }}</option>
-                    <option value="soon">{{ __('personalization.menu_status.soon') }}</option>
-                    <option value="maintenance">{{ __('personalization.menu_status.maintenance') }}</option>
-                    <option value="disabled">{{ __('personalization.menu_status.disabled') }}</option>
-                </select>
-                <div class="flex items-center gap-1 ml-auto">
-                    <button type="button" onclick="moveMenuItem(this, -1)" class="btn-move-up p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Monter">
-                        <i class="bi bi-chevron-up"></i>
+            <div class="menu-item p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 border-primary has-changes" data-id="${tempId}" data-new="true">
+                <div class="flex items-center gap-2">
+                    <span class="item-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="bi bi-grip-vertical"></i>
+                    </span>
+                    <span class="item-number inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">${index}</span>
+                    <input type="text" value="bi bi-link"
+                           class="item-icon input-text text-sm py-1.5 w-28"
+                           placeholder="bi bi-link"
+                           onchange="markChanged(this)">
+                    <input type="text" value=""
+                           class="item-name input-text text-sm py-1.5 w-40 min-w-[10rem]"
+                           placeholder="{{ __('global.name') }}"
+                           onchange="markChanged(this)">
+                    <input type="text" value=""
+                           class="item-url input-text text-sm py-1.5 w-48"
+                           placeholder="/url"
+                           onchange="markChanged(this)">
+                    <select class="item-linktype input-text text-xs py-1.5 w-24" onchange="markChanged(this)">
+                        <option value="link" selected>Link</option>
+                        <option value="new_tab">New tab</option>
+                    </select>
+                    <select class="item-status input-text text-xs py-1.5 w-24" onchange="markChanged(this)">
+                        <option value="active" selected>{{ __('personalization.menu_status.active') }}</option>
+                        <option value="soon">{{ __('personalization.menu_status.soon') }}</option>
+                        <option value="maintenance">{{ __('personalization.menu_status.maintenance') }}</option>
+                        <option value="disabled">{{ __('personalization.menu_status.disabled') }}</option>
+                    </select>
+                    <button type="button" onclick="toggleScheduling(this)" class="btn-schedule p-1.5 text-gray-400 hover:text-blue-500" title="{{ __('personalization.menu_status.schedule_help') }}">
+                        <i class="bi bi-clock"></i>
                     </button>
-                    <button type="button" onclick="moveMenuItem(this, 1)" class="btn-move-down p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Descendre">
-                        <i class="bi bi-chevron-down"></i>
-                    </button>
-                    <button type="button" onclick="deleteMenuItem(this)" class="btn-delete p-1.5 text-red-400 hover:text-red-600" title="{{ __('global.delete') }}">
-                        <i class="bi bi-trash"></i>
+                    <div class="flex items-center gap-1 ml-auto">
+                        <button type="button" onclick="moveMenuItem(this, -1)" class="btn-move-up p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Monter">
+                            <i class="bi bi-chevron-up"></i>
+                        </button>
+                        <button type="button" onclick="moveMenuItem(this, 1)" class="btn-move-down p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Descendre">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <button type="button" onclick="deleteMenuItem(this)" class="btn-delete p-1.5 text-red-400 hover:text-red-600" title="{{ __('global.delete') }}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="scheduling-row hidden flex items-center gap-3 mt-2 ml-8 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                    <i class="bi bi-calendar-event text-blue-500"></i>
+                    <div class="flex items-center gap-2">
+                        <label class="text-gray-600 dark:text-gray-400">{{ __('personalization.menu_status.starts_at') }}:</label>
+                        <input type="datetime-local" class="item-starts-at input-text text-xs py-1 w-44" value="" onchange="markChanged(this)">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-gray-600 dark:text-gray-400">{{ __('personalization.menu_status.ends_at') }}:</label>
+                        <input type="datetime-local" class="item-ends-at input-text text-xs py-1 w-44" value="" onchange="markChanged(this)">
+                    </div>
+                    <button type="button" onclick="clearScheduling(this)" class="text-gray-400 hover:text-red-500" title="Effacer les dates">
+                        <i class="bi bi-x-circle"></i>
                     </button>
                 </div>
             </div>
@@ -290,6 +329,26 @@
         saveButton.disabled = false;
         updateUI();
         triggerAutoSave(true);
+    };
+
+    // Toggle scheduling row visibility
+    window.toggleScheduling = function(button) {
+        const container = button.closest('.menu-item');
+        const schedulingRow = container.querySelector('.scheduling-row');
+        if (schedulingRow) {
+            schedulingRow.classList.toggle('hidden');
+            button.classList.toggle('text-blue-500', !schedulingRow.classList.contains('hidden'));
+        }
+    };
+
+    // Clear scheduling dates
+    window.clearScheduling = function(button) {
+        const schedulingRow = button.closest('.scheduling-row');
+        const inputs = schedulingRow.querySelectorAll('input[type="datetime-local"]');
+        inputs.forEach(input => {
+            input.value = '';
+            markChanged(input);
+        });
     };
 
     // Open translation overlay
@@ -354,6 +413,8 @@
                 icon: item.querySelector('.item-icon').value,
                 link_type: item.querySelector('.item-linktype').value,
                 status: item.querySelector('.item-status')?.value || 'active',
+                status_starts_at: item.querySelector('.item-starts-at')?.value || null,
+                status_ends_at: item.querySelector('.item-ends-at')?.value || null,
                 allowed_role: 'all',
                 type: type,
                 position: i + 1

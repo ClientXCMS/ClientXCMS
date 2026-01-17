@@ -90,6 +90,9 @@
                             <option value="maintenance" {{ ($menu->status ?? 'active') == 'maintenance' ? 'selected' : '' }}>{{ __('personalization.menu_status.maintenance') }}</option>
                             <option value="disabled" {{ ($menu->status ?? 'active') == 'disabled' ? 'selected' : '' }}>{{ __('personalization.menu_status.disabled') }}</option>
                         </select>
+                        <button type="button" onclick="toggleScheduling(this)" class="btn-schedule p-1.5 text-gray-400 hover:text-blue-500 {{ $menu->status_starts_at || $menu->status_ends_at ? 'text-blue-500' : '' }}" title="{{ __('personalization.menu_status.schedule_help') }}">
+                            <i class="bi bi-clock"></i>
+                        </button>
                         <button type="button" onclick="moveMenuSection(this, -1)" class="btn-move-up p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed" title="Monter">
                             <i class="bi bi-chevron-up"></i>
                         </button>
@@ -100,6 +103,22 @@
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
+                </div>
+
+                {{-- Scheduling row (hidden by default) --}}
+                <div class="scheduling-row {{ $menu->status_starts_at || $menu->status_ends_at ? '' : 'hidden' }} flex items-center gap-3 mt-2 ml-11 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                    <i class="bi bi-calendar-event text-blue-500"></i>
+                    <div class="flex items-center gap-2">
+                        <label class="text-gray-600 dark:text-gray-400">{{ __('personalization.menu_status.starts_at') }}:</label>
+                        <input type="datetime-local" class="menu-starts-at input-text text-xs py-1 w-44" data-field="status_starts_at" value="{{ $menu->status_starts_at ? $menu->status_starts_at->format('Y-m-d\TH:i') : '' }}" onchange="markChanged(this)">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-gray-600 dark:text-gray-400">{{ __('personalization.menu_status.ends_at') }}:</label>
+                        <input type="datetime-local" class="menu-ends-at input-text text-xs py-1 w-44" data-field="status_ends_at" value="{{ $menu->status_ends_at ? $menu->status_ends_at->format('Y-m-d\TH:i') : '' }}" onchange="markChanged(this)">
+                    </div>
+                    <button type="button" onclick="clearScheduling(this)" class="text-gray-400 hover:text-red-500" title="Effacer les dates">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
                 </div>
 
                 @if ($menu->hasChildren())
@@ -136,8 +155,23 @@
                                 <option value="maintenance" {{ ($child->status ?? 'active') == 'maintenance' ? 'selected' : '' }}>{{ __('personalization.menu_status.maintenance') }}</option>
                                 <option value="disabled" {{ ($child->status ?? 'active') == 'disabled' ? 'selected' : '' }}>{{ __('personalization.menu_status.disabled') }}</option>
                             </select>
+                            <button type="button" onclick="toggleScheduling(this)" class="btn-schedule p-1 text-gray-400 hover:text-blue-500 {{ $child->status_starts_at || $child->status_ends_at ? 'text-blue-500' : '' }}" title="{{ __('personalization.menu_status.schedule_help') }}">
+                                <i class="bi bi-clock text-xs"></i>
+                            </button>
                             <button type="button" onclick="deleteMenuChild(this)" class="p-1 text-red-400 hover:text-red-600" title="{{ __('global.delete') }}">
                                 <i class="bi bi-x-lg text-xs"></i>
+                            </button>
+                        </div>
+
+                        {{-- Scheduling row for child --}}
+                        <div class="scheduling-row {{ $child->status_starts_at || $child->status_ends_at ? '' : 'hidden' }} flex items-center gap-2 mt-1.5 ml-2 p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                            <i class="bi bi-calendar-event text-blue-500 text-xs"></i>
+                            <label class="text-gray-500 dark:text-gray-400">{{ __('personalization.menu_status.starts_at') }}:</label>
+                            <input type="datetime-local" class="child-starts-at input-text text-xs py-0.5 w-36" data-field="status_starts_at" value="{{ $child->status_starts_at ? $child->status_starts_at->format('Y-m-d\TH:i') : '' }}" onchange="markChanged(this)">
+                            <label class="text-gray-500 dark:text-gray-400">{{ __('personalization.menu_status.ends_at') }}:</label>
+                            <input type="datetime-local" class="child-ends-at input-text text-xs py-0.5 w-36" data-field="status_ends_at" value="{{ $child->status_ends_at ? $child->status_ends_at->format('Y-m-d\TH:i') : '' }}" onchange="markChanged(this)">
+                            <button type="button" onclick="clearScheduling(this)" class="text-gray-400 hover:text-red-500" title="Effacer">
+                                <i class="bi bi-x-circle text-xs"></i>
                             </button>
                         </div>
 
@@ -149,35 +183,51 @@
                                 $grandchildName = $grandchild->trans('name', $grandchild->name);
                                 $grandchildUrl = $grandchild->trans('url', $grandchild->url);
                             @endphp
-                            <div class="menu-grandchild flex items-center gap-2 p-1.5 bg-white dark:bg-gray-800 rounded text-xs" data-id="{{ $grandchild->id }}">
-                                <span class="text-gray-400 text-xs"><i class="bi bi-arrow-return-right"></i></span>
-                                <input type="text" value="{{ $grandchild->icon }}"
-                                       class="grandchild-icon input-text text-xs py-1 w-24"
-                                       placeholder="bi bi-link"
-                                       data-field="icon"
-                                       onchange="markChanged(this)">
-                                <input type="text" value="{{ $grandchildName }}"
-                                       class="grandchild-name input-text text-xs py-1 w-32 min-w-[8rem]"
-                                       placeholder="{{ __('global.name') }}"
-                                       data-field="name"
-                                       onchange="markChanged(this)">
-                                <button type="button" class="btn-translate p-0.5 text-blue-500 hover:text-blue-700 text-xs" onclick="openTranslation({{ $grandchild->id }})" title="Traductions">
-                                    <i class="bi bi-translate text-xs"></i>
-                                </button>
-                                <input type="text" value="{{ $grandchildUrl }}"
-                                       class="grandchild-url input-text text-xs py-1 w-36 min-w-[9rem]"
-                                       placeholder="/url"
-                                       data-field="url"
-                                       onchange="markChanged(this)">
-                                <select class="grandchild-status input-text text-xs py-1 w-20" data-field="status" onchange="markChanged(this)">
-                                    <option value="active" {{ ($grandchild->status ?? 'active') == 'active' ? 'selected' : '' }}>{{ __('personalization.menu_status.active') }}</option>
-                                    <option value="soon" {{ ($grandchild->status ?? 'active') == 'soon' ? 'selected' : '' }}>{{ __('personalization.menu_status.soon') }}</option>
-                                    <option value="maintenance" {{ ($grandchild->status ?? 'active') == 'maintenance' ? 'selected' : '' }}>{{ __('personalization.menu_status.maintenance') }}</option>
-                                    <option value="disabled" {{ ($grandchild->status ?? 'active') == 'disabled' ? 'selected' : '' }}>{{ __('personalization.menu_status.disabled') }}</option>
-                                </select>
-                                <button type="button" onclick="deleteGrandchild(this)" class="p-0.5 text-red-400 hover:text-red-600" title="{{ __('global.delete') }}">
-                                    <i class="bi bi-x-lg text-xs"></i>
-                                </button>
+                            <div class="menu-grandchild p-1.5 bg-white dark:bg-gray-800 rounded text-xs" data-id="{{ $grandchild->id }}">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gray-400 text-xs"><i class="bi bi-arrow-return-right"></i></span>
+                                    <input type="text" value="{{ $grandchild->icon }}"
+                                           class="grandchild-icon input-text text-xs py-1 w-24"
+                                           placeholder="bi bi-link"
+                                           data-field="icon"
+                                           onchange="markChanged(this)">
+                                    <input type="text" value="{{ $grandchildName }}"
+                                           class="grandchild-name input-text text-xs py-1 w-32 min-w-[8rem]"
+                                           placeholder="{{ __('global.name') }}"
+                                           data-field="name"
+                                           onchange="markChanged(this)">
+                                    <button type="button" class="btn-translate p-0.5 text-blue-500 hover:text-blue-700 text-xs" onclick="openTranslation({{ $grandchild->id }})" title="Traductions">
+                                        <i class="bi bi-translate text-xs"></i>
+                                    </button>
+                                    <input type="text" value="{{ $grandchildUrl }}"
+                                           class="grandchild-url input-text text-xs py-1 w-36 min-w-[9rem]"
+                                           placeholder="/url"
+                                           data-field="url"
+                                           onchange="markChanged(this)">
+                                    <select class="grandchild-status input-text text-xs py-1 w-20" data-field="status" onchange="markChanged(this)">
+                                        <option value="active" {{ ($grandchild->status ?? 'active') == 'active' ? 'selected' : '' }}>{{ __('personalization.menu_status.active') }}</option>
+                                        <option value="soon" {{ ($grandchild->status ?? 'active') == 'soon' ? 'selected' : '' }}>{{ __('personalization.menu_status.soon') }}</option>
+                                        <option value="maintenance" {{ ($grandchild->status ?? 'active') == 'maintenance' ? 'selected' : '' }}>{{ __('personalization.menu_status.maintenance') }}</option>
+                                        <option value="disabled" {{ ($grandchild->status ?? 'active') == 'disabled' ? 'selected' : '' }}>{{ __('personalization.menu_status.disabled') }}</option>
+                                    </select>
+                                    <button type="button" onclick="toggleScheduling(this)" class="btn-schedule p-0.5 text-gray-400 hover:text-blue-500 {{ $grandchild->status_starts_at || $grandchild->status_ends_at ? 'text-blue-500' : '' }}" title="{{ __('personalization.menu_status.schedule_help') }}">
+                                        <i class="bi bi-clock text-xs"></i>
+                                    </button>
+                                    <button type="button" onclick="deleteGrandchild(this)" class="p-0.5 text-red-400 hover:text-red-600" title="{{ __('global.delete') }}">
+                                        <i class="bi bi-x-lg text-xs"></i>
+                                    </button>
+                                </div>
+                                {{-- Scheduling row for grandchild --}}
+                                <div class="scheduling-row {{ $grandchild->status_starts_at || $grandchild->status_ends_at ? '' : 'hidden' }} flex items-center gap-2 mt-1 ml-5 p-1 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                                    <i class="bi bi-calendar-event text-blue-500 text-xs"></i>
+                                    <span class="text-gray-500">{{ __('personalization.menu_status.starts_at') }}:</span>
+                                    <input type="datetime-local" class="grandchild-starts-at input-text text-xs py-0.5 w-32" data-field="status_starts_at" value="{{ $grandchild->status_starts_at ? $grandchild->status_starts_at->format('Y-m-d\TH:i') : '' }}" onchange="markChanged(this)">
+                                    <span class="text-gray-500">{{ __('personalization.menu_status.ends_at') }}:</span>
+                                    <input type="datetime-local" class="grandchild-ends-at input-text text-xs py-0.5 w-32" data-field="status_ends_at" value="{{ $grandchild->status_ends_at ? $grandchild->status_ends_at->format('Y-m-d\TH:i') : '' }}" onchange="markChanged(this)">
+                                    <button type="button" onclick="clearScheduling(this)" class="text-gray-400 hover:text-red-500">
+                                        <i class="bi bi-x-circle text-xs"></i>
+                                    </button>
+                                </div>
                             </div>
                             @endforeach
                         </div>
@@ -372,6 +422,9 @@
                             <option value="maintenance">{{ __('personalization.menu_status.maintenance') }}</option>
                             <option value="disabled">{{ __('personalization.menu_status.disabled') }}</option>
                         </select>
+                        <button type="button" onclick="toggleScheduling(this)" class="btn-schedule p-1.5 text-gray-400 hover:text-blue-500" title="{{ __('personalization.menu_status.schedule_help') }}">
+                            <i class="bi bi-clock"></i>
+                        </button>
                         <button type="button" onclick="moveMenuSection(this, -1)" class="btn-move-up p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed">
                             <i class="bi bi-chevron-up"></i>
                         </button>
@@ -382,6 +435,20 @@
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
+                </div>
+                <div class="scheduling-row hidden flex items-center gap-3 mt-2 ml-11 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                    <i class="bi bi-calendar-event text-blue-500"></i>
+                    <div class="flex items-center gap-2">
+                        <label class="text-gray-600 dark:text-gray-400">{{ __('personalization.menu_status.starts_at') }}:</label>
+                        <input type="datetime-local" class="menu-starts-at input-text text-xs py-1 w-44" data-field="status_starts_at" value="" onchange="markChanged(this)">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-gray-600 dark:text-gray-400">{{ __('personalization.menu_status.ends_at') }}:</label>
+                        <input type="datetime-local" class="menu-ends-at input-text text-xs py-1 w-44" data-field="status_ends_at" value="" onchange="markChanged(this)">
+                    </div>
+                    <button type="button" onclick="clearScheduling(this)" class="text-gray-400 hover:text-red-500" title="Effacer les dates">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
                 </div>
                 <button type="button" onclick="addMenuChild(this)"
                         class="mt-3 w-full py-2 px-3 border border-dashed border-gray-300 dark:border-gray-600 rounded text-xs font-medium text-gray-500 dark:text-gray-400 hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-1">
@@ -438,8 +505,21 @@
                         <option value="maintenance">{{ __('personalization.menu_status.maintenance') }}</option>
                         <option value="disabled">{{ __('personalization.menu_status.disabled') }}</option>
                     </select>
+                    <button type="button" onclick="toggleScheduling(this)" class="btn-schedule p-1 text-gray-400 hover:text-blue-500" title="{{ __('personalization.menu_status.schedule_help') }}">
+                        <i class="bi bi-clock text-xs"></i>
+                    </button>
                     <button type="button" onclick="deleteMenuChild(this)" class="p-1 text-red-400 hover:text-red-600">
                         <i class="bi bi-x-lg text-xs"></i>
+                    </button>
+                </div>
+                <div class="scheduling-row hidden flex items-center gap-2 mt-1.5 ml-2 p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                    <i class="bi bi-calendar-event text-blue-500 text-xs"></i>
+                    <label class="text-gray-500 dark:text-gray-400">{{ __('personalization.menu_status.starts_at') }}:</label>
+                    <input type="datetime-local" class="child-starts-at input-text text-xs py-0.5 w-36" data-field="status_starts_at" value="" onchange="markChanged(this)">
+                    <label class="text-gray-500 dark:text-gray-400">{{ __('personalization.menu_status.ends_at') }}:</label>
+                    <input type="datetime-local" class="child-ends-at input-text text-xs py-0.5 w-36" data-field="status_ends_at" value="" onchange="markChanged(this)">
+                    <button type="button" onclick="clearScheduling(this)" class="text-gray-400 hover:text-red-500" title="Effacer">
+                        <i class="bi bi-x-circle text-xs"></i>
                     </button>
                 </div>
             </div>
@@ -467,32 +547,47 @@
         }
 
         const html = `
-            <div class="menu-grandchild flex items-center gap-2 p-1.5 bg-white dark:bg-gray-800 rounded text-xs has-changes" data-id="${tempId}" data-new="true" data-parent="${parentId}">
-                <span class="text-gray-400 text-xs"><i class="bi bi-arrow-return-right"></i></span>
-                <input type="text" value=""
-                       class="grandchild-icon input-text text-xs py-1 w-24"
-                       placeholder="bi bi-link"
-                       data-field="icon"
-                       onchange="markChanged(this)">
-                <input type="text" value=""
-                       class="grandchild-name input-text text-xs py-1 w-32 min-w-[8rem]"
-                       placeholder="{{ __('global.name') }}"
-                       data-field="name"
-                       onchange="markChanged(this)">
-                <input type="text" value=""
-                       class="grandchild-url input-text text-xs py-1 w-36 min-w-[9rem]"
-                       placeholder="/url"
-                       data-field="url"
-                       onchange="markChanged(this)">
-                <select class="grandchild-status input-text text-xs py-1 w-20" data-field="status" onchange="markChanged(this)">
-                    <option value="active" selected>{{ __('personalization.menu_status.active') }}</option>
-                    <option value="soon">{{ __('personalization.menu_status.soon') }}</option>
-                    <option value="maintenance">{{ __('personalization.menu_status.maintenance') }}</option>
-                    <option value="disabled">{{ __('personalization.menu_status.disabled') }}</option>
-                </select>
-                <button type="button" onclick="deleteGrandchild(this)" class="p-0.5 text-red-400 hover:text-red-600">
-                    <i class="bi bi-x-lg text-xs"></i>
-                </button>
+            <div class="menu-grandchild p-1.5 bg-white dark:bg-gray-800 rounded text-xs has-changes" data-id="${tempId}" data-new="true" data-parent="${parentId}">
+                <div class="flex items-center gap-2">
+                    <span class="text-gray-400 text-xs"><i class="bi bi-arrow-return-right"></i></span>
+                    <input type="text" value=""
+                           class="grandchild-icon input-text text-xs py-1 w-24"
+                           placeholder="bi bi-link"
+                           data-field="icon"
+                           onchange="markChanged(this)">
+                    <input type="text" value=""
+                           class="grandchild-name input-text text-xs py-1 w-32 min-w-[8rem]"
+                           placeholder="{{ __('global.name') }}"
+                           data-field="name"
+                           onchange="markChanged(this)">
+                    <input type="text" value=""
+                           class="grandchild-url input-text text-xs py-1 w-36 min-w-[9rem]"
+                           placeholder="/url"
+                           data-field="url"
+                           onchange="markChanged(this)">
+                    <select class="grandchild-status input-text text-xs py-1 w-20" data-field="status" onchange="markChanged(this)">
+                        <option value="active" selected>{{ __('personalization.menu_status.active') }}</option>
+                        <option value="soon">{{ __('personalization.menu_status.soon') }}</option>
+                        <option value="maintenance">{{ __('personalization.menu_status.maintenance') }}</option>
+                        <option value="disabled">{{ __('personalization.menu_status.disabled') }}</option>
+                    </select>
+                    <button type="button" onclick="toggleScheduling(this)" class="btn-schedule p-0.5 text-gray-400 hover:text-blue-500" title="{{ __('personalization.menu_status.schedule_help') }}">
+                        <i class="bi bi-clock text-xs"></i>
+                    </button>
+                    <button type="button" onclick="deleteGrandchild(this)" class="p-0.5 text-red-400 hover:text-red-600">
+                        <i class="bi bi-x-lg text-xs"></i>
+                    </button>
+                </div>
+                <div class="scheduling-row hidden flex items-center gap-2 mt-1 ml-5 p-1 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                    <i class="bi bi-calendar-event text-blue-500 text-xs"></i>
+                    <span class="text-gray-500">{{ __('personalization.menu_status.starts_at') }}:</span>
+                    <input type="datetime-local" class="grandchild-starts-at input-text text-xs py-0.5 w-32" data-field="status_starts_at" value="" onchange="markChanged(this)">
+                    <span class="text-gray-500">{{ __('personalization.menu_status.ends_at') }}:</span>
+                    <input type="datetime-local" class="grandchild-ends-at input-text text-xs py-0.5 w-32" data-field="status_ends_at" value="" onchange="markChanged(this)">
+                    <button type="button" onclick="clearScheduling(this)" class="text-gray-400 hover:text-red-500">
+                        <i class="bi bi-x-circle text-xs"></i>
+                    </button>
+                </div>
             </div>
         `;
 
@@ -572,6 +667,26 @@
         triggerAutoSave(true);
     };
 
+    // Toggle scheduling row visibility
+    window.toggleScheduling = function(button) {
+        const container = button.closest('.menu-section, .menu-child, .menu-grandchild');
+        const schedulingRow = container.querySelector('.scheduling-row');
+        if (schedulingRow) {
+            schedulingRow.classList.toggle('hidden');
+            button.classList.toggle('text-blue-500', !schedulingRow.classList.contains('hidden'));
+        }
+    };
+
+    // Clear scheduling dates
+    window.clearScheduling = function(button) {
+        const schedulingRow = button.closest('.scheduling-row');
+        const inputs = schedulingRow.querySelectorAll('input[type="datetime-local"]');
+        inputs.forEach(input => {
+            input.value = '';
+            markChanged(input);
+        });
+    };
+
     // Open translation overlay
     window.openTranslation = function(id) {
         const overlay = document.getElementById('translations-overlay-menu-' + id);
@@ -605,6 +720,8 @@
                 icon: section.querySelector('.menu-icon').value,
                 allowed_role: section.querySelector('.menu-role').value,
                 status: section.querySelector('.menu-status')?.value || 'active',
+                status_starts_at: section.querySelector('.menu-starts-at')?.value || null,
+                status_ends_at: section.querySelector('.menu-ends-at')?.value || null,
                 link_type: hasChildren ? 'dropdown' : 'link',
                 type: type,
                 position: i + 1
@@ -645,6 +762,8 @@
                     url: child.querySelector('.child-url').value || '#',
                     icon: child.querySelector('.child-icon').value,
                     status: child.querySelector('.child-status')?.value || 'active',
+                    status_starts_at: child.querySelector('.child-starts-at')?.value || null,
+                    status_ends_at: child.querySelector('.child-ends-at')?.value || null,
                     allowed_role: 'all',
                     link_type: hasGrandchildren ? 'dropdown' : 'link',
                     type: type,
@@ -684,6 +803,8 @@
                         url: grandchild.querySelector('.grandchild-url').value || '#',
                         icon: grandchild.querySelector('.grandchild-icon').value,
                         status: grandchild.querySelector('.grandchild-status')?.value || 'active',
+                        status_starts_at: grandchild.querySelector('.grandchild-starts-at')?.value || null,
+                        status_ends_at: grandchild.querySelector('.grandchild-ends-at')?.value || null,
                         allowed_role: 'all',
                         link_type: 'link',
                         type: type,
