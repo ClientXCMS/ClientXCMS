@@ -56,9 +56,46 @@ class ThemeManager
         }
     }
 
-    public static function clearCache()
+    /**
+     * Cache key prefix for theme configuration.
+     * Cache is stored per locale to support multilingual sections.
+     */
+    private const CACHE_KEY_PREFIX = 'theme_configuration';
+
+    /**
+     * Clear theme configuration cache for all locales.
+     */
+    public static function clearCache(): void
     {
-        Cache::forget('theme_configuration');
+        // Clear cache for all enabled locales
+        $enabledLocales = self::getEnabledLocales();
+        foreach ($enabledLocales as $locale) {
+            Cache::forget(self::CACHE_KEY_PREFIX . '_' . $locale);
+        }
+
+        // Also clear legacy cache key for backwards compatibility
+        Cache::forget(self::CACHE_KEY_PREFIX);
+    }
+
+    /**
+     * Get list of enabled locales for cache management.
+     */
+    private static function getEnabledLocales(): array
+    {
+        try {
+            $setting = \App\Models\Admin\Setting::where('name', 'app_enabled_locales')->first();
+            if ($setting && $setting->value) {
+                $locales = json_decode($setting->value, true);
+                if (is_array($locales) && !empty($locales)) {
+                    return $locales;
+                }
+            }
+        } catch (\Exception $e) {
+            // Database might not be available during boot
+        }
+
+        // Fallback to common locales
+        return ['fr', 'en', 'de', 'es', 'it', 'pt', 'nl'];
     }
 
     public function hasTheme(): bool
@@ -170,9 +207,16 @@ class ThemeManager
         return $this->getSections()->where('uuid', $uuid)->where('theme_uuid', $theme_uuid)->where('is_active', true)->exists();
     }
 
+    /**
+     * Get theme settings with locale-aware caching.
+     * Sections HTML are cached per locale to support translations.
+     */
     public function getSetting()
     {
-        return Cache::remember('theme_configuration', 60 * 60 * 24 * 7, function () {
+        $locale = app()->getLocale();
+        $cacheKey = self::CACHE_KEY_PREFIX . '_' . $locale;
+
+        return Cache::remember($cacheKey, 60 * 60 * 24 * 7, function () {
             $types = \App\Models\Personalization\MenuLink::pluck('type')->unique()->toArray();
             $links = collect($types)->mapWithKeys(function ($type) {
                 return [$type . '_links' => MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get()];
