@@ -56,43 +56,26 @@ class ThemeManager
         }
     }
 
-    /**
-     * Cache key prefix for theme configuration.
-     * Cache is stored per locale to support multilingual sections.
-     */
     private const CACHE_KEY_PREFIX = 'theme_configuration';
 
-    /**
-     * Clear theme configuration cache for all locales.
-     */
     public static function clearCache(): void
     {
-        // Clear cache for all enabled locales
         $enabledLocales = self::getEnabledLocales();
         foreach ($enabledLocales as $locale) {
             Cache::forget(self::CACHE_KEY_PREFIX . '_' . $locale);
         }
-
-        // Also clear legacy cache key for backwards compatibility
         Cache::forget(self::CACHE_KEY_PREFIX);
     }
 
-    /**
-     * Get list of enabled locales for cache management.
-     * Returns short locale codes (fr, en) matching app()->getLocale() format.
-     */
     private static function getEnabledLocales(): array
     {
         try {
-            // Use LocaleService to get enabled locales dynamically
             $locales = array_keys(\App\Services\Core\LocaleService::getLocalesNames());
 
-            // Extract short locale codes (fr from fr_FR, en from en_GB)
             return array_unique(array_map(function ($locale) {
                 return str_contains($locale, '_') ? explode('_', $locale)[0] : $locale;
             }, $locales));
         } catch (\Exception $e) {
-            // Fallback if LocaleService is not available during boot
             return ['fr', 'en'];
         }
     }
@@ -206,10 +189,6 @@ class ThemeManager
         return $this->getSections()->where('uuid', $uuid)->where('theme_uuid', $theme_uuid)->where('is_active', true)->exists();
     }
 
-    /**
-     * Get theme settings with locale-aware caching.
-     * Sections HTML are cached per locale to support translations.
-     */
     public function getSetting()
     {
         $locale = app()->getLocale();
