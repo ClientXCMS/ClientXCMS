@@ -79,23 +79,22 @@ class ThemeManager
 
     /**
      * Get list of enabled locales for cache management.
+     * Returns short locale codes (fr, en) matching app()->getLocale() format.
      */
     private static function getEnabledLocales(): array
     {
         try {
-            $setting = \App\Models\Admin\Setting::where('name', 'app_enabled_locales')->first();
-            if ($setting && $setting->value) {
-                $locales = json_decode($setting->value, true);
-                if (is_array($locales) && !empty($locales)) {
-                    return $locales;
-                }
-            }
-        } catch (\Exception $e) {
-            // Database might not be available during boot
-        }
+            // Use LocaleService to get enabled locales dynamically
+            $locales = array_keys(\App\Services\Core\LocaleService::getLocalesNames());
 
-        // Fallback to common locales
-        return ['fr', 'en', 'de', 'es', 'it', 'pt', 'nl'];
+            // Extract short locale codes (fr from fr_FR, en from en_GB)
+            return array_unique(array_map(function ($locale) {
+                return str_contains($locale, '_') ? explode('_', $locale)[0] : $locale;
+            }, $locales));
+        } catch (\Exception $e) {
+            // Fallback if LocaleService is not available during boot
+            return ['fr', 'en'];
+        }
     }
 
     public function hasTheme(): bool
