@@ -62,7 +62,7 @@ class ThemeManager
     {
         $enabledLocales = self::getEnabledLocales();
         foreach ($enabledLocales as $locale) {
-            Cache::forget(self::CACHE_KEY_PREFIX . '_' . $locale);
+            Cache::forget(self::CACHE_KEY_PREFIX.'_'.$locale);
         }
         Cache::forget(self::CACHE_KEY_PREFIX);
     }
@@ -192,7 +192,7 @@ class ThemeManager
     public function getSetting()
     {
         $locale = app()->getLocale();
-        $cacheKey = self::CACHE_KEY_PREFIX . '_' . $locale;
+        $cacheKey = self::CACHE_KEY_PREFIX.'_'.$locale;
 
         return Cache::remember($cacheKey, 60 * 60 * 24 * 7, function () {
             $types = \App\Models\Personalization\MenuLink::pluck('type')->unique()->toArray();
