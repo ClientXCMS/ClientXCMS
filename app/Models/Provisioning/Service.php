@@ -414,7 +414,6 @@ class Service extends Model implements HasNotifiableVariablesInterface
             ->whereNotNull('expires_at')
             ->where('expires_at', '<=', now())
             ->get();
-
     }
 
     public static function getShouldCancel()
@@ -457,7 +456,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
             if ($pricing) {
                 return new ProductPriceDTO(
                     $pricing[$billing] ?? 0,
-                    $pricing['setup_'.$billing] ?? 0,
+                    $pricing['setup_' . $billing] ?? 0,
                     $this->currency,
                     $billing
                 );
@@ -511,7 +510,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         if ($this->product_id != null) {
             return $this->product->getAllPricing($this->product_id);
         }
-        throw new \Exception('Service Pricing not found for #'.$this->id);
+        throw new \Exception('Service Pricing not found for #' . $this->id);
     }
 
     private function getAllPricingCurrency(int $related_id, string $currency)
@@ -523,7 +522,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         if ($this->product_id != null) {
             return $this->product->getAllPricingCurrency($related_id, $this->pricing_key, $currency);
         }
-        throw new \Exception('Service Pricing not found for #'.$this->id);
+        throw new \Exception('Service Pricing not found for #' . $this->id);
     }
 
     public function invoice()
@@ -683,7 +682,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         return $this->billing == 'onetime';
     }
 
-    public function getInvoiceName()
+    public function getInvoiceName(?string $billing = null)
     {
         if ($this->product == null) {
             return $this->name;
@@ -692,7 +691,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
             return $this->name;
         }
         $current = $this->expires_at->format('d/m/y');
-        $expiresAt = app(RecurringService::class)->addFrom($this->expires_at, $this->billing);
+        $expiresAt = app(RecurringService::class)->addFrom($this->expires_at, $billing ?? $this->billing);
 
         return "{$this->product->trans('name')} ({$current} - {$expiresAt->format('d/m/y')})";
     }
@@ -744,7 +743,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public function relatedName(): string
     {
-        return __('global.service').' #'.Str::limit($this->uuid, 5).' - '.$this->excerptName().' - '.$this->status.' - '.($this->expires_at ? $this->expires_at->format('d/m/y') : 'None');
+        return __('global.service') . ' #' . Str::limit($this->uuid, 5) . ' - ' . $this->excerptName() . ' - ' . $this->status . ' - ' . ($this->expires_at ? $this->expires_at->format('d/m/y') : 'None');
     }
 
     public function notifyExpiration(): bool
@@ -821,7 +820,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
                 PricingService::forgot();
             }
 
-            $description .= $_item->getBillingDescription().' | ';
+            $description .= $_item->getBillingDescription() . ' | ';
         }
         $this->description = $description;
         $this->save();
@@ -839,7 +838,14 @@ class Service extends Model implements HasNotifiableVariablesInterface
     public static function getNotificationContextVariables(): array
     {
         return [
-            '%service_name%', '%service_status%', '%service_expires_at%', '%service_price%', '%service_billing%', '%service_type%', '%service_server%', '%service_product%',
+            '%service_name%',
+            '%service_status%',
+            '%service_expires_at%',
+            '%service_price%',
+            '%service_billing%',
+            '%service_type%',
+            '%service_server%',
+            '%service_product%',
         ];
     }
 
