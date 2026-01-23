@@ -49,7 +49,7 @@ class SettingsBillingController extends Controller
         ];
         $tmpcountries = Countries::names();
         $countries = collect(TaxesService::arrayVatPercents())->mapWithKeys(function ($item, $key) use ($tmpcountries) {
-            return [$key => $tmpcountries[$key].' ('.$item.'%)'];
+            return [$key => $tmpcountries[$key] . ' (' . $item . '%)'];
         });
         $rates = [
             TaxesService::VAT_RATE_BY_COUNTRY => __('billing.admin.settings.fields.rates.vat_rate_by_country'),
@@ -78,9 +78,12 @@ class SettingsBillingController extends Controller
             'display_product_price' => 'required|in:tax_included,tax_excluded',
             'add_setupfee_on_upgrade' => 'in:true,false',
             'minimum_days_to_force_renewal_with_upgrade' => 'required|integer|min:0',
-            'vat_default_country' => 'required_if:store_vat_rate,'.TaxesService::VAT_RATE_BY_COUNTRY.'|nullable',
+            'vat_default_country' => 'required_if:store_vat_rate,' . TaxesService::VAT_RATE_BY_COUNTRY . '|nullable',
             'allow_add_balance_to_invoices' => 'in:true,false',
+            'store_enabled' => 'in:true,false',
+            'store_redirect_url' => 'nullable|url',
         ]);
+        $validated['store_enabled'] = $validated['store_enabled'] ?? 'false';
         $validated['store_vat_enabled'] = $validated['store_vat_enabled'] ?? 'false';
         $validated['allow_add_balance_to_invoices'] = $validated['allow_add_balance_to_invoices'] ?? 'false';
         $validated['checkout_customermustbeconfirmed'] = $validated['checkout_customermustbeconfirmed'] ?? 'false';
@@ -102,6 +105,5 @@ class SettingsBillingController extends Controller
         Setting::updateSettings($validated);
 
         return redirect()->back()->with('success', __('billing.admin.settings.success'));
-
     }
 }

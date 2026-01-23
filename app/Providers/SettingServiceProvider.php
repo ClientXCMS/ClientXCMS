@@ -65,12 +65,14 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('app_name', config('app.name'));
             $service->setDefaultValue('app_url', request()->getSchemeAndHttpHost());
             $service->setDefaultValue('app_timezone', 'Europe/Paris');
-            $service->setDefaultValue('app_address', config('app.name').', You can set your address in the settings');
+            $service->setDefaultValue('app_address', config('app.name') . ', You can set your address in the settings');
             $service->setDefaultValue('app_debug', config('app.debug', 'false'));
             $service->setDefaultValue('app_env', config('app.env', 'production'));
             $service->setDefaultValue('app_license_refresh_token', setting('app.license.refresh_token'));
             $service->setDefaultValue('store_mode_tax', TaxesService::MODE_TAX_EXCLUDED);
             $service->setDefaultValue('store_vat_enabled', true);
+            $service->setDefaultValue('store_enabled', true);
+            $service->setDefaultValue('store_redirect_url', null);
             $service->setDefaultValue('billing_invoice_prefix', 'CTX');
             $service->setDefaultValue('days_before_creation_renewal_invoice', 7);
             $service->setDefaultValue('days_before_expiration', 7);
@@ -91,10 +93,10 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('mail_smtp_encryption', env('MAIL_ENCRYPTION'));
             $service->setDefaultValue('mail_smtp_enable', env('MAIL_MAILER') == 'smtp');
             $service->setDefaultValue('mail_domain', env('APP_URL', request()->getSchemeAndHttpHost()));
-            $service->setDefaultValue('theme_footer_description', config('app.name').' You can modify this text in the settings. Powered By CLIENTXCMS');
+            $service->setDefaultValue('theme_footer_description', config('app.name') . ' You can modify this text in the settings. Powered By CLIENTXCMS');
             $service->setDefaultValue('theme_home_enabled', true);
             $service->setDefaultValue('theme_switch_mode', 'both');
-            $service->setDefaultValue('seo_site_title', ' - '.setting('app_name'));
+            $service->setDefaultValue('seo_site_title', ' - ' . setting('app_name'));
             $service->setDefaultValue('theme_home_title_meta', setting('app_name'));
             $service->setDefaultValue('helpdesk_ticket_auto_close_days', 7);
             $service->setDefaultValue('helpdesk_attachments_max_size', 5);
@@ -112,7 +114,7 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('captcha_driver', 'none');
             $service->setDefaultValue('maintenance_enabled', false);
             $service->setDefaultValue('maintenance_message', __('maintenance.in_maintenance_message'));
-            $service->setDefaultValue('maintenance_url', '/maintenancebypass/'.md5(\Str::random(12)));
+            $service->setDefaultValue('maintenance_url', '/maintenancebypass/' . md5(\Str::random(12)));
             $service->setDefaultValue('maintenance_button_link', null);
             $service->setDefaultValue('maintenance_button_text', null);
             $service->setDefaultValue('maintenance_button_icon', 'bi bi-box-arrow-up-right');
