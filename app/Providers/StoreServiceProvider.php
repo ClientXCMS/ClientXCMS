@@ -67,7 +67,7 @@ class StoreServiceProvider extends ServiceProvider
             if ($gateway->uuid == 'none' || $gateway->paymentType() instanceof GatewayTypeInterface == false) {
                 continue;
             }
-            $setting->addCardItem('store', $gateway->uuid, $gateway->name, 'admin.settings.store.gateways.description', $gateway->paymentType() instanceof GatewayTypeInterface ? $gateway->paymentType()->icon() : "bi bi-credit-card  ", [GatewayController::class, 'config'], 'admin.manage_gateways');
+            $setting->addCardItem('store', $gateway->uuid, $gateway->name, 'admin.settings.store.gateways.description', $gateway->paymentType() instanceof GatewayTypeInterface ? $gateway->paymentType()->icon() : 'bi bi-credit-card  ', [GatewayController::class, 'config'], 'admin.manage_gateways');
         }
     }
 }

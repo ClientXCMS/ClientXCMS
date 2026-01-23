@@ -456,7 +456,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
             if ($pricing) {
                 return new ProductPriceDTO(
                     $pricing[$billing] ?? 0,
-                    $pricing['setup_' . $billing] ?? 0,
+                    $pricing['setup_'.$billing] ?? 0,
                     $this->currency,
                     $billing
                 );
@@ -510,7 +510,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         if ($this->product_id != null) {
             return $this->product->getAllPricing($this->product_id);
         }
-        throw new \Exception('Service Pricing not found for #' . $this->id);
+        throw new \Exception('Service Pricing not found for #'.$this->id);
     }
 
     private function getAllPricingCurrency(int $related_id, string $currency)
@@ -522,7 +522,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         if ($this->product_id != null) {
             return $this->product->getAllPricingCurrency($related_id, $this->pricing_key, $currency);
         }
-        throw new \Exception('Service Pricing not found for #' . $this->id);
+        throw new \Exception('Service Pricing not found for #'.$this->id);
     }
 
     public function invoice()
@@ -743,7 +743,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public function relatedName(): string
     {
-        return __('global.service') . ' #' . Str::limit($this->uuid, 5) . ' - ' . $this->excerptName() . ' - ' . $this->status . ' - ' . ($this->expires_at ? $this->expires_at->format('d/m/y') : 'None');
+        return __('global.service').' #'.Str::limit($this->uuid, 5).' - '.$this->excerptName().' - '.$this->status.' - '.($this->expires_at ? $this->expires_at->format('d/m/y') : 'None');
     }
 
     public function notifyExpiration(): bool
@@ -820,7 +820,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
                 PricingService::forgot();
             }
 
-            $description .= $_item->getBillingDescription() . ' | ';
+            $description .= $_item->getBillingDescription().' | ';
         }
         $this->description = $description;
         $this->save();

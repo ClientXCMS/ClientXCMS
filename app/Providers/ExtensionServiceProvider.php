@@ -35,7 +35,6 @@ use Illuminate\Support\ServiceProvider;
 
 class ExtensionServiceProvider extends ServiceProvider
 {
-
     public function register(): void
     {
         $this->app->singleton('module', ModuleManager::class);

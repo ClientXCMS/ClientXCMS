@@ -22,8 +22,8 @@ use App\Http\Controllers\Admin\Security\DatabaseController;
 use App\Http\Controllers\Admin\Security\HistoryController;
 use App\Http\Controllers\Admin\Security\LicenseController;
 use App\Http\Controllers\Admin\Security\SecurityQuestionController;
-use App\Http\Controllers\Admin\Settings\SettingsSecurityController;
 use App\Http\Controllers\Admin\Security\UpdateController;
+use App\Http\Controllers\Admin\Settings\SettingsSecurityController;
 use Illuminate\Support\Facades\Route;
 
 Route::name('history.')->prefix('history')->group(function () {

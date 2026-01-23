@@ -130,7 +130,7 @@ class Gateway extends Model
     public function getGatewayName()
     {
         if ($this->uuid == 'balance' && auth()->user() && auth()->user()->balance != 0) {
-            return $this->name . ' (' . formatted_price(auth()->user()->balance, currency()) . ')';
+            return $this->name.' ('.formatted_price(auth()->user()->balance, currency()).')';
         } else {
             return $this->name;
         }
@@ -143,6 +143,6 @@ class Gateway extends Model
 
     public function getGatewayNameWithAmount()
     {
-        return $this->name . ' (' . formatted_price($this->amount, currency()) . ')';
+        return $this->name.' ('.formatted_price($this->amount, currency()).')';
     }
 }

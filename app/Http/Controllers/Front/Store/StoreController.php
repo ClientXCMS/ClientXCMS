@@ -30,8 +30,9 @@ class StoreController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!setting('store_enabled', 'true')) {
+            if (! setting('store_enabled', 'true')) {
                 $url = setting('store_redirect_url');
+
                 return redirect($url ?? '/');
             }
 
@@ -66,7 +67,7 @@ class StoreController extends Controller
         if ($products->count() == 0 && $groups->count() == 0) {
             \Session::flash('info', __('store.product.noproduct'));
         }
-        \View::share('meta_append', '<meta name="description" content="' . $subtitle . '">');
+        \View::share('meta_append', '<meta name="description" content="'.$subtitle.'">');
 
         return view('front.store.index', compact('group', 'groups', 'title', 'subtitle', 'products'));
     }
@@ -85,7 +86,7 @@ class StoreController extends Controller
         if ($products->count() == 0 && $groups->count() == 0) {
             \Session::flash('info', __('store.product.noproduct'));
         }
-        \View::share('meta_append', '<meta name="description" content="' . $subtitle . '">');
+        \View::share('meta_append', '<meta name="description" content="'.$subtitle.'">');
 
         return view('front.store.group', compact('group', 'title', 'subtitle', 'products', 'groups', 'subgroup'));
     }

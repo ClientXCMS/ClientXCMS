@@ -258,6 +258,7 @@ class Basket extends Model
                 ->whereNull('completed_at')
                 ->first();
         }
+
         return self::$basket;
     }
 
