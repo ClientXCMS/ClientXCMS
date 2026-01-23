@@ -42,6 +42,18 @@ Route::get('/', function () {
 
     return view('home');
 })->name('home');
+
+Route::get('/robots.txt', function () {
+    $content = "User-agent: *\n";
+    if (setting('seo_disablereferencement')) {
+        $content .= "Disallow: /\n";
+    } else {
+        $content .= "Disallow:\n";
+    }
+
+    return response($content, 200, ['Content-Type' => 'text/plain']);
+})->name('robots.txt');
+
 Route::fallback(function () {
     return response()->view('errors.404', [], 404);
 });
