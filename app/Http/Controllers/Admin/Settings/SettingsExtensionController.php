@@ -36,6 +36,7 @@ class SettingsExtensionController
         $item = $card->items->firstWhere('uuid', 'extensions');
         \View::share('current_card', $card);
         \View::share('current_item', $item);
+
         return view('admin.settings.extensions.index', ['groups' => $groups, 'tags' => app('extension')->fetch()['tags'] ?? []]);
     }
 
@@ -74,7 +75,7 @@ class SettingsExtensionController
             \App\Theme\ThemeManager::clearCache();
             ActionLog::log(ActionLog::THEME_CHANGED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
         } else {
-            \Artisan::call('migrate', ['--force' => true, '--path' => $type . '/' . $extension . '/database/migrations']);
+            \Artisan::call('migrate', ['--force' => true, '--path' => $type.'/'.$extension.'/database/migrations']);
             ActionLog::log(ActionLog::EXTENSION_ENABLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
         }
 
