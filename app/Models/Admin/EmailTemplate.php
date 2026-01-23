@@ -76,7 +76,10 @@ class EmailTemplate extends Model
         }
         $template = self::where('name', $name)->where('locale', $locale)->first();
         if ($template == null) {
-            throw new \Exception(sprintf('Email template %s not found for locale %s', $name, $locale));
+            $template = self::where('name', $name)->where('locale', 'en_GB')->first();
+            if ($template == null) {
+                throw new \Exception(sprintf('Email template %s not found for locale %s', $name, $locale));
+            }
         }
         $content = self::bladeRender($template->content, $context);
         $parts = explode(PHP_EOL, $content);
@@ -100,7 +103,7 @@ class EmailTemplate extends Model
         ];
         if (setting('email_template_name') != null) {
             $colors = ThemeManager::getColorsArray();
-            $mail->view('notifications::'.str_replace('.blade', '', setting('email_template_name')), array_merge($mail->viewData, ['primaryColor' => $colors['600'], 'secondaryColor' => $colors['400']]));
+            $mail->view('notifications::' . str_replace('.blade', '', setting('email_template_name')), array_merge($mail->viewData, ['primaryColor' => $colors['600'], 'secondaryColor' => $colors['400']]));
         }
 
         return $mail;
@@ -115,7 +118,7 @@ class EmailTemplate extends Model
             'fullname' => $notifiable->FullName,
         ];
         foreach ($context as $key => $value) {
-            $content = str_replace('%'.$key.'%', $value, $content);
+            $content = str_replace('%' . $key . '%', $value, $content);
         }
 
         return $content;
@@ -125,9 +128,9 @@ class EmailTemplate extends Model
     {
         $folder = resource_path('views/vendor/notifications');
         $oldTemplate = setting('email_template_name');
-        $file->storeAs('', $name.'.php', ['disk' => 'email']);
+        $file->storeAs('', $name . '.php', ['disk' => 'email']);
         if ($oldTemplate != null && $oldTemplate != $name) {
-            $oldTemplate = $folder.'/'.$oldTemplate.'.blade.php';
+            $oldTemplate = $folder . '/' . $oldTemplate . '.blade.php';
             if (file_exists($oldTemplate)) {
                 unlink($oldTemplate);
             }
@@ -139,7 +142,7 @@ class EmailTemplate extends Model
         $folder = resource_path('views/vendor/notifications');
         $oldTemplate = setting('email_template_name');
         if ($oldTemplate != null) {
-            $oldTemplate = $folder.'/'.$oldTemplate.'.blade.php';
+            $oldTemplate = $folder . '/' . $oldTemplate . '.blade.php';
             if (file_exists($oldTemplate)) {
                 unlink($oldTemplate);
             }
