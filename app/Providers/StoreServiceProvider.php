@@ -19,6 +19,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\Store\GatewayTypeInterface;
 use App\Http\Controllers\Admin\Store\CouponController;
 use App\Http\Controllers\Admin\Store\GatewayController;
 use App\Http\Controllers\Admin\Store\GroupController;
@@ -63,10 +64,10 @@ class StoreServiceProvider extends ServiceProvider
         $setting->addCardItem('store', 'coupon', 'coupon.coupons', 'coupon.admin.description', 'bi bi-percent', action([CouponController::class, 'index']), 'admin.manage_coupons');
 
         foreach ($gateways as $gateway) {
-            if ($gateway->uuid == 'none' || $gateway->paymentType() == null) {
+            if ($gateway->uuid == 'none' || $gateway->paymentType() instanceof GatewayTypeInterface == false) {
                 continue;
             }
-            $setting->addCardItem('store', $gateway->uuid, $gateway->name, 'admin.settings.store.gateways.description', $gateway->paymentType()->icon(), [GatewayController::class, 'config'], 'admin.manage_gateways');
+            $setting->addCardItem('store', $gateway->uuid, $gateway->name, 'admin.settings.store.gateways.description', $gateway->paymentType() instanceof GatewayTypeInterface ? $gateway->paymentType()->icon() : "bi bi-credit-card  ", [GatewayController::class, 'config'], 'admin.manage_gateways');
         }
     }
 }

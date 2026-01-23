@@ -29,10 +29,17 @@ use App\Models\Account\Customer;
 use App\Models\Admin\Permission;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\Subscription;
+use App\Services\Core\PaymentTypeService;
 use Illuminate\Support\ServiceProvider;
 
 class BillingServiceProvider extends ServiceProvider
 {
+
+    public function register(): void
+    {
+        $this->app->singleton(PaymentTypeService::class);
+    }
+
     public function boot(): void
     {
         if (! is_installed() || app()->runningUnitTests() || app()->runningInConsole()) {
