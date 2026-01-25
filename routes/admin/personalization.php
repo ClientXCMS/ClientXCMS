@@ -50,6 +50,7 @@ Route::get('menulink/{type}', [MenuLinkController::class, 'create'])->name('pers
 Route::delete('menulink/{menulink}', [MenuLinkController::class, 'delete'])->name('personalization.menulinks.delete');
 Route::get('menulink/{menulink}', [MenuLinkController::class, 'show'])->name('personalization.menulinks.show');
 Route::post('menulink/{type}/sort', [MenuLinkController::class, 'sort'])->name('personalization.menulinks.sort')->withoutMiddleware('csrf');
+Route::post('menulink/{type}/bulk', [MenuLinkController::class, 'bulkUpdate'])->name('personalization.menulinks.bulk')->whereIn('type', $types);
 Route::get('menulink/custom/{type}', [SettingsPersonalizationController::class, 'showCustomMenu'])->name('personalization.menulinks.custom');
 Route::name('settings.')->prefix('settings')->middleware('admin')->group(function () {
     Route::put('/personalization/seo', [SettingsPersonalizationController::class, 'storeSeoSettings'])->name('personalization.seo');
