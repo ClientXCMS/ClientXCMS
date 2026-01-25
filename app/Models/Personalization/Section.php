@@ -20,14 +20,13 @@
 namespace App\Models\Personalization;
 
 use App\DTO\Core\Extensions\ExtensionSectionTrait;
+use App\Models\Traits\Translatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 /**
- * 
- *
  * @property int $id
  * @property string $uuid
  * @property string $theme_uuid
@@ -35,38 +34,23 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $order
  * @property int $is_active
  * @property string $url
+ * @property array|null $config
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereIsActive($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section wherePath($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereThemeUuid($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereUrl($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereUuid($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Section withoutTrashed()
- * @mixin \Eloquent
  */
 class Section extends Model
 {
     use ExtensionSectionTrait;
     use HasFactory;
-    use softDeletes;
+    use SoftDeletes;
+    use Translatable;
 
     protected $table = 'theme_sections';
 
     const TAGS_DISABLED = [
         '<?php', '?>', '@php', '@endphp', '@shell', '<?=',
-        'env(', '$_ENV', '$_SERVER', '$_GET', '.env', '.__DIR__', 
+        'env(', '$_ENV', '$_SERVER', '$_GET', '.env', '.__DIR__',
         '$_POST', '$_REQUEST', '$_SESSION', '$_COOKIE', 'exec(',
         'shell_exec(', 'system(', 'passthru(', 'proc_open(', 'popen(',
         'pcntl_exec(', 'eval(', 'assert(', 'preg_replace(', 'create_function(',
@@ -79,7 +63,7 @@ class Section extends Model
         'exit(', 'phpinfo(', 'php_uname(', 'getenv(', 'get_current_user(',
         'getmyuid(', 'getmygid(', 'getmypid(', 'getmyinode(', 'getlastmod(',
         'getprotobyname(', 'getprotobynumber(', 'getservbyname(', 'getservbyport(',
-        
+
     ];
 
     protected $fillable = [
@@ -88,6 +72,12 @@ class Section extends Model
         'path',
         'is_active',
         'url',
+        'config',
+    ];
+
+    protected $casts = [
+        'config' => 'array',
+        'is_active' => 'boolean',
     ];
 
     public static function scanSections()
@@ -149,80 +139,81 @@ class Section extends Model
     }
 
     /**
-     * Get all settings for this section
-     */
-    public function settings(): HasMany
-    {
-        return $this->hasMany(SectionSetting::class);
-    }
-
-    /**
-     * Get a setting value for this section
-     *
-     * @param string $key The setting key
-     * @param mixed $default Default value if not found
-     * @param string|null $locale Locale for translatable fields (null = current locale)
-     * @return mixed
+     * Get a configuration value for this section.
+     * Uses the translations table for translatable fields (via Translatable trait),
+     * and the config JSON column for non-translatable fields.
      */
     public function getSetting(string $key, mixed $default = null, ?string $locale = null): mixed
     {
-        $locale = $locale ?? app()->getLocale();
         $fieldDef = $this->getFieldDefinition($key);
+        $isTranslatable = $fieldDef && ($fieldDef['translatable'] ?? false);
 
-        $query = $this->settings()->where('key', $key);
-
-        if ($fieldDef && ($fieldDef['translatable'] ?? false)) {
-            $setting = $query->where('locale', $locale)->first();
-            if (!$setting) {
-                $setting = $query->whereNull('locale')->first();
+        if ($isTranslatable) {
+            $value = $this->getTranslation('config_' . $key, null, $locale);
+            if ($value === '' || $value === null) {
+                return $default;
             }
-        } else {
-            $setting = $query->whereNull('locale')->first();
+            return $this->castConfigValue($value, $fieldDef['type'] ?? 'text');
         }
 
-        if (!$setting) {
+        $config = $this->config ?? [];
+        if (!array_key_exists($key, $config)) {
             return $default;
         }
 
-        $type = $fieldDef['type'] ?? 'text';
-        return $setting->getTypedValue($type);
+        return $this->castConfigValue($config[$key], $fieldDef['type'] ?? 'text');
     }
 
     /**
-     * Set a setting value for this section
+     * Set a configuration value for this section.
+     * Uses the translations table for translatable fields,
+     * and the config JSON column for non-translatable fields.
      */
     public function setSetting(string $key, mixed $value, ?string $locale = null): void
     {
         $fieldDef = $this->getFieldDefinition($key);
         $isTranslatable = $fieldDef && ($fieldDef['translatable'] ?? false);
 
-        if (is_array($value)) {
-            $value = json_encode($value);
-        } elseif (is_bool($value)) {
-            $value = $value ? 'true' : 'false';
+        $value = $this->prepareConfigValue($value);
+
+        if ($isTranslatable) {
+            $locale = $locale ?? app()->getLocale();
+            $this->saveTranslation('config_' . $key, $locale, (string) $value);
+            return;
         }
 
-        $this->settings()->updateOrCreate(
-            [
-                'key' => $key,
-                'locale' => $isTranslatable ? ($locale ?? app()->getLocale()) : null,
-            ],
-            ['value' => $value]
-        );
+        $config = $this->config ?? [];
+        $config[$key] = $value;
+        $this->config = $config;
+        $this->save();
+
+        $this->clearConfigCache();
     }
 
     /**
-     * Delete a setting value for this section
+     * Delete a configuration value for this section.
      */
     public function deleteSetting(string $key, ?string $locale = null): void
     {
         $fieldDef = $this->getFieldDefinition($key);
         $isTranslatable = $fieldDef && ($fieldDef['translatable'] ?? false);
 
-        $this->settings()
-            ->where('key', $key)
-            ->where('locale', $isTranslatable ? ($locale ?? app()->getLocale()) : null)
-            ->delete();
+        if ($isTranslatable) {
+            $locale = $locale ?? app()->getLocale();
+            $this->translations()
+                ->where('key', 'config_' . $key)
+                ->where('locale', $locale)
+                ->delete();
+            Cache::forget('translations_' . self::class . '_' . $this->id);
+            return;
+        }
+
+        $config = $this->config ?? [];
+        unset($config[$key]);
+        $this->config = $config;
+        $this->save();
+
+        $this->clearConfigCache();
     }
 
     /**
@@ -257,10 +248,60 @@ class Section extends Model
         return null;
     }
 
+    /**
+     * Cast a config value to its proper type based on field definition
+     */
+    private function castConfigValue(mixed $value, string $type): mixed
+    {
+        return match ($type) {
+            'boolean' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
+            'number' => is_numeric($value) ? (int) $value : $value,
+            'json', 'repeater' => is_string($value) ? (json_decode($value, true) ?? []) : (array) $value,
+            default => $value,
+        };
+    }
+
+    /**
+     * Prepare a config value for storage
+     */
+    private function prepareConfigValue(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            return json_encode($value);
+        }
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+        return $value;
+    }
+
+    /**
+     * Clear the section config cache
+     */
+    private function clearConfigCache(): void
+    {
+        Cache::forget('theme_configuration');
+    }
+
     public function cloneSection()
     {
         $clone = $this->replicate();
+        $clone->config = $this->config;
         $clone->save();
+
+        // Clone translations for config fields
+        foreach ($this->translations as $translation) {
+            if (str_starts_with($translation->key, 'config_')) {
+                Translation::create([
+                    'model' => self::class,
+                    'model_id' => $clone->id,
+                    'key' => $translation->key,
+                    'locale' => $translation->locale,
+                    'content' => $translation->content,
+                ]);
+            }
+        }
+
         $theme = app('theme')->getTheme();
         if (! file_exists($theme->path.'/views/sections_copy')) {
             mkdir($theme->path.'/views/sections_copy', 0777, true);
