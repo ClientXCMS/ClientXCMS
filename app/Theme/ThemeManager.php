@@ -257,7 +257,7 @@ class ThemeManager
             });
 
             return $links->merge([
-                'socials' => SocialNetwork::all()->where('hidden', false),
+                'socials' => SocialNetwork::where('hidden', false)->orderBy('position')->get(),
                 'sections_pages' => $this->getSectionsPages(),
                 'sections' => Section::orderBy('order')->get(),
                 'sections_html' => Section::orderBy('order')->get()->mapWithKeys(function (Section $item) {

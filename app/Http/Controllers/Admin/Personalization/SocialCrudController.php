@@ -34,6 +34,23 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
 
     protected string $model = SocialNetwork::class;
 
+    /**
+     * Override index to order by position.
+     */
+    public function index(Request $request)
+    {
+        $card = app('settings')->getCurrentCard('personalization');
+        $item = app('settings')->getCurrentItem('personalization', 'social');
+        $items = SocialNetwork::orderBy('position')->get();
+
+        return view($this->viewPath . '.index', [
+            'items' => $items,
+            'translatePrefix' => $this->translatePrefix,
+            'current_card' => $card,
+            'current_item' => $item,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -41,10 +58,32 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
             'icon' => 'required|string|max:255',
             'url' => 'required|string|max:255',
         ]);
+        $data['position'] = SocialNetwork::max('position') + 1;
         $model = $this->model::create($data);
         ThemeManager::clearCache();
 
         return $this->storeRedirect($model);
+    }
+
+    /**
+     * Reorder social networks via drag-and-drop.
+     */
+    public function sort(Request $request)
+    {
+        $this->checkPermission('update');
+
+        $validated = $request->validate([
+            'items' => 'required|array',
+            'items.*' => 'integer|exists:theme_socialnetworks,id',
+        ]);
+
+        foreach ($validated['items'] as $position => $id) {
+            SocialNetwork::where('id', $id)->update(['position' => $position]);
+        }
+
+        ThemeManager::clearCache();
+
+        return response()->json(['success' => true]);
     }
 
     public function update(Request $request, SocialNetwork $social)
