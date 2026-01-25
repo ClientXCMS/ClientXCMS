@@ -87,10 +87,17 @@ class Setting extends Model
         ])->all();
 
         foreach ($keys as $name => $val) {
-            if ($val !== null) {
+            if ($val !== null && $val !== '') {
                 self::updateOrCreate(['name' => $name], ['value' => $val]);
             } else {
-                self::where('name', $name)->delete();
+                // Delete setting and associated translations to prevent orphan data
+                $setting = self::where('name', $name)->first();
+                if ($setting) {
+                    Translation::where('model', self::class)
+                        ->where('model_id', $setting->id)
+                        ->delete();
+                    $setting->delete();
+                }
             }
 
             setting()->set($name, $val);
@@ -102,6 +109,11 @@ class Setting extends Model
         }
 
         \Cache::forget('settings');
+
+        // Clear translation cache to ensure fresh data on next request
+        foreach ($keys as $name => $val) {
+            \Cache::forget('translations_setting_' . $name);
+        }
 
         return $old;
     }
