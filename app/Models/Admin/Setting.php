@@ -112,7 +112,7 @@ class Setting extends Model
 
         // Clear translation cache to ensure fresh data on next request
         foreach ($keys as $name => $val) {
-            \Cache::forget('translations_setting_' . $name);
+            \Cache::forget('translations_setting_'.$name);
         }
 
         return $old;
