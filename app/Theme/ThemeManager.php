@@ -53,6 +53,25 @@ class ThemeManager
             if (File::exists($this->themePath('lang'))) {
                 app('translator')->addNamespace('theme', $this->themePath('lang'));
             }
+            $this->registerThemeSeeders();
+        }
+    }
+
+    /**
+     * Register theme seeders with the extension manager.
+     *
+     * Themes can define seeders in theme.json that will be executed
+     * during db:seed, similar to module seeders.
+     */
+    protected function registerThemeSeeders(): void
+    {
+        if (!$this->theme || !$this->theme->hasSeeder()) {
+            return;
+        }
+
+        $seederClass = $this->theme->loadSeeder();
+        if ($seederClass !== null) {
+            app('extension')->addSeeder($seederClass);
         }
     }
 
