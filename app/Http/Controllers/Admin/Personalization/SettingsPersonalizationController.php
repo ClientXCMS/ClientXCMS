@@ -96,7 +96,7 @@ class SettingsPersonalizationController extends Controller
             'new_tab' => __('personalization.menu_links.new_tab'),
         ];
 
-        if ($type === 'front' && $supportDropdown) {
+        if ($supportDropdown) {
             $linkTypes['dropdown'] = __('personalization.menu_links.dropdown');
         }
 

@@ -22,16 +22,13 @@ namespace App\Http\Controllers\Admin\Personalization;
 use App\Events\Resources\ResourceCreatedEvent;
 use App\Events\Resources\ResourceUpdatedEvent;
 use App\Http\Controllers\Admin\AbstractCrudController;
-use App\Http\Requests\Personalization\BulkMenuItemsRequest;
 use App\Http\Requests\Personalization\MenuLinkRequest;
 use App\Models\Admin\Permission;
 use App\Models\Personalization\MenuLink;
 use App\Theme\ThemeManager;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class MenuLinkController extends AbstractCrudController
 {
@@ -76,165 +73,36 @@ class MenuLinkController extends AbstractCrudController
     public function sort(Request $request, string $type)
     {
         $this->checkPermission('update');
-        $menuLinks = $request->items;
-        $i = 0;
-        foreach ($menuLinks as $menuLink) {
-            if (is_array($menuLink)) {
-                $id = $menuLink['id'];
-                $children = $menuLink['children'];
-            } else {
-                $id = $menuLink;
-                $children = [];
-            }
-            $menu = MenuLink::find($id);
-            $menu->update([
-                'position' => $i,
-                'type' => $type,
-                'parent_id' => null,
-            ]);
-            foreach ($children as $child) {
-                $menu = MenuLink::find($child);
-                $menu->update([
-                    'position' => $i,
-                    'type' => $type,
-                    'parent_id' => $id,
-                ]);
-                $i++;
-            }
-            $i++;
-        }
+
+        $this->sortItems($request->items, $type, null);
+
         ThemeManager::clearCache();
 
         return response()->json(['success' => true]);
     }
 
     /**
-     * Bulk update all menu items for a given type.
-     * Handles create, update, and delete operations in a single transaction.
+     * Recursively sort menu items up to 3 levels deep.
      */
-    public function bulkUpdate(BulkMenuItemsRequest $request, string $type): JsonResponse
+    private function sortItems(array $items, string $type, ?int $parentId, int $depth = 0): void
     {
-        $this->checkPermission('update');
-
-        DB::beginTransaction();
-        try {
-            $items = $request->validated()['items'];
-            $processedIds = [];
-            $position = 0;
-
-            $this->processMenuItems($items, $type, null, $position, $processedIds);
-
-            // Delete items that were not in the payload (removed by user)
-            MenuLink::where('type', $type)
-                ->whereNotIn('id', $processedIds)
-                ->delete();
-
-            DB::commit();
-            ThemeManager::clearCache();
-
-            return response()->json([
-                'success' => true,
-                'message' => __('personalization.menu_links.bulk_saved'),
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-            ], 422);
-        }
-    }
-
-    /**
-     * Recursively process menu items (max 3 levels).
-     *
-     * @param array $items Items to process
-     * @param string $type Menu type (front/bottom)
-     * @param int|null $parentId Parent menu item ID
-     * @param int &$position Current position counter (passed by reference)
-     * @param array &$processedIds Collected IDs of processed items
-     * @param int $depth Current recursion depth
-     */
-    private function processMenuItems(
-        array $items,
-        string $type,
-        ?int $parentId,
-        int &$position,
-        array &$processedIds,
-        int $depth = 0
-    ): void {
-        // Safety limit: max 3 levels deep
         if ($depth >= 3) {
             return;
         }
 
-        foreach ($items as $itemData) {
-            // Skip deleted items
-            if (! empty($itemData['isDeleted'])) {
-                if (! empty($itemData['id'])) {
-                    MenuLink::where('id', $itemData['id'])->delete();
-                }
-                continue;
-            }
+        foreach ($items as $position => $item) {
+            $isNested = is_array($item);
+            $id = $isNested ? $item['id'] : $item;
+            $children = $isNested ? ($item['children'] ?? []) : [];
 
-            $menuData = [
-                'name' => $itemData['name'],
-                'url' => $itemData['url'],
-                'icon' => $itemData['icon'] ?? null,
-                'badge' => $itemData['badge'] ?? null,
-                'description' => $itemData['description'] ?? null,
-                'link_type' => $itemData['link_type'],
-                'allowed_role' => $itemData['allowed_role'],
+            MenuLink::where('id', $id)->update([
+                'position' => $position,
                 'type' => $type,
                 'parent_id' => $parentId,
-                'position' => $position,
-            ];
+            ]);
 
-            if (! empty($itemData['id'])) {
-                // Update existing item
-                $menuLink = MenuLink::find($itemData['id']);
-                if ($menuLink) {
-                    $menuLink->update($menuData);
-                    $processedIds[] = $menuLink->id;
-                }
-            } else {
-                // Create new item
-                $menuLink = MenuLink::create($menuData);
-                $processedIds[] = $menuLink->id;
-            }
-
-            $position++;
-
-            // Process translations if provided
-            if (! empty($itemData['translations']) && isset($menuLink)) {
-                $this->processItemTranslations($menuLink, $itemData['translations']);
-            }
-
-            // Recursively process children
-            if (! empty($itemData['children']) && isset($menuLink)) {
-                $this->processMenuItems(
-                    $itemData['children'],
-                    $type,
-                    $menuLink->id,
-                    $position,
-                    $processedIds,
-                    $depth + 1
-                );
-            }
-        }
-    }
-
-    /**
-     * Process translations for a menu item.
-     */
-    private function processItemTranslations(MenuLink $menuLink, array $translations): void
-    {
-        foreach ($translations as $locale => $fields) {
-            foreach ($fields as $key => $value) {
-                if ($value !== null && $value !== '') {
-                    $menuLink->saveTranslation($key, $locale, $value);
-                }
+            if (!empty($children)) {
+                $this->sortItems($children, $type, (int) $id, $depth + 1);
             }
         }
     }
