@@ -65,7 +65,7 @@ class ThemeManager
      */
     protected function registerThemeSeeders(): void
     {
-        if (!$this->theme || !$this->theme->hasSeeder()) {
+        if (! $this->theme || ! $this->theme->hasSeeder()) {
             return;
         }
 
