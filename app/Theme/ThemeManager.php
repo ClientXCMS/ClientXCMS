@@ -41,6 +41,8 @@ class ThemeManager
 
     private string $themesPublicPath;
 
+    private ?Section $currentRenderingSection = null;
+
     public function __construct()
     {
         $this->themesPath = resource_path('themes/');
@@ -54,15 +56,31 @@ class ThemeManager
                 app('translator')->addNamespace('theme', $this->themePath('lang'));
             }
             $this->registerThemeSeeders();
+            $this->bootTheme();
         }
     }
 
-    /**
-     * Register theme seeders with the extension manager.
-     *
-     * Themes can define seeders in theme.json that will be executed
-     * during db:seed, similar to module seeders.
-     */
+    protected function bootTheme(): void
+    {
+        $bootFile = $this->themePath('boot.php');
+
+        if ($bootFile && File::exists($bootFile)) {
+            require $bootFile;
+        }
+    }
+
+    protected function registerThemeSeeders(): void
+    {
+        if (!$this->theme || !$this->theme->hasSeeder()) {
+            return;
+        }
+
+        $seederClass = $this->theme->loadSeeder();
+        if ($seederClass !== null) {
+            app('extension')->addSeeder($seederClass);
+        }
+    }
+
     protected function registerThemeSeeders(): void
     {
         if (! $this->theme || ! $this->theme->hasSeeder()) {
@@ -97,6 +115,15 @@ class ThemeManager
         } catch (\Exception $e) {
             return ['fr', 'en'];
         }
+    }
+    public function setCurrentRenderingSection(?Section $section): void
+    {
+        $this->currentRenderingSection = $section;
+    }
+
+    public function getCurrentRenderingSection(): ?Section
+    {
+        return $this->currentRenderingSection;
     }
 
     public function hasTheme(): bool

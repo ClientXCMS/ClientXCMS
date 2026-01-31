@@ -112,6 +112,12 @@
                                                            <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700" href="{{ route($routePath . '.show', ['section' => $section]) }}" {{ !$section->isModifiable() ? 'disabled="true"' : '' }}>
                                                                {{ __('global.edit') }}
                                                            </a>
+                                                           @if ($section->isConfigurable())
+                                                           <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-blue-600 hover:bg-blue-50 focus:outline-none focus:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 dark:hover:text-blue-300 dark:focus:bg-blue-900/20" href="{{ route($routePath . '.config', ['section' => $section]) }}">
+                                                               <i class="bi bi-gear"></i>
+                                                               {{ __('personalization.sections.config.btn') }}
+                                                           </a>
+                                                           @endif
                                                            <form method="POST" action="{{ route($routePath . '.clone', ['section' => $section]) }}">
                                                                @csrf
                                                                <button class="flex items-center gap-x-3.5 py-2 w-full px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700">

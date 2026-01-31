@@ -20,9 +20,11 @@
 namespace App\Models\Personalization;
 
 use App\DTO\Core\Extensions\ExtensionSectionTrait;
+use App\Models\Traits\Translatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @property int $id
@@ -32,10 +34,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $order
  * @property int $is_active
  * @property string $url
+ * @property array|null $config
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Section newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Section newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Section onlyTrashed()
@@ -59,7 +61,8 @@ class Section extends Model
 {
     use ExtensionSectionTrait;
     use HasFactory;
-    use softDeletes;
+    use SoftDeletes;
+    use Translatable;
 
     protected $table = 'theme_sections';
 
@@ -87,6 +90,12 @@ class Section extends Model
         'path',
         'is_active',
         'url',
+        'config',
+    ];
+
+    protected $casts = [
+        'config' => 'array',
+        'is_active' => 'boolean',
     ];
 
     public static function scanSections()
@@ -147,10 +156,139 @@ class Section extends Model
         $this->save();
     }
 
+    public function getSetting(string $key, mixed $default = null, ?string $locale = null): mixed
+    {
+        $fieldDef = $this->getFieldDefinition($key);
+        $isTranslatable = $fieldDef && ($fieldDef['translatable'] ?? false);
+
+        if ($isTranslatable) {
+            $value = $this->getTranslation('config_' . $key, null, $locale);
+            if ($value === '' || $value === null) {
+                return $default;
+            }
+            return $this->castConfigValue($value, $fieldDef['type'] ?? 'text');
+        }
+
+        $config = $this->config ?? [];
+        if (!array_key_exists($key, $config)) {
+            return $default;
+        }
+
+        return $this->castConfigValue($config[$key], $fieldDef['type'] ?? 'text');
+    }
+
+    public function setSetting(string $key, mixed $value, ?string $locale = null): void
+    {
+        $fieldDef = $this->getFieldDefinition($key);
+        $isTranslatable = $fieldDef && ($fieldDef['translatable'] ?? false);
+
+        $value = $this->prepareConfigValue($value);
+
+        if ($isTranslatable) {
+            $locale = $locale ?? app()->getLocale();
+            $this->saveTranslation('config_' . $key, $locale, (string) $value);
+            return;
+        }
+
+        $config = $this->config ?? [];
+        $config[$key] = $value;
+        $this->config = $config;
+        $this->save();
+
+        $this->clearConfigCache();
+    }
+
+    public function deleteSetting(string $key, ?string $locale = null): void
+    {
+        $fieldDef = $this->getFieldDefinition($key);
+        $isTranslatable = $fieldDef && ($fieldDef['translatable'] ?? false);
+
+        if ($isTranslatable) {
+            $locale = $locale ?? app()->getLocale();
+            $this->translations()
+                ->where('key', 'config_' . $key)
+                ->where('locale', $locale)
+                ->delete();
+            Cache::forget('translations_' . self::class . '_' . $this->id);
+            return;
+        }
+
+        $config = $this->config ?? [];
+        unset($config[$key]);
+        $this->config = $config;
+        $this->save();
+
+        $this->clearConfigCache();
+    }
+
+    public function getConfigurableFields(): array
+    {
+        $dto = $this->toDTO();
+        return $dto->json['fields'] ?? [];
+    }
+
+    public function isConfigurable(): bool
+    {
+        $dto = $this->toDTO();
+        return ($dto->json['configurable'] ?? false) && !empty($this->getConfigurableFields());
+    }
+
+    public function getFieldDefinition(string $key): ?array
+    {
+        $fields = $this->getConfigurableFields();
+        foreach ($fields as $field) {
+            if ($field['key'] === $key) {
+                return $field;
+            }
+        }
+        return null;
+    }
+
+    private function castConfigValue(mixed $value, string $type): mixed
+    {
+        return match ($type) {
+            'boolean' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
+            'number' => is_numeric($value) ? (int) $value : $value,
+            'json', 'repeater' => is_string($value) ? (json_decode($value, true) ?? []) : (array) $value,
+            default => $value,
+        };
+    }
+
+    private function prepareConfigValue(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            return json_encode($value);
+        }
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+        return $value;
+    }
+
+    private function clearConfigCache(): void
+    {
+        Cache::forget('theme_configuration');
+    }
+
     public function cloneSection()
     {
         $clone = $this->replicate();
+        $clone->config = $this->config;
         $clone->save();
+
+        // Clone translations for config fields
+        foreach ($this->translations as $translation) {
+            if (str_starts_with($translation->key, 'config_')) {
+                Translation::create([
+                    'model' => self::class,
+                    'model_id' => $clone->id,
+                    'key' => $translation->key,
+                    'locale' => $translation->locale,
+                    'content' => $translation->content,
+                ]);
+            }
+        }
+
         $theme = app('theme')->getTheme();
         if (! file_exists($theme->path.'/views/sections_copy')) {
             mkdir($theme->path.'/views/sections_copy', 0777, true);
