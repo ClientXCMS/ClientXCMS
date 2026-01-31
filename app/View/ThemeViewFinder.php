@@ -24,7 +24,9 @@ class ThemeViewFinder extends \Illuminate\View\FileViewFinder
     public function findInPaths($name, $paths)
     {
         $parent = app('theme')->getTheme()->getParentTheme();
-        //$paths = app('view')->getFinder()->getPaths();
+        // Reload paths after app('theme') resolution: ThemeManager adds
+        // theme locations during lazy construction via addLocation()
+        $paths = $this->paths;
         $paths[] = resource_path('themes/' . $parent . '/views');
 
         if (strpos($paths[0] ?? '', '/vendor/')) {
