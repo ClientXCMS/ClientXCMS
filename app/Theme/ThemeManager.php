@@ -81,18 +81,6 @@ class ThemeManager
         }
     }
 
-    protected function registerThemeSeeders(): void
-    {
-        if (! $this->theme || ! $this->theme->hasSeeder()) {
-            return;
-        }
-
-        $seederClass = $this->theme->loadSeeder();
-        if ($seederClass !== null) {
-            app('extension')->addSeeder($seederClass);
-        }
-    }
-
     private const CACHE_KEY_PREFIX = 'theme_configuration';
 
     public static function clearCache(): void
