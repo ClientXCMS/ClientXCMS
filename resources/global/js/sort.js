@@ -7,6 +7,7 @@ const SortableMixin = Base =>
                 this.saveButton.addEventListener('click', this.save.bind(this));
             }
             this.saveUrl = this.dataset.url;
+            this.autosave = this.dataset.autosave !== undefined;
             if (this.dataset.form !== undefined) {
                 this.form = document.querySelector(this.dataset.form);
             }
@@ -15,7 +16,7 @@ const SortableMixin = Base =>
         }
 
         initSortable() {
-            this.sortable = Sortable.create(this, {
+            const options = {
                 animation: 150,
                 group: {
                     name: 'item',
@@ -27,8 +28,18 @@ const SortableMixin = Base =>
                     if (evt.from.tagName == 'OL'){
                         evt.item.childNodes[1].classList.remove('ml-4');
                     }
+                    if (this.autosave) {
+                        this.save();
+                    }
                 }
-            });
+            };
+
+            // Support optional drag handle via data-handle attribute
+            if (this.dataset.handle) {
+                options.handle = this.dataset.handle;
+            }
+
+            this.sortable = Sortable.create(this, options);
         }
 
         serialize(sortableEl = this.sortable.el) {
@@ -52,26 +63,32 @@ const SortableMixin = Base =>
             if (this.form !== undefined) {
                 return;
             }
-            const data = new FormData(this.form);
-            data.append('items', JSON.stringify(this.serialize()));
 
-            this.saveButton.disabled = true;
+            if (this.saveButton) {
+                this.saveButton.disabled = true;
+            }
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             fetch(this.saveUrl, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
                 },
                 body: JSON.stringify({ items: this.serialize() })
             })
                 .then(response => response.json())
                 .then(data => {
-                    window.location.reload();
+                    if (!this.autosave) {
+                        window.location.reload();
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                 })
                 .finally(() => {
-                    this.saveButton.disabled = false;
+                    if (this.saveButton) {
+                        this.saveButton.disabled = false;
+                    }
                 });
         }
     };

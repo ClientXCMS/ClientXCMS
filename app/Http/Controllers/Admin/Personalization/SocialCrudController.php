@@ -19,10 +19,13 @@
 
 namespace App\Http\Controllers\Admin\Personalization;
 
+use App\Events\Resources\ResourceCreatedEvent;
 use App\Events\Resources\ResourceUpdatedEvent;
 use App\Models\Personalization\SocialNetwork;
 use App\Theme\ThemeManager;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudController
 {
@@ -34,21 +37,20 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
 
     protected string $model = SocialNetwork::class;
 
-    /**
-     * Override index to order by position.
-     */
-    public function index(Request $request)
+    protected function queryIndex(): LengthAwarePaginator
     {
-        $card = app('settings')->getCurrentCard('personalization');
-        $item = app('settings')->getCurrentItem('personalization', 'social');
-        $items = SocialNetwork::orderBy('position')->get();
+        return SocialNetwork::orderBy('position')
+            ->paginate($this->perPage)
+            ->appends(request()->query());
+    }
 
-        return view($this->viewPath . '.index', [
-            'items' => $items,
-            'translatePrefix' => $this->translatePrefix,
-            'current_card' => $card,
-            'current_item' => $item,
-        ]);
+    protected function getIndexParams($items, string $translatePrefix)
+    {
+        $params = parent::getIndexParams($items, $translatePrefix);
+        $params['current_card'] = app('settings')->getCurrentCard('personalization');
+        $params['current_item'] = app('settings')->getCurrentItem('personalization', 'social');
+
+        return $params;
     }
 
     public function store(Request $request)
@@ -62,7 +64,10 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
         $model = $this->model::create($data);
         ThemeManager::clearCache();
 
-        return $this->storeRedirect($model);
+        event(new ResourceCreatedEvent($model));
+
+        return redirect()->route($this->routePath . '.index')
+            ->with('success', __($this->flashs['created']));
     }
 
     /**
@@ -77,9 +82,11 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
             'items.*' => 'integer|exists:theme_socialnetworks,id',
         ]);
 
-        foreach ($validated['items'] as $position => $id) {
-            SocialNetwork::where('id', $id)->update(['position' => $position]);
-        }
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['items'] as $position => $id) {
+                SocialNetwork::where('id', $id)->update(['position' => $position]);
+            }
+        });
 
         ThemeManager::clearCache();
 
@@ -96,33 +103,20 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
         $social->update($data);
         ThemeManager::clearCache();
 
-        return $this->updateRedirect($social);
+        event(new ResourceUpdatedEvent($social));
+
+        return redirect()->route($this->routePath . '.index')
+            ->with('success', __($this->flashs['updated']));
     }
 
-    public function getCreateParams()
+    public function create(Request $request)
     {
-        $params = parent::getCreateParams();
-
-        $params['current_card'] = app('settings')->getCurrentCard('personalization');
-        $params['current_item'] = app('settings')->getCurrentItem('personalization', 'social');
-
-        return $params;
-    }
-
-    public function showView(array $params)
-    {
-        $params = parent::showView($params);
-        $params['current_card'] = app('settings')->getCurrentCard('personalization');
-        $params['current_item'] = app('settings')->getCurrentItem('personalization', 'social');
-
-        return $params;
+        return redirect()->route($this->routePath . '.index');
     }
 
     public function show(SocialNetwork $social)
     {
-        return $this->showView([
-            'item' => $social,
-        ]);
+        return redirect()->route($this->routePath . '.index');
     }
 
     public function destroy(SocialNetwork $social)
