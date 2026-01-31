@@ -65,7 +65,7 @@ return [
     'security_questions' => [
         'pet_name' => 'What is the name of your first pet?',
         'birth_city' => 'In which city were you born?',
-        'mother_maiden_name' => 'What is your mother’s maiden name?',
+        'mother_maiden_name' => 'What is your mother\'s maiden name?',
         'first_school' => 'What is the name of your first school?',
         'favorite_movie' => 'What is your favorite movie?',
         'childhood_nickname' => 'What was your childhood nickname?',

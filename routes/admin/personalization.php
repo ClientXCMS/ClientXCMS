@@ -32,7 +32,7 @@ if (! is_installed() || app()->runningInConsole()) {
 
 Route::name('personalization.')->prefix('/personalization')->group(function () {
     Route::resource('/socials', SocialCrudController::class)->names('socials')->except('edit');
-    Route::post('/socials/sort', [SocialCrudController::class, 'sort'])->name('socials.sort')->withoutMiddleware('csrf');
+    Route::post('/socials/sort', [SocialCrudController::class, 'sort'])->name('socials.sort');
     Route::put('/primary', [SettingsPersonalizationController::class, 'storePrimaryColors'])->name('primary');
     Route::post('/bottom_menu', [SettingsPersonalizationController::class, 'storeBottomMenu'])->name('bottom_menu');
     Route::post('/switch_theme/{theme}', [ThemeController::class, 'switchTheme'])->name('switch_theme');
