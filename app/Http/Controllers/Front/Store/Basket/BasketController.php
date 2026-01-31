@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Front\Store\Basket;
 
@@ -232,9 +232,11 @@ class BasketController extends \App\Http\Controllers\Controller
                     return redirect()->route('front.store.basket.checkout')->with('error', __('client.alerts.invoice_payment_failed'));
                 } else {
                     $invoice->update(['payment_method_id' => $source->id, 'paymethod' => $source->gateway_uuid]);
+
                     return redirect()->route('front.invoices.show', $invoice)->with('success', __('admin.invoices.paidsuccess'));
                 }
             }
+
             return $invoice->pay($gateway, $request);
         } catch (WrongPaymentException $e) {
             logger()->error($e->getMessage());

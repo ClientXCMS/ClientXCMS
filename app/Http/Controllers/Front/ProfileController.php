@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,14 +17,15 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Front;
 
 use App\Helpers\Countries;
+use App\Http\Requests\Profile\DeleteAccountRequest;
 use App\Http\Requests\Profile\ProfilePasswordRequest;
 use App\Http\Requests\Profile\ProfileUpdateRequest;
 use App\Models\Account\Customer;
 use App\Models\ActionLog;
+use App\Services\Account\AccountDeletionService;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -87,7 +89,6 @@ class ProfileController extends \App\Http\Controllers\Controller
         try {
             \Auth::logoutOtherDevices($request->password);
         } catch (AuthenticationException $e) {
-
         }
 
         return redirect()->route('front.profile.index')->with('success', __('client.profile.changepassword'));
@@ -122,5 +123,44 @@ class ProfileController extends \App\Http\Controllers\Controller
             });
             echo $codes->join("\n");
         }, '2fa_recovery_codes_'.\Str::slug(config('app.name')).'.txt');
+    }
+
+    public function deleteAccount(DeleteAccountRequest $request): RedirectResponse
+    {
+        $customer = $request->user('web');
+        $deletionService = new AccountDeletionService;
+
+        try {
+            $deletionService->delete($customer);
+            auth('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('front.index')
+                ->with('success', __('client.profile.delete.success'));
+        } catch (\Exception $e) {
+            return redirect()->route('front.profile.delete')
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Save or update the security question for the current user.
+     */
+    public function saveSecurityQuestion(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'security_question_id' => ['required', 'exists:security_questions,id'],
+            'security_answer' => ['required', 'string', 'min:2', 'max:100'],
+            'currentpassword' => ['required', 'current_password'],
+        ]);
+
+        $request->user('web')->setSecurityQuestion(
+            (int) $request->security_question_id,
+            $request->security_answer
+        );
+
+        return redirect()->route('front.profile.index')
+            ->with('success', __('client.profile.security_question_saved'));
     }
 }

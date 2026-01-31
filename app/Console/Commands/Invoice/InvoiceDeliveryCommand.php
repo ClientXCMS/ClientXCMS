@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -53,8 +54,9 @@ class InvoiceDeliveryCommand extends Command
         $services = Service::getItemsByMetadata('must_created_manually', '1');
         $services->each(function (Service $service) {
             try {
-                if (!$service->isPending()) {
+                if (! $service->isPending()) {
                     $this->info("Service {$service->id} is not pending, skipping delivery.");
+
                     return;
                 }
                 $result = $service->deliver();
@@ -78,6 +80,7 @@ class InvoiceDeliveryCommand extends Command
                 // Double livraison pour les renouvellements du à l'event RenewServiceListerner qui peut avoir déjà livré le service et donc on attend 2 minutes avant de relivrer
                 if ($item->type == 'renewal' && ($item->invoice && $item->invoice->paid_at != null && $item->invoice->paid_at->subMinutes(2)->isFuture())) {
                     $this->info("Skipping invoice item {$item->id} as it is a renewal and the invoice is not yet paid or too recent.");
+
                     return;
                 }
                 if ($item->tryDeliver()) {

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Helpers;
 
@@ -47,5 +47,10 @@ class Countries
         $names = implode(',', array_keys(self::names()));
 
         return "phone:{$names}";
+    }
+
+    public static function getName(string $code): string
+    {
+        return self::names()[$code] ?? '';
     }
 }

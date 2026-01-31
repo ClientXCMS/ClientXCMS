@@ -2,15 +2,17 @@
     "openapi": "3.0.0",
     "info": {
         "title": "CLIENTXCMS New Gen API",
-        "description": "This is the API documentation for the CLIENTXCMS New Gen API",
+        "description": "This is the API documentation for the CLIENTXCMS New Gen API. ",
         "contact": {
+            "name": "CLIENTXCMS Support",
+            "url": "https://clientxcms.com/client/support",
             "email": "contact@clientxcms.com"
         },
         "version": "1.0.2"
     },
     "servers": [
         {
-            "url": "test/api",
+            "url": "https://clientxcms.app/api",
             "description": "Endpoint"
         }
     ],
@@ -131,10 +133,10 @@
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -190,10 +192,10 @@
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -218,10 +220,10 @@
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -250,10 +252,10 @@
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -282,10 +284,10 @@
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -312,15 +314,15 @@
                     "Invoices"
                 ],
                 "summary": "Edit an invoice",
-                "operationId": "8f1bd67da2237b6135ea2f99b4eb4484",
+                "operationId": "5fb33a8f85185dc43f2d44f7788e527f",
                 "parameters": [
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -352,10 +354,10 @@
                     {
                         "name": "invoice",
                         "in": "path",
-                        "description": "ID of the invoice",
+                        "description": "ID or UUID of the invoice",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -374,6 +376,1550 @@
                         "description": "Validation errors"
                     }
                 }
+            }
+        },
+        "/application/invoices/{invoice}/download": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Download an invoice as PDF",
+                "operationId": "e9611f48f43e09ce83ff800e309d7ab7",
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "description": "ID or UUID of the invoice",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF file download"
+                    }
+                }
+            }
+        },
+        "/client/auth/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login to client account",
+                "operationId": "f797ddaf0227d1fa2ede6a664a861d01",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        },
+                                        "requires_2fa": {
+                                            "type": "boolean"
+                                        },
+                                        "customer": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    },
+                    "403": {
+                        "description": "Account banned or disabled"
+                    }
+                }
+            }
+        },
+        "/client/auth/2fa/verify": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Verify 2FA code after login",
+                "operationId": "c71c14bd61542a3705860e46cb5cb4c0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code"
+                                ],
+                                "properties": {
+                                    "code": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "2FA verification successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid 2FA code"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/auth/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register a new client account",
+                "operationId": "ef0d3269eab5bb8cf85f345551675bbd",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "password_confirmation",
+                                    "firstname",
+                                    "lastname",
+                                    "country"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "firstname": {
+                                        "type": "string"
+                                    },
+                                    "lastname": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "address2": {
+                                        "type": "string"
+                                    },
+                                    "city": {
+                                        "type": "string"
+                                    },
+                                    "zipcode": {
+                                        "type": "string"
+                                    },
+                                    "region": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "country": {
+                                        "type": "string",
+                                        "example": "FR"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registration successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "token": {
+                                            "type": "string"
+                                        },
+                                        "customer": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Registration disabled"
+                    }
+                }
+            }
+        },
+        "/client/auth/forgot-password": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Request password reset link",
+                "operationId": "4945b23fc11a06392ee9fa5f536f1546",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password reset link sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/client/auth/reset-password": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Reset password with token",
+                "operationId": "6084eb3c9d64d74b7312881221dc6122",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password reset successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid token or validation error"
+                    }
+                }
+            }
+        },
+        "/client/auth/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout and revoke token",
+                "operationId": "637d39ccf711f97c64eae7107ed5a3fd",
+                "responses": {
+                    "200": {
+                        "description": "Logout successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/invoices": {
+            "get": {
+                "tags": [
+                    "Customer Invoices"
+                ],
+                "summary": "List customer's invoices",
+                "operationId": "4231925d24dc7cdf7c258e0c55fcb45d",
+                "parameters": [
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "description": "Filter by status (pending, paid, cancelled, refunded)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of invoices"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/invoices/{invoice}": {
+            "get": {
+                "tags": [
+                    "Customer Invoices"
+                ],
+                "summary": "Get invoice details",
+                "operationId": "ab897b62cf38e09782c2194de2062b16",
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice details with items"
+                    },
+                    "404": {
+                        "description": "Invoice not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/invoices/{invoice}/pdf": {
+            "get": {
+                "tags": [
+                    "Customer Invoices"
+                ],
+                "summary": "Stream invoice PDF",
+                "operationId": "dc83495024958aa6f8da239b4e3116df",
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF stream"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/invoices/{invoice}/download": {
+            "get": {
+                "tags": [
+                    "Customer Invoices"
+                ],
+                "summary": "Download invoice PDF",
+                "operationId": "b6b34a4cc013d0d85fc03e90292723b9",
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF download"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/invoices/{invoice}/pay/{gateway}": {
+            "post": {
+                "tags": [
+                    "Customer Invoices"
+                ],
+                "summary": "Pay an invoice",
+                "operationId": "3d0888d202547735b9b70904b78925b7",
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "gateway",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment initiated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "redirect_url": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Cannot pay invoice"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/invoices/{invoice}/balance": {
+            "post": {
+                "tags": [
+                    "Customer Invoices"
+                ],
+                "summary": "Add balance to invoice",
+                "operationId": "5dde1e9524713dc8d60b012db442e2d4",
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "amount": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Balance added"
+                    },
+                    "400": {
+                        "description": "Insufficient balance"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/payment-methods": {
+            "get": {
+                "tags": [
+                    "Customer Payment Methods"
+                ],
+                "summary": "List customer's payment methods",
+                "operationId": "bcd8cd1e9aa49143c843797674f6d2d7",
+                "responses": {
+                    "200": {
+                        "description": "List of payment methods"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/payment-methods/gateways": {
+            "get": {
+                "tags": [
+                    "Customer Payment Methods"
+                ],
+                "summary": "List available gateways that support payment methods",
+                "operationId": "f8560885ee8c56a3553f6d87bc63631c",
+                "responses": {
+                    "200": {
+                        "description": "List of gateways"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/payment-methods/{gateway}": {
+            "post": {
+                "tags": [
+                    "Customer Payment Methods"
+                ],
+                "summary": "Add a new payment method",
+                "operationId": "ee8a2b35bfe6af2dfc67f62227e4faf4",
+                "parameters": [
+                    {
+                        "name": "gateway",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Gateway-specific payment method data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payment method added"
+                    },
+                    "400": {
+                        "description": "Gateway does not support payment methods"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/payment-methods/{source}/default": {
+            "put": {
+                "tags": [
+                    "Customer Payment Methods"
+                ],
+                "summary": "Set default payment method",
+                "operationId": "3a180d013d1b636b2d8bbfcd40a7d3c0",
+                "parameters": [
+                    {
+                        "name": "source",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Default payment method set"
+                    },
+                    "404": {
+                        "description": "Payment method not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/payment-methods/{source}": {
+            "delete": {
+                "tags": [
+                    "Customer Payment Methods"
+                ],
+                "summary": "Delete a payment method",
+                "operationId": "2824190ccf67995f5d048723f294f9fd",
+                "parameters": [
+                    {
+                        "name": "source",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment method deleted"
+                    },
+                    "404": {
+                        "description": "Payment method not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/profile": {
+            "get": {
+                "tags": [
+                    "Customer Profile"
+                ],
+                "summary": "Get current user profile",
+                "operationId": "144ef72f29bb6cdd9c05a63a71fcf11f",
+                "responses": {
+                    "200": {
+                        "description": "Profile data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "firstname": {
+                                                    "type": "string"
+                                                },
+                                                "lastname": {
+                                                    "type": "string"
+                                                },
+                                                "address": {
+                                                    "type": "string"
+                                                },
+                                                "city": {
+                                                    "type": "string"
+                                                },
+                                                "country": {
+                                                    "type": "string"
+                                                },
+                                                "phone": {
+                                                    "type": "string"
+                                                },
+                                                "balance": {
+                                                    "type": "number"
+                                                },
+                                                "two_factor_enabled": {
+                                                    "type": "boolean"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Customer Profile"
+                ],
+                "summary": "Update profile information",
+                "operationId": "c6cb44a2a1518f1224b0d7faf3ca5243",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "firstname": {
+                                        "type": "string"
+                                    },
+                                    "lastname": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "address2": {
+                                        "type": "string"
+                                    },
+                                    "city": {
+                                        "type": "string"
+                                    },
+                                    "zipcode": {
+                                        "type": "string"
+                                    },
+                                    "region": {
+                                        "type": "string"
+                                    },
+                                    "country": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Customer Profile"
+                ],
+                "summary": "Delete account",
+                "operationId": "6c3bd56c2be45a76150bdecf593b43ca",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "password"
+                                ],
+                                "properties": {
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Account deleted"
+                    },
+                    "400": {
+                        "description": "Cannot delete account (active services, etc.)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/profile/password": {
+            "put": {
+                "tags": [
+                    "Customer Profile"
+                ],
+                "summary": "Change password",
+                "operationId": "62e5aa91ffc65e56d94f865ad2c25312",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "current_password",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "current_password": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password changed successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/profile/2fa": {
+            "post": {
+                "tags": [
+                    "Customer Profile"
+                ],
+                "summary": "Enable or disable 2FA",
+                "operationId": "b3526b6145cbe3b6fb51295a8c9eb706",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code"
+                                ],
+                                "properties": {
+                                    "code": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    },
+                                    "secret": {
+                                        "description": "Required when enabling 2FA",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "2FA toggled successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "enabled": {
+                                            "type": "boolean"
+                                        },
+                                        "recovery_codes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/profile/2fa/setup": {
+            "get": {
+                "tags": [
+                    "Customer Profile"
+                ],
+                "summary": "Get 2FA setup information (secret and QR code)",
+                "operationId": "4cb14d003766a554dc9ab94c190378da",
+                "responses": {
+                    "200": {
+                        "description": "2FA setup data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "secret": {
+                                            "type": "string"
+                                        },
+                                        "qr_code": {
+                                            "description": "SVG QR code",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/profile/2fa/recovery-codes": {
+            "get": {
+                "tags": [
+                    "Customer Profile"
+                ],
+                "summary": "Get 2FA recovery codes",
+                "operationId": "bef337b2e034797a819a712097c9f26e",
+                "responses": {
+                    "200": {
+                        "description": "Recovery codes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "recovery_codes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/profile/security-question": {
+            "post": {
+                "tags": [
+                    "Customer Profile"
+                ],
+                "summary": "Save security question",
+                "operationId": "5fd910865105fb4d5bcbbe501419c66c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "security_question_id",
+                                    "security_answer",
+                                    "current_password"
+                                ],
+                                "properties": {
+                                    "security_question_id": {
+                                        "type": "integer"
+                                    },
+                                    "security_answer": {
+                                        "type": "string"
+                                    },
+                                    "current_password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Security question saved"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/services": {
+            "get": {
+                "tags": [
+                    "Customer Services"
+                ],
+                "summary": "List customer's services",
+                "operationId": "f8b5f0fd48ea331de517efc782c9ef79",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status (active, suspended, cancelled, expired, pending)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of services"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/services/{service}": {
+            "get": {
+                "tags": [
+                    "Customer Services"
+                ],
+                "summary": "Get service details",
+                "operationId": "5e8aa2770480e0519e462a128e032c57",
+                "parameters": [
+                    {
+                        "name": "service",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Service details"
+                    },
+                    "404": {
+                        "description": "Service not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/tickets": {
+            "get": {
+                "tags": [
+                    "Customer Tickets"
+                ],
+                "summary": "List customer's tickets",
+                "operationId": "21fcfbd38902320a849c55eebdd26280",
+                "parameters": [
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "description": "Filter by status (open, answered, customer_reply, closed)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of tickets",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Customer Tickets"
+                ],
+                "summary": "Create a new ticket",
+                "operationId": "26bae17b90a50b3d61ed59537b8a7380",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "department_id",
+                                    "subject",
+                                    "content",
+                                    "priority"
+                                ],
+                                "properties": {
+                                    "department_id": {
+                                        "type": "integer"
+                                    },
+                                    "subject": {
+                                        "type": "string"
+                                    },
+                                    "content": {
+                                        "type": "string"
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high"
+                                        ]
+                                    },
+                                    "related_id": {
+                                        "type": "integer"
+                                    },
+                                    "related_type": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ticket created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/tickets/departments": {
+            "get": {
+                "tags": [
+                    "Customer Tickets"
+                ],
+                "summary": "List available departments",
+                "operationId": "0737beb7f8544c72fc4e6a0988d526fd",
+                "responses": {
+                    "200": {
+                        "description": "List of departments"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/tickets/{ticket}": {
+            "get": {
+                "tags": [
+                    "Customer Tickets"
+                ],
+                "summary": "Get ticket details",
+                "operationId": "698f05a5abc44f6749fde04b71932d11",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket details with messages",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/tickets/{ticket}/reply": {
+            "post": {
+                "tags": [
+                    "Customer Tickets"
+                ],
+                "summary": "Reply to a ticket",
+                "operationId": "a15d7e8ddcca5c0e2ab8373fd173cbbb",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "content"
+                                ],
+                                "properties": {
+                                    "content": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reply added"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/tickets/{ticket}/close": {
+            "post": {
+                "tags": [
+                    "Customer Tickets"
+                ],
+                "summary": "Close a ticket",
+                "operationId": "75fe37072c30817fee9a9930559f24a1",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket closed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/tickets/{ticket}/reopen": {
+            "post": {
+                "tags": [
+                    "Customer Tickets"
+                ],
+                "summary": "Reopen a closed ticket",
+                "operationId": "b1134313a096e1977d9d2e337270f0e2",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket reopened"
+                    },
+                    "400": {
+                        "description": "Cannot reopen (too old)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/client/tickets/{ticket}/attachments/{attachment}": {
+            "get": {
+                "tags": [
+                    "Customer Tickets"
+                ],
+                "summary": "Download an attachment",
+                "operationId": "79f161c770ad0c281c228497ff0e0744",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "attachment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File download"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/application/customers": {
@@ -524,6 +2070,14 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "force",
+                        "in": "query",
+                        "description": "Force deletion even with active services",
+                        "schema": {
+                            "type": "boolean"
+                        }
                     }
                 ],
                 "responses": {
@@ -531,7 +2085,7 @@
                         "description": "Customer deleted"
                     },
                     "400": {
-                        "description": "Customer has invoices"
+                        "description": "Customer cannot be deleted"
                     }
                 }
             }
@@ -679,26 +2233,1086 @@
                 }
             }
         },
-        "/customer/me": {
+        "/application/departments": {
             "get": {
                 "tags": [
-                    "Client API"
+                    "Departments"
                 ],
-                "summary": "Display the current customer details",
-                "operationId": "customerMe",
-                "responses": {
-                    "403": {
-                        "description": "Invalid token"
+                "summary": "Get a list of support departments",
+                "operationId": "ba7029296ac0236ec5cc62fd9d82e647",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
                     },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "created_at"
+                        }
+                    },
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "description": "Filter departments",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Related resources to include",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "tickets"
+                        }
+                    }
+                ],
+                "responses": {
                     "200": {
-                        "description": "Display the current customer details",
+                        "description": "A list of support departments",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Customer"
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SupportDepartment"
+                                    }
                                 }
                             }
                         }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Departments"
+                ],
+                "summary": "Create a new support department",
+                "operationId": "b8f766300f92165ee857dcb2bca60925",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "description",
+                                    "icon"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Technical Support"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Handles all technical issues"
+                                    },
+                                    "icon": {
+                                        "type": "string",
+                                        "example": "bi bi-question-circle"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Department created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportDepartment"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/application/departments/{department}": {
+            "get": {
+                "tags": [
+                    "Departments"
+                ],
+                "summary": "Get a single support department",
+                "operationId": "0f89d1b194fff44b6a16ebe24d9edd1d",
+                "parameters": [
+                    {
+                        "name": "department",
+                        "in": "path",
+                        "description": "ID of the department",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single support department",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportDepartment"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Departments"
+                ],
+                "summary": "Update an existing support department",
+                "operationId": "97b08b776cdc1fa3a810459ff9ef3494",
+                "parameters": [
+                    {
+                        "name": "department",
+                        "in": "path",
+                        "description": "ID of the department",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "description",
+                                    "icon"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Technical Support"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Handles all technical issues"
+                                    },
+                                    "icon": {
+                                        "type": "string",
+                                        "example": "bi bi-question-circle"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Department updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportDepartment"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Departments"
+                ],
+                "summary": "Delete an existing support department",
+                "operationId": "1b8717ea5218bac4b1c4fffd72f148aa",
+                "parameters": [
+                    {
+                        "name": "department",
+                        "in": "path",
+                        "description": "ID of the department",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Department deleted successfully"
+                    },
+                    "403": {
+                        "description": "Department cannot be deleted (has tickets)"
+                    }
+                }
+            }
+        },
+        "/application/tickets": {
+            "get": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Get a list of support tickets",
+                "operationId": "ca3fb08fe4f01691e984b38d73f94471",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "created_at"
+                        }
+                    },
+                    {
+                        "name": "filter[status]",
+                        "in": "query",
+                        "description": "Filter by status (open, closed, answered)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[priority]",
+                        "in": "query",
+                        "description": "Filter by priority (low, medium, high)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[department_id]",
+                        "in": "query",
+                        "description": "Filter by department ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[customer_id]",
+                        "in": "query",
+                        "description": "Filter by customer ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Related resources to include",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "customer,department,messages"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of support tickets",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SupportTicket"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Create a new support ticket",
+                "operationId": "d5c58d680d404bcff28a8b98876b1171",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "department_id",
+                                    "customer_id",
+                                    "subject",
+                                    "priority",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "department_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "customer_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "subject": {
+                                        "type": "string",
+                                        "example": "Issue with my service"
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high"
+                                        ],
+                                        "example": "medium"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "I'm having issues with my service..."
+                                    },
+                                    "related_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "service",
+                                            "invoice"
+                                        ],
+                                        "nullable": true
+                                    },
+                                    "related_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ticket created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportTicket"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/application/tickets/{ticket}": {
+            "get": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Get a single support ticket",
+                "operationId": "777f58f2548c6706fcb3a550bf80cfc2",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID or UUID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single support ticket",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportTicket"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Update an existing support ticket",
+                "operationId": "5aeb39e5a514197bee8697e1ef7970a3",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID or UUID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "department_id",
+                                    "subject",
+                                    "priority"
+                                ],
+                                "properties": {
+                                    "department_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "subject": {
+                                        "type": "string",
+                                        "example": "Updated subject"
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high"
+                                        ],
+                                        "example": "high"
+                                    },
+                                    "assigned_to": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "close_reason": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ticket updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportTicket"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Delete/Close an existing support ticket",
+                "operationId": "77e5172941565be3122dfef6323fd265",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID or UUID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket closed/deleted successfully"
+                    }
+                }
+            }
+        },
+        "/application/tickets/{ticket}/reply": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Reply to a support ticket",
+                "operationId": "eeb6afb01b6719e2f6a6b51f1da25022",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID or UUID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "content"
+                                ],
+                                "properties": {
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Thank you for contacting us..."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reply added successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportTicket"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/application/tickets/{ticket}/close": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Close a support ticket",
+                "operationId": "08b30793024f61b5600b00d2a476af4a",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID or UUID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "example": "Issue resolved",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ticket closed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportTicket"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/application/tickets/{ticket}/reopen": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Reopen a closed support ticket",
+                "operationId": "84b8683d10eeb2a7b980b0a47d4890d7",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "description": "ID or UUID of the ticket",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket reopened successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupportTicket"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Ticket is not closed"
+                    }
+                }
+            }
+        },
+        "/api/cancellation_reasons": {
+            "get": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "List all cancellation reasons",
+                "operationId": "d78fd632b09b0f9315912f9bc70e39ae",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Create a new cancellation reason",
+                "operationId": "361c57951d113f1ceb588f21f52a8c30",
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/api/cancellation_reasons/{id}": {
+            "get": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Get a specific cancellation reason",
+                "operationId": "5ae253acef5a78b6949b0b5df4bce45f",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Update a cancellation reason",
+                "operationId": "5a6a43c1e64a9aa31702003272a58776",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Delete a cancellation reason",
+                "operationId": "e3b19423af9e9e82219d2778586b5bf7",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            }
+        },
+        "/api/cancellation_reasons_analytics": {
+            "get": {
+                "tags": [
+                    "Cancellation Reasons"
+                ],
+                "summary": "Get cancellation analytics data",
+                "operationId": "2d67eb6bfa07e1a37a098ed4ccfda908",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                }
+            }
+        },
+        "/application/servers": {
+            "get": {
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Get a list of servers",
+                "operationId": "097e6898d25406e28b113628f78ef9d9",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[type]",
+                        "in": "query",
+                        "description": "Filter by server type (pterodactyl, plesk, etc.)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[status]",
+                        "in": "query",
+                        "description": "Filter by status",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of servers",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ProvisioningServer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Create a new server",
+                "operationId": "b9685ad3634a0c74b050ee1b4d27970f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "address",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Node-Paris-01"
+                                    },
+                                    "hostname": {
+                                        "type": "string",
+                                        "example": "paris01.example.com"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "192.168.0.10"
+                                    },
+                                    "port": {
+                                        "type": "integer",
+                                        "example": 443
+                                    },
+                                    "username": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "pterodactyl"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "hidden",
+                                            "unreferenced"
+                                        ],
+                                        "example": "active"
+                                    },
+                                    "maxaccounts": {
+                                        "type": "integer",
+                                        "example": 100,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Server created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProvisioningServer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/application/servers/{server}": {
+            "get": {
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Get a single server",
+                "operationId": "b9957141a36f96deb6019f3686710c2b",
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "description": "ID of the server",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single server",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProvisioningServer"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Update an existing server",
+                "operationId": "5e490fca2fa45676391b899976d18e23",
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "description": "ID of the server",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "hostname": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "port": {
+                                        "type": "integer"
+                                    },
+                                    "username": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "maxaccounts": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Server updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProvisioningServer"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Delete an existing server",
+                "operationId": "6438d6f99a153b01ac8f38261763c3c1",
+                "parameters": [
+                    {
+                        "name": "server",
+                        "in": "path",
+                        "description": "ID of the server",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Server deleted successfully"
+                    }
+                }
+            }
+        },
+        "/application/servers/test": {
+            "post": {
+                "tags": [
+                    "Servers"
+                ],
+                "summary": "Test server connection",
+                "operationId": "609de3b2fa0fddbbff3d07fd2acc70af",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "address",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "port": {
+                                        "type": "integer"
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "username": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "hostname": {
+                                        "type": "string"
+                                    },
+                                    "server_id": {
+                                        "description": "Existing server ID to use credentials from",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connection test result"
                     }
                 }
             }
@@ -708,60 +3322,73 @@
                 "tags": [
                     "Services"
                 ],
-                "summary": "Get list of service",
-                "description": "Returns list of service",
-                "operationId": "getServicesList",
+                "summary": "Get a list of services",
+                "description": "Returns a list of services",
+                "operationId": "getAllServices",
                 "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
                     {
                         "name": "per_page",
                         "in": "query",
-                        "description": "Number of pricings per page",
+                        "description": "Number of items per page",
+                        "required": false,
                         "schema": {
-                            "type": "number",
-                            "format": "int64",
-                            "default": 12
+                            "type": "integer",
+                            "default": 10
                         }
                     },
                     {
                         "name": "sort",
                         "in": "query",
-                        "description": "Sort fields, e.g. sort=id or sort=-id",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[customer_id]",
-                        "in": "query",
-                        "description": "Filter by customer ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "filter[status]",
-                        "in": "query",
-                        "description": "Filter by service status",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "filter[created_at]",
-                        "in": "query",
-                        "description": "Filter by creation date",
+                        "description": "Sort order",
+                        "required": false,
                         "schema": {
                             "type": "string",
-                            "format": "date-time"
+                            "default": "created_at"
+                        }
+                    },
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "description": "Filter services",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Related resources to include",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "customer,metadata,pricings,configoptions"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Show pricings list"
-                    },
-                    "403": {
-                        "description": "Key is invalid"
+                        "description": "Successful operation"
                     }
                 }
             }
@@ -778,10 +3405,10 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "service id",
+                        "description": "service id or uuid",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -815,10 +3442,10 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "service id",
+                        "description": "service id or uuid",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -854,10 +3481,10 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "service id",
+                        "description": "service id or uuid",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -910,10 +3537,10 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "service id",
+                        "description": "service id or uuid",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -970,10 +3597,10 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "service id",
+                        "description": "service id or uuid",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],
@@ -993,6 +3620,532 @@
                     },
                     "404": {
                         "description": "service not found"
+                    }
+                }
+            }
+        },
+        "/application/subdomains": {
+            "get": {
+                "tags": [
+                    "Subdomain Hosts"
+                ],
+                "summary": "Get a list of subdomain hosts",
+                "operationId": "f9eaaa2763ec838a177718d1e503c323",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of subdomain hosts"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Subdomain Hosts"
+                ],
+                "summary": "Create a new subdomain host",
+                "operationId": "f7705da3bcf4440c6b1297e06c1c1e85",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "domain"
+                                ],
+                                "properties": {
+                                    "domain": {
+                                        "type": "string",
+                                        "example": ".example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Subdomain host created successfully"
+                    }
+                }
+            }
+        },
+        "/application/subdomains/{subdomain}": {
+            "get": {
+                "tags": [
+                    "Subdomain Hosts"
+                ],
+                "summary": "Get a single subdomain host",
+                "operationId": "3f01f5e502e0515368a0594dc1fad3f0",
+                "parameters": [
+                    {
+                        "name": "subdomain",
+                        "in": "path",
+                        "description": "ID of the subdomain host",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single subdomain host"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Subdomain Hosts"
+                ],
+                "summary": "Update an existing subdomain host",
+                "operationId": "1d39e4d9f59af712ad58c7f80d743269",
+                "parameters": [
+                    {
+                        "name": "subdomain",
+                        "in": "path",
+                        "description": "ID of the subdomain host",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "domain"
+                                ],
+                                "properties": {
+                                    "domain": {
+                                        "type": "string",
+                                        "example": ".newdomain.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Subdomain host updated successfully"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Subdomain Hosts"
+                ],
+                "summary": "Delete an existing subdomain host",
+                "operationId": "5b6b80bd2cb5a03a63a8b29475adcd56",
+                "parameters": [
+                    {
+                        "name": "subdomain",
+                        "in": "path",
+                        "description": "ID of the subdomain host",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subdomain host deleted successfully"
+                    }
+                }
+            }
+        },
+        "/application/logs": {
+            "get": {
+                "tags": [
+                    "Action Logs"
+                ],
+                "summary": "Get a list of action logs",
+                "operationId": "90bf469ec6cb805439a038222a48a93f",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 50
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order (default: -created_at)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[action]",
+                        "in": "query",
+                        "description": "Filter by action type",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[model]",
+                        "in": "query",
+                        "description": "Filter by model name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[staff_id]",
+                        "in": "query",
+                        "description": "Filter by staff ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[customer_id]",
+                        "in": "query",
+                        "description": "Filter by customer ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Related resources to include",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "customer,staff,entries"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of action logs"
+                    }
+                }
+            }
+        },
+        "/application/logs/{log}": {
+            "get": {
+                "tags": [
+                    "Action Logs"
+                ],
+                "summary": "Get a single action log",
+                "operationId": "7f8701503ee0ab54c6d70825124e62c1",
+                "parameters": [
+                    {
+                        "name": "log",
+                        "in": "path",
+                        "description": "ID of the action log",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single action log with details"
+                    }
+                }
+            }
+        },
+        "/application/coupons": {
+            "get": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Get a list of coupons",
+                "operationId": "d353400d2f716be4bbe016cc2b731635",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort order",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Related resources to include",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "products,pricing"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of coupons"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Create a new coupon",
+                "operationId": "b2d1fafa8137aff9996b0ab50a9018c7",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "code",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "code": {
+                                        "type": "string",
+                                        "example": "SUMMER25"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "fixed",
+                                            "percent"
+                                        ],
+                                        "example": "percent"
+                                    },
+                                    "applied_month": {
+                                        "type": "integer",
+                                        "example": -1
+                                    },
+                                    "free_setup": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "start_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    },
+                                    "end_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "nullable": true
+                                    },
+                                    "first_order_only": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "max_uses": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "max_uses_per_customer": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "minimum_order_amount": {
+                                        "type": "number",
+                                        "example": 0
+                                    },
+                                    "is_global": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "products": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "pricing": {
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Coupon created successfully"
+                    }
+                }
+            }
+        },
+        "/application/coupons/{coupon}": {
+            "get": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Get a single coupon",
+                "operationId": "06fd0751848fe4f9848fc37c963c5497",
+                "parameters": [
+                    {
+                        "name": "coupon",
+                        "in": "path",
+                        "description": "ID of the coupon",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A single coupon"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Update an existing coupon",
+                "operationId": "2e906dc6076052fd2a0ba3ab6bd0c9e7",
+                "parameters": [
+                    {
+                        "name": "coupon",
+                        "in": "path",
+                        "description": "ID of the coupon",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "fixed",
+                                            "percent"
+                                        ]
+                                    },
+                                    "is_global": {
+                                        "type": "boolean"
+                                    },
+                                    "products": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Coupon updated successfully"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Coupons"
+                ],
+                "summary": "Delete an existing coupon",
+                "operationId": "51475c3b39bb9ff36e937f15bdb7ccf4",
+                "parameters": [
+                    {
+                        "name": "coupon",
+                        "in": "path",
+                        "description": "ID of the coupon",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Coupon deleted successfully"
                     }
                 }
             }
@@ -1731,6 +4884,72 @@
                 }
             }
         },
+        "/application/products/{id}/config": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Get product configuration",
+                "description": "Returns the product configuration as JSON, including metadata and pricing.",
+                "operationId": "getProductConfig",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the product",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product configuration"
+                    },
+                    "404": {
+                        "description": "Product not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Update product configuration",
+                "description": "Updates the product configuration.",
+                "operationId": "updateProductConfig",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the product",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Configuration updated successfully"
+                    },
+                    "404": {
+                        "description": "Product config not found"
+                    }
+                }
+            }
+        },
         "/application/health": {
             "get": {
                 "tags": [
@@ -2104,12 +5323,6 @@
                         "type": "number",
                         "format": "float",
                         "example": 250.5
-                    },
-                    "notes": {
-                        "type": "string",
-                        "maxLength": 1000,
-                        "example": "Client fidèle",
-                        "nullable": true
                     },
                     "country": {
                         "type": "string",
@@ -4024,8 +7237,28 @@
     },
     "tags": [
         {
-            "name": "Client API",
-            "description": "API Endpoints for customer account"
+            "name": "Authentication",
+            "description": "Authentication endpoints for client API"
+        },
+        {
+            "name": "Customer Invoices",
+            "description": "Invoice endpoints for customer API"
+        },
+        {
+            "name": "Customer Payment Methods",
+            "description": "Payment method endpoints for client API"
+        },
+        {
+            "name": "Customer Profile",
+            "description": "Profile management endpoints for customer API"
+        },
+        {
+            "name": "Customer Services",
+            "description": "Service endpoints for customer API"
+        },
+        {
+            "name": "Customer Tickets",
+            "description": "Support ticket endpoints for customer API"
         },
         {
             "name": "Products",
@@ -4050,6 +7283,34 @@
         {
             "name": "Invoices",
             "description": "Invoices"
+        },
+        {
+            "name": "Departments",
+            "description": "Departments"
+        },
+        {
+            "name": "Tickets",
+            "description": "Tickets"
+        },
+        {
+            "name": "Cancellation Reasons",
+            "description": "Cancellation Reasons"
+        },
+        {
+            "name": "Servers",
+            "description": "Servers"
+        },
+        {
+            "name": "Subdomain Hosts",
+            "description": "Subdomain Hosts"
+        },
+        {
+            "name": "Action Logs",
+            "description": "Action Logs"
+        },
+        {
+            "name": "Coupons",
+            "description": "Coupons"
         }
     ],
     "security": [

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Theme;
 
@@ -56,9 +56,28 @@ class ThemeManager
         }
     }
 
-    public static function clearCache()
+    private const CACHE_KEY_PREFIX = 'theme_configuration';
+
+    public static function clearCache(): void
     {
-        Cache::forget('theme_configuration');
+        $enabledLocales = self::getEnabledLocales();
+        foreach ($enabledLocales as $locale) {
+            Cache::forget(self::CACHE_KEY_PREFIX.'_'.$locale);
+        }
+        Cache::forget(self::CACHE_KEY_PREFIX);
+    }
+
+    private static function getEnabledLocales(): array
+    {
+        try {
+            $locales = array_keys(\App\Services\Core\LocaleService::getLocalesNames());
+
+            return array_unique(array_map(function ($locale) {
+                return str_contains($locale, '_') ? explode('_', $locale)[0] : $locale;
+            }, $locales));
+        } catch (\Exception $e) {
+            return ['fr', 'en'];
+        }
     }
 
     public function hasTheme(): bool
@@ -139,7 +158,7 @@ class ThemeManager
             return collect();
         }
         $support = $this->getTheme()->supportOption('menu_dropdown');
-        $items = $this->getSetting()[$type . '_links'] ?? collect();
+        $items = $this->getSetting()[$type.'_links'] ?? collect();
 
         return $items->filter(function (MenuLink $item) use ($support) {
             return $item->canShowed($support);
@@ -172,11 +191,15 @@ class ThemeManager
 
     public function getSetting()
     {
-        return Cache::remember('theme_configuration', 60 * 60 * 24 * 7, function () {
+        $locale = app()->getLocale();
+        $cacheKey = self::CACHE_KEY_PREFIX.'_'.$locale;
+
+        return Cache::remember($cacheKey, 60 * 60 * 24 * 7, function () {
             $types = \App\Models\Personalization\MenuLink::pluck('type')->unique()->toArray();
             $links = collect($types)->mapWithKeys(function ($type) {
-                return [$type . '_links' => MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get()];
+                return [$type.'_links' => MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get()];
             });
+
             return $links->merge([
                 'socials' => SocialNetwork::all()->where('hidden', false),
                 'sections_pages' => $this->getSectionsPages(),

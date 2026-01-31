@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,21 +17,19 @@
  * Year: 2025
  */
 
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
- *
  * @property int $id
  * @property int $action_log_id
  * @property string $attribute
  * @property string|null $old_value
  * @property string|null $new_value
  * @property-read \App\Models\ActionLog $actionLog
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActionLogEntries newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActionLogEntries newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActionLogEntries query()
@@ -39,6 +38,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActionLogEntries whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActionLogEntries whereNewValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActionLogEntries whereOldValue($value)
+ *
  * @mixin \Eloquent
  */
 class ActionLogEntries extends Model

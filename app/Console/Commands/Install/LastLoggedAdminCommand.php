@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -48,16 +49,19 @@ class LastLoggedAdminCommand extends Command
         foreach ($admins as $admin) {
             if ($admin->last_login == null) {
                 $this->error('No admin has logged in yet.');
+
                 continue;
             }
             /** @var Carbon $carbon */
             $carbon = $admin->last_login;
             if ($carbon->diffInDays(Carbon::now()) > 30) {
                 $this->error('No admin has logged in the last 30 days.');
+
                 continue;
             }
             if ($carbon->diffInDays(Carbon::now()) > 7) {
                 $this->warn('No Admin has logged in the last 7 days.');
+
                 continue;
             }
             if ($carbon->diffInDays(Carbon::now()) < 3) {

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Admin\Personalization;
 
 use App\Events\Resources\ResourceCreatedEvent;
@@ -26,7 +26,6 @@ use App\Http\Requests\Personalization\MenuLinkRequest;
 use App\Models\Admin\Permission;
 use App\Models\Personalization\MenuLink;
 use App\Theme\ThemeManager;
-use GuzzleHttp\Psr7\Response;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
@@ -54,6 +53,7 @@ class MenuLinkController extends AbstractCrudController
         $data['type'] = $type;
 
         $menus = MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get();
+
         return $this->createView($data);
     }
 

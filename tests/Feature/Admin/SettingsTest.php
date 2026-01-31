@@ -1,10 +1,13 @@
 <?php
 
 namespace Tests\Feature\Admin;
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
+
 class SettingsTest extends \Tests\TestCase
 {
     use RefreshDatabase;
+
     public function test_show_settings(): void
     {
         $this->seed(\Database\Seeders\AdminSeeder::class);

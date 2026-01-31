@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\DTO\Core\Extensions;
 
@@ -60,9 +60,6 @@ class ExtensionThemeDTO
 
     public array $config = [];
 
-    /**
-     * List of config keys that should be stored in database (for translation support).
-     */
     public array $dbSettings = [];
 
     public ?string $dbSettingsFile = null;
@@ -196,7 +193,6 @@ class ExtensionThemeDTO
         $validated = $validator->validated();
         $this->config = $validated;
 
-        // Separate DB settings from file settings
         $dbSettingsData = [];
         $fileSettings = $validated;
 
@@ -209,12 +205,10 @@ class ExtensionThemeDTO
             }
         }
 
-        // Store DB settings using Setting model (supports translations)
         if (!empty($dbSettingsData)) {
             Setting::updateSettings($dbSettingsData);
         }
 
-        // Store remaining config in JSON file
         if ($this->configRulesFile !== null) {
             file_put_contents(
                 $this->path . '/config/config.json',
@@ -300,6 +294,7 @@ class ExtensionThemeDTO
             ];
         }
         $translations = $this->api['translations'];
+
         return [
             'name' => $translations['name'][$locale] ?? ($this->api['name'] ?? $this->uuid),
             'description' => $translations['short_description'][$locale] ?? ($this->api['short_description'] ?? $this->uuid),

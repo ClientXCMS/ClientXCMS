@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -62,7 +63,7 @@ class CreateThemeCommand extends Command
             'name' => $name,
             'uuid' => $uuid,
             'description' => $description,
-            'version' => '1.0.0',
+            'version' => '1.0',
             'author' => [
                 'name' => $author_name,
                 'email' => $author_email,

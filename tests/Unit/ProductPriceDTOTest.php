@@ -79,16 +79,16 @@ class ProductPriceDTOTest extends TestCase
         parent::setUp();
         Setting::updateSettings([
             'store_vat_enabled' => true,
-            'store_mode_tax'    => TaxesService::MODE_TAX_EXCLUDED,
+            'store_mode_tax' => TaxesService::MODE_TAX_EXCLUDED,
             // Si l’app utilise env('STORE_FIXED_VAT_RATE'), on le fixe via config helper
         ]);
 
         \Lang::addLines([
-            'store.product.freemessage'   => 'Gratuit',
+            'store.product.freemessage' => 'Gratuit',
             'store.product.setupmessage' => ':first + setup, puis :recurring chaque :unit :tax',
-            'store.product.nocharge'     => ':first chaque :unit :tax',
-            'store.ttc'                  => 'TTC',
-            'store.ht'                   => 'HT',
+            'store.product.nocharge' => ':first chaque :unit :tax',
+            'store.ttc' => 'TTC',
+            'store.ht' => 'HT',
         ], 'fr');
         config(['app.locale' => 'fr']); // éviter erreurs de localisation
     }
@@ -121,9 +121,9 @@ class ProductPriceDTOTest extends TestCase
         );
 
         $this->assertSame(100.0, $dto->priceHT());
-        $this->assertSame(10.0,  $dto->setupHT());
+        $this->assertSame(10.0, $dto->setupHT());
         $this->assertSame(120.0, $dto->priceTTC());     // 100 * 1.20
-        $this->assertSame(12.0,  $dto->setupTTC());     // 10  * 1.20
+        $this->assertSame(12.0, $dto->setupTTC());     // 10  * 1.20
     }
 
     public function test_free_product_is_detected(): void
@@ -167,17 +167,16 @@ class ProductPriceDTOTest extends TestCase
         $this->assertSame(40.0, $dto->billableAmount()); // firstpayment override is treated as montant facturé
     }
 
-
     /* ------------------------------------------------------------------ */
-    /*                      Tests sur displayPrice()                      */
+    /*                      Tests sur displayPrice() */
     /* ------------------------------------------------------------------ */
 
-    public function testDisplayPriceReturnsTtcWhenConfiguredAndPriceIsHt()
+    public function test_display_price_returns_ttc_when_configured_and_price_is_ht()
     {
         // Contexte : prix saisi hors taxe (mode TAX_EXCLUDED) mais affichage en TTC.
         Setting::updateSettings([
-            'store_mode_tax'         => TaxesService::MODE_TAX_EXCLUDED,
-            'display_product_price'  => TaxesService::PRICE_TTC,
+            'store_mode_tax' => TaxesService::MODE_TAX_EXCLUDED,
+            'display_product_price' => TaxesService::PRICE_TTC,
         ]);
 
         $dto = new ProductPriceDTO(100.0, null, 'EUR', 'monthly'); // 100 € HT
@@ -186,12 +185,12 @@ class ProductPriceDTOTest extends TestCase
         $this->assertEquals(120.0, $dto->displayPrice(), 0.01);
     }
 
-    public function testDisplayPriceReturnsHtWhenConfigured()
+    public function test_display_price_returns_ht_when_configured()
     {
         // Contexte : même prix HT mais affichage en HT.
         Setting::updateSettings([
-            'store_mode_tax'         => TaxesService::MODE_TAX_EXCLUDED,
-            'display_product_price'  => TaxesService::PRICE_HT,
+            'store_mode_tax' => TaxesService::MODE_TAX_EXCLUDED,
+            'display_product_price' => TaxesService::PRICE_HT,
         ]);
 
         $dto = new ProductPriceDTO(100.0, null, 'EUR', 'monthly');
@@ -199,12 +198,12 @@ class ProductPriceDTOTest extends TestCase
         $this->assertEquals(100.0, $dto->displayPrice(), 0.01);
     }
 
-    public function testDisplayPriceWithTtcInputDoesNotAddVatTwice()
+    public function test_display_price_with_ttc_input_does_not_add_vat_twice()
     {
         // Prix saisi en TTC (mode TAX_INCLUDED) et on veut l’afficher TTC :
         Setting::updateSettings([
-            'store_mode_tax'         => TaxesService::MODE_TAX_INCLUDED,
-            'display_product_price'  => TaxesService::PRICE_TTC,
+            'store_mode_tax' => TaxesService::MODE_TAX_INCLUDED,
+            'display_product_price' => TaxesService::PRICE_TTC,
         ]);
 
         $dto = new ProductPriceDTO(120.0, null, 'EUR', 'monthly'); // 120 € TTC → ~100 € HT en interne
@@ -213,7 +212,7 @@ class ProductPriceDTOTest extends TestCase
         $this->assertEquals(120.0, $dto->displayPrice(), 0.01);
     }
 
-    public function testCanHydrateWithHtAmountsEvenWhenStoreIsTtc(): void
+    public function test_can_hydrate_with_ht_amounts_even_when_store_is_ttc(): void
     {
         Setting::updateSettings([
             'store_mode_tax' => TaxesService::MODE_TAX_INCLUDED,
@@ -237,14 +236,14 @@ class ProductPriceDTOTest extends TestCase
     }
 
     /* ------------------------------------------------------------------ */
-    /*                     Tests sur pricingMessage()                     */
+    /*                     Tests sur pricingMessage() */
     /* ------------------------------------------------------------------ */
 
-    public function testPricingMessageWithSetupShowsBothAmounts()
+    public function test_pricing_message_with_setup_shows_both_amounts()
     {
         Setting::updateSettings([
-            'store_mode_tax'         => TaxesService::MODE_TAX_EXCLUDED,
-            'display_product_price'  => TaxesService::PRICE_TTC,
+            'store_mode_tax' => TaxesService::MODE_TAX_EXCLUDED,
+            'display_product_price' => TaxesService::PRICE_TTC,
         ]);
 
         // Prix récurrent 100 € HT, setup 10 € HT
@@ -258,11 +257,11 @@ class ProductPriceDTOTest extends TestCase
         $this->assertStringContainsString('120', $message);
     }
 
-    public function testPricingMessageWithoutSetupShowsRecurringOnly()
+    public function test_pricing_message_without_setup_shows_recurring_only()
     {
         Setting::updateSettings([
-            'store_mode_tax'         => TaxesService::MODE_TAX_EXCLUDED,
-            'display_product_price'  => TaxesService::PRICE_TTC,
+            'store_mode_tax' => TaxesService::MODE_TAX_EXCLUDED,
+            'display_product_price' => TaxesService::PRICE_TTC,
         ]);
 
         $dto = new ProductPriceDTO(50.0, null, 'EUR', 'monthly');

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Admin;
 
 use App\Contracts\Notifications\NotifiablePlaceholderInterface;
@@ -28,8 +28,6 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\HtmlString;
 
 /**
- * 
- *
  * @property int $id
  * @property string $name
  * @property string $content
@@ -39,6 +37,7 @@ use Illuminate\Support\HtmlString;
  * @property int $hidden
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailTemplate newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailTemplate newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailTemplate query()
@@ -51,6 +50,7 @@ use Illuminate\Support\HtmlString;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailTemplate whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailTemplate whereSubject($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailTemplate whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class EmailTemplate extends Model
@@ -76,7 +76,10 @@ class EmailTemplate extends Model
         }
         $template = self::where('name', $name)->where('locale', $locale)->first();
         if ($template == null) {
-            throw new \Exception(sprintf('Email template %s not found for locale %s', $name, $locale));
+            $template = self::where('name', $name)->where('locale', 'en_GB')->first();
+            if ($template == null) {
+                throw new \Exception(sprintf('Email template %s not found for locale %s', $name, $locale));
+            }
         }
         $content = self::bladeRender($template->content, $context);
         $parts = explode(PHP_EOL, $content);
@@ -153,6 +156,6 @@ class EmailTemplate extends Model
         }
         $content = sanitize_content($content);
 
-        return \Blade::render($content, $context);
+        return \Blade::render($content, $context, true);
     }
 }

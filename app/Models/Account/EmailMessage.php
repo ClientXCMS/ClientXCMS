@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Account;
 
 use App\Models\Admin\EmailTemplate;
@@ -25,8 +25,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
- *
  * @property int $id
  * @property string $recipient
  * @property int|null $recipient_id
@@ -36,6 +34,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Account\Customer|null $customer
+ *
  * @method static \Database\Factories\Core\EmailMessageFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailMessage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailMessage newQuery()
@@ -48,6 +47,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailMessage whereSubject($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailMessage whereTemplate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailMessage whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class EmailMessage extends Model

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Account;
 
@@ -46,13 +46,12 @@ use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
- * 
- *
  * @OA\Schema (
  *      schema="Customer",
  *     title="Customer",
  *     description="Customer model"
  * )
+ *
  * @property int $id
  * @property string $firstname
  * @property string $lastname
@@ -94,6 +93,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property-read int|null $tickets_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Sanctum\PersonalAccessToken> $tokens
  * @property-read int|null $tokens_count
+ *
  * @method static \Database\Factories\Core\CustomerFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer newQuery()
@@ -128,12 +128,15 @@ use Laravel\Sanctum\HasApiTokens;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereZipcode($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer withoutTrashed()
+ *
  * @property string|null $company_name
  * @property string|null $billing_details
  * @property int $gdpr_compliment
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereBillingDetails($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereCompanyName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Customer whereGdprCompliment($value)
+ *
  * @mixin \Eloquent
  */
 class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\MustVerifyEmail, HasNotifiableVariablesInterface, NotifiablePlaceholderInterface
@@ -279,6 +282,8 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'billing_details',
         'company_name',
         'gdpr_compliment',
+        'security_question_id',
+        'security_answer',
     ];
 
     protected $attributes = [
@@ -299,6 +304,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'remember_token',
         'updated_at',
         'last_ip',
+        'security_answer',
     ];
 
     /**
@@ -311,7 +317,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'password' => 'hashed',
         'last_login' => 'datetime',
         'phone' => CustomRawPhoneNumberCast::class.':FR',
-        'balance' => 'decimal:2'
+        'balance' => 'decimal:2',
     ];
 
     public static function boot()
@@ -365,6 +371,11 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public function tickets()
     {
         return $this->hasMany(SupportTicket::class, 'customer_id');
+    }
+
+    public function customerNotes()
+    {
+        return $this->hasMany(CustomerNote::class, 'customer_id');
     }
 
     protected static function newFactory()
@@ -427,7 +438,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         $this->balance += $amount;
         $this->save();
         if ($reason !== null) {
-            $reason = " " . strtolower(__('global.for')) . " " . $reason;
+            $reason = ' '.strtolower(__('global.for')).' '.$reason;
             if (auth('admin')->check()) {
                 $adminId = auth('admin')->id();
             } else {
@@ -470,7 +481,18 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public static function getNotificationContextVariables(): array
     {
         return [
-            '%customer_name%', '%customer_email%', '%customer_phone%', '%customer_address%', '%customer_address2%', '%customer_city%', '%customer_country%', '%customer_region%', '%customer_zipcode%', '%customer_locale%', '%customer_firstname%', '%customer_lastname%',
+            '%customer_name%',
+            '%customer_email%',
+            '%customer_phone%',
+            '%customer_address%',
+            '%customer_address2%',
+            '%customer_city%',
+            '%customer_country%',
+            '%customer_region%',
+            '%customer_zipcode%',
+            '%customer_locale%',
+            '%customer_firstname%',
+            '%customer_lastname%',
         ];
     }
 
@@ -518,7 +540,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public function isTrustedForReviews(): bool
     {
         // If trusted client feature is disabled, always return false
-        if (!setting('reviews_trusted_client_enabled', false)) {
+        if (! setting('reviews_trusted_client_enabled', false)) {
             return false;
         }
 
@@ -541,5 +563,55 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         }
 
         return true;
+    }
+
+    /**
+     * Get the security question associated with the customer.
+     */
+    public function securityQuestion()
+    {
+        return $this->belongsTo(\App\Models\Admin\SecurityQuestion::class, 'security_question_id');
+    }
+
+    /**
+     * Check if the customer has a security question set.
+     */
+    public function hasSecurityQuestion(): bool
+    {
+        return $this->security_question_id !== null && $this->security_answer !== null;
+    }
+
+    /**
+     * Verify the security answer (case insensitive).
+     */
+    public function verifySecurityAnswer(string $answer): bool
+    {
+        if (! $this->hasSecurityQuestion()) {
+            return true;
+        }
+
+        return strtolower(trim($answer)) === strtolower(trim($this->security_answer));
+    }
+
+    /**
+     * Set the security question and answer.
+     */
+    public function setSecurityQuestion(int $questionId, string $answer): void
+    {
+        $this->update([
+            'security_question_id' => $questionId,
+            'security_answer' => strtolower(trim($answer)),
+        ]);
+    }
+
+    /**
+     * Reset the security question.
+     */
+    public function resetSecurityQuestion(): void
+    {
+        $this->update([
+            'security_question_id' => null,
+            'security_answer' => null,
+        ]);
     }
 }

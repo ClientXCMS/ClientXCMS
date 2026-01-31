@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Billing;
 
 use App\DTO\Provisioning\ServiceStateChangeDTO;
@@ -28,8 +28,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- *
- *
  * @OA\Schema (
  *     schema="Upgrade",
  *     title="Upgrade",
@@ -44,6 +42,7 @@ use Illuminate\Database\Eloquent\Model;
  *     @OA\Property(property="invoice_id", type="integer", example=1001),
  *     @OA\Property(property="upgraded", type="boolean", example=true)
  * )
+ *
  * @property int $id
  * @property int $customer_id
  * @property int $service_id
@@ -58,6 +57,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read Product $newProduct
  * @property-read Product $oldProduct
  * @property-read Service $service
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Upgrade newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Upgrade newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Upgrade query()
@@ -70,6 +70,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Upgrade whereServiceId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Upgrade whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Upgrade whereUpgraded($value)
+ *
  * @mixin \Eloquent
  */
 class Upgrade extends Model

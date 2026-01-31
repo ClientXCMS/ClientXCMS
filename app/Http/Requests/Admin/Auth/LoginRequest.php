@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Requests\Admin\Auth;
 
@@ -115,6 +115,7 @@ class LoginRequest extends FormRequest
         if ($this->has('redirect')) {
             return $this->get('redirect');
         }
+
         return parent::getRedirectUrl();
     }
 }

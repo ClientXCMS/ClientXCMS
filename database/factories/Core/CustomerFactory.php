@@ -22,7 +22,7 @@ class CustomerFactory extends Factory
      */
     public function definition(): array
     {
-        $phone = '06'.random_int(10000000, 99999999);
+        $phone = '07'.random_int(10000000, 99999999);
 
         return [
             'firstname' => fake()->firstName(),

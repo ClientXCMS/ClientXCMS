@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Http\Requests\Billing;
 
 use App\Models\Billing\Invoice;
@@ -24,6 +26,7 @@ use Illuminate\Foundation\Http\FormRequest;
  * @OA\Schema(
  *     title="UpdateInvoiceRequest",
  *     description="Request body for updating invoices",
+ *
  *     @OA\Property(
  *         property="status",
  *         type="string",
@@ -83,9 +86,11 @@ use Illuminate\Foundation\Http\FormRequest;
  *     @OA\Property(
  *         property="billing_address",
  *         type="array",
+ *
  *         @OA\Items(type="string"),
  *         description="The billing address for the invoice"
  *     ),
+ *
  *     @OA\Property(
  *         property="external_id",
  *         type="string",
@@ -119,7 +124,7 @@ class UpdateInvoiceRequest extends FormRequest
             'currency' => 'required_if:billing_address,null|string|max:3',
             'due_date' => 'required_if:billing_address,null|date',
             'paid_at' => 'nullable|date',
-            'balance' => 'nullable|numeric|min:0|max:' . $this->invoice->total,
+            'balance' => 'nullable|numeric|min:0|max:'.$this->invoice->total,
             'payment_method_id' => 'nullable',
             'billing_address' => 'nullable|array',
             'external_id' => ['nullable', 'string', 'max:255', 'unique:invoices,external_id,'.$this->invoice->id],
