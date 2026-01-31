@@ -334,7 +334,7 @@
                             </div>
                             @endif
 
-                            @includeWhen(app('extension')->extensionIsEnabled('supportid'), 'supportid_admin::customer/card', ['customer' => $item])
+                            @includeWhen(app('extension')->extensionIsEnabled('supportid'), 'supportid_admin::card', ['customer' => $item])
 
                         </div>
                     </div>
