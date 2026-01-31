@@ -2,7 +2,7 @@
 
 return [
   'install' => 'Installation',
-  'step' => 'Stage',
+  'step' => 'Step',
   'settings' => [
     'title' => 'Parameters',
     'client_id' => 'Client ID',
@@ -33,21 +33,29 @@ return [
   'authentication' => 'Authentication',
   'extensions' => 'Extensions',
   'departmentsseeder' => [
-      'general' => [
-        'name' => 'General',
-        'description' => 'General Department',
-      ],
-      'billing' => [
-        'name' => 'Invoicing',
-        'description' => 'Billing Department',
-      ],
-      'technical' => [
-        'name' => 'Technique',
-        'description' => 'Technical Department',
-      ],
-      'sales' => [
-        'name' => 'Commercial',
-        'description' => 'Sales Department',
-      ],
+    'general' => [
+      'name' => 'General',
+      'description' => 'General department',
     ],
+    'billing' => [
+      'name' => 'Billing',
+      'description' => 'Billing department',
+    ],
+    'technical' => [
+      'name' => 'Technical',
+      'description' => 'Technical department',
+    ],
+    'sales' => [
+      'name' => 'Sales',
+      'description' => 'Sales department',
+    ],
+  ],
+  'security_questions' => [
+    'pet_name' => 'What is the name of your first pet?',
+    'birth_city' => 'In which city were you born?',
+    'mother_maiden_name' => 'What is your mother\'s maiden name?',
+    'first_school' => 'What is the name of your first school?',
+    'favorite_movie' => 'What is your favourite film?',
+    'childhood_nickname' => 'What was your childhood nickname?',
+  ],
 ];
