@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\Cache;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Section newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Section newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Section onlyTrashed()
@@ -162,15 +163,16 @@ class Section extends Model
         $isTranslatable = $fieldDef && ($fieldDef['translatable'] ?? false);
 
         if ($isTranslatable) {
-            $value = $this->getTranslation('config_' . $key, null, $locale);
+            $value = $this->getTranslation('config_'.$key, null, $locale);
             if ($value === '' || $value === null) {
                 return $default;
             }
+
             return $this->castConfigValue($value, $fieldDef['type'] ?? 'text');
         }
 
         $config = $this->config ?? [];
-        if (!array_key_exists($key, $config)) {
+        if (! array_key_exists($key, $config)) {
             return $default;
         }
 
@@ -186,7 +188,8 @@ class Section extends Model
 
         if ($isTranslatable) {
             $locale = $locale ?? app()->getLocale();
-            $this->saveTranslation('config_' . $key, $locale, (string) $value);
+            $this->saveTranslation('config_'.$key, $locale, (string) $value);
+
             return;
         }
 
@@ -206,10 +209,11 @@ class Section extends Model
         if ($isTranslatable) {
             $locale = $locale ?? app()->getLocale();
             $this->translations()
-                ->where('key', 'config_' . $key)
+                ->where('key', 'config_'.$key)
                 ->where('locale', $locale)
                 ->delete();
-            Cache::forget('translations_' . self::class . '_' . $this->id);
+            Cache::forget('translations_'.self::class.'_'.$this->id);
+
             return;
         }
 
@@ -224,13 +228,15 @@ class Section extends Model
     public function getConfigurableFields(): array
     {
         $dto = $this->toDTO();
+
         return $dto->json['fields'] ?? [];
     }
 
     public function isConfigurable(): bool
     {
         $dto = $this->toDTO();
-        return ($dto->json['configurable'] ?? false) && !empty($this->getConfigurableFields());
+
+        return ($dto->json['configurable'] ?? false) && ! empty($this->getConfigurableFields());
     }
 
     public function getFieldDefinition(string $key): ?array
@@ -241,6 +247,7 @@ class Section extends Model
                 return $field;
             }
         }
+
         return null;
     }
 
@@ -262,6 +269,7 @@ class Section extends Model
         if (is_bool($value)) {
             return $value ? 'true' : 'false';
         }
+
         return $value;
     }
 

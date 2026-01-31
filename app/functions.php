@@ -316,6 +316,7 @@ if (! function_exists('render_theme_sections')) {
             } finally {
                 $themeManager->setCurrentRenderingSection(null);
             }
+
             return $html.$rendered;
         }, '');
     }
@@ -325,16 +326,15 @@ if (! function_exists('section_config')) {
     /**
      * Get a configuration value for the current rendering section
      *
-     * @param string $key The configuration key
-     * @param mixed $default Default value if not configured
-     * @return mixed
+     * @param  string  $key  The configuration key
+     * @param  mixed  $default  Default value if not configured
      */
     function section_config(string $key, mixed $default = null): mixed
     {
         try {
             $section = app('theme')->getCurrentRenderingSection();
 
-            if (!$section) {
+            if (! $section) {
                 return $default;
             }
 
@@ -351,14 +351,12 @@ if (! function_exists('section_config')) {
 if (! function_exists('section_config_all')) {
     /**
      * Get all configuration values for the current rendering section
-     *
-     * @return array
      */
     function section_config_all(): array
     {
         $section = app('theme')->getCurrentRenderingSection();
 
-        if (!$section) {
+        if (! $section) {
             return [];
         }
 

@@ -71,7 +71,7 @@ class ThemeManager
 
     protected function registerThemeSeeders(): void
     {
-        if (!$this->theme || !$this->theme->hasSeeder()) {
+        if (! $this->theme || ! $this->theme->hasSeeder()) {
             return;
         }
 
@@ -116,6 +116,7 @@ class ThemeManager
             return ['fr', 'en'];
         }
     }
+
     public function setCurrentRenderingSection(?Section $section): void
     {
         $this->currentRenderingSection = $section;

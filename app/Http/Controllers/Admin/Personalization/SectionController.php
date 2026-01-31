@@ -180,7 +180,7 @@ class SectionController extends AbstractCrudController
      */
     public function showConfig(Section $section)
     {
-        if (!$section->isConfigurable()) {
+        if (! $section->isConfigurable()) {
             return back()->with('error', __('personalization.sections.errors.not_configurable'));
         }
 
@@ -224,7 +224,7 @@ class SectionController extends AbstractCrudController
      */
     public function updateConfig(Request $request, Section $section)
     {
-        if (!$section->isConfigurable()) {
+        if (! $section->isConfigurable()) {
             return back()->with('error', __('personalization.sections.errors.not_configurable'));
         }
 
@@ -232,7 +232,7 @@ class SectionController extends AbstractCrudController
         $locales = array_keys(LocaleService::getLocales());
 
         $validationRules = $this->buildValidationRules($fields, $locales);
-        if (!empty($validationRules)) {
+        if (! empty($validationRules)) {
             $request->validate($validationRules);
         }
 
@@ -245,24 +245,26 @@ class SectionController extends AbstractCrudController
                     if ($oldValue && Storage::exists($oldValue)) {
                         Storage::delete($oldValue);
                     }
-                    $path = $request->file($key)->store('public/sections/' . $section->id);
+                    $path = $request->file($key)->store('public/sections/'.$section->id);
                     $section->setSetting($key, $path);
-                } elseif ($request->has('remove_' . $key)) {
+                } elseif ($request->has('remove_'.$key)) {
                     $oldValue = $section->getSetting($key);
                     if ($oldValue && Storage::exists($oldValue)) {
                         Storage::delete($oldValue);
                     }
                     $section->deleteSetting($key);
                 }
+
                 continue;
             }
 
             if ($field['type'] === 'repeater') {
                 $value = $request->input($key, []);
-                if (!is_array($value)) {
+                if (! is_array($value)) {
                     $value = json_decode($value, true) ?? [];
                 }
                 $section->setSetting($key, $value);
+
                 continue;
             }
 
@@ -323,10 +325,10 @@ class SectionController extends AbstractCrudController
                     case 'number':
                         $fieldRules[] = 'numeric';
                         if (isset($field['min'])) {
-                            $fieldRules[] = 'min:' . $field['min'];
+                            $fieldRules[] = 'min:'.$field['min'];
                         }
                         if (isset($field['max'])) {
-                            $fieldRules[] = 'max:' . $field['max'];
+                            $fieldRules[] = 'max:'.$field['max'];
                         }
                         break;
                     case 'image':
