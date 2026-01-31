@@ -96,7 +96,7 @@ class ExtensionThemeDTO
         }
 
         // Load DB settings configuration (keys to store in database for translation)
-        $dbSettingsPath = $dto->path . '/config/db_settings.php';
+        $dbSettingsPath = $dto->path.'/config/db_settings.php';
         if (file_exists($dbSettingsPath)) {
             $dto->dbSettingsFile = $dbSettingsPath;
             $dto->dbSettings = require $dbSettingsPath;
@@ -196,7 +196,7 @@ class ExtensionThemeDTO
         $dbSettingsData = [];
         $fileSettings = $validated;
 
-        if (!empty($this->dbSettings)) {
+        if (! empty($this->dbSettings)) {
             foreach ($this->dbSettings as $key) {
                 if (array_key_exists($key, $validated)) {
                     $dbSettingsData[$key] = $validated[$key];
@@ -205,13 +205,13 @@ class ExtensionThemeDTO
             }
         }
 
-        if (!empty($dbSettingsData)) {
+        if (! empty($dbSettingsData)) {
             Setting::updateSettings($dbSettingsData);
         }
 
         if ($this->configRulesFile !== null) {
             file_put_contents(
-                $this->path . '/config/config.json',
+                $this->path.'/config/config.json',
                 json_encode($fileSettings, JSON_PRETTY_PRINT)
             );
         }
