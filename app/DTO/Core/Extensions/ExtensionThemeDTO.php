@@ -60,6 +60,10 @@ class ExtensionThemeDTO
 
     public array $config = [];
 
+    public ?string $seederFile = null;
+
+    public ?string $seederClass = null;
+  
     public array $dbSettings = [];
 
     public ?string $dbSettingsFile = null;
@@ -95,7 +99,13 @@ class ExtensionThemeDTO
             }
         }
 
-        // Load DB settings configuration (keys to store in database for translation)
+        if (isset($json['seeder'])) {
+            $seederPath = $dto->path . '/' . $json['seeder']['file'];
+            if (file_exists($seederPath)) {
+                $dto->seederFile = $seederPath;
+                $dto->seederClass = $json['seeder']['class'];
+            }
+         } 
         $dbSettingsPath = $dto->path.'/config/db_settings.php';
         if (file_exists($dbSettingsPath)) {
             $dto->dbSettingsFile = $dbSettingsPath;
@@ -312,5 +322,23 @@ class ExtensionThemeDTO
     public function toDto(): ExtensionDTO
     {
         return new ExtensionDTO($this->uuid, 'themes', $this->enabled, $this->api);
+    }
+
+    public function hasSeeder(): bool
+    {
+        return $this->seederFile !== null && $this->seederClass !== null;
+    }
+
+    public function loadSeeder(): ?string
+    {
+        if (!$this->hasSeeder()) {
+            return null;
+        }
+
+        if (!class_exists($this->seederClass)) {
+            require_once $this->seederFile;
+        }
+
+        return class_exists($this->seederClass) ? $this->seederClass : null;
     }
 }
