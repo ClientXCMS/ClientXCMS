@@ -4,8 +4,8 @@ namespace Tests\Unit\Services;
 
 use App\Services\SettingsService;
 use App\Services\Store\TaxesService;
-use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class TaxesServiceTest extends TestCase
 {

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Rules;
 
 use Closure;
@@ -30,12 +32,12 @@ class ValidHtmlWithoutBlade implements ValidationRule
         }
 
         libxml_use_internal_errors(true);
-        $dom = new DOMDocument();
+        $dom = new DOMDocument;
 
-        $wrappedValue = '<!DOCTYPE html><html><body>' . $value . '</body></html>';
+        $wrappedValue = '<!DOCTYPE html><html><body>'.$value.'</body></html>';
         $loaded = $dom->loadHTML($wrappedValue, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         libxml_clear_errors();
-        if (!$loaded) {
+        if (! $loaded) {
             $fail(__('The content must be valid HTML.'));
         }
     }

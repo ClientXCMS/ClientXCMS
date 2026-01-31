@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Admin\Billing;
 
 use App\DTO\Admin\MassActionDTO;
@@ -24,8 +24,8 @@ use App\DTO\Store\ProductDataDTO;
 use App\Events\Core\Invoice\InvoiceCreated;
 use App\Helpers\Countries;
 use App\Http\Controllers\Admin\AbstractCrudController;
-use App\Http\Requests\Billing\InvoiceDraftRequest;
 use App\Http\Requests\Billing\ExportInvoiceRequest;
+use App\Http\Requests\Billing\InvoiceDraftRequest;
 use App\Http\Requests\Billing\StoreInvoiceRequest;
 use App\Http\Requests\Billing\UpdateInvoiceRequest;
 use App\Models\Account\Customer;
@@ -78,6 +78,7 @@ class InvoiceController extends AbstractCrudController
     {
         $params = parent::getIndexParams($items, $translatePrefix);
         $params['exportFormats'] = InvoiceExporterService::getAvailableFormats();
+
         return $params;
     }
 
@@ -111,6 +112,7 @@ class InvoiceController extends AbstractCrudController
         $this->checkPermission('create');
         $validatedData = $request->validated();
         $invoice = InvoiceService::createFreshInvoice($validatedData['customer_id'], $validatedData['currency'], 'Created manually by '.auth('admin')->user()->username);
+
         return $this->storeRedirect($invoice);
     }
 
@@ -137,10 +139,15 @@ class InvoiceController extends AbstractCrudController
         } elseif ($related == 'product') {
             $product = Product::find($relatedId);
             if ($product->productType()->data($product) != null) {
-                $productData = \Validator::validate($request->all(), $product->productType()->data($product)->validate());
+                $productData = $product->productType()->data($product)->parameters(new ProductDataDTO($product, [], $validatedData)) + $validatedData;
             } else {
-                $productData = [];
+                $productData = $validatedData;
             }
+            unset($productData['options']);
+            if (array_key_exists('error', $productData)) {
+                return back()->with('error', $productData['error']);
+            }
+            $productData['options'] = $this->processConfigOptions($product, $validatedData['options'] ?? []);
             $invoice->addProduct($product, $validatedData, $productData);
         } else {
             $validatedData['description'] = $validatedData['description'] ?? '';
@@ -159,6 +166,7 @@ class InvoiceController extends AbstractCrudController
         }
         $invoiceItem->delete();
         $invoice->recalculate();
+
         return back()->with('success', __('admin.invoices.draft.itemremoved'));
     }
 
@@ -177,7 +185,7 @@ class InvoiceController extends AbstractCrudController
         if (! $invoice->isDraft()) {
             return back()->with('error', __('admin.invoices.draft.notallowed'));
         }
-        $validatedData = $request->validate([
+        $rules = [
             'quantity' => 'required|integer|min:1',
             'unit_price_ttc' => 'required|numeric|min:0',
             'unit_price_ht' => 'required|numeric|min:0',
@@ -186,17 +194,40 @@ class InvoiceController extends AbstractCrudController
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:255',
             'coupon_id' => 'nullable',
-            'billing' => 'nullable|string|in:' . join(',', app(RecurringService::class)->getRecurringTypes()),
-        ]);
+            'billing' => 'nullable|string|in:'.implode(',', app(RecurringService::class)->getRecurringTypes()),
+        ];
+
+        $product = null;
         if ($invoiceItem->relatedType() instanceof Product) {
             $product = $invoiceItem->relatedType();
-            if ($invoiceItem->relatedType()->productType()->data($product) != null) {
-                $productData = \Validator::validate($request->all(), $invoiceItem->relatedType()->productType()->data($product)->validate());
-                $validatedData['data'] = $invoiceItem->relatedType()->productType()->data($product)->parameters(new ProductDataDTO($invoiceItem->relatedType(), $invoiceItem->data, $productData));
-            } else {
-                $validatedData['data'] = [];
+            $productType = $product->productType();
+            if ($productType->data($product) !== null) {
+                $rules = array_merge($rules, $productType->data($product)->validate());
+            }
+            $configOptions = $product->configoptions()->orderBy('sort_order')->get();
+            foreach ($configOptions as $configOption) {
+                $rules['options.'.$configOption->key] = $configOption->validate();
             }
         }
+
+        $validatedData = $request->validate($rules);
+
+        if ($product !== null) {
+            if ($product->productType()->data($product) != null) {
+                $data = $product->productType()->data($product)->parameters(new ProductDataDTO($product, $invoiceItem->data, $validatedData)) + $validatedData;
+            } else {
+                $data = $validatedData;
+            }
+            unset($data['options']);
+            if (array_key_exists('error', $data)) {
+                return back()->with('error', $data['error']);
+            }
+            $data['options'] = $this->processConfigOptions($product, $validatedData['options'] ?? []);
+            $validatedData['data'] = $data;
+        } else {
+            $validatedData['data'] = [];
+        }
+
         if (array_key_exists('billing', $validatedData)) {
             $validatedData['data']['billing'] = $validatedData['billing'];
         }
@@ -282,6 +313,7 @@ class InvoiceController extends AbstractCrudController
     {
         $this->checkPermission('update');
         $request->update($invoice);
+
         return $this->updateRedirect($invoice);
     }
 
@@ -325,7 +357,7 @@ class InvoiceController extends AbstractCrudController
     public function destroy(Invoice $invoice)
     {
         $this->checkPermission('delete');
-        abort_if(!$invoice->canDelete(), 404);
+        abort_if(! $invoice->canDelete(), 404);
         $invoice->items()->delete();
         $invoice->delete();
 
@@ -335,6 +367,7 @@ class InvoiceController extends AbstractCrudController
     public function export(ExportInvoiceRequest $request): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
     {
         $this->checkPermission('export');
+
         return $request->export();
     }
 
@@ -350,6 +383,7 @@ class InvoiceController extends AbstractCrudController
             $result = $invoice->customer->payInvoiceWithPaymentMethod($invoice, $source);
             if ($result->success) {
                 $result->invoice->update(['paymethod' => $source->gateway_uuid, 'payment_method_id' => $source->id]);
+
                 return back()->with('success', __('admin.invoices.paidsuccess'));
             } else {
                 return back()->with('error', $result->message);
@@ -357,7 +391,6 @@ class InvoiceController extends AbstractCrudController
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
-
     }
 
     public function validateInvoice(Invoice $invoice)
@@ -381,7 +414,6 @@ class InvoiceController extends AbstractCrudController
         $this->checkPermission('create');
         if ($invoice->status != Invoice::STATUS_PENDING) {
             return back()->with('error', __('admin.invoices.draft.not_in_pending'));
-
         }
         $invoice->status = Invoice::STATUS_DRAFT;
         $invoice->save();
@@ -433,5 +465,24 @@ class InvoiceController extends AbstractCrudController
         $coupons->put('none', __('global.none'));
 
         return $coupons;
+    }
+
+    /**
+     * Process config options similar to BasketRow::saveOptions
+     */
+    private function processConfigOptions(Product $product, array $options): array
+    {
+        $configOptions = $product->configoptions()->orderBy('sort_order')->get();
+        $keys = $configOptions->pluck('key')->toArray();
+        $saved = [];
+        foreach ($options as $key => $value) {
+            if ($value === null || ! in_array($key, $keys) || $value === '' || $value === '0') {
+                unset($saved[$key]);
+            } else {
+                $saved[$key] = $value;
+            }
+        }
+
+        return $saved;
     }
 }

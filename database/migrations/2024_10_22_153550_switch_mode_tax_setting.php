@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -19,9 +20,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-    }
+    public function up(): void {}
 
     /**
      * Reverse the migrations.

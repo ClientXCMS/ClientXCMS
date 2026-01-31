@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers;
 
@@ -40,6 +40,7 @@ class InstallController extends Controller
         $locales = collect(LocaleService::getLocales(false, false))->mapWithKeys(function ($item, $key) {
             return [$key => $item['name']];
         })->toArray();
+
         return view('install.settings', ['step' => 1, 'isMigrated' => $isMigrated, 'locales' => $locales]);
     }
 
@@ -62,6 +63,7 @@ class InstallController extends Controller
             LocaleService::downloadFiles($locale);
         }
         Setting::updateSettings(['app_default_locale' => $request->input('locales')[0] ?? 'en_GB']);
+
         return redirect()->to(app('license')->getAuthorizationUrl());
     }
 

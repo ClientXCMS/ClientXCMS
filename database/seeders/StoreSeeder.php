@@ -16,7 +16,7 @@ class StoreSeeder extends Seeder
      */
     public function run(): void
     {
-        if (!app()->runningUnitTests() || Group::count() > 0) {
+        if (! app()->runningUnitTests() || Group::count() > 0) {
             return;
         }
         $id = Group::create([

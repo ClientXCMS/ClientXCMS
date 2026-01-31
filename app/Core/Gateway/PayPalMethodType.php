@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Core\Gateway;
 
@@ -165,7 +165,8 @@ class PayPalMethodType extends AbstractGatewayType
     {
         if ($invoice->external_id) {
             $url = $_ENV['PAYPAL_SANDBOX'] == 'sandbox' ? 'https://www.sandbox.paypal.com/unifiedtransactions/details/payment/' : 'https://www.paypal.com/unifiedtransactions/details/payment/';
-            return $url . $invoice->external_id;
+
+            return $url.$invoice->external_id;
         }
 
         return null;

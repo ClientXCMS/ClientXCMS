@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Admin\Personalization;
 
@@ -88,12 +88,12 @@ class SectionController extends AbstractCrudController
     public function update(Request $request, Section $section)
     {
         $validated = $request->validate([
-            'content' => ['nullable', 'string', new \App\Rules\ValidHtmlWithoutBlade()],
+            'content' => ['nullable', 'string', new \App\Rules\ValidHtmlWithoutBlade],
             'url' => 'required',
             'theme_uuid' => 'required',
         ]);
         $validated['is_active'] = $request->has('is_active');
-        if (!is_sanitized($request->get('content'))) {
+        if (! is_sanitized($request->get('content'))) {
             return back()->with('error', __('personalization.sections.errors.sanitized_content'))->withInput();
         }
         unset($validated['content']);

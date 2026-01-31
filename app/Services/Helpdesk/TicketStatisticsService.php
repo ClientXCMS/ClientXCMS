@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,10 +16,11 @@
  *
  * Year: 2025
  */
+
 namespace App\Services\Helpdesk;
 
-use App\Models\Helpdesk\SupportTicket;
 use App\Models\Helpdesk\SupportMessage;
+use App\Models\Helpdesk\SupportTicket;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -29,7 +31,7 @@ class TicketStatisticsService
     {
         $closedTickets = SupportTicket::where('status', SupportTicket::STATUS_CLOSED)
             ->whereNotNull('closed_at')
-            ->with(['messages' => fn($q) => $q->orderBy('created_at', 'asc')])
+            ->with(['messages' => fn ($q) => $q->orderBy('created_at', 'asc')])
             ->get();
 
         $totalReplySeconds = 0;
@@ -64,7 +66,7 @@ class TicketStatisticsService
             ->allowedFilters(['department_id', 'priority'])
             ->allowedSorts(['updated_at'])
             ->get()
-            ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()));
+            ->filter(fn ($ticket) => $ticket->staffCanView(auth('admin')->user()));
     }
 
     public function getActiveTickets()
@@ -76,7 +78,7 @@ class TicketStatisticsService
             ->allowedFilters(['department_id', 'priority'])
             ->allowedSorts(['updated_at'])
             ->get()
-            ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()));
+            ->filter(fn ($ticket) => $ticket->staffCanView(auth('admin')->user()));
     }
 
     public function getStaffMessageCounts()
@@ -99,8 +101,6 @@ class TicketStatisticsService
             ->limit(10)
             ->get();
     }
-
-
 
     public function getWeeklyGraphLabels()
     {

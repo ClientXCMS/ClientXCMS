@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Admin\Provisioning;
 
@@ -76,7 +76,7 @@ class SubdomainHostController extends AbstractCrudController
                 'string',
                 'unique:subdomains_hosts',
                 'max:255',
-                new FQDN
+                new FQDN,
             ],
         ]);
         $subdomain = SubdomainHost::create($data);

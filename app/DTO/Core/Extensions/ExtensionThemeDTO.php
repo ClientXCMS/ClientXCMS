@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,10 +17,10 @@
  * Year: 2025
  */
 
-
 namespace App\DTO\Core\Extensions;
 
 use App\Exceptions\ThemeInvalidException;
+use App\Models\Admin\Setting;
 use File;
 use Illuminate\Validation\ValidationException;
 use Validator;
@@ -59,6 +60,14 @@ class ExtensionThemeDTO
 
     public array $config = [];
 
+    public ?string $seederFile = null;
+
+    public ?string $seederClass = null;
+
+    public array $dbSettings = [];
+
+    public ?string $dbSettingsFile = null;
+
     public static function fromJson(string $theme_file)
     {
         $json = json_decode(File::get($theme_file), true);
@@ -88,6 +97,19 @@ class ExtensionThemeDTO
             if (file_exists($dto->path.'/config/config.json')) {
                 $dto->config = json_decode(file_get_contents($dto->path.'/config/config.json'), true);
             }
+        }
+
+        if (isset($json['seeder'])) {
+            $seederPath = $dto->path.'/'.$json['seeder']['file'];
+            if (file_exists($seederPath)) {
+                $dto->seederFile = $seederPath;
+                $dto->seederClass = $json['seeder']['class'];
+            }
+        }
+        $dbSettingsPath = $dto->path.'/config/db_settings.php';
+        if (file_exists($dbSettingsPath)) {
+            $dto->dbSettingsFile = $dbSettingsPath;
+            $dto->dbSettings = require $dbSettingsPath;
         }
 
         return $dto;
@@ -177,9 +199,32 @@ class ExtensionThemeDTO
         if ($validator->fails()) {
             throw new ValidationException($validator);
         }
-        $this->config = $validator->validated();
-        if ($this->configRulesFile != null)
-            file_put_contents($this->path.'/config/config.json', json_encode($validator->validated(), JSON_PRETTY_PRINT));
+
+        $validated = $validator->validated();
+        $this->config = $validated;
+
+        $dbSettingsData = [];
+        $fileSettings = $validated;
+
+        if (! empty($this->dbSettings)) {
+            foreach ($this->dbSettings as $key) {
+                if (array_key_exists($key, $validated)) {
+                    $dbSettingsData[$key] = $validated[$key];
+                    unset($fileSettings[$key]);
+                }
+            }
+        }
+
+        if (! empty($dbSettingsData)) {
+            Setting::updateSettings($dbSettingsData);
+        }
+
+        if ($this->configRulesFile !== null) {
+            file_put_contents(
+                $this->path.'/config/config.json',
+                json_encode($fileSettings, JSON_PRETTY_PRINT)
+            );
+        }
     }
 
     public function hasScreenshot(): bool
@@ -259,6 +304,7 @@ class ExtensionThemeDTO
             ];
         }
         $translations = $this->api['translations'];
+
         return [
             'name' => $translations['name'][$locale] ?? ($this->api['name'] ?? $this->uuid),
             'description' => $translations['short_description'][$locale] ?? ($this->api['short_description'] ?? $this->uuid),
@@ -276,5 +322,23 @@ class ExtensionThemeDTO
     public function toDto(): ExtensionDTO
     {
         return new ExtensionDTO($this->uuid, 'themes', $this->enabled, $this->api);
+    }
+
+    public function hasSeeder(): bool
+    {
+        return $this->seederFile !== null && $this->seederClass !== null;
+    }
+
+    public function loadSeeder(): ?string
+    {
+        if (! $this->hasSeeder()) {
+            return null;
+        }
+
+        if (! class_exists($this->seederClass)) {
+            require_once $this->seederFile;
+        }
+
+        return class_exists($this->seederClass) ? $this->seederClass : null;
     }
 }

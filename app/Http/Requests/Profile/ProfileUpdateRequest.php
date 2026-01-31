@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,31 +17,21 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Requests\Profile;
 
-use App\Helpers\Countries;
-use App\Rules\ZipCode;
+use App\Services\Account\AccountEditService;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
     public function rules(): array
     {
-        return [
-            'firstname' => ['required', 'string', 'max:255'],
-            'lastname' => ['string', 'max:255'],
-            'address' => ['string', 'max:255'],
-            'address2' => ['nullable', 'string', 'max:255'],
-            'city' => ['string', 'max:255'],
-            'zipcode' => ['string', 'max:255', new ZipCode($this->country)],
-            'phone' => ['max:255', Countries::rule(), Rule::unique('customers', 'phone')->ignore($this->user('web')->id)],
-            'region' => ['string', 'max:255'],
-            'company_name' => ['nullable', 'string', 'max:255'],
-            'billing_details' => ['nullable', 'string', 'max:255'],
-            'country' => ['string', 'max:255', Rule::in(array_keys(Countries::names()))],
-            'locale' => ['string', 'max:255', Rule::in(array_keys(\App\Services\Core\LocaleService::getLocalesNames()))],
-        ];
+        // Use AccountEditService for common customer fields
+        return AccountEditService::rules(
+            $this->country ?? 'FR',
+            email: false,
+            password: false,
+            except: $this->user('web')?->id
+        );
     }
 }

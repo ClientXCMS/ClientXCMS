@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Api\Store\Products;
 
@@ -277,6 +277,7 @@ class ProductController extends AbstractApiController
      *
      *         @OA\Schema(type="integer")
      *     ),
+     *
      *     @OA\RequestBody(
      *         required=true,
      *
@@ -366,6 +367,7 @@ class ProductController extends AbstractApiController
             return response()->json(null, 404);
         }
         $config = $config->getConfig($product->id);
+
         return response()->json($config, 200);
     }
 
@@ -388,6 +390,7 @@ class ProductController extends AbstractApiController
      *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(type="object")
      *     ),
      *
@@ -404,13 +407,13 @@ class ProductController extends AbstractApiController
         if ($config == null) {
             return response()->json(['message' => __('admin.products.config.notfound')], 404);
         }
-        
+
         if ($config->getConfig($product->id) == null) {
             $config->storeConfig($product, $request->validated());
         } else {
             $config->updateConfig($product, $request->validated());
         }
-        
+
         return response()->json([
             'message' => __('admin.products.config.success'),
             'config' => $config->getConfig($product->id),

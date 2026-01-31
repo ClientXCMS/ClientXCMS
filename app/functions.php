@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -206,7 +207,7 @@ if (! function_exists('is_subroute')) {
         if (is_array($route)) {
             return in_array(request()->path(), $route);
         }
-        if ($route instanceof \App\Models\Personalization\MenuLink){
+        if ($route instanceof \App\Models\Personalization\MenuLink) {
             $route = $route->trans('url');
         }
         if ($route == '/' || $route == '/client') {
@@ -411,6 +412,7 @@ if (! function_exists('generate_uuid')) {
         if ($class::where('uuid', $uuid)->exists()) {
             return generate_uuid($class);
         }
+
         return $uuid;
     }
 }
@@ -431,11 +433,12 @@ if (! function_exists('sanitize_content')) {
 
         foreach ($badPatterns as $pattern) {
             if (preg_match($pattern, $content)) {
-                $content = preg_replace_callback($pattern, function($m){
+                $content = preg_replace_callback($pattern, function ($m) {
                     return '&lt;?';
                 }, $content);
             }
         }
+
         return $content;
     }
 }
@@ -455,6 +458,7 @@ if (! function_exists('is_sanitized')) {
                 return false;
             }
         }
+
         return true;
     }
 }
@@ -465,34 +469,38 @@ if (! function_exists('get_group_icon')) {
         $name = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name);
         $icon = 'bi bi-cloud text-xl';
         $map = [
-            'vps'          => 'bi bi-server',
-            'hosting'      => 'bi bi-globe',
-            'hebergement'  => 'bi bi-globe',
-            'dedicated'    => 'bi bi-hdd-rack',
-            'dedie'        => 'bi bi-hdd-rack',
-            'domain'       => 'bi bi-globe2',
-            'domaine'      => 'bi bi-globe2',
-            'fivem'        => 'bi bi-controller',
-            'gmod'         => 'bi bi-joystick',
-            'garry'        => 'bi bi-joystick',
-            'ark'          => 'bi bi-rocket-takeoff',
-            'minecraft'    => 'bi bi-box',
-            'rust'         => 'bi bi-fire',
-            'valheim'      => 'bi bi-shield',
-            'palworld'     => 'bi bi-stars',
-            'cs2'          => 'bi bi-bullseye',
-            'csgo'         => 'bi bi-bullseye',
-            'dayz'         => 'bi bi-compass',
-            'terraria'     => 'bi bi-tree',
+            'vps' => 'bi bi-server',
+            'hosting' => 'bi bi-globe',
+            'hebergement' => 'bi bi-globe',
+            'dedicated' => 'bi bi-hdd-rack',
+            'dedie' => 'bi bi-hdd-rack',
+            'domain' => 'bi bi-globe2',
+            'domaine' => 'bi bi-globe2',
+            'fivem' => 'bi bi-controller',
+            'gmod' => 'bi bi-joystick',
+            'garry' => 'bi bi-joystick',
+            'ark' => 'bi bi-rocket-takeoff',
+            'minecraft' => 'bi bi-box',
+            'rust' => 'bi bi-fire',
+            'valheim' => 'bi bi-shield',
+            'palworld' => 'bi bi-stars',
+            'cs2' => 'bi bi-bullseye',
+            'csgo' => 'bi bi-bullseye',
+            'dayz' => 'bi bi-compass',
+            'terraria' => 'bi bi-tree',
             'satisfactory' => 'bi bi-gear',
         ];
         foreach ($map as $key => $cls) {
-            if (str_contains($name, $key)) { $icon = $cls.' text-xl'; break; }
+            if (str_contains($name, $key)) {
+                $icon = $cls.' text-xl';
+                break;
+            }
         }
 
         if ($icon === 'bi bi-cloud text-xl' && preg_match('/\bmc\b/', $name)) {
             $icon = 'bi bi-box text-xl';
         }
+
         return $icon;
     }
 }

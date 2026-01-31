@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Core\Gateway;
 
 use App\Abstracts\AbstractGatewayType;
@@ -28,7 +28,6 @@ use App\Helpers\EnvEditor;
 use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
-use App\Models\Billing\InvoiceItem;
 use Illuminate\Http\Request;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\InvalidRequestException;
@@ -341,8 +340,9 @@ class StripeType extends AbstractGatewayType
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
     {
         if ($invoice->external_id) {
-            return "https://dashboard.stripe.com/payments/" . $invoice->external_id;
+            return 'https://dashboard.stripe.com/payments/'.$invoice->external_id;
         }
+
         return null;
     }
 }

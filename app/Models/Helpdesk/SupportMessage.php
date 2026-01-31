@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Helpdesk;
 
 use App\Models\Account\Customer;
@@ -27,14 +27,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="SupportMessage",
  *     title="Support Message",
  *     description="Message sent on a support ticket",
  *     required={"ticket_id", "message"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=12),
  *     @OA\Property(property="ticket_id", type="integer", example=101),
  *     @OA\Property(property="customer_id", type="integer", nullable=true, example=5),
@@ -53,6 +51,7 @@ use Illuminate\Support\Collection;
  *         ref="#/components/schemas/Admin"
  *     )
  * )
+ *
  * @property int $id
  * @property int $ticket_id
  * @property int|null $customer_id
@@ -66,6 +65,7 @@ use Illuminate\Support\Collection;
  * @property-read Admin|null $admin
  * @property-read Customer|null $customer
  * @property-read \App\Models\Helpdesk\SupportTicket|null $ticket
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportMessage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportMessage newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportMessage onlyTrashed()
@@ -82,6 +82,7 @@ use Illuminate\Support\Collection;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportMessage whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportMessage withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportMessage withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class SupportMessage extends Model
@@ -166,6 +167,7 @@ class SupportMessage extends Model
                 return $this->admin->initials();
             }
         }
+
         return 'AB';
     }
 

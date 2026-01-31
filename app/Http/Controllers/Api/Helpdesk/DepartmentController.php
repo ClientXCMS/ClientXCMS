@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Http\Controllers\Api\Helpdesk;
 
 use App\Http\Controllers\Api\AbstractApiController;
@@ -50,44 +52,56 @@ class DepartmentController extends AbstractApiController
      *     path="/application/departments",
      *     summary="Get a list of support departments",
      *     tags={"Departments"},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="A list of support departments",
+     *
      *         @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/SupportDepartment"))
      *     ),
+     *
      *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         description="Page number",
      *         required=false,
+     *
      *         @OA\Schema(type="integer", default=1)
      *     ),
+     *
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
      *         description="Number of items per page",
      *         required=false,
+     *
      *         @OA\Schema(type="integer", default=10)
      *     ),
+     *
      *     @OA\Parameter(
      *         name="sort",
      *         in="query",
      *         description="Sort order",
      *         required=false,
+     *
      *         @OA\Schema(type="string", default="created_at")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="filter",
      *         in="query",
      *         description="Filter departments",
      *         required=false,
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="include",
      *         in="query",
      *         description="Related resources to include",
      *         required=false,
+     *
      *         @OA\Schema(type="string", default="tickets")
      *     )
      * )
@@ -102,18 +116,23 @@ class DepartmentController extends AbstractApiController
      *     path="/application/departments",
      *     summary="Create a new support department",
      *     tags={"Departments"},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"name", "description", "icon"},
+     *
      *             @OA\Property(property="name", type="string", example="Technical Support"),
      *             @OA\Property(property="description", type="string", example="Handles all technical issues"),
      *             @OA\Property(property="icon", type="string", example="bi bi-question-circle")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=201,
      *         description="Department created successfully",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/SupportDepartment")
      *     )
      * )
@@ -121,6 +140,7 @@ class DepartmentController extends AbstractApiController
     public function store(StoreDepartmentRequest $request)
     {
         $department = SupportDepartment::create($request->validated());
+
         return response()->json($department, 201);
     }
 
@@ -129,16 +149,20 @@ class DepartmentController extends AbstractApiController
      *     path="/application/departments/{department}",
      *     summary="Get a single support department",
      *     tags={"Departments"},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="A single support department",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/SupportDepartment")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="department",
      *         in="path",
      *         description="ID of the department",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     )
      * )
@@ -153,25 +177,32 @@ class DepartmentController extends AbstractApiController
      *     path="/application/departments/{department}",
      *     summary="Update an existing support department",
      *     tags={"Departments"},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"name", "description", "icon"},
+     *
      *             @OA\Property(property="name", type="string", example="Technical Support"),
      *             @OA\Property(property="description", type="string", example="Handles all technical issues"),
      *             @OA\Property(property="icon", type="string", example="bi bi-question-circle")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Department updated successfully",
+     *
      *         @OA\JsonContent(ref="#/components/schemas/SupportDepartment")
      *     ),
+     *
      *     @OA\Parameter(
      *         name="department",
      *         in="path",
      *         description="ID of the department",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     )
      * )
@@ -179,6 +210,7 @@ class DepartmentController extends AbstractApiController
     public function update(UpdateDepartmentRequest $request, SupportDepartment $department)
     {
         $department->update($request->validated());
+
         return response()->json($department, 200);
     }
 
@@ -187,6 +219,7 @@ class DepartmentController extends AbstractApiController
      *     path="/application/departments/{department}",
      *     summary="Delete an existing support department",
      *     tags={"Departments"},
+     *
      *     @OA\Response(
      *         response=204,
      *         description="Department deleted successfully"
@@ -195,11 +228,13 @@ class DepartmentController extends AbstractApiController
      *         response=403,
      *         description="Department cannot be deleted (has tickets)"
      *     ),
+     *
      *     @OA\Parameter(
      *         name="department",
      *         in="path",
      *         description="ID of the department",
      *         required=true,
+     *
      *         @OA\Schema(type="integer")
      *     )
      * )
@@ -210,6 +245,7 @@ class DepartmentController extends AbstractApiController
             return response()->json(['message' => __('helpdesk.admin.departments.error_delete')], 403);
         }
         $department->delete();
+
         return response()->json(['message' => 'Department deleted successfully'], 204);
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Billing;
 
 use App\Models\Account\Customer;
@@ -25,8 +25,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @property int $id
  * @property int $invoice_id
  * @property string $status
@@ -37,6 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\Billing\Invoice $invoice
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceLog onlyTrashed()
@@ -52,6 +51,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceLog whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceLog withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceLog withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class InvoiceLog extends Model

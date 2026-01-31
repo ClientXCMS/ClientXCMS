@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Requests\Provisioning;
 
@@ -62,7 +62,7 @@ class UpdateServiceRequest extends FormRequest
             'data' => ['nullable', 'array'],
             'description' => ['nullable', 'string', 'max:1000'],
             'resync' => ['nullable'],
-        ], $this->pricingRules(!$this->has('resync')));
+        ], $this->pricingRules(! $this->has('resync')));
 
     }
 

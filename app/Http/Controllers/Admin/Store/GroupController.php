@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Admin\Store;
 
@@ -111,7 +111,7 @@ class GroupController extends AbstractCrudController
             $newGroup = $group->replicate();
             $newGroup->name = $group->name.' - '.__('global.clone');
             $newGroup->slug = $group->slug.'-'.__('global.clone');
-            while(Group::withTrashed()->where('slug', $newGroup->slug)->exists()) {
+            while (Group::withTrashed()->where('slug', $newGroup->slug)->exists()) {
                 $newGroup->slug = $newGroup->slug.'-'.rand(1000, 9999);
             }
             $newGroup->save();

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 use App\Http\Controllers\Admin\Core\DashboardController;
 use App\Http\Controllers\Admin\Settings\SettingsController;
@@ -36,6 +36,7 @@ Route::name('settings.')->prefix('settings')->middleware('admin')->group(functio
     Route::post('/extensions/{type}/{extension}/enable', [SettingsExtensionController::class, 'enable'])->name('extensions.enable');
     Route::post('/extensions/{type}/{extension}/disable', [SettingsExtensionController::class, 'disable'])->name('extensions.disable');
     Route::post('/extensions/{type}/{extension}/update', [SettingsExtensionController::class, 'update'])->name('extensions.update');
+    Route::get('/extensions', [SettingsExtensionController::class, 'showExtensions'])->name('extensions.index');
     Route::post('/extensions/clear', [SettingsExtensionController::class, 'clear'])->name('extensions.clear');
 });
 

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Theme;
 
@@ -60,10 +60,6 @@ class ThemeManager
         }
     }
 
-    /**
-     * Boot the theme by loading its boot.php file if it exists.
-     * This allows themes to register services, inject data into addons, etc.
-     */
     protected function bootTheme(): void
     {
         $bootFile = $this->themePath('boot.php');
@@ -73,11 +69,6 @@ class ThemeManager
         }
     }
 
-    /**
-     * Register theme seeders with the extension manager.
-     * This allows themes to define seeders in theme.json that will be
-     * executed during db:seed like module seeders.
-     */
     protected function registerThemeSeeders(): void
     {
         if (!$this->theme || !$this->theme->hasSeeder()) {
@@ -90,22 +81,46 @@ class ThemeManager
         }
     }
 
-    public static function clearCache()
+    protected function registerThemeSeeders(): void
     {
-        Cache::forget('theme_configuration');
+        if (! $this->theme || ! $this->theme->hasSeeder()) {
+            return;
+        }
+
+        $seederClass = $this->theme->loadSeeder();
+        if ($seederClass !== null) {
+            app('extension')->addSeeder($seederClass);
+        }
     }
 
-    /**
-     * Set the current rendering section for section_config() helper
-     */
+    private const CACHE_KEY_PREFIX = 'theme_configuration';
+
+    public static function clearCache(): void
+    {
+        $enabledLocales = self::getEnabledLocales();
+        foreach ($enabledLocales as $locale) {
+            Cache::forget(self::CACHE_KEY_PREFIX.'_'.$locale);
+        }
+        Cache::forget(self::CACHE_KEY_PREFIX);
+    }
+
+    private static function getEnabledLocales(): array
+    {
+        try {
+            $locales = array_keys(\App\Services\Core\LocaleService::getLocalesNames());
+
+            return array_unique(array_map(function ($locale) {
+                return str_contains($locale, '_') ? explode('_', $locale)[0] : $locale;
+            }, $locales));
+        } catch (\Exception $e) {
+            return ['fr', 'en'];
+        }
+    }
     public function setCurrentRenderingSection(?Section $section): void
     {
         $this->currentRenderingSection = $section;
     }
 
-    /**
-     * Get the current rendering section
-     */
     public function getCurrentRenderingSection(): ?Section
     {
         return $this->currentRenderingSection;
@@ -189,7 +204,7 @@ class ThemeManager
             return collect();
         }
         $support = $this->getTheme()->supportOption('menu_dropdown');
-        $items = $this->getSetting()[$type . '_links'] ?? collect();
+        $items = $this->getSetting()[$type.'_links'] ?? collect();
 
         return $items->filter(function (MenuLink $item) use ($support) {
             return $item->canShowed($support);
@@ -222,11 +237,15 @@ class ThemeManager
 
     public function getSetting()
     {
-        return Cache::remember('theme_configuration', 60 * 60 * 24 * 7, function () {
+        $locale = app()->getLocale();
+        $cacheKey = self::CACHE_KEY_PREFIX.'_'.$locale;
+
+        return Cache::remember($cacheKey, 60 * 60 * 24 * 7, function () {
             $types = \App\Models\Personalization\MenuLink::pluck('type')->unique()->toArray();
             $links = collect($types)->mapWithKeys(function ($type) {
-                return [$type . '_links' => MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get()];
+                return [$type.'_links' => MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get()];
             });
+
             return $links->merge([
                 'socials' => SocialNetwork::all()->where('hidden', false),
                 'sections_pages' => $this->getSectionsPages(),

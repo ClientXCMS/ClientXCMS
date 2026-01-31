@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Helpdesk;
 
 use App\Models\Traits\Loggable;
@@ -26,14 +26,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="SupportDepartment",
  *     title="Support Department",
  *     description="A support department that handles support tickets and groups staff subscribers.",
  *     required={"name", "description"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="Technical Support"),
  *     @OA\Property(property="description", type="string", example="Handles all technical issues related to services."),
@@ -42,22 +40,23 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *         property="staff_subscribers",
  *         type="array",
  *         description="List of admin IDs subscribed to this department",
- * 
+ *
  *         @OA\Items(type="integer"),
  *         example={2, 5, 9}
  *     ),
- * 
+ *
  *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-03-01T10:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-04-01T15:30:00Z"),
  *     @OA\Property(property="deleted_at", type="string", format="date-time", nullable=true, example=null),
  *     @OA\Property(
  *         property="tickets",
  *         type="array",
- * 
+ *
  *         @OA\Items(ref="#/components/schemas/SupportTicket"),
  *         description="List of tickets belonging to this department"
  *     )
  * )
+ *
  * @property int $id
  * @property string $name
  * @property string|null $description
@@ -70,6 +69,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $tickets_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Personalization\Translation> $translations
  * @property-read int|null $translations_count
+ *
  * @method static \Database\Factories\Helpdesk\DepartmentFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportDepartment newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportDepartment newQuery()
@@ -85,6 +85,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportDepartment whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportDepartment withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportDepartment withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class SupportDepartment extends Model

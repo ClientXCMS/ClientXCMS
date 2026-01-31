@@ -35,6 +35,11 @@ class ProfileControllerTest extends \Tests\TestCase
             'country' => 'FR',
             'company_name' => 'Doe Industries',
             'billing_details' => 'Billing details here',
+            'address' => 'test',
+            'city' => 'roubaix',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'zipcode' => '59100',
         ]);
 
         $response->assertRedirect(route('front.profile.index'));
@@ -45,6 +50,11 @@ class ProfileControllerTest extends \Tests\TestCase
             'country' => 'FR',
             'company_name' => 'Doe Industries',
             'billing_details' => 'Billing details here',
+            'address' => 'test',
+            'city' => 'roubaix',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'zipcode' => '59100',
         ]);
     }
 

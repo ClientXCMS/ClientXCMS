@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Personalization;
 
@@ -38,6 +38,24 @@ use Illuminate\Support\Facades\Cache;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section wherePath($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereThemeUuid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereUrl($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section whereUuid($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Section withoutTrashed()
+ *
+ * @mixin \Eloquent
  */
 class Section extends Model
 {
@@ -114,7 +132,7 @@ class Section extends Model
 
     public function saveContent(string $content)
     {
-        if ($this->toDTO()->isProtected()){
+        if ($this->toDTO()->isProtected()) {
             return;
         }
         $theme = app('theme')->getTheme();
@@ -138,11 +156,6 @@ class Section extends Model
         $this->save();
     }
 
-    /**
-     * Get a configuration value for this section.
-     * Uses the translations table for translatable fields (via Translatable trait),
-     * and the config JSON column for non-translatable fields.
-     */
     public function getSetting(string $key, mixed $default = null, ?string $locale = null): mixed
     {
         $fieldDef = $this->getFieldDefinition($key);
@@ -164,11 +177,6 @@ class Section extends Model
         return $this->castConfigValue($config[$key], $fieldDef['type'] ?? 'text');
     }
 
-    /**
-     * Set a configuration value for this section.
-     * Uses the translations table for translatable fields,
-     * and the config JSON column for non-translatable fields.
-     */
     public function setSetting(string $key, mixed $value, ?string $locale = null): void
     {
         $fieldDef = $this->getFieldDefinition($key);
@@ -190,9 +198,6 @@ class Section extends Model
         $this->clearConfigCache();
     }
 
-    /**
-     * Delete a configuration value for this section.
-     */
     public function deleteSetting(string $key, ?string $locale = null): void
     {
         $fieldDef = $this->getFieldDefinition($key);
@@ -216,27 +221,18 @@ class Section extends Model
         $this->clearConfigCache();
     }
 
-    /**
-     * Get all configurable fields from sections.json
-     */
     public function getConfigurableFields(): array
     {
         $dto = $this->toDTO();
         return $dto->json['fields'] ?? [];
     }
 
-    /**
-     * Check if this section has configurable fields
-     */
     public function isConfigurable(): bool
     {
         $dto = $this->toDTO();
         return ($dto->json['configurable'] ?? false) && !empty($this->getConfigurableFields());
     }
 
-    /**
-     * Get field definition by key
-     */
     public function getFieldDefinition(string $key): ?array
     {
         $fields = $this->getConfigurableFields();
@@ -248,9 +244,6 @@ class Section extends Model
         return null;
     }
 
-    /**
-     * Cast a config value to its proper type based on field definition
-     */
     private function castConfigValue(mixed $value, string $type): mixed
     {
         return match ($type) {
@@ -261,9 +254,6 @@ class Section extends Model
         };
     }
 
-    /**
-     * Prepare a config value for storage
-     */
     private function prepareConfigValue(mixed $value): mixed
     {
         if (is_array($value)) {
@@ -275,9 +265,6 @@ class Section extends Model
         return $value;
     }
 
-    /**
-     * Clear the section config cache
-     */
     private function clearConfigCache(): void
     {
         Cache::forget('theme_configuration');

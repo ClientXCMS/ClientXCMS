@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Provisioning;
 
 use App\Models\Traits\HasMetadata;
@@ -26,13 +26,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- *
- *
  * @property int $id
  * @property string $domain
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SubdomainHost newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SubdomainHost newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SubdomainHost onlyTrashed()
@@ -44,11 +43,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SubdomainHost whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SubdomainHost withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SubdomainHost withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class SubdomainHost extends Model
 {
-    use HasFactory, Loggable, softDeletes, HasMetadata;
+    use HasFactory, HasMetadata, Loggable, softDeletes;
 
     protected $fillable = ['domain'];
 

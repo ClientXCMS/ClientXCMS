@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Auth;
 
@@ -82,6 +82,14 @@ class RegisteredUserController extends Controller
             'gdpr_compliment' => is_gdpr_compliment(),
         ]);
 
+        // Save security question if provided
+        if ($request->filled('security_question_id') && $request->filled('security_answer')) {
+            $user->setSecurityQuestion(
+                (int) $request->security_question_id,
+                $request->security_answer
+            );
+        }
+
         if (setting('auto_confirm_registration', false) === true) {
             $user->markEmailAsVerified();
         }
@@ -93,16 +101,28 @@ class RegisteredUserController extends Controller
         if ($request->has('origin') && $request->get('origin') != null) {
             $user->attachMetadata('origin_url', str_replace(url('/'), '', $request->get('origin')));
         }
+
+        // Save "How did you find us" origin source
+        if ($request->filled('origin_source')) {
+            $originValue = $request->origin_source;
+            // If "Other" is selected and a custom value is provided, use the custom value
+            if (strtolower($originValue) === 'autre' || strtolower($originValue) === 'other') {
+                if ($request->filled('origin_other')) {
+                    $originValue = $request->origin_other;
+                }
+            }
+            $user->attachMetadata('origin', $originValue);
+        }
+
         Auth::login($user);
         if (setting('auto_confirm_registration', false) === true) {
             return redirect()->route('front.client.index')->with('success', __('auth.register.success'));
         } else {
             return redirect()->route('front.client.onboarding');
         }
-
     }
 
-    private function formatPhone(?string $phone = null, string $country): ?string
+    private function formatPhone(?string $phone, string $country): ?string
     {
         try {
             if ($phone === null || $phone === '') {

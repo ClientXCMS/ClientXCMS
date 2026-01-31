@@ -3,7 +3,6 @@
 namespace Tests\Feature\Admin\Personalization;
 
 use App\Models\Admin\EmailTemplate;
-use App\Services\Core\LocaleService;
 use Database\Seeders\EmailTemplateSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

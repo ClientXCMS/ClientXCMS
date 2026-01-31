@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Store;
 
 use App\Models\Account\Customer;
@@ -32,8 +32,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Session;
 
 /**
- * 
- *
  * @property int $id
  * @property string $code
  * @property string $type
@@ -61,6 +59,7 @@ use Session;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Store\Product> $products
  * @property-read int|null $products_count
  * @property-read int|null $usages_count
+ *
  * @method static \Database\Factories\CouponFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Coupon newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Coupon newQuery()
@@ -87,6 +86,7 @@ use Session;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Coupon whereUsages($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Coupon withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Coupon withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Coupon extends Model
@@ -181,11 +181,13 @@ class Coupon extends Model
             if ($this->getPricingRecurring($service->billing, BasketRow::PRICE) <= 0) {
                 return false;
             }
+
             return true;
         } else {
             if ($this->getPricingRecurring($service->billing, BasketRow::PRICE) <= 0) {
                 return false;
             }
+
             return true;
         }
     }
@@ -320,6 +322,7 @@ class Coupon extends Model
                 $can = true;
             }
         }
+
         return $can;
     }
 
@@ -335,7 +338,7 @@ class Coupon extends Model
             'sub_setup' => number_format($unit_setup_ht - $this->applyAmount($unit_setup_ht, $billing, BasketRow::SETUP_FEES), 2),
             'value_price' => (float) $this->getPricingRecurring($billing, BasketRow::PRICE) ?? 0,
             'value_setup' => (float) $this->getPricingRecurring($billing, BasketRow::SETUP_FEES) ?? 0,
-        ];   
+        ];
     }
 
     protected static function newFactory()

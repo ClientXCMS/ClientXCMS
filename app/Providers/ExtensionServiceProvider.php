@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Providers;
 
@@ -43,7 +43,7 @@ class ExtensionServiceProvider extends ServiceProvider
         $this->app->singleton('theme', ThemeManager::class);
         $this->app->make(ExtensionManager::class)->autoload($this->app);
         $service = $this->app->make('settings');
-        $service->addCard('personalization', 'personalization.title', 'personalization.description', 10);
+        $service->addCard('personalization', 'personalization.title', 'personalization.description', 10, null, true, 2, 'bi bi-brush');
         $service->addCardItem('personalization', 'theme', 'personalization.theme.title', 'personalization.theme.description', 'bi bi-brush', [ThemeController::class, 'showTheme'], Permission::MANAGE_PERSONALIZATION);
         $service->addCardItem('personalization', 'home', 'personalization.home.title', 'personalization.home.description', 'bi bi-house', [SettingsPersonalizationController::class, 'showHomeSettings'], Permission::MANAGE_SETTINGS);
 
