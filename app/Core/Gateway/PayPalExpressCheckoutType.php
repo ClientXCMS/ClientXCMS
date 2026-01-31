@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Core\Gateway;
 
@@ -195,19 +195,19 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
     public function sourceReturn(Request $request)
     {
         $token = $request->query('approval_token_id');
-        if (!$token) {
+        if (! $token) {
             return redirect()->route('front.payment-methods.index')->with('error', __('client.payment-methods.errors.not_found'));
         }
         $req = new HttpRequest('/v3/vault/payment-tokens/', 'POST');
         $req->body = json_encode([
             'approval_token_id' => $token,
-            'customer' => ['id' => 'CLIENTXCMS-' . auth()->id()],
+            'customer' => ['id' => 'CLIENTXCMS-'.auth()->id()],
             'payment_source' => [
                 'token' => [
-                    "id" => $token,
-                    "type" =>"SETUP_TOKEN"
-                ]
-            ]
+                    'id' => $token,
+                    'type' => 'SETUP_TOKEN',
+                ],
+            ],
         ]);
         try {
             $resp = $this->executeClient($req);
@@ -215,32 +215,36 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
                 $source = $resp->result->customer->id;
                 /** @var Customer $customer */
                 $customer = auth()->user();
-                if (!$customer) {
+                if (! $customer) {
                     logger()->error('Cannot find customer for PayPal source return');
+
                     return redirect()->route('front.payment-methods.index')->with('error', __('store.checkout.wrong_payment'));
                 }
                 $customer->attachMetadata('paypal_customer_id', $source);
                 if ($customer->getDefaultPaymentMethod() == null) {
                     $customer->setDefaultPaymentMethod($resp->result->payment_tokens[0]->id);
                 }
+
                 return redirect()->route('front.payment-methods.index')->with('success', __('client.payment-methods.success'));
             }
         } catch (\Exception $e) {
             logger()->error('PayPal source return error: '.$e->getMessage());
+
             return redirect()->route('front.payment-methods.index')->with('error', __(''));
         }
     }
 
     public function removeSource(PaymentMethodSourceDTO $sourceDTO)
     {
-        $req = new HttpRequest('/v3/vault/payment-tokens/' . $sourceDTO->id, 'DELETE');
+        $req = new HttpRequest('/v3/vault/payment-tokens/'.$sourceDTO->id, 'DELETE');
         try {
             $resp = $this->executeClient($req);
             if ($resp->statusCode === 204) {
                 /** @var Customer $customer */
                 $customer = auth()->user();
-                if (!$customer) {
+                if (! $customer) {
                     logger()->error('Cannot find customer for PayPal source removal');
+
                     return redirect()->route('front.payment-methods.index')->with('error', __('store.checkout.wrong_payment'));
                 }
             }
@@ -256,38 +260,40 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
             'payment_source' => [
                 'paypal' => [
                     'description' => 'Test Content',
-                    "usage_pattern" => "IMMEDIATE",
-                    "usage_type" => "MERCHANT",
-                    "customer_type" => "CONSUMER",
-                    "experience_context" => [
-                        "shipping_preference" => "SET_PROVIDED_ADDRESS",
-                          "payment_method_preference" => "IMMEDIATE_PAYMENT_REQUIRED",
-                          "brand_name" => setting('app_name'),
-                          "locale" => 'en-US',
-                          "return_url" => route('gateways.source.return', ['gateway' => 'paypal_express_checkout']),
-                          "cancel_url" => route('front.payment-methods.index')
+                    'usage_pattern' => 'IMMEDIATE',
+                    'usage_type' => 'MERCHANT',
+                    'customer_type' => 'CONSUMER',
+                    'experience_context' => [
+                        'shipping_preference' => 'SET_PROVIDED_ADDRESS',
+                        'payment_method_preference' => 'IMMEDIATE_PAYMENT_REQUIRED',
+                        'brand_name' => setting('app_name'),
+                        'locale' => 'en-US',
+                        'return_url' => route('gateways.source.return', ['gateway' => 'paypal_express_checkout']),
+                        'cancel_url' => route('front.payment-methods.index'),
                     ],
-                ]
+                ],
             ],
-            'customer' => ['id' => 'CLIENTXCMS-' . auth()->id()],
+            'customer' => ['id' => 'CLIENTXCMS-'.auth()->id()],
         ]);
         try {
             $resp = $this->executeClient($req);
-            $approveLink = collect($resp->result->links)->first(fn($link) => $link->rel === 'approve');
+            $approveLink = collect($resp->result->links)->first(fn ($link) => $link->rel === 'approve');
+
             return redirect($approveLink->href);
         } catch (\Exception $e) {
             throw new WrongPaymentException($e->getMessage());
         }
     }
+
     public function payInvoice(Invoice $invoice, PaymentMethodSourceDTO $sourceDTO): GatewayPayInvoiceResultDTO
     {
-        $vaultId  = $invoice->customer->getMetadata('paypal_vault_id');
+        $vaultId = $invoice->customer->getMetadata('paypal_vault_id');
 
-        if (!$vaultId) {
+        if (! $vaultId) {
             throw new WrongPaymentException('The customer does not have a PayPal vault_id.');
         }
 
-        $orderReq = new OrdersCreateRequest();
+        $orderReq = new OrdersCreateRequest;
         $orderReq->prefer('return=representation');
 
         $orderReq->body = [
@@ -300,12 +306,12 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
 
                         'value' => number_format($invoice->total, 2, '.', ''),
                     ],
-                    'description' => 'Payment for Invoice #' . $invoice->id,
+                    'description' => 'Payment for Invoice #'.$invoice->id,
                 ],
             ],
             'payment_source' => [
                 'token' => [
-                    'id'   => $sourceDTO->id,
+                    'id' => $sourceDTO->id,
                     'type' => 'PAYMENT_METHOD_TOKEN',
                 ],
             ],
@@ -314,13 +320,13 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
             $orderRes = $this->executeClient($orderReq);
         } catch (\PayPalHttp\HttpException $e) {
             logger()->error($e->getMessage());
-            throw new WrongPaymentException('PayPal order creation failed: ' . $e->getMessage());
+            throw new WrongPaymentException('PayPal order creation failed: '.$e->getMessage());
         } catch (\Exception $e) {
             logger()->error($e->getMessage());
-            throw new WrongPaymentException('An unexpected error occurred during PayPal order creation: ' . $e->getMessage());
+            throw new WrongPaymentException('An unexpected error occurred during PayPal order creation: '.$e->getMessage());
         }
         $orderId = $orderRes->result->id;
-        $status  = $orderRes->result->status;
+        $status = $orderRes->result->status;
         if ($status === 'APPROVED') {
             $captureReq = new OrdersCaptureRequest($orderId);
             $captureReq->prefer('return=representation');
@@ -329,32 +335,33 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
                 $captureRes = $this->executeClient($captureReq);
             } catch (\PayPalHttp\HttpException $e) {
                 logger()->error($e->getMessage());
-                throw new WrongPaymentException('PayPal capture failed: ' . $e->getMessage());
+                throw new WrongPaymentException('PayPal capture failed: '.$e->getMessage());
             } catch (\Exception $e) {
                 logger()->error($e->getMessage());
-                throw new WrongPaymentException('An unexpected error occurred during PayPal capture: ' . $e->getMessage());
+                throw new WrongPaymentException('An unexpected error occurred during PayPal capture: '.$e->getMessage());
             }
             $finalStatus = $captureRes->result->status ?? 'FAILED';
-        } else if ($status != "COMPLETED") {
-            throw new WrongPaymentException('PayPal order was not approved for capture. Status: ' . $status);
-        } else{
+        } elseif ($status != 'COMPLETED') {
+            throw new WrongPaymentException('PayPal order was not approved for capture. Status: '.$status);
+        } else {
             $finalStatus = $status;
             $captureRes = $orderRes;
         }
         if ($finalStatus !== 'COMPLETED') {
-            throw new WrongPaymentException('PayPal payment was not completed. Final status: ' . $finalStatus);
+            throw new WrongPaymentException('PayPal payment was not completed. Final status: '.$finalStatus);
         }
         $capture = $captureRes->result->purchase_units[0]->payments->captures[0] ?? null;
-        if (!$capture) {
+        if (! $capture) {
             throw new WrongPaymentException('Missing capture data from PayPal response.');
         }
 
         $invoice->update([
             'external_id' => $capture->id,
-            'fees'        => $capture->seller_receivable_breakdown->paypal_fee->value ?? null,
+            'fees' => $capture->seller_receivable_breakdown->paypal_fee->value ?? null,
         ]);
         $invoice->attachMetadata('used_payment_method', $sourceDTO->id);
         $invoice->complete();
+
         return new GatewayPayInvoiceResultDTO(true, 'Done', $invoice, $sourceDTO);
     }
 
@@ -362,7 +369,8 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
     {
         if ($invoice->external_id) {
             $url = $_ENV['PAYPAL_SANDBOX'] == 'sandbox' ? 'https://www.sandbox.paypal.com/unifiedtransactions/details/payment/' : 'https://www.paypal.com/unifiedtransactions/details/payment/';
-            return $url . $invoice->external_id;
+
+            return $url.$invoice->external_id;
         }
 
         return null;
@@ -376,15 +384,16 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
     public function getSources(Customer $customer): array
     {
         $customer_id = $customer->getMetadata('paypal_customer_id');
-        if (!$customer_id) {
+        if (! $customer_id) {
             return [];
         }
-        $req = new HttpRequest('/v3/vault/payment-tokens?customer_id=' . $customer_id, 'GET');
+        $req = new HttpRequest('/v3/vault/payment-tokens?customer_id='.$customer_id, 'GET');
         try {
             $resp = $this->executeClient($req);
         } catch (\Exception $e) {
             return [];
         }
+
         return collect($resp->result->payment_tokens ?? [])->map(function ($token) use ($customer) {
             return new PaymentMethodSourceDTO(
                 $token->id,
@@ -405,9 +414,10 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
         try {
             $request->headers['Authorization'] = 'Basic '.$client->environment->authorizationString();
             $request->headers['Content-Type'] = 'application/json';
+
             return $client->execute($request);
         } catch (\Exception $e) {
-            throw new WrongPaymentException('PayPal API request failed: ' . $e->getMessage());
+            throw new WrongPaymentException('PayPal API request failed: '.$e->getMessage());
         }
     }
 }

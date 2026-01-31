@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Services;
 
@@ -80,9 +80,9 @@ class SettingsService
         Setting::updateSettings($this->settings->all());
     }
 
-    public function addCard(string $uuid, string $name, string $description, int $order, ?Collection $items = null, bool $is_active = true, int $columns = 2): void
+    public function addCard(string $uuid, string $name, string $description, int $order, ?Collection $items = null, bool $is_active = true, int $columns = 2, string $icon = 'bi bi-gear'): void
     {
-        $this->cards->push(new SettingsCardDTO($uuid, $name, $description, $order, $items ?? collect(), $is_active, $columns));
+        $this->cards->push(new SettingsCardDTO($uuid, $name, $description, $order, $items ?? collect(), $is_active, $columns, $icon));
     }
 
     public function getCards(): Collection

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,14 +17,11 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Billing;
 
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
- *
  * @property int $id
  * @property int $subscription_id
  * @property int $invoice_id
@@ -33,6 +31,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property float|null $amount
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SubscriptionLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SubscriptionLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SubscriptionLog query()
@@ -45,6 +44,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SubscriptionLog whereStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SubscriptionLog whereSubscriptionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SubscriptionLog whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class SubscriptionLog extends Model

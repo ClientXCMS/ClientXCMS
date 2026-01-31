@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Admin\Security;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
@@ -31,7 +31,9 @@ class DatabaseController extends Controller
     public function index()
     {
         staff_aborts_permission(Permission::MANAGE_DATABASE);
-        $extensions = collect(app('extension')->getAllExtensions())->mapWithKeys(function (ExtensionDTO $extension) {
+        $extensions = collect(app('extension')->getAllExtensions())->filter(function (ExtensionDTO $extension) {
+            return $extension->supportMigration();
+        })->mapWithKeys(function (ExtensionDTO $extension) {
             return [$extension->uuid => $extension->name()];
         })->toArray();
         $extensions['core'] = 'Core';

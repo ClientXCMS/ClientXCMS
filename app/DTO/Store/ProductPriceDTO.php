@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\DTO\Store;
 
 use App\Services\Store\RecurringService;
@@ -23,25 +25,32 @@ use DragonCode\Contracts\Support\Jsonable;
 
 class ProductPriceDTO implements Jsonable
 {
-
     public string $mode;
 
     public float $price_ht;
+
     public float $setup_ht;
+
     public ?float $firstpayment_ht;
 
     public float $base_price;
+
     public float $base_setup;
+
     public ?float $base_firstpayment;
 
     public string $currency;
+
     public string $recurring;
-    public bool   $free;
+
+    public bool $free;
+
     public float $price;
+
     public float $setup;
 
     public function __construct(
-        float  $recurringprice,
+        float $recurringprice,
         ?float $setup,
         string $currency,
         string $recurring,
@@ -51,30 +60,46 @@ class ProductPriceDTO implements Jsonable
     ) {
         $this->mode = $mode ?? setting('store_mode_tax', TaxesService::MODE_TAX_EXCLUDED);
 
-        $this->base_price        = $this->resolveBaseAmount($recurringprice, $amountsAreHt);
-        $this->base_setup        = $this->resolveBaseAmount($setup ?? 0.0, $amountsAreHt);
+        $this->base_price = $this->resolveBaseAmount($recurringprice, $amountsAreHt);
+        $this->base_setup = $this->resolveBaseAmount($setup ?? 0.0, $amountsAreHt);
         $this->base_firstpayment = $firstpayment !== null ? $this->resolveBaseAmount($firstpayment, $amountsAreHt) : null;
 
-        $this->price_ht        = $amountsAreHt ? round($recurringprice, 2) : $this->normalizeToHt($recurringprice);
-        $this->setup_ht        = $setup       !== null ? ($amountsAreHt ? round($setup, 2)       : $this->normalizeToHt($setup))       : 0.0;
-        $this->firstpayment_ht = $firstpayment!== null ? ($amountsAreHt ? round($firstpayment, 2): $this->normalizeToHt($firstpayment)): null;
+        $this->price_ht = $amountsAreHt ? round($recurringprice, 2) : $this->normalizeToHt($recurringprice);
+        $this->setup_ht = $setup !== null ? ($amountsAreHt ? round($setup, 2) : $this->normalizeToHt($setup)) : 0.0;
+        $this->firstpayment_ht = $firstpayment !== null ? ($amountsAreHt ? round($firstpayment, 2) : $this->normalizeToHt($firstpayment)) : null;
 
-        $this->currency  = $currency;
+        $this->currency = $currency;
         $this->recurring = $recurring;
-        $this->free      = $this->price_ht == 0.0;
+        $this->free = $this->price_ht == 0.0;
         $this->price = $this->price_ht;
         $this->setup = $this->setup_ht;
 
     }
 
-    public function isModeTTC(): bool { return $this->mode === TaxesService::MODE_TAX_INCLUDED; }
-    public function isModeHT(): bool  { return ! $this->isModeTTC(); }
+    public function isModeTTC(): bool
+    {
+        return $this->mode === TaxesService::MODE_TAX_INCLUDED;
+    }
 
-    public function isFree(): bool { return $this->free; }
+    public function isModeHT(): bool
+    {
+        return ! $this->isModeTTC();
+    }
 
-    public function getSymbol(): string { return currency_symbol($this->currency); }
+    public function isFree(): bool
+    {
+        return $this->free;
+    }
 
-    private function vatRate(): float   { return tax_percent(); }
+    public function getSymbol(): string
+    {
+        return currency_symbol($this->currency);
+    }
+
+    private function vatRate(): float
+    {
+        return tax_percent();
+    }
 
     private function resolveBaseAmount(float $amount, bool $amountIsHt): float
     {
@@ -93,41 +118,65 @@ class ProductPriceDTO implements Jsonable
         }
 
         $rate = $this->vatRate();
-        $ht   = $amount / (1 + $rate / 100);
+        $ht = $amount / (1 + $rate / 100);
+
         return round($ht, 2);
     }
 
     private function format(float $number): float
     {
-        return fmod($number, 1.0) === 0.0 ? (float)(int)$number : round($number, 2);
+        return fmod($number, 1.0) === 0.0 ? (float) (int) $number : round($number, 2);
     }
 
-    public function priceHT(): float  { return $this->price_ht; }
-    public function setupHT(): float  { return $this->setup_ht; }
-    public function firstPaymentHT(): float { return $this->firstPayment(); }
+    public function priceHT(): float
+    {
+        return $this->price_ht;
+    }
 
-    public function setup(): float  { return $this->setup; }
+    public function setupHT(): float
+    {
+        return $this->setup_ht;
+    }
 
-    public function priceTTC(): float {
+    public function firstPaymentHT(): float
+    {
+        return $this->firstPayment();
+    }
+
+    public function setup(): float
+    {
+        return $this->setup;
+    }
+
+    public function priceTTC(): float
+    {
         return $this->isModeHT()
             ? TaxesService::getPriceWithVat($this->price_ht)
             : $this->base_price;
     }
-    public function setupTTC(): float {
+
+    public function setupTTC(): float
+    {
         return $this->isModeHT()
             ? TaxesService::getPriceWithVat($this->setup_ht)
             : $this->base_setup;
     }
-    public function firstPaymentTTC(): float {
+
+    public function firstPaymentTTC(): float
+    {
         if ($this->firstpayment_ht !== null) {
             return $this->isModeHT()
                 ? TaxesService::getPriceWithVat($this->firstpayment_ht)
                 : $this->base_firstpayment;
         }
+
         return 0.0;
     }
 
-    public function hasSetup(): bool { return $this->setup_ht > 0.0; }
+    public function hasSetup(): bool
+    {
+        return $this->setup_ht > 0.0;
+    }
 
     public function displayPrice(?float $baseHT = null): float
     {
@@ -163,6 +212,7 @@ class ProductPriceDTO implements Jsonable
     public function firstPayment(): float
     {
         $ht = $this->firstpayment_ht ?? ($this->price_ht + $this->setup_ht);
+
         return $this->format($ht);
     }
 
@@ -170,6 +220,7 @@ class ProductPriceDTO implements Jsonable
     {
         $htTotal = $this->firstPayment();
         $ttcTotal = TaxesService::getPriceWithVat($htTotal);
+
         return $this->isModeHT() ? $htTotal : TaxesService::getPriceWithoutVat($ttcTotal);
     }
 
@@ -183,7 +234,10 @@ class ProductPriceDTO implements Jsonable
         return $this->taxAmount();
     }
 
-    public function taxRate(): float { return $this->vatRate(); }
+    public function taxRate(): float
+    {
+        return $this->vatRate();
+    }
 
     public function recurring(): array
     {
@@ -202,19 +256,19 @@ class ProductPriceDTO implements Jsonable
 
         if ($this->hasSetup() && $setup || $this->firstpayment_ht !== null) {
             return trans('store.product.setupmessage', [
-                'first'     => $this->getPriceByDisplayMode($firstHT),
+                'first' => $this->getPriceByDisplayMode($firstHT),
                 'recurring' => $this->getPriceByDisplayMode($recurringHT),
-                'currency'  => $this->getSymbol(),
-                'tax'       => $this->taxTitle(),
-                'unit'      => $unit,
+                'currency' => $this->getSymbol(),
+                'tax' => $this->taxTitle(),
+                'unit' => $unit,
             ]);
         }
 
         return trans('store.product.nocharge', [
-            'first'    => $this->getPriceByDisplayMode($recurringHT),
+            'first' => $this->getPriceByDisplayMode($recurringHT),
             'currency' => $this->getSymbol(),
-            'unit'     => $unit,
-            'tax'      => $this->taxTitle(),
+            'unit' => $unit,
+            'tax' => $this->taxTitle(),
         ]);
     }
 
@@ -231,6 +285,7 @@ class ProductPriceDTO implements Jsonable
         if ($monthlyprice == 0) {
             return 0;
         }
+
         return round(($monthlyprice - $this->price_ht - $this->setup_ht) / $monthlyprice * 100, 2);
     }
 
@@ -244,23 +299,23 @@ class ProductPriceDTO implements Jsonable
     public function toJson(int $options = 0): string
     {
         return json_encode([
-            'currency'         => $this->currency,
-            'mode'             => $this->mode,
-            'tax_rate'         => $this->taxRate(),
+            'currency' => $this->currency,
+            'mode' => $this->mode,
+            'tax_rate' => $this->taxRate(),
 
-            'price_ht'         => $this->price_ht,
-            'setup_ht'         => $this->setup_ht,
+            'price_ht' => $this->price_ht,
+            'setup_ht' => $this->setup_ht,
             'first_payment_ht' => $this->firstpayment_ht,
-            'subtotal'         => $this->firstPayment(),
-            'tax'              => $this->taxAmount(),
-            'price_ttc'        => $this->priceTTC(),
-            'setup_ttc'        => $this->setupTTC(),
-            'first_payment_ttc'=> $this->firstPaymentTTC(),
-            'recurring'        => $this->recurring,
-            'setup'            => $this->setup(),
+            'subtotal' => $this->firstPayment(),
+            'tax' => $this->taxAmount(),
+            'price_ttc' => $this->priceTTC(),
+            'setup_ttc' => $this->setupTTC(),
+            'first_payment_ttc' => $this->firstPaymentTTC(),
+            'recurring' => $this->recurring,
+            'setup' => $this->setup(),
             'recurringPayment' => $this->recurringPayment(),
-            'onetimePayment'   => $this->onetimePayment(),
-            'free'             => $this->free,
+            'onetimePayment' => $this->onetimePayment(),
+            'free' => $this->free,
         ], $options);
     }
 }

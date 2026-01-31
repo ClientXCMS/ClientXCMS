@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Http\Controllers\Admin\Security;
 
 use App\Http\Controllers\Admin\AbstractCrudController;
@@ -62,6 +64,45 @@ class ApiKeysController extends AbstractCrudController
                 'invoices:update' => __('global.update'),
                 'invoices:delete' => __('global.delete'),
             ],
+            __('coupon.coupons') => [
+                'coupons:index' => __('global.listing'),
+                'coupons:store' => __('global.store'),
+                'coupons:show' => __('global.show'),
+                'coupons:update' => __('global.update'),
+                'coupons:delete' => __('global.delete'),
+            ],
+            __('provisioning.admin.servers.title') => [
+                'servers:index' => __('global.listing'),
+                'servers:store' => __('global.store'),
+                'servers:show' => __('global.show'),
+                'servers:update' => __('global.update'),
+                'servers:delete' => __('global.delete'),
+                'servers:test' => __('global.test'),
+            ],
+            __('provisioning.admin.subdomains_hosts.title') => [
+                'subdomains:index' => __('global.listing'),
+                'subdomains:store' => __('global.store'),
+                'subdomains:show' => __('global.show'),
+                'subdomains:update' => __('global.update'),
+                'subdomains:delete' => __('global.delete'),
+            ],
+            __('helpdesk.admin.departments.title') => [
+                'departments:index' => __('global.listing'),
+                'departments:store' => __('global.store'),
+                'departments:show' => __('global.show'),
+                'departments:update' => __('global.update'),
+                'departments:delete' => __('global.delete'),
+            ],
+            __('global.tickets') => [
+                'tickets:index' => __('global.listing'),
+                'tickets:store' => __('global.store'),
+                'tickets:show' => __('global.show'),
+                'tickets:update' => __('global.update'),
+                'tickets:delete' => __('global.delete'),
+                'tickets:reply' => __('helpdesk.support.show.reply'),
+                'tickets:close' => __('helpdesk.support.show.close'),
+                'tickets:reopen' => __('helpdesk.support.show.reopen'),
+            ],
             __('global.services') => [
                 'services:index' => __('global.listing'),
                 'services:store' => __('global.store'),
@@ -71,6 +112,10 @@ class ApiKeysController extends AbstractCrudController
                 'services:suspend' => __('global.suspend'),
                 'services:unsuspend' => __('global.unsuspend'),
                 'services:terminate' => __('global.terminate'),
+            ],
+            __('actionslog.settings.title') => [
+                'actionlogs:index' => __('global.listing'),
+                'actionlogs:show' => __('global.show'),
             ],
         ];
     }

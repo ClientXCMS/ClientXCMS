@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\DTO\Admin\Settings;
 
@@ -37,7 +37,9 @@ class SettingsCardDTO
 
     public int $columns;
 
-    public function __construct(string $uuid, string $name, string $description, int $order, Collection $items, bool $is_active = true, int $columns = 2)
+    public string $icon;
+
+    public function __construct(string $uuid, string $name, string $description, int $order, Collection $items, bool $is_active = true, int $columns = 2, string $icon = 'bi bi-gear')
     {
         $this->uuid = $uuid;
         $this->name = $name;
@@ -46,5 +48,6 @@ class SettingsCardDTO
         $this->order = $order;
         $this->is_active = $is_active;
         $this->columns = $columns;
+        $this->icon = $icon;
     }
 }

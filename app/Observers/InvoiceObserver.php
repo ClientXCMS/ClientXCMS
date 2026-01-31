@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Observers;
 
@@ -49,6 +49,7 @@ class InvoiceObserver
             }
         }
     }
+
     public function deleted(Invoice $invoice)
     {
         InvoiceLog::log($invoice, InvoiceLog::DELETE_INVOICE);

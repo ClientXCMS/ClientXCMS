@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\DTO\Core\Extensions;
 
 use App\Core\License\LicenseCache;
@@ -24,7 +24,6 @@ use Illuminate\Contracts\Support\Arrayable;
 
 class ExtensionDTO implements Arrayable
 {
-
     public string $uuid;
 
     public ?string $version = null;
@@ -49,13 +48,14 @@ class ExtensionDTO implements Arrayable
 
     public function extensionPath(): string
     {
-        if ($this->type == 'theme'){
+        if ($this->type == 'theme') {
             return base_path('resources/themes/'.$this->uuid);
         }
         if ($this->type == 'email_template' || $this->type == 'invoice_template') {
-            return base_path('resources/views/vendor/notifications/'.$this->uuid . '.blade.php');
+            return base_path('resources/views/vendor/notifications/'.$this->uuid.'.blade.php');
         }
-        return base_path($this->type() . '/'.$this->uuid);
+
+        return base_path($this->type().'/'.$this->uuid);
     }
 
     public static function fromArray(array $module)
@@ -69,19 +69,26 @@ class ExtensionDTO implements Arrayable
         );
     }
 
-    public function author(){
+    public function supportMigration(): bool
+    {
+        return in_array($this->type, ['addon', 'theme', 'module']);
+    }
+
+    public function author()
+    {
         if (array_key_exists('author', $this->api) && is_array($this->api['author'])) {
             return $this->api['author']['name'] ?? 'Unknown';
         }
         if (array_key_exists('author', $this->api) && is_string($this->api['author'])) {
             return $this->api['author'];
         }
+
         return 'Unknown';
     }
 
     public function hasPadding()
     {
-        return $this->type === 'themes';
+        return $this->type !== 'theme';
     }
 
     public function toArray()
@@ -115,7 +122,7 @@ class ExtensionDTO implements Arrayable
 
     public function type()
     {
-        return $this->type . 's';
+        return $this->type.'s';
     }
 
     public function name()
@@ -183,6 +190,7 @@ class ExtensionDTO implements Arrayable
             ];
         }
         $translations = $this->api['translations'];
+
         return [
             'name' => $translations['name'][$locale] ?? ($this->api['name'] ?? $this->uuid),
             'description' => $translations['short_description'][$locale] ?? ($this->api['short_description'] ?? $this->uuid),
@@ -192,6 +200,7 @@ class ExtensionDTO implements Arrayable
     public function price(bool $formatted = true)
     {
         $key = $formatted ? 'formatted_price' : 'price';
+
         return $this->api[$key] ?? ($formatted ? __('global.free') : 0);
     }
 
@@ -207,6 +216,7 @@ class ExtensionDTO implements Arrayable
         if (is_array($extensions) && in_array($this->uuid, $extensions)) {
             return true;
         }
+
         return false;
     }
 
@@ -220,7 +230,7 @@ class ExtensionDTO implements Arrayable
         if (array_key_exists('unofficial', $this->api)) {
             return true;
         }
-        if ($this->price(false) == 0)  {
+        if ($this->price(false) == 0) {
             return true;
         }
 

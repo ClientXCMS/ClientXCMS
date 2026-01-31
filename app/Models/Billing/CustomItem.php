@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Billing;
 
 use App\Core\NoneProductType;
@@ -25,20 +25,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="CustomItem",
  *     title="Custom Item",
  *     description="Custom product added to an invoice manually",
  *     required={"name", "unit_price"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=12),
  *     @OA\Property(property="name", type="string", example="Custom Service Fee"),
  *     @OA\Property(property="description", type="string", example="One-time service activation fee"),
  *     @OA\Property(property="unit_price", type="number", format="float", example=25.00),
  *     @OA\Property(property="unit_setupfees", type="number", format="float", example=5.00)
  * )
+ *
  * @property int $id
  * @property string $name
  * @property string|null $description
@@ -47,6 +46,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomItem newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomItem newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomItem onlyTrashed()
@@ -61,6 +61,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomItem whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomItem withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomItem withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class CustomItem extends Model

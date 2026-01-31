@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,10 +17,10 @@
  * Year: 2025
  */
 
-
 namespace App\DTO\Core\Extensions;
 
 use App\Exceptions\ThemeInvalidException;
+use App\Models\Admin\Setting;
 use File;
 use Illuminate\Validation\ValidationException;
 use Validator;
@@ -62,6 +63,10 @@ class ExtensionThemeDTO
     public ?string $seederFile = null;
 
     public ?string $seederClass = null;
+  
+    public array $dbSettings = [];
+
+    public ?string $dbSettingsFile = null;
 
     public static function fromJson(string $theme_file)
     {
@@ -94,13 +99,17 @@ class ExtensionThemeDTO
             }
         }
 
-        // Load seeder configuration from theme.json
         if (isset($json['seeder'])) {
             $seederPath = $dto->path . '/' . $json['seeder']['file'];
             if (file_exists($seederPath)) {
                 $dto->seederFile = $seederPath;
                 $dto->seederClass = $json['seeder']['class'];
             }
+         } 
+        $dbSettingsPath = $dto->path.'/config/db_settings.php';
+        if (file_exists($dbSettingsPath)) {
+            $dto->dbSettingsFile = $dbSettingsPath;
+            $dto->dbSettings = require $dbSettingsPath;
         }
 
         return $dto;
@@ -190,9 +199,32 @@ class ExtensionThemeDTO
         if ($validator->fails()) {
             throw new ValidationException($validator);
         }
-        $this->config = $validator->validated();
-        if ($this->configRulesFile != null)
-            file_put_contents($this->path.'/config/config.json', json_encode($validator->validated(), JSON_PRETTY_PRINT));
+
+        $validated = $validator->validated();
+        $this->config = $validated;
+
+        $dbSettingsData = [];
+        $fileSettings = $validated;
+
+        if (! empty($this->dbSettings)) {
+            foreach ($this->dbSettings as $key) {
+                if (array_key_exists($key, $validated)) {
+                    $dbSettingsData[$key] = $validated[$key];
+                    unset($fileSettings[$key]);
+                }
+            }
+        }
+
+        if (! empty($dbSettingsData)) {
+            Setting::updateSettings($dbSettingsData);
+        }
+
+        if ($this->configRulesFile !== null) {
+            file_put_contents(
+                $this->path.'/config/config.json',
+                json_encode($fileSettings, JSON_PRETTY_PRINT)
+            );
+        }
     }
 
     public function hasScreenshot(): bool
@@ -272,6 +304,7 @@ class ExtensionThemeDTO
             ];
         }
         $translations = $this->api['translations'];
+
         return [
             'name' => $translations['name'][$locale] ?? ($this->api['name'] ?? $this->uuid),
             'description' => $translations['short_description'][$locale] ?? ($this->api['short_description'] ?? $this->uuid),
@@ -291,18 +324,11 @@ class ExtensionThemeDTO
         return new ExtensionDTO($this->uuid, 'themes', $this->enabled, $this->api);
     }
 
-    /**
-     * Check if the theme has a seeder defined in theme.json.
-     */
     public function hasSeeder(): bool
     {
         return $this->seederFile !== null && $this->seederClass !== null;
     }
 
-    /**
-     * Load and return the seeder class name.
-     * The seeder file is included and the class name is returned for registration.
-     */
     public function loadSeeder(): ?string
     {
         if (!$this->hasSeeder()) {

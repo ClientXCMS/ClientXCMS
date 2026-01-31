@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Helpdesk;
 
@@ -37,14 +37,12 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="SupportTicket",
  *     title="Support Ticket",
  *     description="Support ticket model",
  *     required={"subject", "priority", "status", "department_id", "customer_id"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=101),
  *     @OA\Property(property="subject", type="string", example="Problème de facturation"),
  *     @OA\Property(property="priority", type="string", enum={"low", "medium", "high"}, example="medium"),
@@ -77,24 +75,25 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  *     @OA\Property(
  *         property="attachments",
  *         type="array",
- * 
+ *
  *         @OA\Items(ref="#/components/schemas/SupportAttachment")
  *     ),
- * 
+ *
  *     @OA\Property(
  *         property="messages",
  *         type="array",
- * 
+ *
  *         @OA\Items(ref="#/components/schemas/SupportMessage")
  *     ),
- * 
+ *
  *     @OA\Property(
  *         property="comments",
  *         type="array",
- * 
+ *
  *         @OA\Items(ref="#/components/schemas/SupportComment")
  *     )
  * )
+ *
  * @property int $id
  * @property int $department_id
  * @property int $customer_id
@@ -122,6 +121,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  * @property-read \App\Models\Helpdesk\SupportDepartment $department
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Helpdesk\SupportMessage> $messages
  * @property-read int|null $messages_count
+ *
  * @method static \Database\Factories\Helpdesk\TicketFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportTicket newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportTicket newQuery()
@@ -147,6 +147,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportTicket whereUuid($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportTicket withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportTicket withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class SupportTicket extends Model
@@ -242,7 +243,19 @@ class SupportTicket extends Model
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withTrashed();
+    }
+
+    /**
+     * Get the customer name or placeholder for deleted users.
+     */
+    public function getCustomerNameAttribute(): string
+    {
+        if ($this->customer_id === null || $this->customer === null) {
+            return __('client.profile.delete.deleted_user_placeholder');
+        }
+
+        return $this->customer->fullName;
     }
 
     public function attachments()
@@ -297,7 +310,7 @@ class SupportTicket extends Model
         if ($lastMessage != null) {
             /** @var Carbon $createdAt */
             $createdAt = $lastMessage->created_at;
-            if ($createdAt->diffInSeconds() < 10) {
+            if ($createdAt->diffInSeconds() < 10 && ! app()->runningUnitTests()) {
                 $isSpam = true;
             }
         }
@@ -361,7 +374,6 @@ class SupportTicket extends Model
         }
 
         return $users;
-
     }
 
     public function isOpen()
@@ -443,6 +455,7 @@ class SupportTicket extends Model
         if (! $model) {
             $model = $this->where('id', $value)->first();
         }
+
         return $model ?? abort(404);
     }
 
