@@ -23,15 +23,15 @@ class ThemeViewFinder extends \Illuminate\View\FileViewFinder
 {
     public function findInPaths($name, $paths)
     {
-        $parent = app('theme')->getTheme()->getParentTheme();
-        // $paths = app('view')->getFinder()->getPaths();
-        $paths[] = resource_path('themes/'.$parent.'/views');
-
-        if (strpos($paths[0] ?? '', '/vendor/')) {
-            return parent::findInPaths($name, $paths);
-        }
-        if (env('APP_REVERSE_PATHS', false)) {
-            $paths = array_reverse($paths);
+        $theme = app('theme')->getTheme();
+        if ($theme !== null) {
+            $parent = $theme->getParentTheme();
+            if ($parent !== null) {
+                $parentPath = resource_path('themes/'.$parent.'/views');
+                if (!in_array($parentPath, $paths)) {
+                    $paths[] = $parentPath;
+                }
+            }
         }
 
         return parent::findInPaths($name, $paths);
