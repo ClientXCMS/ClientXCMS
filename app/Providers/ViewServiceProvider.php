@@ -56,7 +56,7 @@ class ViewServiceProvider extends ServiceProvider
         }
 
         $themePath = $themeManager->themePath('views');
-        if ($themePath === null || !is_dir($themePath)) {
+        if ($themePath === null || ! is_dir($themePath)) {
             return;
         }
 

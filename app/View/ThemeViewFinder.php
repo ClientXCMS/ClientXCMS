@@ -28,7 +28,7 @@ class ThemeViewFinder extends \Illuminate\View\FileViewFinder
             $parent = $theme->getParentTheme();
             if ($parent !== null) {
                 $parentPath = resource_path('themes/'.$parent.'/views');
-                if (!in_array($parentPath, $paths)) {
+                if (! in_array($parentPath, $paths)) {
                     $paths[] = $parentPath;
                 }
             }
