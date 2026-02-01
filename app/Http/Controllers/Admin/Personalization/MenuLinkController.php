@@ -101,7 +101,7 @@ class MenuLinkController extends AbstractCrudController
                 'parent_id' => $parentId,
             ]);
 
-            if (!empty($children)) {
+            if (! empty($children)) {
                 $this->sortItems($children, $type, (int) $id, $depth + 1);
             }
         }
