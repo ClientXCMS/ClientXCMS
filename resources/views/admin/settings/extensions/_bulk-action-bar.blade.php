@@ -3,13 +3,13 @@
 {{-- SweetAlert2 confirmation before bulk enable/disable --}}
 {{-- ARIA: role="toolbar", aria-label="Actions groupées" --}}
 
-{{-- Bulk Action Bar (sticky, hidden by default - shown when bulk mode active) --}}
+{{-- Bulk Action Bar (fixed bottom floating, hidden by default - shown when bulk mode active) --}}
 <div id="bulk-action-bar"
-    class="hidden fixed bottom-0 left-0 right-0 md:sticky md:bottom-auto md:top-4 z-40"
+    class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40"
     role="toolbar"
     aria-label="Actions groupées">
-    <div class="bg-white dark:bg-slate-900 border-t md:border border-gray-200 dark:border-slate-700 md:rounded-xl shadow-2xl md:shadow-lg p-3">
-        <div class="flex items-center justify-between gap-3 max-w-4xl mx-auto">
+    <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl shadow-2xl p-3">
+        <div class="flex items-center justify-between gap-3">
             {{-- Selection count --}}
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
@@ -34,6 +34,13 @@
                     disabled
                     class="px-3 py-1.5 text-xs font-medium bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
                     <i class="bi bi-ban mr-1"></i> {{ __('extensions.settings.disable') }}
+                </button>
+
+                <button type="button"
+                    data-action="bulk-uninstall"
+                    disabled
+                    class="hidden px-3 py-1.5 text-xs font-medium bg-gray-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
+                    <i class="bi bi-trash mr-1"></i> {{ __('extensions.settings.uninstall') }}
                 </button>
 
                 <button type="button"

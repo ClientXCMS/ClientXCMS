@@ -171,7 +171,7 @@ export class CartManager {
         // Focus first interactive element after CSS transition completes
         setTimeout(() => {
             const focusable = this._getFocusableElements(drawer);
-            if (focusable.length > 0) focusable[0].focus();
+            if (focusable.length > 0) focusable[0].focus({ preventScroll: true });
         }, ANIMATION_DURATION_MS);
 
         this._installFocusTrap(drawer);
@@ -196,9 +196,9 @@ export class CartManager {
 
         this._removeFocusTrap();
 
-        // Return focus to the trigger button
+        // Return focus to the trigger button without scrolling to top
         const triggerBtn = document.querySelector('[data-action="open-cart"]');
-        if (triggerBtn) triggerBtn.focus();
+        if (triggerBtn) triggerBtn.focus({ preventScroll: true });
     }
 
     /**

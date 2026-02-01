@@ -272,13 +272,19 @@
         if (updateBtn && window.ExtensionActions) {
             updateBtn.addEventListener('click', window.ExtensionActions.handleUpdate);
         }
+
+        var uninstallBtn = container.querySelector('.js-btn-uninstall');
+        if (uninstallBtn && window.ExtensionActions) {
+            uninstallBtn.addEventListener('click', window.ExtensionActions.handleUninstall);
+        }
     }
 
     // Creates a styled action button via DOM API
     function createActionBtn(cssClass, jsClass, iconClass, label, dataUrl) {
         var btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = jsClass + ' inline-flex items-center gap-2 px-5 py-3 ' + cssClass + ' text-white rounded-xl font-medium transition-colors';
+        var hasTextColor = /\btext-(gray|slate|red|white|black)/.test(cssClass);
+        btn.className = jsClass + ' inline-flex items-center gap-2 px-5 py-3 ' + cssClass + (hasTextColor ? '' : ' text-white') + ' rounded-xl font-medium transition-colors';
         if (dataUrl && isSafeUrl(dataUrl)) btn.dataset.url = dataUrl;
         btn.appendChild(el('i', iconClass));
         btn.appendChild(document.createTextNode(' ' + label));
@@ -313,7 +319,22 @@
             container.appendChild(
                 createActionBtn('bg-green-500 hover:bg-green-600', 'js-btn-enable', 'bi bi-check-circle', getTranslation('enable', 'Enable'), data.enableUrl)
             );
-        } else if (!data.isInstalled && data.isActivable) {
+        }
+
+        // Uninstall button: installed + disabled + not unofficial
+        if (data.isInstalled && !data.isEnabled && !data.isUnofficial) {
+            container.appendChild(
+                createActionBtn(
+                    'bg-gray-200 dark:bg-slate-700 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 text-gray-600 dark:text-gray-400',
+                    'js-btn-uninstall',
+                    'bi bi-trash',
+                    getTranslation('uninstall', 'Uninstall'),
+                    data.uninstallUrl
+                )
+            );
+        }
+
+        if (!data.isInstalled && data.isActivable) {
             container.appendChild(
                 createActionBtn('bg-indigo-600 hover:bg-indigo-700', 'js-btn-install', 'bi bi-cloud-download', getTranslation('install', 'Install'), data.installUrl)
             );
@@ -359,6 +380,8 @@
                 disableUrl: card.dataset.disableUrl || '',
                 installUrl: card.dataset.installUrl || '',
                 updateUrl: card.dataset.updateUrl || '',
+                uninstallUrl: card.dataset.uninstallUrl || '',
+                isUnofficial: card.dataset.unofficial === 'true',
                 tags: (card.dataset.tagNames || '').split(',').filter(Boolean),
             };
 

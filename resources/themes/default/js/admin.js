@@ -1,4 +1,5 @@
 import Swal from "sweetalert2";
+window.Swal = Swal;
 function isVisible(element) {
     if (!element) return false;
     const style = window.getComputedStyle(element);

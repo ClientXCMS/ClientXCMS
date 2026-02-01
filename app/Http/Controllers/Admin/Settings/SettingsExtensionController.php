@@ -138,6 +138,12 @@ class SettingsExtensionController
         if (! in_array($type, self::ALLOWED_TYPES)) {
             abort(404);
         }
+
+        // Active theme cannot be disabled: another theme must be activated first
+        if ($type === 'themes' && app('theme')->getTheme()->uuid === $extension) {
+            return $this->respond($request, false, __('extensions.flash.cannot_disable_active_theme'), 'DISABLE_BLOCKED');
+        }
+
         try {
             app('extension')->disable($type, $extension);
         } catch (\Exception $e) {
@@ -152,6 +158,36 @@ class SettingsExtensionController
         ActionLog::log(ActionLog::EXTENSION_DISABLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
 
         return $this->respond($request, true, __('extensions.flash.disabled'));
+    }
+
+    public function uninstall(Request $request, string $type, string $extension)
+    {
+        staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
+
+        if (! in_array($type, self::ALLOWED_TYPES)) {
+            abort(404);
+        }
+
+        try {
+            app('extension')->uninstall($type, $extension);
+        } catch (\Exception $e) {
+            return $this->respond($request, false, $e->getMessage(), 'UNINSTALL_FAILED');
+        }
+
+        \Artisan::call('cache:clear');
+        \Artisan::call('view:clear');
+        \Artisan::call('config:clear');
+
+        ActionLog::log(
+            ActionLog::EXTENSION_UNINSTALLED,
+            ExtensionDTO::class,
+            $extension,
+            auth('admin')->id(),
+            null,
+            ['type' => $type]
+        );
+
+        return $this->respond($request, true, __('extensions.flash.uninstalled'));
     }
 
     public function clear(Request $request)
@@ -183,6 +219,10 @@ class SettingsExtensionController
         } catch (\Exception $e) {
             return $this->respond($request, false, $e->getMessage(), 'UPDATE_FAILED');
         }
+        \Artisan::call('cache:clear');
+        \Artisan::call('view:clear');
+        \Artisan::call('config:clear');
+
         ActionLog::log(ActionLog::EXTENSION_UPDATED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
 
         return $this->respond($request, true, __('extensions.flash.updated'));

@@ -39,7 +39,9 @@ $authorAvatar = is_array($authorData) ? ($authorData['avatar'] ?? null) : null;
     data-enable-url="{{ route('admin.settings.extensions.enable', [$extension->type(), $extension->uuid]) }}"
     data-disable-url="{{ route('admin.settings.extensions.disable', [$extension->type(), $extension->uuid]) }}"
     data-install-url="{{ route('admin.settings.extensions.install', [$extension->type(), $extension->uuid]) }}"
-    data-update-url="{{ route('admin.settings.extensions.update', [$extension->type(), $extension->uuid]) }}">
+    data-update-url="{{ route('admin.settings.extensions.update', [$extension->type(), $extension->uuid]) }}"
+    data-unofficial="{{ $extension->isUnofficial() ? 'true' : 'false' }}"
+    data-uninstall-url="{{ route('admin.settings.extensions.uninstall', [$extension->type(), $extension->uuid]) }}">
 
     <div class="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-50 dark:from-slate-800 dark:to-slate-900 overflow-hidden">
         @if ($extension->thumbnail())
@@ -142,6 +144,14 @@ $authorAvatar = is_array($authorData) ? ($authorData['avatar'] ?? null) : null;
                     <i class="bi bi-check-circle"></i>{{ __('extensions.settings.enable') }}
                 </button>
             </form>
+            @if (!$extension->isUnofficial())
+            <form action="{{ route('admin.settings.extensions.uninstall', [$extension->type(), $extension->uuid]) }}" method="POST">
+                @csrf
+                <button type="submit" class="js-btn-uninstall w-full inline-flex items-center justify-center gap-1.5 px-3 py-3.5 lg:py-2.5 bg-gray-200 dark:bg-slate-700 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 text-gray-600 dark:text-gray-400 rounded-xl font-medium text-sm transition-colors min-h-[44px] lg:min-h-0">
+                    <i class="bi bi-trash"></i>{{ __('extensions.settings.uninstall') }}
+                </button>
+            </form>
+            @endif
             @elseif ($extension->isNotInstalled() && $extension->isActivable())
             <form action="{{ route('admin.settings.extensions.install', [$extension->type(), $extension->uuid]) }}" method="POST">
                 @csrf

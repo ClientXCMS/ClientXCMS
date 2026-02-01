@@ -393,10 +393,13 @@ class ExtensionManager extends ExtensionCollectionsManager
         if (collect($extensions[$type] ?? [])->where('uuid', $extension)->isEmpty()) {
             $extensions[$type][] = ['uuid' => $extension, 'version' => $api['version'] ?? 'v1.0', 'type' => $type, 'enabled' => true, 'installed' => true, 'api' => $api];
         }
-        $extensions[$type] = collect($extensions[$type])->map(function ($item) use ($extension, $api) {
+        $extensions[$type] = collect($extensions[$type])->map(function ($item) use ($extension, $api, $type) {
             if ($item['uuid'] == $extension) {
                 $item['enabled'] = true;
                 $item['api'] = $api;
+            } elseif ($type == 'themes') {
+                // Themes are mutually exclusive: only one active at a time
+                $item['enabled'] = false;
             }
 
             return $item;
@@ -406,6 +409,54 @@ class ExtensionManager extends ExtensionCollectionsManager
         } catch (\Exception $e) {
             throw new ExtensionException('Unable to write extensions.json file: '.$e->getMessage());
         }
+    }
+
+    public function uninstall(string $type, string $uuid): void
+    {
+        $extensions = self::readExtensionJson();
+
+        $entry = collect($extensions[$type] ?? [])->first(fn($item) => $item['uuid'] === $uuid);
+
+        if (! $entry) {
+            throw new ExtensionException('Extension not found in registry');
+        }
+
+        if (! empty($entry['enabled'])) {
+            throw new ExtensionException(__('extensions.flash.must_disable_before_uninstall'));
+        }
+
+        if (! empty($entry['api']['unofficial'])) {
+            throw new ExtensionException(__('extensions.flash.cannot_uninstall_unofficial'));
+        }
+
+        $dto = ExtensionDTO::fromArray(array_merge($entry, ['type' => $this->singularType($type)]));
+        $path = $dto->extensionPath();
+
+        if ($this->files->isDirectory($path)) {
+            $this->files->deleteDirectory($path);
+        } elseif ($this->files->exists($path)) {
+            $this->files->delete($path);
+        }
+
+        $extensions[$type] = collect($extensions[$type] ?? [])
+            ->reject(fn($item) => $item['uuid'] === $uuid)
+            ->values()
+            ->toArray();
+
+        self::writeExtensionJson($extensions, 'uninstall', $uuid);
+    }
+
+    private function singularType(string $type): string
+    {
+        $map = [
+            'modules' => 'module',
+            'addons' => 'addon',
+            'themes' => 'theme',
+            'email_templates' => 'email_template',
+            'invoice_templates' => 'invoice_template',
+        ];
+
+        return $map[$type] ?? rtrim($type, 's');
     }
 
     public function disable(string $type, string $extension)

@@ -140,7 +140,7 @@ $apiDegraded = $apiDegraded ?? false;
     <div id="tab-installed" class="tab-content">
         @if ($installedExtensions->count() > 0)
         @if ($installedThemes->count() > 0)
-        <div class="mb-10">
+        <div class="mb-10" data-section="themes">
             <div class="flex items-center gap-3 mb-5">
                 <div class="w-10 h-10 bg-gradient-to-br from-violet-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
                     <i class="bi bi-palette-fill text-white text-lg"></i>
@@ -157,7 +157,7 @@ $apiDegraded = $apiDegraded ?? false;
         @endif
 
         @if ($installedModulesAddons->count() > 0)
-        <div class="mb-10">
+        <div class="mb-10" data-section="modules">
             <div class="flex items-center gap-3 mb-5">
                 <div class="w-10 h-10 bg-gradient-to-br from-indigo-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
                     <i class="bi bi-puzzle-fill text-white text-lg"></i>
@@ -424,6 +424,7 @@ $extensionsData = $allExtensions->mapWithKeys(function($ext) {
         'version' => $ext->version ?? null,
         'latestVersion' => $ext->getLatestVersion(),
         'hasUpdate' => $ext->isInstalled() && $ext->getLatestVersion() && version_compare($ext->version ?? '0', $ext->getLatestVersion(), '<'),
+        'isUnofficial' => $ext->isUnofficial(),
     ]];
 });
 @endphp
@@ -488,7 +489,16 @@ window.__extensionTranslations = {
     batch_select: @json(__('extensions.settings.batch_select')),
     batch_cancel_selection: @json(__('extensions.settings.batch_cancel_selection')),
     batch_selected_count: @json(__('extensions.settings.batch_selected_count')),
+    batch_uninstalling: @json(__('extensions.settings.batch_uninstalling')),
     batch_updates_available: @json(__('extensions.settings.batch_updates_available')),
+    uninstall: @json(__('extensions.settings.uninstall')),
+    uninstalled: @json(__('extensions.flash.uninstalled')),
+    confirm_uninstall_title: @json(__('extensions.settings.confirm_uninstall_title')),
+    confirm_uninstall_text: @json(__('extensions.settings.confirm_uninstall_text')),
+    confirm_uninstall: @json(__('extensions.settings.confirm_uninstall')),
+    error_uninstall: @json(__('extensions.settings.error_uninstall')),
+    sections_my_themes: @json(__('extensions.settings.sections.my_themes')),
+    sections_my_modules: @json(__('extensions.settings.sections.my_modules')),
 };
 </script>
 

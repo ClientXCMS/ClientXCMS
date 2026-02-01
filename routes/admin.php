@@ -36,6 +36,7 @@ Route::name('settings.')->prefix('settings')->middleware('admin')->group(functio
     Route::post('/extensions/{type}/{extension}/enable', [SettingsExtensionController::class, 'enable'])->name('extensions.enable');
     Route::post('/extensions/{type}/{extension}/disable', [SettingsExtensionController::class, 'disable'])->name('extensions.disable');
     Route::post('/extensions/{type}/{extension}/update', [SettingsExtensionController::class, 'update'])->name('extensions.update');
+    Route::post('/extensions/{type}/{extension}/uninstall', [SettingsExtensionController::class, 'uninstall'])->name('extensions.uninstall');
     Route::post('/extensions/install/{type}/{uuid}', [SettingsExtensionController::class, 'install'])->name('extensions.install');
     Route::get('/extensions', [SettingsExtensionController::class, 'showExtensions'])->name('extensions.index');
     Route::post('/extensions/clear', [SettingsExtensionController::class, 'clear'])->name('extensions.clear');

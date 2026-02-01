@@ -206,6 +206,7 @@ export class BatchEngine {
             recap.classList.add('hidden');
             recap.setAttribute('aria-hidden', 'true');
         }
+        document.body.style.overflow = 'hidden';
     }
 
     /**
@@ -275,6 +276,7 @@ export class BatchEngine {
             activating: getTranslation('batch_activating', 'Activation'),
             updating: getTranslation('batch_updating', 'Mise a jour'),
             deactivating: getTranslation('batch_deactivating', 'D\u00e9sactivation'),
+            uninstalling: getTranslation('batch_uninstalling', 'Uninstalling'),
         };
 
         if (text) {
@@ -538,6 +540,8 @@ export class BatchEngine {
         this.isRunning = false;
         this.isStopped = false;
 
+        document.body.style.overflow = '';
+
         // PA-3: This is the ONLY authorized reload
         window.location.reload();
     }
@@ -680,6 +684,28 @@ export class BatchEngine {
                 card.prepend(wrapper);
             }
         });
+
+        // Inject "Select all" checkbox in each section header
+        document.querySelectorAll('[data-section]').forEach(section => {
+            const header = section.querySelector('.flex.items-center.gap-3');
+            if (!header) return;
+
+            const label = document.createElement('label');
+            label.className = 'bulk-select-all-wrapper flex items-center gap-1.5 ml-2 cursor-pointer';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'bulk-select-all w-4 h-4 rounded border-2 border-gray-300 dark:border-slate-500 text-indigo-600 focus:ring-indigo-500 cursor-pointer';
+            checkbox.dataset.section = section.dataset.section;
+
+            const text = document.createElement('span');
+            text.className = 'text-xs font-medium text-gray-500 dark:text-gray-400 select-none';
+            text.textContent = getTranslation('batch_select_all', 'Select all');
+
+            label.appendChild(checkbox);
+            label.appendChild(text);
+            header.appendChild(label);
+        });
     }
 
     /**
@@ -689,6 +715,7 @@ export class BatchEngine {
         this.bulkModeActive = false;
         document.body.classList.remove('bulk-mode-active');
         document.querySelectorAll('.bulk-checkbox-wrapper').forEach(el => el.remove());
+        document.querySelectorAll('.bulk-select-all-wrapper').forEach(el => el.remove());
         document.querySelectorAll('.extension-item.bulk-selected').forEach(el => el.classList.remove('bulk-selected'));
 
         const bar = document.getElementById('bulk-action-bar');
@@ -709,21 +736,105 @@ export class BatchEngine {
     }
 
     /**
-     * Update the bulk selection count display.
+     * Update the bulk selection count display and contextual button visibility.
+     * Buttons only appear when the selection contains extensions matching the action.
      */
     _updateBulkCount() {
         const checked = document.querySelectorAll('.bulk-checkbox:checked');
         const countEl = document.getElementById('bulk-count');
+
+        let enabledCount = 0;
+        let disabledCount = 0;
+
+        let uninstallableCount = 0;
+
+        checked.forEach(cb => {
+            const uuid = cb.dataset.uuid;
+            const ext = window.__extensionsData?.[uuid];
+            if (ext) {
+                if (ext.isEnabled) {
+                    enabledCount++;
+                } else {
+                    disabledCount++;
+                }
+                // Uninstallable: installed + disabled + not unofficial
+                if (ext.isInstalled && !ext.isEnabled && !ext.isUnofficial) {
+                    uninstallableCount++;
+                }
+            }
+        });
+
         if (countEl) {
             countEl.textContent = trans('batch_selected_count', ':count selected', {
                 count: checked.length,
             });
         }
 
-        const activateBtn = document.querySelector('[data-action="bulk-activate"]');
-        const deactivateBtn = document.querySelector('[data-action="bulk-deactivate"]');
-        if (activateBtn) activateBtn.disabled = checked.length === 0;
-        if (deactivateBtn) deactivateBtn.disabled = checked.length === 0;
+        this._updateBulkButton(
+            '[data-action="bulk-activate"]',
+            'bi bi-check-circle mr-1',
+            getTranslation('enable', 'Enable'),
+            disabledCount
+        );
+
+        this._updateBulkButton(
+            '[data-action="bulk-deactivate"]',
+            'bi bi-ban mr-1',
+            getTranslation('disable', 'Disable'),
+            enabledCount
+        );
+
+        this._updateBulkButton(
+            '[data-action="bulk-uninstall"]',
+            'bi bi-trash mr-1',
+            getTranslation('uninstall', 'Uninstall'),
+            uninstallableCount
+        );
+
+        this._updateSelectAllState();
+    }
+
+    /**
+     * Update a single bulk action button: visibility, disabled state, and label with count.
+     * @param {string} selector - CSS selector for the button
+     * @param {string} iconClass - CSS classes for the icon element
+     * @param {string} label - Base label text (e.g. "Enable")
+     * @param {number} count - Number of extensions eligible for this action
+     */
+    _updateBulkButton(selector, iconClass, label, count) {
+        const btn = document.querySelector(selector);
+        if (!btn) return;
+
+        btn.disabled = count === 0;
+        btn.classList.toggle('hidden', count === 0);
+
+        btn.textContent = '';
+        const icon = document.createElement('i');
+        icon.className = iconClass;
+        btn.appendChild(icon);
+        btn.appendChild(document.createTextNode(
+            label + (count > 0 ? ` (${count})` : '')
+        ));
+    }
+
+    /**
+     * Synchronize select-all checkbox state (checked/indeterminate/unchecked)
+     * based on individual checkbox states within each section.
+     */
+    _updateSelectAllState() {
+        document.querySelectorAll('.bulk-select-all').forEach(selectAll => {
+            const section = selectAll.dataset.section;
+            const container = document.querySelector(`[data-section="${section}"]`);
+            if (!container) return;
+
+            const checkboxes = container.querySelectorAll('.bulk-checkbox');
+            const checked = container.querySelectorAll('.bulk-checkbox:checked');
+
+            if (checkboxes.length === 0) return;
+
+            selectAll.checked = checked.length === checkboxes.length;
+            selectAll.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
+        });
     }
 
     /**
@@ -754,7 +865,9 @@ export class BatchEngine {
 
         const actionLabel = action === 'enable'
             ? getTranslation('enable', 'Enable')
-            : getTranslation('disable', 'Disable');
+            : action === 'disable'
+            ? getTranslation('disable', 'Disable')
+            : getTranslation('uninstall', 'Uninstall');
 
         // Build safe list using DOM, then serialize for Swal html
         const ul = document.createElement('ul');
@@ -787,7 +900,14 @@ export class BatchEngine {
      * @param {'enable'|'disable'} action
      */
     async bulkAction(action) {
-        const extensions = this._getSelectedExtensions();
+        const allSelected = this._getSelectedExtensions();
+        // Only keep extensions whose status matches the action
+        const extensions = allSelected.filter(ext =>
+            action === 'enable' ? !ext.isEnabled :
+            action === 'disable' ? ext.isEnabled :
+            action === 'uninstall' ? (ext.isInstalled && !ext.isEnabled && !ext.isUnofficial) :
+            false
+        );
         if (extensions.length === 0) return;
 
         const confirmed = await this._confirmBulkAction(extensions, action);
@@ -806,7 +926,9 @@ export class BatchEngine {
             if (this.isStopped) break;
 
             const ext = extensions[i];
-            const phase = action === 'enable' ? 'activating' : 'deactivating';
+            const phase = action === 'enable' ? 'activating' :
+                          action === 'disable' ? 'deactivating' :
+                          'uninstalling';
             this._updateProgress(ext, i, extensions.length, phase);
             this._setProgressItemState(ext.uuid, 'active');
 
@@ -915,6 +1037,13 @@ export class BatchEngine {
                 return;
             }
 
+            // Bulk uninstall
+            if (e.target.closest('[data-action="bulk-uninstall"]')) {
+                e.preventDefault();
+                this.bulkAction('uninstall');
+                return;
+            }
+
             // Story 3.6: Bulk cancel
             if (e.target.closest('[data-action="bulk-cancel"]')) {
                 e.preventDefault();
@@ -932,6 +1061,21 @@ export class BatchEngine {
                 if (card) {
                     card.classList.toggle('bulk-selected', e.target.checked);
                 }
+            }
+
+            // Select-all checkbox: toggle all individual checkboxes in the section
+            if (e.target.classList.contains('bulk-select-all')) {
+                const section = e.target.dataset.section;
+                const container = document.querySelector(`[data-section="${section}"]`);
+                if (!container) return;
+
+                const isChecked = e.target.checked;
+                container.querySelectorAll('.bulk-checkbox').forEach(cb => {
+                    cb.checked = isChecked;
+                    const card = cb.closest('.extension-item');
+                    if (card) card.classList.toggle('bulk-selected', isChecked);
+                });
+                this._updateBulkCount();
             }
         });
     }
