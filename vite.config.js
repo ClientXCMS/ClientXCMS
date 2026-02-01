@@ -15,6 +15,7 @@ export default defineConfig({
                 ...glob.sync('resources/svg/*.svg'),
                 ...glob.sync('resources/themes/*/js/*.js'),
                 ...glob.sync('addons/*/resources/js/*.js'),
+                'resources/global/js/extensions/index.js',
             ],
             refresh: true,
         }),

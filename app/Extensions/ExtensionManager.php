@@ -22,6 +22,7 @@ namespace App\Extensions;
 use App\Core\License\LicenseGateway;
 use App\DTO\Core\Extensions\ExtensionDTO;
 use App\Exceptions\ExtensionException;
+use App\Models\ActionLog;
 use App\Models\Admin\Setting;
 use Composer\Autoload\ClassLoader;
 use Composer\Semver\VersionParser;
@@ -74,7 +75,7 @@ class ExtensionManager extends ExtensionCollectionsManager
     /**
      * @throws \Exception
      */
-    public static function writeExtensionJson(array $extensions): void
+    public static function writeExtensionJson(array $extensions, ?string $action = null, ?string $extensionUuid = null): void
     {
         if (app()->environment('testing')) {
             self::$testExtensions = $extensions;
@@ -82,18 +83,99 @@ class ExtensionManager extends ExtensionCollectionsManager
             return;
         }
 
+        $dir = base_path('bootstrap/cache');
+        self::writeExtensionJsonToFile($extensions, $dir);
+        self::logStateChange($extensions, $action, $extensionUuid);
+    }
+
+    /**
+     * Write extensions array to a directory using atomic temp file + rename pattern.
+     * Uses advisory file lock to prevent concurrent write corruption.
+     * Extracted for testability with custom directories.
+     */
+    public static function writeExtensionJsonToFile(array $extensions, string $dir): void
+    {
+        $path = $dir.'/extensions.json';
+        $tmpPath = $dir.'/extensions.json.tmp';
+        $bakPath = $dir.'/extensions.json.bak';
+        $lockPath = $dir.'/extensions.json.lock';
+
         try {
-            $path = base_path('bootstrap/cache');
-            if (! file_exists($path)) {
-                mkdir($path, 0777, true);
+            if (! file_exists($dir)) {
+                mkdir($dir, 0755, true);
             }
         } catch (\Exception $e) {
             throw new ExtensionException('Unable to create bootstrap/cache directory');
         }
-        $path = base_path('bootstrap/cache/extensions.json');
-        $edit = file_put_contents($path, json_encode($extensions, JSON_PRETTY_PRINT));
-        if (! $edit) {
-            throw new ExtensionException('Unable to write extensions.json file');
+
+        // Acquire advisory lock to prevent concurrent write corruption
+        $lockFp = fopen($lockPath, 'c');
+        if ($lockFp === false || ! flock($lockFp, LOCK_EX)) {
+            throw new ExtensionException('Unable to acquire lock for extensions.json');
+        }
+
+        try {
+            // Create backup of existing file
+            if (file_exists($path)) {
+                copy($path, $bakPath);
+            }
+
+            // Encode and validate JSON before writing
+            $json = json_encode($extensions, JSON_PRETTY_PRINT);
+            if ($json === false) {
+                throw new ExtensionException('Unable to encode extensions to JSON: '.json_last_error_msg());
+            }
+
+            // Write to temp file, verify complete write
+            $written = file_put_contents($tmpPath, $json);
+            if ($written === false || $written !== strlen($json)) {
+                throw new ExtensionException('Unable to write extensions.json temp file');
+            }
+
+            // Atomic rename
+            if (! rename($tmpPath, $path)) {
+                // Cleanup temp file on failure
+                if (file_exists($tmpPath)) {
+                    unlink($tmpPath);
+                }
+
+                throw new ExtensionException('Unable to write extensions.json file');
+            }
+        } finally {
+            flock($lockFp, LOCK_UN);
+            fclose($lockFp);
+        }
+    }
+
+    private static function logStateChange(array $extensions, ?string $action = null, ?string $extensionUuid = null): void
+    {
+        try {
+            $staffId = auth('admin')->check() ? auth('admin')->id() : null;
+            $enabled = collect($extensions['modules'] ?? [])
+                ->merge($extensions['addons'] ?? [])
+                ->merge($extensions['themes'] ?? [])
+                ->merge($extensions['email_templates'] ?? [])
+                ->where('enabled', true)
+                ->pluck('uuid')
+                ->toArray();
+
+            ActionLog::log(
+                ActionLog::SETTINGS_UPDATED,
+                ExtensionDTO::class,
+                $extensionUuid ?? 'extensions.json',
+                $staffId,
+                null,
+                [
+                    'action' => $action ?? 'state_change',
+                    'enabled_extensions' => $enabled,
+                ]
+            );
+        } catch (\Exception $e) {
+            \Log::warning('Failed to log extension state change', [
+                'action' => $action,
+                'extension' => $extensionUuid,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -169,12 +251,11 @@ class ExtensionManager extends ExtensionCollectionsManager
     public function getAllExtensions(bool $withTheme = true, bool $withUnofficial = true)
     {
         $installed = $this->fetchInstalledExtensions();
-        $versions = collect($installed)->pluck('version')->toArray();
-        $uuids = collect($installed)->pluck('uuid')->toArray();
+        $installedVersions = collect($installed)->pluck('version', 'uuid')->toArray();
         $enabled = $this->fetchEnabledExtensions();
         $theme = app('theme')->getTheme();
         $enabled = array_merge($enabled, [$theme->uuid]);
-        $versions = array_merge($versions, [$theme->version]);
+        $installedVersions[$theme->uuid] = $theme->version;
         if (setting('email_template_name') != null) {
             $enabled = array_merge($enabled, [\setting('email_template_name')]);
         }
@@ -185,10 +266,12 @@ class ExtensionManager extends ExtensionCollectionsManager
             }
 
             return in_array($extensionDTO['type'], $allowedTypes);
-        })->map(function ($extension) use ($uuids, $enabled, $versions) {
+        })->map(function ($extension) use ($installedVersions, $enabled) {
+            $latestVersion = $extension['version'] ?? null;
             $extension['enabled'] = in_array($extension['uuid'], $enabled);
             $extension['api'] = $extension;
-            $extension['version'] = $versions[array_search($extension['uuid'], $uuids)] ?? null;
+            $extension['api']['latest_version'] = $latestVersion;
+            $extension['version'] = $installedVersions[$extension['uuid']] ?? null;
 
             return ExtensionDTO::fromArray($extension);
         });
@@ -259,7 +342,7 @@ class ExtensionManager extends ExtensionCollectionsManager
 
         try {
             (new UpdaterManager)->update($api['uuid']);
-            self::writeExtensionJson($extensions);
+            self::writeExtensionJson($extensions, 'update', $extension);
         } catch (\Exception $e) {
             throw new ExtensionException('Error in UpdaterManager: '.$e->getMessage());
         }
@@ -319,7 +402,7 @@ class ExtensionManager extends ExtensionCollectionsManager
             return $item;
         })->toArray();
         try {
-            self::writeExtensionJson($extensions);
+            self::writeExtensionJson($extensions, 'enable', $extension);
         } catch (\Exception $e) {
             throw new ExtensionException('Unable to write extensions.json file: '.$e->getMessage());
         }
@@ -339,8 +422,15 @@ class ExtensionManager extends ExtensionCollectionsManager
             Setting::updateSettings(['email_template_name' => null]);
         }
         try {
-            self::writeExtensionJson($extensions);
+            self::writeExtensionJson($extensions, 'disable', $extension);
         } catch (\Exception $e) {
+            \Log::error('Failed to disable extension', [
+                'extension' => $extension,
+                'type' => $type,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw new ExtensionException('Unable to disable extension: '.$e->getMessage());
         }
     }
 

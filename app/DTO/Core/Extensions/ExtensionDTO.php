@@ -111,7 +111,10 @@ class ExtensionDTO implements Arrayable
     public function getLatestVersion(): ?string
     {
         if (array_key_exists('unofficial', $this->api)) {
-            return $this->api['version'] ?? null;
+            return $this->version;
+        }
+        if (array_key_exists('latest_version', $this->api)) {
+            return $this->api['latest_version'];
         }
         if (array_key_exists('version', $this->api)) {
             return $this->api['version'];
@@ -160,6 +163,10 @@ class ExtensionDTO implements Arrayable
             try {
                 return \Vite::asset('resources/themes/'.$this->uuid.'/screenshot.png');
             } catch (\Exception $e) {
+                \Log::warning('Failed to resolve Vite asset for theme thumbnail', [
+                    'theme' => $this->uuid,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
         if (array_key_exists('unofficial', $this->api) || ! empty($this->api['thumbnail'])) {
