@@ -50,10 +50,10 @@ class DatabaseExtensionCommand extends Command
             $directories = \File::directories($folder);
             foreach ($directories as $directory) {
                 if (app('extension')->extensionIsEnabled(basename($directory))) {
-                    $extensions[] = basename($folder) . '/' . basename($directory) . '/database/migrations';
+                    $extensions[] = basename($folder).'/'.basename($directory).'/database/migrations';
                 }
                 if ($this->option('extension') == basename($directory)) {
-                    $extension = basename($folder) . '/' . basename($directory) . '/database/migrations';
+                    $extension = basename($folder).'/'.basename($directory).'/database/migrations';
                 }
             }
         }
@@ -92,7 +92,7 @@ class DatabaseExtensionCommand extends Command
 
     private function migrate($extension)
     {
-        $this->info('Migrating extension: ' . $extension);
+        $this->info('Migrating extension: '.$extension);
         \Artisan::call('migrate', ['--path' => $extension, '--force' => true]);
         $this->info(\Artisan::output());
         $this->info('Extension migrated successfully.');
@@ -100,7 +100,7 @@ class DatabaseExtensionCommand extends Command
 
     private function rollback($extension)
     {
-        $this->info('Rolling back extension: ' . $extension);
+        $this->info('Rolling back extension: '.$extension);
         \Artisan::call('migrate:rollback', ['--path' => $extension, '--force' => true]);
         $this->info(\Artisan::output());
         $this->info('Extension rolled back successfully.');
@@ -108,7 +108,7 @@ class DatabaseExtensionCommand extends Command
 
     private function seed($extension)
     {
-        $this->info('Seeding extension: ' . $extension);
+        $this->info('Seeding extension: '.$extension);
         \Artisan::call('db:seed', ['--path' => $extension, '--force' => true]);
         $this->info(\Artisan::output());
         $this->info('Extension seeded successfully.');
