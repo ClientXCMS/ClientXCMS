@@ -54,6 +54,16 @@ class SocialNetwork extends Model
         'icon',
         'name',
         'url',
+        'position',
+    ];
+
+    protected $casts = [
+        'position' => 'integer',
+        'hidden' => 'boolean',
+    ];
+
+    protected $attributes = [
+        'position' => 0,
     ];
 
     public static function getSvgFromResource(string $name): string

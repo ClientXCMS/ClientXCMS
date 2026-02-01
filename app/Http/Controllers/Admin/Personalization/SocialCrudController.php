@@ -19,10 +19,13 @@
 
 namespace App\Http\Controllers\Admin\Personalization;
 
+use App\Events\Resources\ResourceCreatedEvent;
 use App\Events\Resources\ResourceUpdatedEvent;
 use App\Models\Personalization\SocialNetwork;
 use App\Theme\ThemeManager;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudController
 {
@@ -34,6 +37,22 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
 
     protected string $model = SocialNetwork::class;
 
+    protected function queryIndex(): LengthAwarePaginator
+    {
+        return SocialNetwork::orderBy('position')
+            ->paginate($this->perPage)
+            ->appends(request()->query());
+    }
+
+    protected function getIndexParams($items, string $translatePrefix)
+    {
+        $params = parent::getIndexParams($items, $translatePrefix);
+        $params['current_card'] = app('settings')->getCurrentCard('personalization');
+        $params['current_item'] = app('settings')->getCurrentItem('personalization', 'social');
+
+        return $params;
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -41,10 +60,37 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
             'icon' => 'required|string|max:255',
             'url' => 'required|string|max:255',
         ]);
+        $data['position'] = SocialNetwork::max('position') + 1;
         $model = $this->model::create($data);
         ThemeManager::clearCache();
 
-        return $this->storeRedirect($model);
+        event(new ResourceCreatedEvent($model));
+
+        return redirect()->route($this->routePath.'.index')
+            ->with('success', __($this->flashs['created']));
+    }
+
+    /**
+     * Reorder social networks via drag-and-drop.
+     */
+    public function sort(Request $request)
+    {
+        $this->checkPermission('update');
+
+        $validated = $request->validate([
+            'items' => 'required|array',
+            'items.*' => 'integer|exists:theme_socialnetworks,id',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['items'] as $position => $id) {
+                SocialNetwork::where('id', $id)->update(['position' => $position]);
+            }
+        });
+
+        ThemeManager::clearCache();
+
+        return response()->json(['success' => true]);
     }
 
     public function update(Request $request, SocialNetwork $social)
@@ -57,33 +103,20 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
         $social->update($data);
         ThemeManager::clearCache();
 
-        return $this->updateRedirect($social);
+        event(new ResourceUpdatedEvent($social));
+
+        return redirect()->route($this->routePath.'.index')
+            ->with('success', __($this->flashs['updated']));
     }
 
-    public function getCreateParams()
+    public function create(Request $request)
     {
-        $params = parent::getCreateParams();
-
-        $params['current_card'] = app('settings')->getCurrentCard('personalization');
-        $params['current_item'] = app('settings')->getCurrentItem('personalization', 'social');
-
-        return $params;
-    }
-
-    public function showView(array $params)
-    {
-        $params = parent::showView($params);
-        $params['current_card'] = app('settings')->getCurrentCard('personalization');
-        $params['current_item'] = app('settings')->getCurrentItem('personalization', 'social');
-
-        return $params;
+        return redirect()->route($this->routePath.'.index');
     }
 
     public function show(SocialNetwork $social)
     {
-        return $this->showView([
-            'item' => $social,
-        ]);
+        return redirect()->route($this->routePath.'.index');
     }
 
     public function destroy(SocialNetwork $social)
