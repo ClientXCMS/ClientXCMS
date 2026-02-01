@@ -15,7 +15,7 @@ class SocialCrudControllerTest extends TestCase
     private function createSocial(array $attributes = []): SocialNetwork
     {
         return SocialNetwork::create(array_merge([
-            'name' => 'Social ' . rand(1, 9999),
+            'name' => 'Social '.rand(1, 9999),
             'icon' => 'bi bi-github',
             'url' => 'https://example.com',
             'position' => 0,
@@ -86,7 +86,7 @@ class SocialCrudControllerTest extends TestCase
         $social2 = $this->createSocial(['position' => 1]);
         $social3 = $this->createSocial(['position' => 2]);
 
-        $response = $this->performAdminAction('POST', self::ROUTE_PREFIX . '/sort', [
+        $response = $this->performAdminAction('POST', self::ROUTE_PREFIX.'/sort', [
             'items' => [$social3->id, $social1->id, $social2->id],
         ]);
 
@@ -108,7 +108,7 @@ class SocialCrudControllerTest extends TestCase
 
         $response = $this->performAdminAction(
             'POST',
-            self::ROUTE_PREFIX . '/sort',
+            self::ROUTE_PREFIX.'/sort',
             ['items' => [$social->id]],
             ['admin.show_theme_socialnetworks']
         );
@@ -118,13 +118,13 @@ class SocialCrudControllerTest extends TestCase
 
     public function test_sort_validates_items_required(): void
     {
-        $response = $this->performAdminAction('POST', self::ROUTE_PREFIX . '/sort', []);
+        $response = $this->performAdminAction('POST', self::ROUTE_PREFIX.'/sort', []);
         $response->assertStatus(422);
     }
 
     public function test_sort_validates_items_are_integers(): void
     {
-        $response = $this->performAdminAction('POST', self::ROUTE_PREFIX . '/sort', [
+        $response = $this->performAdminAction('POST', self::ROUTE_PREFIX.'/sort', [
             'items' => ['abc', 'def'],
         ]);
         $response->assertStatus(422);
@@ -132,7 +132,7 @@ class SocialCrudControllerTest extends TestCase
 
     public function test_sort_validates_items_exist_in_database(): void
     {
-        $response = $this->performAdminAction('POST', self::ROUTE_PREFIX . '/sort', [
+        $response = $this->performAdminAction('POST', self::ROUTE_PREFIX.'/sort', [
             'items' => [99999, 99998],
         ]);
         $response->assertStatus(422);

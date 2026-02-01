@@ -66,7 +66,7 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
 
         event(new ResourceCreatedEvent($model));
 
-        return redirect()->route($this->routePath . '.index')
+        return redirect()->route($this->routePath.'.index')
             ->with('success', __($this->flashs['created']));
     }
 
@@ -105,18 +105,18 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
 
         event(new ResourceUpdatedEvent($social));
 
-        return redirect()->route($this->routePath . '.index')
+        return redirect()->route($this->routePath.'.index')
             ->with('success', __($this->flashs['updated']));
     }
 
     public function create(Request $request)
     {
-        return redirect()->route($this->routePath . '.index');
+        return redirect()->route($this->routePath.'.index');
     }
 
     public function show(SocialNetwork $social)
     {
-        return redirect()->route($this->routePath . '.index');
+        return redirect()->route($this->routePath.'.index');
     }
 
     public function destroy(SocialNetwork $social)
