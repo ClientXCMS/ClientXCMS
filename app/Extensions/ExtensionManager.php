@@ -415,7 +415,7 @@ class ExtensionManager extends ExtensionCollectionsManager
     {
         $extensions = self::readExtensionJson();
 
-        $entry = collect($extensions[$type] ?? [])->first(fn($item) => $item['uuid'] === $uuid);
+        $entry = collect($extensions[$type] ?? [])->first(fn ($item) => $item['uuid'] === $uuid);
 
         if (! $entry) {
             throw new ExtensionException('Extension not found in registry');
@@ -439,7 +439,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         }
 
         $extensions[$type] = collect($extensions[$type] ?? [])
-            ->reject(fn($item) => $item['uuid'] === $uuid)
+            ->reject(fn ($item) => $item['uuid'] === $uuid)
             ->values()
             ->toArray();
 
