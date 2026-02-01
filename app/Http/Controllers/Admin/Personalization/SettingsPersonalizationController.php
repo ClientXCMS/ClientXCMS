@@ -31,11 +31,21 @@ class SettingsPersonalizationController extends Controller
 {
     public function showFrontMenu()
     {
-        $menus = MenuLink::where('type', 'front')->whereNull('parent_id')->orderBy('position')->get();
+        $menus = MenuLink::where('type', 'front')
+            ->whereNull('parent_id')
+            ->orderBy('position')
+            ->with(['children' => function ($query) {
+                $query->orderBy('position')->with(['children' => function ($q) {
+                    $q->orderBy('position');
+                }]);
+            }])
+            ->get();
 
-        return view('admin.personalization.settings.front', [
+        $menuData = $this->getMenuEditorData('front');
+
+        return view('admin.personalization.settings.front', array_merge([
             'menus' => $menus,
-        ]);
+        ], $menuData));
     }
 
     public function showCustomMenu(string $type)
@@ -56,11 +66,51 @@ class SettingsPersonalizationController extends Controller
 
     public function showBottomMenu()
     {
-        $menus = MenuLink::where('type', 'bottom')->whereNull('parent_id')->orderBy('position')->get();
+        $menus = MenuLink::where('type', 'bottom')
+            ->whereNull('parent_id')
+            ->orderBy('position')
+            ->with(['children' => function ($query) {
+                $query->orderBy('position')->with(['children' => function ($q) {
+                    $q->orderBy('position');
+                }]);
+            }])
+            ->get();
 
-        return view('admin.personalization.settings.bottom', [
+        $menuData = $this->getMenuEditorData('bottom');
+
+        return view('admin.personalization.settings.bottom', array_merge([
             'menus' => $menus,
-        ]);
+        ], $menuData));
+    }
+
+    /**
+     * Get common data needed for the menu inline editor.
+     */
+    private function getMenuEditorData(string $type): array
+    {
+        $supportDropdown = app('theme')->getTheme()->supportOption(
+            $type === 'front' ? 'menu_dropdown' : 'multi_footer_columns'
+        );
+
+        $linkTypes = [
+            'link' => __('personalization.menu_links.link'),
+            'new_tab' => __('personalization.menu_links.new_tab'),
+        ];
+
+        if ($supportDropdown) {
+            $linkTypes['dropdown'] = __('personalization.menu_links.dropdown');
+        }
+
+        return [
+            'roles' => [
+                'all' => __('personalization.menu_links.allowed_roles.all'),
+                'staff' => __('personalization.menu_links.allowed_roles.staff'),
+                'customer' => __('personalization.menu_links.allowed_roles.customer'),
+                'logged' => __('personalization.menu_links.allowed_roles.logged'),
+            ],
+            'linkTypes' => $linkTypes,
+            'supportDropDropdown' => $supportDropdown,
+        ];
     }
 
     public function storeBottomMenu(Request $request)

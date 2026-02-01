@@ -31,21 +31,23 @@ const SortableMixin = Base =>
             });
         }
 
+        serializeNode(node) {
+            const nested = node.querySelector(':scope > ul, :scope > ol');
+            if (node.classList.contains('sortable-parent') && nested !== null && nested.children.length > 0) {
+                return {
+                    id: node.id,
+                    children: Array.from(nested.children)
+                        .filter(child => child instanceof HTMLElement)
+                        .map(child => this.serializeNode(child))
+                };
+            }
+            return node.id;
+        }
+
         serialize(sortableEl = this.sortable.el) {
             return [].slice.call(sortableEl.children)
                 .filter(child => child instanceof HTMLElement)
-                .map(child => {
-                    if (child.classList.contains('sortable-parent')) {
-                        const childrens = child.querySelector('ul, ol');
-                        if (childrens !== null && childrens.children.length > 0) {
-                            return {
-                                id: child.id,
-                                children: Array.from(childrens.children).map(child => child.id)
-                            };
-                        }
-                    }
-                    return child.id;
-                });
+                .map(child => this.serializeNode(child));
         }
 
         save() {

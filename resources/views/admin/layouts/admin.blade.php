@@ -26,6 +26,7 @@
     @vite('resources/themes/default/css/app.scss')
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/png" href="{{ Vite::asset("resources/global/favicon.png") }}">
     @yield('styles')
 </head>

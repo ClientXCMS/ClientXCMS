@@ -187,6 +187,27 @@ class ThemeManager
         return $this->getCustomLinks('bottom');
     }
 
+    /**
+     * Get bottom menu items that act as footer columns (items with children).
+     * Includes both dropdown items and legacy parent items that have children.
+     */
+    public function getFooterColumns(): Collection
+    {
+        return $this->getBottomLinks()->filter(function (MenuLink $item) {
+            return $item->children && $item->children->isNotEmpty();
+        });
+    }
+
+    /**
+     * Get bottom menu items that act as inline footer links (leaf items, no children).
+     */
+    public function getFooterInlineLinks(): Collection
+    {
+        return $this->getBottomLinks()->filter(function (MenuLink $item) {
+            return $item->link_type !== 'dropdown' && (! $item->children || $item->children->isEmpty());
+        });
+    }
+
     public function getCustomLinks(string $type): Collection
     {
         if (app()->environment('testing')) {

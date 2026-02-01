@@ -73,36 +73,38 @@ class MenuLinkController extends AbstractCrudController
     public function sort(Request $request, string $type)
     {
         $this->checkPermission('update');
-        $menuLinks = $request->items;
-        $i = 0;
-        foreach ($menuLinks as $menuLink) {
-            if (is_array($menuLink)) {
-                $id = $menuLink['id'];
-                $children = $menuLink['children'];
-            } else {
-                $id = $menuLink;
-                $children = [];
-            }
-            $menu = MenuLink::find($id);
-            $menu->update([
-                'position' => $i,
-                'type' => $type,
-                'parent_id' => null,
-            ]);
-            foreach ($children as $child) {
-                $menu = MenuLink::find($child);
-                $menu->update([
-                    'position' => $i,
-                    'type' => $type,
-                    'parent_id' => $id,
-                ]);
-                $i++;
-            }
-            $i++;
-        }
+
+        $this->sortItems($request->items, $type, null);
+
         ThemeManager::clearCache();
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Recursively sort menu items up to 3 levels deep.
+     */
+    private function sortItems(array $items, string $type, ?int $parentId, int $depth = 0): void
+    {
+        if ($depth >= 3) {
+            return;
+        }
+
+        foreach ($items as $position => $item) {
+            $isNested = is_array($item);
+            $id = $isNested ? $item['id'] : $item;
+            $children = $isNested ? ($item['children'] ?? []) : [];
+
+            MenuLink::where('id', $id)->update([
+                'position' => $position,
+                'type' => $type,
+                'parent_id' => $parentId,
+            ]);
+
+            if (!empty($children)) {
+                $this->sortItems($children, $type, (int) $id, $depth + 1);
+            }
+        }
     }
 
     public function show(Request $request, MenuLink $menulink)
