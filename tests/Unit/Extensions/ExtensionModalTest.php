@@ -10,12 +10,12 @@ class ExtensionModalTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        self::$basePath = realpath(__DIR__ . '/../../../');
+        self::$basePath = realpath(__DIR__.'/../../../');
     }
 
     private function resourcePath(string $path): string
     {
-        return self::$basePath . '/resources/' . $path;
+        return self::$basePath.'/resources/'.$path;
     }
 
     public function test_modal_js_file_exists_and_uses_dom_api(): void
