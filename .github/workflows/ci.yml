@@ -318,6 +318,31 @@ jobs:
           echo "Parent DB host: ${PARENT_HOST}"
           echo "data-sync-ready=true" >> "$GITHUB_OUTPUT"
 
+      - name: Copy OAuth secret for review app
+        if: steps.env.outputs.is-review-app == 'true'
+        run: |
+          RELEASE="${{ steps.env.outputs.release }}"
+          TARGET_NS="clientxcms-uat"
+
+          # Read OAuth credentials from production
+          CLIENT_ID=$(kubectl get secret clientxcms-oauth-secret \
+            -n clientxcms -o jsonpath='{.data.oauth-client-id}' | base64 -d)
+          CLIENT_SECRET=$(kubectl get secret clientxcms-oauth-secret \
+            -n clientxcms -o jsonpath='{.data.oauth-client-secret}' | base64 -d)
+
+          if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
+            echo "WARNING: Could not read OAuth secret from production, skipping"
+            exit 0
+          fi
+
+          kubectl create secret generic "${RELEASE}-oauth-secret" \
+            -n "${TARGET_NS}" \
+            --from-literal=oauth-client-id="${CLIENT_ID}" \
+            --from-literal=oauth-client-secret="${CLIENT_SECRET}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "OAuth secret created: ${RELEASE}-oauth-secret in ${TARGET_NS}"
+
       - name: Deploy with Helm
         run: |
           HELM_ARGS=""
