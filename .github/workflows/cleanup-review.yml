@@ -62,6 +62,12 @@ jobs:
             -l app.kubernetes.io/instance=${{ steps.release.outputs.release }} \
             --ignore-not-found
 
+      - name: Delete parent DB secret
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          kubectl delete secret ${{ steps.release.outputs.release }}-parent-db \
+            -n clientxcms-uat --ignore-not-found
+
       # -- Remove Cloudflare Tunnel route and DNS record --
       - name: Remove Cloudflare Tunnel route
         env:

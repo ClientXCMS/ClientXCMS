@@ -215,21 +215,25 @@ jobs:
             echo "release=clientxcms" >> "$GITHUB_OUTPUT"
             echo "values-file=values-prod.yaml" >> "$GITHUB_OUTPUT"
             echo "hostname=cerbonix.net" >> "$GITHUB_OUTPUT"
+            echo "is-review-app=false" >> "$GITHUB_OUTPUT"
           elif [ "$BRANCH" = "development" ]; then
             echo "namespace=clientxcms-dev" >> "$GITHUB_OUTPUT"
             echo "release=clientxcms-dev" >> "$GITHUB_OUTPUT"
             echo "values-file=values-dev.yaml" >> "$GITHUB_OUTPUT"
             echo "hostname=dev.cerbonix.net" >> "$GITHUB_OUTPUT"
+            echo "is-review-app=false" >> "$GITHUB_OUTPUT"
           elif [ "$BRANCH" = "staging" ]; then
             echo "namespace=clientxcms-staging" >> "$GITHUB_OUTPUT"
             echo "release=clientxcms-staging" >> "$GITHUB_OUTPUT"
             echo "values-file=values-staging.yaml" >> "$GITHUB_OUTPUT"
             echo "hostname=staging.cerbonix.net" >> "$GITHUB_OUTPUT"
+            echo "is-review-app=false" >> "$GITHUB_OUTPUT"
           elif [ "$BRANCH" = "preprod" ]; then
             echo "namespace=clientxcms-preprod" >> "$GITHUB_OUTPUT"
             echo "release=clientxcms-preprod" >> "$GITHUB_OUTPUT"
             echo "values-file=values-preprod.yaml" >> "$GITHUB_OUTPUT"
             echo "hostname=preprod.cerbonix.net" >> "$GITHUB_OUTPUT"
+            echo "is-review-app=false" >> "$GITHUB_OUTPUT"
           else
             # feature/*, fix/*, features/* -> review app
             SLUG=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | head -c 40)
@@ -237,6 +241,33 @@ jobs:
             echo "release=clientxcms-${SLUG}" >> "$GITHUB_OUTPUT"
             echo "values-file=values-uat.yaml" >> "$GITHUB_OUTPUT"
             echo "hostname=${SLUG}-uat.cerbonix.net" >> "$GITHUB_OUTPUT"
+            echo "is-review-app=true" >> "$GITHUB_OUTPUT"
+
+            # Detect parent branch by shortest distance from merge-base
+            git fetch origin development staging preprod --depth=100 2>/dev/null || true
+            BEST_PARENT="development"
+            BEST_DISTANCE=999999
+            for CANDIDATE in development staging preprod; do
+              BASE=$(git merge-base HEAD "origin/${CANDIDATE}" 2>/dev/null || echo "")
+              if [ -n "$BASE" ]; then
+                DISTANCE=$(git rev-list --count "${BASE}..HEAD" 2>/dev/null || echo 999999)
+                echo "Distance to ${CANDIDATE}: ${DISTANCE} commits"
+                if [ "$DISTANCE" -lt "$BEST_DISTANCE" ]; then
+                  BEST_DISTANCE=$DISTANCE
+                  BEST_PARENT=$CANDIDATE
+                fi
+              fi
+            done
+            echo "Detected parent branch: ${BEST_PARENT}"
+
+            # Map parent branch to namespace and release
+            case "$BEST_PARENT" in
+              development) PARENT_NS="clientxcms-dev";      PARENT_RELEASE="clientxcms-dev" ;;
+              staging)     PARENT_NS="clientxcms-staging";   PARENT_RELEASE="clientxcms-staging" ;;
+              preprod)     PARENT_NS="clientxcms-preprod";   PARENT_RELEASE="clientxcms-preprod" ;;
+            esac
+            echo "parent-namespace=${PARENT_NS}" >> "$GITHUB_OUTPUT"
+            echo "parent-release=${PARENT_RELEASE}" >> "$GITHUB_OUTPUT"
           fi
 
           echo "image-tag=${SHA_SHORT}" >> "$GITHUB_OUTPUT"
@@ -248,8 +279,54 @@ jobs:
           token: ${{ secrets.INFRA_REPO_PAT }}
           path: infra
 
+      - name: Copy parent DB secret to UAT namespace
+        id: datasync
+        if: steps.env.outputs.is-review-app == 'true'
+        run: |
+          PARENT_NS="${{ steps.env.outputs.parent-namespace }}"
+          PARENT_RELEASE="${{ steps.env.outputs.parent-release }}"
+          RELEASE="${{ steps.env.outputs.release }}"
+          TARGET_NS="clientxcms-uat"
+
+          echo "Copying MariaDB credentials from ${PARENT_RELEASE}-mariadb in ${PARENT_NS}..."
+
+          # Read parent MariaDB password
+          PARENT_PASSWORD=$(kubectl get secret "${PARENT_RELEASE}-mariadb" \
+            -n "${PARENT_NS}" \
+            -o jsonpath='{.data.mariadb-password}' | base64 -d)
+
+          if [ -z "$PARENT_PASSWORD" ]; then
+            echo "WARNING: Could not read parent MariaDB secret, data sync will be skipped"
+            echo "data-sync-ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Parent DB host via cross-namespace DNS
+          PARENT_HOST="${PARENT_RELEASE}-mariadb.${PARENT_NS}.svc.cluster.local"
+
+          # Create secret with parent DB connection info in UAT namespace
+          kubectl create secret generic "${RELEASE}-parent-db" \
+            -n "${TARGET_NS}" \
+            --from-literal=host="${PARENT_HOST}" \
+            --from-literal=port="3306" \
+            --from-literal=database="clientxcms" \
+            --from-literal=username="clientxcms" \
+            --from-literal=password="${PARENT_PASSWORD}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "Parent DB secret created: ${RELEASE}-parent-db in ${TARGET_NS}"
+          echo "Parent DB host: ${PARENT_HOST}"
+          echo "data-sync-ready=true" >> "$GITHUB_OUTPUT"
+
       - name: Deploy with Helm
         run: |
+          HELM_ARGS=""
+          if [ "${{ steps.env.outputs.is-review-app }}" = "true" ] && \
+             [ "${{ steps.datasync.outputs.data-sync-ready }}" = "true" ]; then
+            HELM_ARGS="--set dataSync.enabled=true"
+            HELM_ARGS="${HELM_ARGS} --set dataSync.parentSecretName=${{ steps.env.outputs.release }}-parent-db"
+          fi
+
           helm upgrade --install ${{ steps.env.outputs.release }} \
             ./infra/kubernetes/charts/clientxcms \
             --namespace ${{ steps.env.outputs.namespace }} \
@@ -258,6 +335,7 @@ jobs:
             --set hostname=${{ steps.env.outputs.hostname }} \
             --set app.url=https://${{ steps.env.outputs.hostname }} \
             --set namespace.create=false \
+            ${HELM_ARGS} \
             --wait --timeout 300s
 
       - name: Wait for rollout
