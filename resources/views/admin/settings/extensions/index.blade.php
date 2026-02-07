@@ -288,7 +288,7 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
 
 <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
-<script src="{{ global_asset('js/admin/extensions.js') }}"></script>
+<script src="{{ Vite::asset('resources/global/js/admin/extensions.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         new ExtensionManager({
