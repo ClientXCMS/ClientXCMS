@@ -29,7 +29,6 @@ class ExtensionModalTest extends TestCase
         $this->assertStringContainsString('function openModal', $content);
         $this->assertStringContainsString('function closeModal', $content);
         $this->assertStringContainsString('function populateModal', $content);
-        $this->assertStringContainsString('function enableFocusTrap', $content);
         $this->assertStringContainsString('function buildModalActions', $content);
 
         // Must use DOM API for content creation (XSS prevention)
@@ -40,10 +39,11 @@ class ExtensionModalTest extends TestCase
         // Must validate URLs against javascript: protocol injection
         $this->assertStringContainsString('isSafeUrl', $content);
 
-        // Must have focus trap with keyboard navigation
-        $this->assertStringContainsString('FOCUSABLE_SELECTOR', $content);
+        // Must have focus trap imported from utils.js
+        $this->assertStringContainsString("import { getTranslation, isSafeUrl, el, createFocusTrap } from './utils.js'", $content);
+
+        // Must handle Escape key
         $this->assertStringContainsString("e.key === 'Escape'", $content);
-        $this->assertStringContainsString("e.key !== 'Tab'", $content);
 
         // Must announce modal opening via aria-live region
         $this->assertStringContainsString('js-extension-announcer', $content);
@@ -138,14 +138,21 @@ class ExtensionModalTest extends TestCase
         // Aria-live announcer region for screen reader announcements
         $this->assertStringContainsString('js-extension-announcer', $content);
 
-        // Script inclusion
-        $this->assertStringContainsString('modal.js', $content);
+        // Module is now loaded via Vite (not inline file_get_contents)
+        $this->assertStringContainsString('extensions/index.js', $content);
 
         // Must NOT have inline onclick handler (removed for proper JS event delegation)
         $this->assertStringNotContainsString(
             'onclick="event.stopPropagation()"',
             $content,
             'Modal panel must not use inline onclick -- event delegation handles backdrop clicks in modal.js'
+        );
+
+        // Must NOT have inline file_get_contents for JS modules (loaded via Vite)
+        $this->assertStringNotContainsString(
+            'file_get_contents',
+            $content,
+            'JS modules must be loaded via Vite, not inlined via file_get_contents'
         );
     }
 }

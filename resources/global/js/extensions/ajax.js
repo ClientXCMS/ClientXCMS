@@ -1,4 +1,8 @@
 import Swal from 'sweetalert2';
+import { getTranslation } from './utils.js';
+
+// Re-export for backward compatibility with modules that imported from ajax.js
+export { getTranslation };
 
 /**
  * Returns the CSRF token from the page meta tag.
@@ -7,16 +11,6 @@ import Swal from 'sweetalert2';
 function getCsrfToken() {
     const meta = document.querySelector('meta[name="csrf-token"]');
     return meta ? meta.content : null;
-}
-
-/**
- * Returns a translated string from the global translations object.
- * @param {string} key - Translation key
- * @param {string} fallback - Fallback text if key is missing
- * @returns {string}
- */
-export function getTranslation(key, fallback) {
-    return (window.__extensionTranslations && window.__extensionTranslations[key]) || fallback;
 }
 
 /**

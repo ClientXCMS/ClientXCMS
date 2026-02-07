@@ -6,21 +6,11 @@
  * drawer UI, badge counter with micro-animation, and event delegation.
  */
 
-import { escapeHtml } from './utils.js';
+import { escapeHtml, getTranslation as t, sanitizeUrl, createFocusTrap } from './utils.js';
 
 const STORAGE_KEY = 'extension_cart';
 const ANIMATION_DURATION_MS = 300;
 const BADGE_BOUNCE_MS = 200;
-const ALLOWED_URL_PROTOCOLS = ['http:', 'https:'];
-
-/**
- * Get a translation string from the global translations object.
- * @param {string} key
- * @returns {string}
- */
-function t(key) {
-    return window.__extensionTranslations?.[key] || key;
-}
 
 /**
  * Load cart items from sessionStorage.
@@ -43,32 +33,13 @@ function saveCart(items) {
 }
 
 /**
- * Validate and sanitize a URL for use in HTML attributes.
- * Only allows http: and https: protocols to prevent javascript: XSS.
- * @param {string} url
- * @returns {string}
- */
-function sanitizeUrl(url) {
-    if (!url) return '';
-    try {
-        const parsed = new URL(url, window.location.origin);
-        if (ALLOWED_URL_PROTOCOLS.includes(parsed.protocol)) {
-            return parsed.href;
-        }
-        return '';
-    } catch {
-        return '';
-    }
-}
-
-/**
  * CartManager class
  * Handles cart state, drawer rendering, badge counter, and events.
  */
 export class CartManager {
     constructor() {
         this.items = loadCart();
-        this._focusTrapHandler = null;
+        this._focusTrap = null;
         this._bindEvents();
         this.updateBadge();
         this.renderDrawerContent();
@@ -170,11 +141,12 @@ export class CartManager {
 
         // Focus first interactive element after CSS transition completes
         setTimeout(() => {
-            const focusable = this._getFocusableElements(drawer);
+            const focusable = drawer.querySelectorAll('button:not([disabled]), a[href], input:not([disabled])');
             if (focusable.length > 0) focusable[0].focus({ preventScroll: true });
         }, ANIMATION_DURATION_MS);
 
-        this._installFocusTrap(drawer);
+        this._focusTrap = createFocusTrap(drawer);
+        this._focusTrap.activate();
     }
 
     /**
@@ -194,7 +166,10 @@ export class CartManager {
             overlay?.classList.add('hidden');
         }, ANIMATION_DURATION_MS);
 
-        this._removeFocusTrap();
+        if (this._focusTrap) {
+            this._focusTrap.deactivate();
+            this._focusTrap = null;
+        }
 
         // Return focus to the trigger button without scrolling to top
         const triggerBtn = document.querySelector('[data-action="open-cart"]');
@@ -364,11 +339,11 @@ export class CartManager {
                 btn.setAttribute('data-uuid', ext.uuid);
 
                 if (this.has(ext.uuid)) {
-                    btn.innerHTML = `<i class="bi bi-cart-check"></i> ${escapeHtml(t('cart_in_cart'))}`;
+                    this._setCartBtnContent(btn, 'bi-cart-check', t('cart_in_cart'));
                     btn.classList.add('opacity-60');
                     btn.disabled = true;
                 } else {
-                    btn.innerHTML = `<i class="bi bi-cart-plus"></i> ${escapeHtml(t('cart_add'))}`;
+                    this._setCartBtnContent(btn, 'bi-cart-plus', t('cart_add'));
                 }
 
                 btnContainer.appendChild(btn);
@@ -383,11 +358,11 @@ export class CartManager {
         document.querySelectorAll('[data-action="add-to-cart"]').forEach(btn => {
             const uuid = btn.dataset.uuid;
             if (this.has(uuid)) {
-                btn.innerHTML = `<i class="bi bi-cart-check"></i> ${escapeHtml(t('cart_in_cart'))}`;
+                this._setCartBtnContent(btn, 'bi-cart-check', t('cart_in_cart'));
                 btn.classList.add('opacity-60');
                 btn.disabled = true;
             } else {
-                btn.innerHTML = `<i class="bi bi-cart-plus"></i> ${escapeHtml(t('cart_add'))}`;
+                this._setCartBtnContent(btn, 'bi-cart-plus', t('cart_add'));
                 btn.classList.remove('opacity-60');
                 btn.disabled = false;
             }
@@ -395,57 +370,17 @@ export class CartManager {
     }
 
     /**
-     * Get all focusable elements within a container.
-     * @param {HTMLElement} container
-     * @returns {HTMLElement[]}
+     * Set cart button content using DOM API (replaces innerHTML).
+     * @param {HTMLElement} btn
+     * @param {string} iconClass - Bootstrap Icons class (e.g. 'bi-cart-plus')
+     * @param {string} label
      */
-    _getFocusableElements(container) {
-        const selector = [
-            'button:not([disabled])',
-            '[href]',
-            'input:not([disabled])',
-            'select:not([disabled])',
-            'textarea:not([disabled])',
-            '[tabindex]:not([tabindex="-1"])',
-        ].join(', ');
-        return Array.from(container.querySelectorAll(selector))
-            .filter(el => el.offsetParent !== null);
-    }
-
-    /**
-     * Install a focus trap that cycles Tab/Shift+Tab within the drawer.
-     * Prevents focus from escaping the dialog while open (ARIA requirement).
-     * @param {HTMLElement} drawer
-     */
-    _installFocusTrap(drawer) {
-        this._removeFocusTrap();
-        this._focusTrapHandler = (e) => {
-            if (e.key !== 'Tab') return;
-            const focusable = this._getFocusableElements(drawer);
-            if (focusable.length === 0) return;
-
-            const first = focusable[0];
-            const last = focusable[focusable.length - 1];
-
-            if (e.shiftKey && document.activeElement === first) {
-                e.preventDefault();
-                last.focus();
-            } else if (!e.shiftKey && document.activeElement === last) {
-                e.preventDefault();
-                first.focus();
-            }
-        };
-        document.addEventListener('keydown', this._focusTrapHandler);
-    }
-
-    /**
-     * Remove the active focus trap handler.
-     */
-    _removeFocusTrap() {
-        if (this._focusTrapHandler) {
-            document.removeEventListener('keydown', this._focusTrapHandler);
-            this._focusTrapHandler = null;
-        }
+    _setCartBtnContent(btn, iconClass, label) {
+        btn.textContent = '';
+        const icon = document.createElement('i');
+        icon.className = `bi ${iconClass}`;
+        btn.appendChild(icon);
+        btn.appendChild(document.createTextNode(' ' + label));
     }
 
     /**

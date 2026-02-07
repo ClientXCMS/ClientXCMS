@@ -11,26 +11,11 @@
  * UUIDs, and other user-influenced data.
  */
 
-import { escapeHtml } from './utils.js';
-import { request, getTranslation } from './ajax.js';
+import { escapeHtml, trans, getTranslation } from './utils.js';
+import { request } from './ajax.js';
 
 /** Max wait time (ms) for user decision on batch error before auto-skip (M4). */
 const ERROR_PROMPT_TIMEOUT_MS = 60000;
-
-/**
- * Replace :placeholder tokens in a translation string.
- * @param {string} key - Translation key
- * @param {string} fallback - Fallback text
- * @param {Object} replacements - { placeholder: value }
- * @returns {string}
- */
-function trans(key, fallback, replacements = {}) {
-    let text = getTranslation(key, fallback);
-    for (const [k, v] of Object.entries(replacements)) {
-        text = text.replace(`:${k}`, v);
-    }
-    return text;
-}
 
 /**
  * Make a silent POST request for batch operations (L1 fix).

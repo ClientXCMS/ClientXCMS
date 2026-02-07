@@ -3,75 +3,19 @@ import { ExtensionStore } from './state.js';
 import { CartManager } from './cart.js';
 import { BatchEngine } from './batch.js';
 import { init as initSearch } from './search.js';
+import { bindActionHandlers } from './ajax-handlers.js';
+import { initModal } from './modal.js';
 
 /** @type {ExtensionStore} */
 let store;
 
 /**
- * Returns the closest .js-extension-card element from an event target.
- * @param {HTMLElement} target
- * @returns {HTMLElement|null}
- */
-function getCardFromTarget(target) {
-    return target.closest('.js-extension-card');
-}
-
-/**
- * Handles click events delegated from extension card containers.
- * Routes events to appropriate handlers based on [data-action] attribute.
- * @param {MouseEvent} event
- */
-function handleCardClick(event) {
-    const card = getCardFromTarget(event.target);
-    if (!card) return;
-
-    const uuid = card.dataset.uuid;
-    if (!uuid) return;
-
-    const actionEl = event.target.closest('[data-action]');
-    if (!actionEl) return;
-
-    const action = actionEl.dataset.action;
-
-    switch (action) {
-        case 'add-to-cart':
-            event.preventDefault();
-            store.addToCart(uuid);
-            break;
-        case 'remove-from-cart':
-            event.preventDefault();
-            store.removeFromCart(uuid);
-            break;
-        default:
-            break;
-    }
-}
-
-/**
- * Sets up event delegation on all known extension card containers.
- */
-function setupEventDelegation() {
-    const containers = [
-        document.getElementById('extensions-grid'),
-        document.getElementById('installed-grid'),
-        document.getElementById('themes-grid'),
-    ];
-
-    containers.forEach((container) => {
-        if (container) {
-            container.addEventListener('click', handleCardClick);
-        }
-    });
-}
-
-/**
  * Initializes the extensions module.
- * Creates the store, reads DOM state, and sets up event delegation.
+ * Creates the store, reads DOM state, and sets up search.
  */
 function initialize() {
     store = new ExtensionStore();
     store.init();
-    setupEventDelegation();
     initSearch();
 }
 
@@ -97,7 +41,16 @@ function initializeCartAndBatch() {
  * Single initialization entry point for the extensions module.
  */
 function boot() {
+    // Clean up legacy cart key from ExtensionStore (now handled by CartManager only)
+    try {
+        sessionStorage.removeItem('clientxcms-extension-cart');
+    } catch {
+        /* sessionStorage may be unavailable */
+    }
+
     initialize();
+    bindActionHandlers(document);
+    initModal();
     initializeCartAndBatch();
 }
 

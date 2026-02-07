@@ -502,16 +502,6 @@ window.__extensionTranslations = {
 };
 </script>
 
-{{-- AJAX Action Handlers (Stories 1.5 & 1.6) --}}
-<script>
-{!! file_get_contents(resource_path('global/js/extensions/ajax-handlers.js')) !!}
-</script>
-
-{{-- Product Detail Modal (Story 2.3) --}}
-<script>
-{!! file_get_contents(resource_path('global/js/extensions/modal.js')) !!}
-</script>
-
 <style>
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }

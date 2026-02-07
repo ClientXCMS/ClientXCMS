@@ -5,6 +5,8 @@
  * keyboard shortcuts, group filtering, context-aware default tab.
  */
 
+import { getTranslation, debounce } from './utils.js';
+
 const DEBOUNCE_MS = 200;
 const TAB_IDS = ['installed', 'discover', 'themes'];
 
@@ -26,24 +28,6 @@ const INACTIVE_BADGE_CLASSES = [
 let activeGroup = 'all';
 let searchQuery = '';
 let currentTab = 'installed';
-
-function getTranslation(key, fallback) {
-    return window.__extensionTranslations?.[key] || fallback;
-}
-
-/**
- * Creates a debounced wrapper. Timer is scoped to the returned closure.
- * @param {Function} fn
- * @param {number} ms
- * @returns {Function}
- */
-function debounce(fn, ms) {
-    let timer = null;
-    return function (...args) {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn.apply(this, args), ms);
-    };
-}
 
 function getCardsInTab(tabId) {
     const tab = document.getElementById(`tab-${tabId}`);
