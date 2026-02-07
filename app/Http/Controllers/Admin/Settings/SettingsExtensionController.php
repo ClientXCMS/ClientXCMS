@@ -75,7 +75,7 @@ class SettingsExtensionController
             \App\Theme\ThemeManager::clearCache();
             ActionLog::log(ActionLog::THEME_CHANGED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
         } else {
-            \Artisan::call('migrate', ['--force' => true, '--path' => $type . '/' . $extension . '/database/migrations']);
+            \Artisan::call('migrate', ['--force' => true, '--path' => $type.'/'.$extension.'/database/migrations']);
             ActionLog::log(ActionLog::EXTENSION_ENABLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
         }
 
@@ -144,16 +144,18 @@ class SettingsExtensionController
                     case 'enable':
                         if (app('extension')->extensionIsEnabled($uuid)) {
                             $results['errors'][] = ['uuid' => $uuid, 'message' => __('extensions.flash.already_enabled')];
+
                             continue 2;
                         }
                         $extensiondto = app('extension')->getExtension($type, $uuid);
                         if (! $extensiondto->isActivable()) {
                             $results['errors'][] = ['uuid' => $uuid, 'message' => __('extensions.flash.cannot_enable')];
+
                             continue 2;
                         }
                         app('extension')->enable($type, $uuid);
                         if ($type != 'themes') {
-                            \Artisan::call('migrate', ['--force' => true, '--path' => $type . '/' . $uuid . '/database/migrations']);
+                            \Artisan::call('migrate', ['--force' => true, '--path' => $type.'/'.$uuid.'/database/migrations']);
                         }
                         ActionLog::log(ActionLog::EXTENSION_ENABLED, ExtensionDTO::class, $uuid, auth('admin')->id(), null, ['type' => $type]);
                         $results['success'][] = ['uuid' => $uuid, 'action' => 'enabled'];
@@ -206,6 +208,7 @@ class SettingsExtensionController
         if (request()->ajax() || request()->wantsJson()) {
             return response()->json(['success' => true, 'message' => $message]);
         }
+
         return redirect()->back()->with('success', $message);
     }
 
@@ -214,6 +217,7 @@ class SettingsExtensionController
         if (request()->ajax() || request()->wantsJson()) {
             return response()->json(['success' => false, 'error' => $message], 400);
         }
+
         return redirect()->back()->with('error', $message);
     }
 }
