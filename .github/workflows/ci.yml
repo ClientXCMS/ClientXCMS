@@ -1,8 +1,9 @@
 ---
 # ClientXCMS CI/CD Pipeline
 #
-# - master  -> production deployment (clientxcms namespace)
-# - dev     -> dev deployment (clientxcms-dev namespace)
+# - master       -> production deployment (clientxcms namespace)
+# - development  -> dev deployment (clientxcms-dev namespace)
+# - staging      -> staging deployment (clientxcms-staging namespace)
 # - feature/*, fix/*, features/* -> review apps (clientxcms-uat namespace)
 #
 # Copy this file to ClientXCMS repo: .github/workflows/ci.yml
@@ -13,14 +14,15 @@ on:
   push:
     branches:
       - master
-      - dev
+      - development
+      - staging
       - "feature/**"
       - "fix/**"
       - "features/**"
   pull_request:
     branches:
       - master
-      - dev
+      - development
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -212,11 +214,16 @@ jobs:
             echo "release=clientxcms" >> "$GITHUB_OUTPUT"
             echo "values-file=values-prod.yaml" >> "$GITHUB_OUTPUT"
             echo "hostname=cerbonix.net" >> "$GITHUB_OUTPUT"
-          elif [ "$BRANCH" = "dev" ]; then
+          elif [ "$BRANCH" = "development" ]; then
             echo "namespace=clientxcms-dev" >> "$GITHUB_OUTPUT"
             echo "release=clientxcms-dev" >> "$GITHUB_OUTPUT"
             echo "values-file=values-dev.yaml" >> "$GITHUB_OUTPUT"
             echo "hostname=dev.cerbonix.net" >> "$GITHUB_OUTPUT"
+          elif [ "$BRANCH" = "staging" ]; then
+            echo "namespace=clientxcms-staging" >> "$GITHUB_OUTPUT"
+            echo "release=clientxcms-staging" >> "$GITHUB_OUTPUT"
+            echo "values-file=values-staging.yaml" >> "$GITHUB_OUTPUT"
+            echo "hostname=staging.cerbonix.net" >> "$GITHUB_OUTPUT"
           else
             # feature/*, fix/*, features/* -> review app
             SLUG=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | head -c 40)
