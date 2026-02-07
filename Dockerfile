@@ -131,7 +131,6 @@ RUN mkdir -p \
         storage/framework/views \
         storage/logs \
         bootstrap/cache \
-    && touch storage/installed \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache \
     && chmod +x /entrypoint.sh

@@ -62,12 +62,6 @@ mkdir -p \
 chown -R www-data:www-data storage bootstrap/cache modules addons
 chmod -R 775 storage bootstrap/cache modules addons
 
-# -- Restore installed marker hidden by K8s PVC mount -------------------------
-if [ ! -f /app/storage/installed ]; then
-    echo "Creating installed marker on PVC..."
-    php -r "file_put_contents('/app/storage/installed', 'version=docker;time=' . time());"
-fi
-
 # -- Create .env in storage (writable PVC) and symlink from /app/.env ----------
 if [ ! -f /app/storage/.env ]; then
     echo "Creating .env from .env.example"
