@@ -313,6 +313,8 @@ if (! function_exists('render_theme_sections')) {
             try {
                 $themeManager->setCurrentRenderingSection($section);
                 $rendered = $section->toDTO()->render();
+            } catch (\Throwable $e) {
+                $rendered = '';
             } finally {
                 $themeManager->setCurrentRenderingSection(null);
             }
