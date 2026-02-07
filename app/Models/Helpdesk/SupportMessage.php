@@ -173,6 +173,9 @@ class SupportMessage extends Model
 
     public function canEdit()
     {
+        if ($this->ticket->status === SupportTicket::STATUS_CLOSED) {
+            return false;
+        }
         if ($this->created_at->diffInMinutes() > 15) {
             return false;
         }
