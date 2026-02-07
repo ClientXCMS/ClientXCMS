@@ -52,8 +52,8 @@ class ThemeManager
         $this->scanThemes();
 
         if ($this->getTheme() != null) {
-            app('view')->prependLocation($this->themePath('views'));
-            app('view')->prependLocation($this->themePath());
+            app('view')->addLocation($this->themePath('views'));
+            app('view')->addLocation($this->themePath());
             if (File::exists($this->themePath('lang'))) {
                 app('translator')->addNamespace('theme', $this->themePath('lang'));
             }
