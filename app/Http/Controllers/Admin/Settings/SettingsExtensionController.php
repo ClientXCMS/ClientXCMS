@@ -110,6 +110,7 @@ class SettingsExtensionController
         }
         try {
             app('extension')->update($type, $extension);
+            
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);
         }

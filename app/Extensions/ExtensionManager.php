@@ -145,7 +145,7 @@ class ExtensionManager extends ExtensionCollectionsManager
             return [];
         }
         try {
-            $response = \Http::timeout(10)->get(LicenseGateway::getDomain().'/api/resources');
+            $response = \Http::timeout(10)->get(LicenseGateway::getDomain() . '/api/resources');
 
             return $response->json('data', []);
         } catch (\Exception $e) {
@@ -261,16 +261,16 @@ class ExtensionManager extends ExtensionCollectionsManager
             (new UpdaterManager)->update($api['uuid']);
             self::writeExtensionJson($extensions);
         } catch (\Exception $e) {
-            throw new ExtensionException('Error in UpdaterManager: '.$e->getMessage());
+            throw new ExtensionException('Error in UpdaterManager: ' . $e->getMessage());
         }
     }
 
     public function checkPrerequisitesForEnable(string $type, string $extension): array
     {
         if ($type == 'themes') {
-            $file = base_path('resources/themes/'.$extension.'/theme.json');
+            $file = base_path('resources/themes/' . $extension . '/theme.json');
         } elseif ($type == 'addons' || $type == 'modules') {
-            $file = base_path($type.'/'.$extension.'/composer.json');
+            $file = base_path($type . '/' . $extension . '/composer.json');
         } else {
             return [];
         }
@@ -306,6 +306,13 @@ class ExtensionManager extends ExtensionCollectionsManager
         }
         if ($type == 'themes') {
             app('theme')->setTheme($extension, true);
+            $extensions['themes'] = collect($extensions['themes'] ?? [])->map(function ($item) use ($extension) {
+                if ($item['uuid'] != $extension) {
+                    $item['enabled'] = false;
+                }
+
+                return $item;
+            })->toArray();
         }
         if (collect($extensions[$type] ?? [])->where('uuid', $extension)->isEmpty()) {
             $extensions[$type][] = ['uuid' => $extension, 'version' => $api['version'] ?? 'v1.0', 'type' => $type, 'enabled' => true, 'installed' => true, 'api' => $api];
@@ -321,7 +328,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         try {
             self::writeExtensionJson($extensions);
         } catch (\Exception $e) {
-            throw new ExtensionException('Unable to write extensions.json file: '.$e->getMessage());
+            throw new ExtensionException('Unable to write extensions.json file: ' . $e->getMessage());
         }
     }
 
@@ -406,7 +413,7 @@ class ExtensionManager extends ExtensionCollectionsManager
             if (in_array($pathinfo['basename'], $extensions)) {
                 continue;
             }
-            $extensionFile = $extension.'/'.$type.'.json';
+            $extensionFile = $extension . '/' . $type . '.json';
             if (! file_exists($extensionFile)) {
                 continue;
             }
