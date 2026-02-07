@@ -259,9 +259,9 @@ jobs:
           kubectl rollout status deployment/${{ steps.env.outputs.release }} \
             -n ${{ steps.env.outputs.namespace }} --timeout=300s
 
-      # -- Cloudflare Tunnel route for review apps --
+      # -- Cloudflare Tunnel route (all environments except production) --
       - name: Create Cloudflare Tunnel route
-        if: steps.env.outputs.namespace == 'clientxcms-uat'
+        if: steps.env.outputs.namespace != 'clientxcms'
         env:
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
