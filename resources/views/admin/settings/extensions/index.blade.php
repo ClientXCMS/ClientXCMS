@@ -245,192 +245,78 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
 @endsection
 
 @section('scripts')
+<div id="bulk-toolbar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden">
+    <div class="flex items-center gap-4 px-6 py-4 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700">
+        <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span id="selected-count">0</span> {{ __('extensions.bulk.selected_count', ['count' => '']) }}
+            </span>
+            <button id="select-all-btn" class="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-medium">
+                {{ __('extensions.bulk.select_all') }}
+            </button>
+        </div>
+        <div class="h-6 w-px bg-gray-300 dark:bg-slate-600"></div>
+        <div class="flex items-center gap-2">
+            <button id="bulk-install-btn" class="btn btn-primary btn-sm flex items-center gap-1">
+                <i class="bi bi-cloud-download"></i>{{ __('extensions.bulk.install_selected') }}
+            </button>
+            <button id="bulk-enable-btn" class="btn btn-success btn-sm flex items-center gap-1">
+                <i class="bi bi-check-circle"></i>{{ __('extensions.bulk.enable_selected') }}
+            </button>
+            <button id="bulk-disable-btn" class="btn btn-danger btn-sm flex items-center gap-1">
+                <i class="bi bi-ban"></i>{{ __('extensions.bulk.disable_selected') }}
+            </button>
+        </div>
+        <div class="h-6 w-px bg-gray-300 dark:bg-slate-600"></div>
+        <button id="cancel-selection-btn" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+</div>
+<div id="extension-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="modal-backdrop"></div>
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <button id="modal-close" class="absolute top-4 right-4 z-10 p-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
+                <i class="bi bi-x-lg text-gray-600 dark:text-gray-400"></i>
+            </button>
+            <div id="modal-content" class="overflow-y-auto max-h-[90vh]">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+<script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+<script src="{{ global_asset('js/admin/extensions.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const mainTabBtns = document.querySelectorAll('.main-tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        mainTabBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const tabId = this.dataset.tab;
-
-                mainTabBtns.forEach(b => {
-                    b.classList.remove('active', 'bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
-                    b.classList.add('text-gray-600', 'dark:text-gray-400');
-                    const badge = b.querySelector('span:last-child');
-                    if (badge) {
-                        badge.classList.remove('bg-indigo-100', 'dark:bg-indigo-900/50', 'text-indigo-600', 'dark:text-indigo-400');
-                        badge.classList.add('bg-gray-200', 'dark:bg-slate-600', 'text-gray-600', 'dark:text-gray-400');
-                    }
-                });
-                this.classList.add('active', 'bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
-                this.classList.remove('text-gray-600', 'dark:text-gray-400');
-                const activeBadge = this.querySelector('span:last-child');
-                if (activeBadge) {
-                    activeBadge.classList.add('bg-indigo-100', 'dark:bg-indigo-900/50', 'text-indigo-600', 'dark:text-indigo-400');
-                    activeBadge.classList.remove('bg-gray-200', 'dark:bg-slate-600', 'text-gray-600', 'dark:text-gray-400');
-                }
-
-                tabContents.forEach(content => {
-                    if (content.id === `tab-${tabId}`) {
-                        content.classList.remove('hidden');
-                        content.style.animation = 'fadeIn 0.3s ease forwards';
-                    } else {
-                        content.classList.add('hidden');
-                    }
-                });
-            });
-        });
-
-        const searchInput = document.getElementById('extension-search');
-        const groupFilterBtns = document.querySelectorAll('.group-filter-btn');
-        const noResults = document.getElementById('no-results');
-        const extensionsGrid = document.getElementById('extensions-grid');
-        const extensionsCount = document.getElementById('extensions-count');
-
-        let activeGroup = 'all';
-        let searchQuery = '';
-
-        const allExtensionItems = document.querySelectorAll('.extension-item');
-        const discoverExtensionItems = document.querySelectorAll('#extensions-grid .extension-item');
-
-        function filterExtensions() {
-            let visibleCount = 0;
-
-            if (searchQuery !== '') {
-                const discoverTabBtn = document.querySelector('.main-tab-btn[data-tab="discover"]');
-                if (discoverTabBtn && !discoverTabBtn.classList.contains('active')) {
-                    discoverTabBtn.click();
-                }
-
-                discoverExtensionItems.forEach(item => {
-                    const category = item.dataset.category;
-                    const name = item.dataset.name?.toLowerCase() || '';
-                    const description = item.dataset.description?.toLowerCase() || '';
-
-                    const matchesGroup = activeGroup === 'all' || category === activeGroup;
-                    const matchesSearch = name.includes(searchQuery.toLowerCase()) ||
-                        description.includes(searchQuery.toLowerCase());
-
-                    if (matchesGroup && matchesSearch) {
-                        item.classList.remove('hidden');
-                        item.style.animation = 'fadeIn 0.3s ease forwards';
-                        visibleCount++;
-                    } else {
-                        item.classList.add('hidden');
-                    }
-                });
-
-                const featuredSections = document.querySelectorAll('#section-featured, #section-new, #section-popular');
-                featuredSections.forEach(section => {
-                    if (section) section.classList.add('hidden');
-                });
-            } else {
-                discoverExtensionItems.forEach(item => {
-                    const category = item.dataset.category;
-
-                    const matchesGroup = activeGroup === 'all' || category === activeGroup;
-
-                    if (matchesGroup) {
-                        item.classList.remove('hidden');
-                        item.style.animation = 'fadeIn 0.3s ease forwards';
-                        visibleCount++;
-                    } else {
-                        item.classList.add('hidden');
-                    }
-                });
-
-                const featuredSections = document.querySelectorAll('#section-featured, #section-new, #section-popular');
-                featuredSections.forEach(section => {
-                    if (section) {
-                        if (activeGroup === 'all') {
-                            section.classList.remove('hidden');
-                        } else {
-                            section.classList.add('hidden');
-                        }
-                    }
-                });
+        new ExtensionManager({
+            csrfToken: '{{ csrf_token() }}',
+            routes: {
+                enable: '{{ route("admin.settings.extensions.enable", ["TYPE", "UUID"]) }}',
+                disable: '{{ route("admin.settings.extensions.disable", ["TYPE", "UUID"]) }}',
+                update: '{{ route("admin.settings.extensions.update", ["TYPE", "UUID"]) }}',
+                bulk: '{{ route("admin.settings.extensions.bulk") }}'
+            },
+            translations: {
+                processing: '{{ __("extensions.settings.processing") }}',
+                enabled: '{{ __("extensions.settings.enabled") }}',
+                installed: '{{ __("extensions.settings.installed") }}',
+                success: '{{ __("extensions.bulk.success") }}',
+                error: '{{ __("extensions.settings.processing_error") }}',
+                version: '{{ __("extensions.modal.version") }}',
+                author: '{{ __("extensions.modal.author") }}',
+                price: '{{ __("extensions.modal.price") }}',
+                tags: '{{ __("extensions.modal.tags") }}',
+                buyNow: '{{ __("extensions.modal.buy_now") }}',
+                viewDetails: '{{ __("extensions.modal.view_details") }}',
+                close: '{{ __("extensions.modal.close") }}',
+                enable: '{{ __("extensions.settings.enable") }}',
+                disable: '{{ __("extensions.settings.disabled") }}',
+                install: '{{ __("extensions.settings.install") }}',
+                update: '{{ __("extensions.settings.update") }}'
             }
-
-            if (extensionsCount) {
-                extensionsCount.textContent = `${visibleCount} extension${visibleCount !== 1 ? 's' : ''}`;
-            }
-
-            if (noResults && extensionsGrid) {
-                if (visibleCount === 0 && searchQuery !== '') {
-                    noResults.classList.remove('hidden');
-                    extensionsGrid.classList.add('hidden');
-                } else {
-                    noResults.classList.add('hidden');
-                    extensionsGrid.classList.remove('hidden');
-                }
-            }
-        }
-
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                searchQuery = this.value.trim();
-                filterExtensions();
-            });
-
-            searchInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    this.value = '';
-                    searchQuery = '';
-                    filterExtensions();
-                }
-            });
-        }
-
-        groupFilterBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                groupFilterBtns.forEach(b => {
-                    b.classList.remove('active', 'bg-indigo-600', 'text-white', 'shadow-md');
-                    b.classList.add('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-                });
-                this.classList.add('active', 'bg-indigo-600', 'text-white', 'shadow-md');
-                this.classList.remove('bg-gray-100', 'dark:bg-slate-700', 'text-gray-700', 'dark:text-gray-300');
-                activeGroup = this.dataset.group;
-                filterExtensions();
-            });
-        });
-
-        const ajaxForms = document.querySelectorAll('.ajax-extension-form');
-        ajaxForms.forEach(form => {
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-                const submitButton = form.querySelector('button');
-                const originalButtonContent = submitButton.innerHTML;
-                submitButton.disabled = true;
-                submitButton.innerHTML = `
-                        <span class="inline-flex items-center">
-                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            {{ __('extensions.settings.processing') }}
-                        </span>
-                    `;
-                fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: new FormData(form)
-                }).then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        return response.json().then((json) => {
-                            return Promise.reject(json.error || 'An error occurred');
-                        })
-                    }
-                }).catch(error => {
-                    alert(error);
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = originalButtonContent;
-                });
-            });
         });
     });
 </script>
@@ -445,6 +331,14 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
             opacity: 1;
             transform: translateY(0);
         }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease forwards;
+    }
+
+    .animate-fade-out {
+        animation: fadeIn 0.3s ease forwards reverse;
     }
 </style>
 @endsection

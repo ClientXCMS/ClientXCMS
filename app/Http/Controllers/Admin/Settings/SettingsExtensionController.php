@@ -48,24 +48,24 @@ class SettingsExtensionController
             abort(404);
         }
         if (app('extension')->extensionIsEnabled($extension)) {
-            return redirect()->back()->with('error', __('extensions.flash.already_enabled'));
+            return $this->respondWithError(__('extensions.flash.already_enabled'));
         }
         try {
             $extensiondto = app('extension')->getExtension($type, $extension);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->respondWithError($e->getMessage());
         }
         if (! empty($prerequisites)) {
-            return redirect()->back()->with('error', implode(', ', $prerequisites));
+            return $this->respondWithError(implode(', ', $prerequisites));
         }
         try {
             $extensiondto = app('extension')->getExtension($type, $extension);
             if (! $extensiondto->isActivable()) {
-                return redirect()->back()->with('error', __('extensions.flash.cannot_enable'));
+                return $this->respondWithError(__('extensions.flash.cannot_enable'));
             }
             app('extension')->enable($type, $extension);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            return $this->respondWithError($e->getMessage());
         }
         \Artisan::call('cache:clear');
         \Artisan::call('view:clear');
@@ -75,11 +75,11 @@ class SettingsExtensionController
             \App\Theme\ThemeManager::clearCache();
             ActionLog::log(ActionLog::THEME_CHANGED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
         } else {
-            \Artisan::call('migrate', ['--force' => true, '--path' => $type.'/'.$extension.'/database/migrations']);
+            \Artisan::call('migrate', ['--force' => true, '--path' => $type . '/' . $extension . '/database/migrations']);
             ActionLog::log(ActionLog::EXTENSION_ENABLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
         }
 
-        return redirect()->back()->with('success', __('extensions.flash.enabled'));
+        return $this->respondWithSuccess(__('extensions.flash.enabled'));
     }
 
     public function disable(string $type, string $extension)
@@ -91,7 +91,7 @@ class SettingsExtensionController
         app('extension')->disable($type, $extension);
         ActionLog::log(ActionLog::EXTENSION_DISABLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
 
-        return redirect()->back()->with('success', __('extensions.flash.disabled'));
+        return $this->respondWithSuccess(__('extensions.flash.disabled'));
     }
 
     public function clear()
@@ -99,7 +99,7 @@ class SettingsExtensionController
         staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
         \Artisan::call('cache:clear');
 
-        return redirect()->back()->with('success', __('extensions.flash.cache_cleared'));
+        return $this->respondWithSuccess(__('extensions.flash.cache_cleared'));
     }
 
     public function update(string $type, string $extension)
@@ -110,12 +110,110 @@ class SettingsExtensionController
         }
         try {
             app('extension')->update($type, $extension);
-            
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);
         }
         ActionLog::log(ActionLog::EXTENSION_UPDATED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
 
         return response()->json(['success' => __('extensions.flash.updated')]);
+    }
+
+    public function bulkAction(\Illuminate\Http\Request $request)
+    {
+        staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
+
+        $validated = $request->validate([
+            'extensions' => 'required|array|min:1',
+            'extensions.*.type' => 'required|string|in:modules,addons,themes,email_templates,invoice_templates',
+            'extensions.*.uuid' => 'required|string',
+            'action' => 'required|string|in:enable,disable,install,update',
+        ]);
+
+        $results = [
+            'success' => [],
+            'errors' => [],
+        ];
+
+        foreach ($validated['extensions'] as $ext) {
+            $type = $ext['type'];
+            $uuid = $ext['uuid'];
+            $action = $validated['action'];
+
+            try {
+                switch ($action) {
+                    case 'enable':
+                        if (app('extension')->extensionIsEnabled($uuid)) {
+                            $results['errors'][] = ['uuid' => $uuid, 'message' => __('extensions.flash.already_enabled')];
+                            continue 2;
+                        }
+                        $extensiondto = app('extension')->getExtension($type, $uuid);
+                        if (! $extensiondto->isActivable()) {
+                            $results['errors'][] = ['uuid' => $uuid, 'message' => __('extensions.flash.cannot_enable')];
+                            continue 2;
+                        }
+                        app('extension')->enable($type, $uuid);
+                        if ($type != 'themes') {
+                            \Artisan::call('migrate', ['--force' => true, '--path' => $type . '/' . $uuid . '/database/migrations']);
+                        }
+                        ActionLog::log(ActionLog::EXTENSION_ENABLED, ExtensionDTO::class, $uuid, auth('admin')->id(), null, ['type' => $type]);
+                        $results['success'][] = ['uuid' => $uuid, 'action' => 'enabled'];
+                        break;
+
+                    case 'disable':
+                        app('extension')->disable($type, $uuid);
+                        ActionLog::log(ActionLog::EXTENSION_DISABLED, ExtensionDTO::class, $uuid, auth('admin')->id(), null, ['type' => $type]);
+                        $results['success'][] = ['uuid' => $uuid, 'action' => 'disabled'];
+                        break;
+
+                    case 'install':
+                    case 'update':
+                        app('extension')->update($type, $uuid);
+                        ActionLog::log(ActionLog::EXTENSION_UPDATED, ExtensionDTO::class, $uuid, auth('admin')->id(), null, ['type' => $type]);
+                        $results['success'][] = ['uuid' => $uuid, 'action' => $action === 'install' ? 'installed' : 'updated'];
+                        break;
+                }
+            } catch (\Exception $e) {
+                $results['errors'][] = ['uuid' => $uuid, 'message' => $e->getMessage()];
+            }
+        }
+
+        // Clear caches after bulk operations
+        \Artisan::call('cache:clear');
+        \Artisan::call('view:clear');
+        \Artisan::call('config:clear');
+        \Artisan::call('db:seed', ['--force' => true]);
+
+        $successCount = count($results['success']);
+        $errorCount = count($results['errors']);
+
+        if ($errorCount === 0) {
+            return response()->json([
+                'success' => true,
+                'message' => __('extensions.bulk.success'),
+                'results' => $results,
+            ]);
+        }
+
+        return response()->json([
+            'success' => $successCount > 0,
+            'message' => __('extensions.bulk.partial_success', ['success' => $successCount, 'failed' => $errorCount]),
+            'results' => $results,
+        ], $successCount > 0 ? 200 : 400);
+    }
+
+    private function respondWithSuccess(string $message)
+    {
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
+        return redirect()->back()->with('success', $message);
+    }
+
+    private function respondWithError(string $message)
+    {
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => false, 'error' => $message], 400);
+        }
+        return redirect()->back()->with('error', $message);
     }
 }

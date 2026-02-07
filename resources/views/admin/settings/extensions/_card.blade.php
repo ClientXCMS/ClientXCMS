@@ -6,28 +6,44 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
     data-category="{{ Str::slug($groupName) }}"
     data-tags="{{ $tagSlugs }}"
     data-name="{{ $extension->name() }}"
-    data-description="{{ $extension->api['short_description'] ?? '' }}">
+    data-description="{{ $extension->api['short_description'] ?? '' }}"
+    data-extension-type="{{ $extension->type() }}"
+    data-extension-uuid="{{ $extension->uuid }}"
+    data-extension-installed="{{ $extension->isInstalled() ? '1' : '0' }}"
+    data-extension-enabled="{{ $extension->isEnabled() ? '1' : '0' }}"
+    data-extension-activable="{{ $extension->isActivable() ? '1' : '0' }}"
+    data-extension-data="{{ json_encode($extension->toArray()) }}">
     <div class="relative h-36 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center {{ $extension->hasPadding() ? 'p-4' : '' }}">
-        @if ($extension->thumbnail())
-        <img src="{{ $extension->thumbnail() }}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" alt="{{ $extension->name() }}">
-        @else
-        <i class="bi bi-puzzle text-4xl text-gray-300 dark:text-slate-600"></i>
+        {{-- Checkbox for bulk selection --}}
+        @if ($extension->isActivable())
+        <div class="absolute top-2.5 left-2.5 z-10">
+            <label class="flex items-center cursor-pointer">
+                <input type="checkbox" class="extension-checkbox w-5 h-5 rounded border-gray-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 transition-all" data-type="{{ $extension->type() }}" data-uuid="{{ $extension->uuid }}">
+            </label>
+        </div>
         @endif
+        <div class="cursor-pointer extension-detail-trigger flex-1 h-full flex items-center justify-center">
+            @if ($extension->thumbnail())
+            <img src="{{ $extension->thumbnail() }}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" alt="{{ $extension->name() }}">
+            @else
+            <i class="bi bi-puzzle text-4xl text-gray-300 dark:text-slate-600"></i>
+            @endif
+        </div>
 
         <div class="absolute top-2.5 right-2.5">
             @if($extension->isEnabled())
-            <span class="inline-flex items-center py-1 px-2 rounded-lg text-xs font-medium bg-green-500 text-white shadow-lg">
+            <span class="extension-status-badge inline-flex items-center py-1 px-2 rounded-lg text-xs font-medium bg-green-500 text-white shadow-lg">
                 <i class="bi bi-check-circle-fill mr-1"></i>{{ __('extensions.settings.enabled') }}
             </span>
             @elseif($extension->isInstalled())
-            <span class="inline-flex items-center py-1 px-2 rounded-lg text-xs font-medium bg-blue-500 text-white shadow-lg">
+            <span class="extension-status-badge inline-flex items-center py-1 px-2 rounded-lg text-xs font-medium bg-blue-500 text-white shadow-lg">
                 <i class="bi bi-check mr-1"></i>{{ __('extensions.settings.installed') }}
             </span>
             @endif
         </div>
 
         @if ($extension->isInstalled() && $extension->getLatestVersion() && version_compare($extension->version, $extension->getLatestVersion(), '<'))
-            <div class="absolute top-2.5 left-2.5">
+            <div class="absolute top-2.5 left-2.5" style="{{ $extension->isActivable() ? 'left: 2.5rem;' : '' }}">
             <span class="inline-flex items-center py-1 px-2 rounded-lg text-xs font-medium bg-amber-500 text-white shadow-lg animate-pulse" title="{{ __('extensions.settings.update_available') }}">
                 <i class="bi bi-arrow-up-circle-fill mr-1"></i>{{ $extension->getLatestVersion() }}
             </span>
@@ -55,7 +71,7 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
 
 <div class="p-4">
     <div class="flex items-start justify-between gap-2 mb-1.5">
-        <h3 class="font-bold text-gray-900 dark:text-white leading-tight line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors text-sm" title="{{ $extension->name() }}">
+        <h3 class="font-bold text-gray-900 dark:text-white leading-tight line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors text-sm cursor-pointer extension-detail-trigger" title="{{ $extension->name() }}">
             {{ $extension->name() }}
         </h3>
         @if ($extension->isInstalled())
@@ -77,37 +93,25 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
         @endif
     </div>
 
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-2 extension-actions">
         @if ($extension->isInstalled() && $extension->getLatestVersion() && version_compare($extension->version, $extension->getLatestVersion(), '<'))
-            <form action="{{ route('admin.settings.extensions.update', [$extension->type(), $extension->uuid]) }}" method="POST" class="ajax-extension-form">
-            @csrf
-            <button class="w-full btn btn-warning btn-sm flex items-center justify-center gap-1">
-                <i class="bi bi-download"></i>{{ __('extensions.settings.update') }}
+            <button type="button" class="ajax-action-btn w-full btn btn-warning btn-sm flex items-center justify-center gap-1" data-action="update" data-type="{{ $extension->type() }}" data-uuid="{{ $extension->uuid }}">
+            <i class="bi bi-download"></i>{{ __('extensions.settings.update') }}
             </button>
-            </form>
             @endif
 
             @if ($extension->isEnabled() && $extension->isActivable())
-            <form action="{{ route('admin.settings.extensions.disable', [$extension->type(), $extension->uuid]) }}" method="POST">
-                @csrf
-                <button type="submit" class="w-full btn btn-danger btn-sm flex items-center justify-center gap-1">
-                    <i class="bi bi-ban"></i>{{ __('extensions.settings.disabled') }}
-                </button>
-            </form>
+            <button type="button" class="ajax-action-btn w-full btn btn-danger btn-sm flex items-center justify-center gap-1" data-action="disable" data-type="{{ $extension->type() }}" data-uuid="{{ $extension->uuid }}">
+                <i class="bi bi-ban"></i>{{ __('extensions.settings.disabled') }}
+            </button>
             @elseif ($extension->isInstalled() && !$extension->isEnabled() && $extension->isActivable())
-            <form action="{{ route('admin.settings.extensions.enable', [$extension->type(), $extension->uuid]) }}" method="POST">
-                @csrf
-                <button type="submit" class="w-full btn btn-success btn-sm flex items-center justify-center gap-1">
-                    <i class="bi bi-check-circle"></i>{{ __('extensions.settings.enable') }}
-                </button>
-            </form>
+            <button type="button" class="ajax-action-btn w-full btn btn-success btn-sm flex items-center justify-center gap-1" data-action="enable" data-type="{{ $extension->type() }}" data-uuid="{{ $extension->uuid }}">
+                <i class="bi bi-check-circle"></i>{{ __('extensions.settings.enable') }}
+            </button>
             @elseif ($extension->isNotInstalled() && $extension->isActivable())
-            <form action="{{ route('admin.settings.extensions.update', [$extension->type(), $extension->uuid]) }}" method="POST" class="ajax-extension-form">
-                @csrf
-                <button class="w-full btn btn-primary btn-sm flex items-center justify-center gap-1">
-                    <i class="bi bi-cloud-download"></i>{{ __('extensions.settings.install') }}
-                </button>
-            </form>
+            <button type="button" class="ajax-action-btn w-full btn btn-primary btn-sm flex items-center justify-center gap-1" data-action="install" data-type="{{ $extension->type() }}" data-uuid="{{ $extension->uuid }}">
+                <i class="bi bi-cloud-download"></i>{{ __('extensions.settings.install') }}
+            </button>
             @else
             <a class="w-full btn btn-primary btn-sm flex items-center justify-center gap-1" href="{{ $extension->api['route'] }}" target="_blank">
                 <i class="bi bi-cart"></i>{{ __('extensions.settings.buy') }}
