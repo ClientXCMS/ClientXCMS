@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Extensions;
 
+use App\DTO\Core\Extensions\ExtensionDTO;
 use App\Extensions\ExtensionManager;
 use App\Models\Admin\Admin;
 use Database\Seeders\AdminSeeder;
@@ -35,6 +36,25 @@ class ExtensionBatchProgressTest extends TestCase
     private function getExtensionsPage()
     {
         $admin = $this->seedAndGetAdmin();
+
+        // Provide a group with one installed extension so batch/bulk partials render.
+        $dto = new ExtensionDTO('test-mod', 'module', true, [
+            'name' => 'Test',
+            'translations' => ['name' => ['en' => 'Test'], 'short_description' => ['en' => 'Test']],
+            'thumbnail' => '', 'formatted_price' => 'Free', 'price' => 0,
+            'group_uuid' => 'test', 'tags' => [],
+        ], '1.0.0');
+        $dto->installed = true;
+
+        $mock = \Mockery::mock(ExtensionManager::class);
+        $mock->shouldReceive('getGroupsWithExtensions')
+            ->andReturn(['Test' => ['items' => collect([$dto]), 'icon' => 'bi bi-puzzle']]);
+        $mock->shouldReceive('fetch')
+            ->andReturn(['tags' => []]);
+        $mock->shouldReceive('getAdminMenuItems')
+            ->andReturn(collect([]));
+        $mock->shouldIgnoreMissing();
+        $this->app->instance('extension', $mock);
 
         return $this->actingAs($admin, 'admin')
             ->get(route('admin.settings.extensions.index'));
@@ -206,14 +226,13 @@ class ExtensionBatchProgressTest extends TestCase
 
     // -- Responsive Layout (AC1) --
 
-    public function test_progress_has_fixed_bottom_class_for_mobile(): void
+    public function test_progress_has_fixed_overlay_layout(): void
     {
         $response = $this->getExtensionsPage();
 
         $response->assertOk();
-        // Fixed bottom on mobile, relative on desktop (md:relative)
-        $response->assertSee('fixed bottom-0', false);
-        $response->assertSee('md:relative', false);
+        // Centered modal overlay with fixed positioning
+        $response->assertSee('fixed inset-0', false);
     }
 
     // -- Page requires authentication --

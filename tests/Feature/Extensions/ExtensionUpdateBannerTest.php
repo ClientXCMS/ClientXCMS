@@ -79,6 +79,8 @@ class ExtensionUpdateBannerTest extends TestCase
             ->andReturn($groups);
         $mock->shouldReceive('fetch')
             ->andReturn(['tags' => []]);
+        $mock->shouldReceive('getAdminMenuItems')
+            ->andReturn(collect([]));
         $mock->shouldIgnoreMissing();
 
         $this->app->instance('extension', $mock);
@@ -120,7 +122,14 @@ class ExtensionUpdateBannerTest extends TestCase
             ->get(route('admin.settings.extensions.index'));
 
         $response->assertOk();
-        $response->assertDontSee('jour disponible');
+        // The banner text is always rendered but hidden via CSS class when no updates
+        $response->assertSee('id="update-banner"', false);
+        $content = $response->getContent();
+        $this->assertMatchesRegularExpression(
+            '/id="update-banner"\s+class="[^"]*hidden/',
+            $content,
+            'Update banner must have hidden class when no updates are available'
+        );
     }
 
     // AC5: Banner count is correct with plural agreement
@@ -209,6 +218,8 @@ class ExtensionUpdateBannerTest extends TestCase
             ->andReturn([]);
         $mock->shouldReceive('fetch')
             ->andReturn(['tags' => []]);
+        $mock->shouldReceive('getAdminMenuItems')
+            ->andReturn(collect([]));
         $mock->shouldIgnoreMissing();
         $this->app->instance('extension', $mock);
 
@@ -235,6 +246,12 @@ class ExtensionUpdateBannerTest extends TestCase
             ->get(route('admin.settings.extensions.index'));
 
         $response->assertOk();
-        $response->assertDontSee('jour disponible');
+        // The banner text is always rendered but hidden via CSS class when no updates
+        $content = $response->getContent();
+        $this->assertMatchesRegularExpression(
+            '/id="update-banner"\s+class="[^"]*hidden/',
+            $content,
+            'Update banner must have hidden class when non-installed extensions have updates'
+        );
     }
 }

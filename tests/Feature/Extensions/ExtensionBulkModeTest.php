@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Extensions;
 
+use App\DTO\Core\Extensions\ExtensionDTO;
 use App\Extensions\ExtensionManager;
 use App\Models\Admin\Admin;
 use Database\Seeders\AdminSeeder;
@@ -37,6 +38,25 @@ class ExtensionBulkModeTest extends TestCase
     {
         $admin = $this->seedAndGetAdmin();
 
+        // Provide a group with one installed extension so bulk partials render.
+        $dto = new ExtensionDTO('test-mod', 'module', true, [
+            'name' => 'Test',
+            'translations' => ['name' => ['en' => 'Test'], 'short_description' => ['en' => 'Test']],
+            'thumbnail' => '', 'formatted_price' => 'Free', 'price' => 0,
+            'group_uuid' => 'test', 'tags' => [],
+        ], '1.0.0');
+        $dto->installed = true;
+
+        $mock = \Mockery::mock(ExtensionManager::class);
+        $mock->shouldReceive('getGroupsWithExtensions')
+            ->andReturn(['Test' => ['items' => collect([$dto]), 'icon' => 'bi bi-puzzle']]);
+        $mock->shouldReceive('fetch')
+            ->andReturn(['tags' => []]);
+        $mock->shouldReceive('getAdminMenuItems')
+            ->andReturn(collect([]));
+        $mock->shouldIgnoreMissing();
+        $this->app->instance('extension', $mock);
+
         return $this->actingAs($admin, 'admin')
             ->get(route('admin.settings.extensions.index'));
     }
@@ -58,7 +78,12 @@ class ExtensionBulkModeTest extends TestCase
         $response->assertOk();
         // The bar must be hidden until bulk mode is activated via JS
         $response->assertSee('id="bulk-action-bar"', false);
-        $response->assertSee('class="hidden fixed bottom-0', false);
+        $content = $response->getContent();
+        $this->assertMatchesRegularExpression(
+            '/id="bulk-action-bar"\s+class="hidden fixed/',
+            $content,
+            'Bulk action bar must be hidden by default'
+        );
     }
 
     // -- ARIA Attributes (AC7) --

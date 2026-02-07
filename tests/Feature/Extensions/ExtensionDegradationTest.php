@@ -35,6 +35,8 @@ class ExtensionDegradationTest extends TestCase
         $mock->shouldReceive('getGroupsWithExtensions')
             ->once()
             ->andThrow(new \Exception('API unavailable'));
+        $mock->shouldReceive('getAdminMenuItems')
+            ->andReturn(collect([]));
         $mock->shouldIgnoreMissing();
 
         $this->app->instance('extension', $mock);
@@ -105,6 +107,8 @@ class ExtensionDegradationTest extends TestCase
         $mock->shouldReceive('getGroupsWithExtensions')
             ->once()
             ->andThrow(new \Exception('API unavailable'));
+        $mock->shouldReceive('getAdminMenuItems')
+            ->andReturn(collect([]));
         $mock->shouldIgnoreMissing();
         $this->app->instance('extension', $mock);
 
