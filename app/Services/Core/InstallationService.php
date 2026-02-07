@@ -80,7 +80,7 @@ class InstallationService
         }
         $unwritable = $this->getUnwritableDirectories();
         if (! empty($unwritable)) {
-            return new Response('Please make the following folders writable: ' . implode(', ', $unwritable), 500);
+            return new Response('Please make the following folders writable: '.implode(', ', $unwritable), 500);
         }
         if (! $this->hasAppKey()) {
             return new Response('Please generate app key with "php artisan key:generate" command on your CLIENTXCMS folder', 500);
