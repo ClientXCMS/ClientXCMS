@@ -1,0 +1,115 @@
+---
+# Cleanup review app when branch is deleted or PR is closed
+#
+# Copy this file to ClientXCMS repo: .github/workflows/cleanup-review.yml
+
+name: Cleanup Review App
+
+on:
+  delete:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup:
+    name: Cleanup
+    runs-on: [self-hosted, cerbonix-k8s]
+    # Only cleanup feature/fix/features branches, not master/dev
+    if: |
+      (github.event_name == 'delete' && github.event.ref_type == 'branch' &&
+       (startsWith(github.event.ref, 'feature/') ||
+        startsWith(github.event.ref, 'fix/') ||
+        startsWith(github.event.ref, 'features/')))
+      ||
+      (github.event_name == 'pull_request' && github.event.action == 'closed' &&
+       (startsWith(github.head_ref, 'feature/') ||
+        startsWith(github.head_ref, 'fix/') ||
+        startsWith(github.head_ref, 'features/')))
+
+    steps:
+      - name: Determine release name
+        id: release
+        run: |
+          if [ "${{ github.event_name }}" = "delete" ]; then
+            BRANCH="${{ github.event.ref }}"
+          else
+            BRANCH="${{ github.head_ref }}"
+          fi
+
+          SLUG=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | head -c 40)
+          RELEASE="clientxcms-${SLUG}"
+          echo "release=${RELEASE}" >> "$GITHUB_OUTPUT"
+          echo "slug=${SLUG}" >> "$GITHUB_OUTPUT"
+
+      - name: Check if release exists
+        id: check
+        run: |
+          if helm status ${{ steps.release.outputs.release }} -n clientxcms-uat 2>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Uninstall Helm release
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          helm uninstall ${{ steps.release.outputs.release }} -n clientxcms-uat --wait
+
+      - name: Delete PVCs
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          kubectl delete pvc -n clientxcms-uat \
+            -l app.kubernetes.io/instance=${{ steps.release.outputs.release }} \
+            --ignore-not-found
+
+      # -- Remove Cloudflare Tunnel route and DNS record --
+      - name: Remove Cloudflare Tunnel route
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_TUNNEL_ID: ${{ secrets.CLOUDFLARE_TUNNEL_ID }}
+          CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          CF_API="https://api.cloudflare.com/client/v4"
+          HOSTNAME="${{ steps.release.outputs.slug }}-uat.cerbonix.net"
+
+          # Fetch current tunnel configuration
+          CURRENT=$(curl -sf -X GET \
+            "${CF_API}/accounts/${CF_ACCOUNT_ID}/cfd_tunnel/${CF_TUNNEL_ID}/configurations" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json")
+
+          # Remove the ingress rule matching this hostname
+          UPDATED_CONFIG=$(echo "$CURRENT" | jq \
+            --arg hostname "$HOSTNAME" '
+            .result.config as $cfg |
+            {config: ($cfg | .ingress = [.ingress[] | select(.hostname != $hostname)])}
+          ')
+
+          # Push updated tunnel configuration
+          curl -sf -X PUT \
+            "${CF_API}/accounts/${CF_ACCOUNT_ID}/cfd_tunnel/${CF_TUNNEL_ID}/configurations" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$UPDATED_CONFIG"
+
+          echo "Tunnel route removed: ${HOSTNAME}"
+
+          # Delete DNS CNAME record if it exists
+          RECORD_ID=$(curl -sf -X GET \
+            "${CF_API}/zones/${CF_ZONE_ID}/dns_records?name=${HOSTNAME}&type=CNAME" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" | jq -r '.result[0].id // empty')
+
+          if [ -n "$RECORD_ID" ]; then
+            curl -sf -X DELETE \
+              "${CF_API}/zones/${CF_ZONE_ID}/dns_records/${RECORD_ID}" \
+              -H "Authorization: Bearer ${CF_API_TOKEN}"
+            echo "DNS CNAME deleted: ${HOSTNAME}"
+          else
+            echo "No DNS record found for ${HOSTNAME} (already cleaned up)"
+          fi
+
+      - name: Cleanup summary
+        run: |
+          echo "Cleaned up review app: ${{ steps.release.outputs.release }}"
+          echo "Namespace: clientxcms-uat"

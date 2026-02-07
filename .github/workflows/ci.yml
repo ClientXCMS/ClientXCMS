@@ -1,0 +1,320 @@
+---
+# ClientXCMS CI/CD Pipeline
+#
+# - master  -> production deployment (clientxcms namespace)
+# - dev     -> dev deployment (clientxcms-dev namespace)
+# - feature/*, fix/*, features/* -> review apps (clientxcms-uat namespace)
+#
+# Copy this file to ClientXCMS repo: .github/workflows/ci.yml
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+      - "feature/**"
+      - "fix/**"
+      - "features/**"
+  pull_request:
+    branches:
+      - master
+      - dev
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: cerbonix/clientxcms
+
+jobs:
+  # -- JOB 1: LINT --
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run Laravel Pint
+        run: vendor/bin/pint --test
+
+  # -- JOB 2: TEST --
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: user
+          MYSQL_PASSWORD: password
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: json, zip, sodium, pcntl, bcmath, pdo_mysql
+          tools: composer
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: /tmp/composer-cache
+          key: ${{ runner.os }}-${{ hashFiles('composer.lock') }}
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -u root -proot --silent; then
+              echo "MySQL is up!"
+              break
+            fi
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+
+      - name: Create installed flag
+        run: mkdir -p storage && touch storage/installed
+
+      - name: Setup environment
+        run: cp .env.testing .env
+
+      - name: Generate application key
+        run: php artisan key:generate
+
+      - name: Generate Swagger docs
+        run: php artisan l5-swagger:generate
+
+      - name: Run migrations and seed
+        run: php artisan migrate --force --no-interaction --seed
+
+      - name: Build frontend assets
+        run: npm install && npm run build
+
+      - name: Import translations
+        run: php artisan translations:import --no-interaction
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --configuration phpunit_github.xml -d date.timezone=Europe/Paris
+
+  # -- JOB 3: BUILD --
+  build:
+    name: Build Image
+    runs-on: cerbonix-k8s
+    needs: [lint, test]
+    if: github.event_name == 'push'
+    permissions:
+      packages: write
+      contents: read
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.sha-tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure Buildah for vfs storage
+        run: |
+          mkdir -p $HOME/.config/containers $HOME/.local/share/containers/storage $HOME/.local/share/containers/run
+          printf '[storage]\ndriver = "vfs"\nrunroot = "%s/.local/share/containers/run"\ngraphroot = "%s/.local/share/containers/storage"\n' "$HOME" "$HOME" > $HOME/.config/containers/storage.conf
+          export CONTAINERS_STORAGE_CONF=$HOME/.config/containers/storage.conf
+          echo "CONTAINERS_STORAGE_CONF=$HOME/.config/containers/storage.conf" >> $GITHUB_ENV
+
+      - name: Compute image metadata
+        id: meta
+        run: |
+          SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+          BRANCH_SLUG=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | head -c 63)
+          echo "sha-tag=${SHA_SHORT}" >> "$GITHUB_OUTPUT"
+          echo "branch-tag=${BRANCH_SLUG}" >> "$GITHUB_OUTPUT"
+
+      - name: Build image with Buildah
+        uses: redhat-actions/buildah-build@v2
+        id: build
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: |
+            ${{ steps.meta.outputs.sha-tag }}
+            ${{ steps.meta.outputs.branch-tag }}
+            ${{ github.ref_name == 'master' && 'latest' || '' }}
+          containerfiles: ./Dockerfile
+
+      - name: Login to GHCR
+        run: buildah login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} ${{ env.REGISTRY }}
+
+      - name: Push image to GHCR
+        run: |
+          for tag in ${{ steps.meta.outputs.sha-tag }} ${{ steps.meta.outputs.branch-tag }}; do
+            [ -z "$tag" ] && continue
+            buildah push ${{ env.IMAGE_NAME }}:${tag} docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${tag}
+          done
+          if [ "${{ github.ref_name }}" = "master" ]; then
+            buildah push ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha-tag }} docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          fi
+
+  # -- JOB 4: DEPLOY --
+  deploy:
+    name: Deploy
+    runs-on: cerbonix-k8s
+    needs: [build]
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Determine environment
+        id: env
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+
+          if [ "$BRANCH" = "master" ]; then
+            echo "namespace=clientxcms" >> "$GITHUB_OUTPUT"
+            echo "release=clientxcms" >> "$GITHUB_OUTPUT"
+            echo "values-file=values-prod.yaml" >> "$GITHUB_OUTPUT"
+            echo "hostname=cerbonix.net" >> "$GITHUB_OUTPUT"
+          elif [ "$BRANCH" = "dev" ]; then
+            echo "namespace=clientxcms-dev" >> "$GITHUB_OUTPUT"
+            echo "release=clientxcms-dev" >> "$GITHUB_OUTPUT"
+            echo "values-file=values-dev.yaml" >> "$GITHUB_OUTPUT"
+            echo "hostname=dev.cerbonix.net" >> "$GITHUB_OUTPUT"
+          else
+            # feature/*, fix/*, features/* -> review app
+            SLUG=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | head -c 40)
+            echo "namespace=clientxcms-uat" >> "$GITHUB_OUTPUT"
+            echo "release=clientxcms-${SLUG}" >> "$GITHUB_OUTPUT"
+            echo "values-file=values-uat.yaml" >> "$GITHUB_OUTPUT"
+            echo "hostname=${SLUG}-uat.cerbonix.net" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "image-tag=${SHA_SHORT}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Infra repo
+        uses: actions/checkout@v4
+        with:
+          repository: Cerbonix/Infra
+          token: ${{ secrets.INFRA_REPO_PAT }}
+          path: infra
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install ${{ steps.env.outputs.release }} \
+            ./infra/kubernetes/charts/clientxcms \
+            --namespace ${{ steps.env.outputs.namespace }} \
+            --values ./infra/kubernetes/charts/clientxcms/${{ steps.env.outputs.values-file }} \
+            --set image.tag=${{ steps.env.outputs.image-tag }} \
+            --set hostname=${{ steps.env.outputs.hostname }} \
+            --set app.url=https://${{ steps.env.outputs.hostname }} \
+            --set namespace.create=false \
+            --wait --timeout 300s
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/${{ steps.env.outputs.release }} \
+            -n ${{ steps.env.outputs.namespace }} --timeout=300s
+
+      # -- Cloudflare Tunnel route for review apps --
+      - name: Create Cloudflare Tunnel route
+        if: steps.env.outputs.namespace == 'clientxcms-uat'
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_TUNNEL_ID: ${{ secrets.CLOUDFLARE_TUNNEL_ID }}
+          CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          CF_API="https://api.cloudflare.com/client/v4"
+          HOSTNAME="${{ steps.env.outputs.hostname }}"
+
+          # Fetch current tunnel configuration
+          CURRENT=$(curl -sf -X GET \
+            "${CF_API}/accounts/${CF_ACCOUNT_ID}/cfd_tunnel/${CF_TUNNEL_ID}/configurations" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json")
+
+          # Route review apps to HAProxy VIP (HTTP), which forwards to K8s via NodePort
+          SERVICE_URL="http://172.16.8.130"
+
+          # Build updated config: remove existing rule for this hostname (idempotent),
+          # then insert new rule before the catch-all (last entry)
+          UPDATED_CONFIG=$(echo "$CURRENT" | jq \
+            --arg hostname "$HOSTNAME" \
+            --arg service "$SERVICE_URL" '
+            .result.config as $cfg |
+            ($cfg.ingress | map(select(.hostname != $hostname))) as $cleaned |
+            {config: ($cfg | .ingress = ($cleaned[:-1]
+              + [{"hostname": $hostname, "service": $service}]
+              + $cleaned[-1:]))}
+          ')
+
+          # Push updated tunnel configuration
+          curl -sf -X PUT \
+            "${CF_API}/accounts/${CF_ACCOUNT_ID}/cfd_tunnel/${CF_TUNNEL_ID}/configurations" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$UPDATED_CONFIG"
+
+          echo "Tunnel route created: ${HOSTNAME} -> ${SERVICE_URL}"
+
+          # Ensure DNS CNAME record exists (delete + recreate for idempotency)
+          RECORD_ID=$(curl -sf -X GET \
+            "${CF_API}/zones/${CF_ZONE_ID}/dns_records?name=${HOSTNAME}&type=CNAME" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" | jq -r '.result[0].id // empty')
+
+          if [ -n "$RECORD_ID" ]; then
+            curl -sf -X DELETE \
+              "${CF_API}/zones/${CF_ZONE_ID}/dns_records/${RECORD_ID}" \
+              -H "Authorization: Bearer ${CF_API_TOKEN}"
+          fi
+
+          curl -sf -X POST \
+            "${CF_API}/zones/${CF_ZONE_ID}/dns_records" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"type\":\"CNAME\",\"name\":\"${HOSTNAME}\",\"content\":\"${CF_TUNNEL_ID}.cfargotunnel.com\",\"proxied\":true}"
+
+          echo "DNS CNAME created: ${HOSTNAME} -> ${CF_TUNNEL_ID}.cfargotunnel.com"
+
+      - name: Deployment summary
+        run: |
+          echo "Deployed ${{ steps.env.outputs.release }} to ${{ steps.env.outputs.namespace }}"
+          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.env.outputs.image-tag }}"
+          echo "URL: https://${{ steps.env.outputs.hostname }}"

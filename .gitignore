@@ -37,3 +37,4 @@ yarn-error.log
 /resources/themes/*/views/sections_copy/*
 /data/*
 docker-compose.yml
+/docs
