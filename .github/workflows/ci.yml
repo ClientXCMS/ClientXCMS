@@ -16,6 +16,7 @@ on:
       - master
       - development
       - staging
+      - preprod
       - "feature/**"
       - "fix/**"
       - "features/**"
@@ -224,6 +225,11 @@ jobs:
             echo "release=clientxcms-staging" >> "$GITHUB_OUTPUT"
             echo "values-file=values-staging.yaml" >> "$GITHUB_OUTPUT"
             echo "hostname=staging.cerbonix.net" >> "$GITHUB_OUTPUT"
+          elif [ "$BRANCH" = "preprod" ]; then
+            echo "namespace=clientxcms-preprod" >> "$GITHUB_OUTPUT"
+            echo "release=clientxcms-preprod" >> "$GITHUB_OUTPUT"
+            echo "values-file=values-preprod.yaml" >> "$GITHUB_OUTPUT"
+            echo "hostname=preprod.cerbonix.net" >> "$GITHUB_OUTPUT"
           else
             # feature/*, fix/*, features/* -> review app
             SLUG=$(echo "$BRANCH" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | head -c 40)
