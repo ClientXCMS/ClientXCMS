@@ -39,37 +39,6 @@ class ViewServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->app->booted(function () {
-            $this->registerThemeNamespaceOverrides();
-        });
-    }
-
-    /**
-     * Prepend theme paths into every registered view namespace
-     * so that themes can override addon views.
-     */
-    private function registerThemeNamespaceOverrides(): void
-    {
-        $themeManager = app('theme');
-        if ($themeManager->getTheme() === null) {
-            return;
-        }
-
-        $themePath = $themeManager->themePath('views');
-        if ($themePath === null || ! is_dir($themePath)) {
-            return;
-        }
-
-        $finder = app('view')->getFinder();
-        $namespaces = $finder->getHints();
-
-        foreach ($namespaces as $namespace => $paths) {
-            $overridePath = $themePath.'/'.$namespace;
-            if (is_dir($overridePath)) {
-                $finder->prependNamespace($namespace, $overridePath);
-            }
-        }
-
-        $finder->flush();
+        //
     }
 }
