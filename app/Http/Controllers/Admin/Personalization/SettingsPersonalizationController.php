@@ -139,8 +139,30 @@ class SettingsPersonalizationController extends Controller
             'seo_themecolor' => 'nullable|string|max:1000',
             'seo_disablereferencement' => 'in:true,false',
             'seo_site_title' => 'required|string|max:1000',
+            'seo_og_title' => 'nullable|string|max:200',
+            'seo_og_description' => 'nullable|string|max:300',
+            'seo_og_image' => 'nullable|image|max:2048',
+            'seo_twitter_handle' => 'nullable|string|max:50',
         ]);
         $data['seo_disablereferencement'] = $data['seo_disablereferencement'] ?? 'false';
+
+        if ($request->hasFile('seo_og_image')) {
+            if (setting('seo_og_image') && \Storage::exists(setting('seo_og_image'))) {
+                \Storage::delete(setting('seo_og_image'));
+            }
+            $file = 'og-image.' . $request->file('seo_og_image')->getClientOriginalExtension();
+            $data['seo_og_image'] = $request->file('seo_og_image')->storeAs('public' . DIRECTORY_SEPARATOR . 'uploads', $file);
+        } else {
+            unset($data['seo_og_image']);
+        }
+
+        if ($request->input('remove_seo_og_image') === 'true') {
+            if (setting('seo_og_image') && \Storage::exists(setting('seo_og_image'))) {
+                \Storage::delete(setting('seo_og_image'));
+            }
+            $data['seo_og_image'] = null;
+        }
+
         Setting::updateSettings($data);
         \Cache::delete('seo_head');
         \Cache::delete('seo_footer');
