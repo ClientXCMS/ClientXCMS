@@ -150,8 +150,8 @@ class SettingsPersonalizationController extends Controller
             if (setting('seo_og_image') && \Storage::exists(setting('seo_og_image'))) {
                 \Storage::delete(setting('seo_og_image'));
             }
-            $file = 'og-image.' . $request->file('seo_og_image')->getClientOriginalExtension();
-            $data['seo_og_image'] = $request->file('seo_og_image')->storeAs('public' . DIRECTORY_SEPARATOR . 'uploads', $file);
+            $file = 'og-image.'.$request->file('seo_og_image')->getClientOriginalExtension();
+            $data['seo_og_image'] = $request->file('seo_og_image')->storeAs('public'.DIRECTORY_SEPARATOR.'uploads', $file);
         } else {
             unset($data['seo_og_image']);
         }

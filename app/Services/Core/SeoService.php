@@ -118,7 +118,7 @@ class SeoService
     private function generateHead(?string $append = null): string
     {
         $head = '';
-        if (setting('seo_description') && !str_contains((string) $append, '<meta name="description"')) {
+        if (setting('seo_description') && ! str_contains((string) $append, '<meta name="description"')) {
             $head .= '<meta name="description" content="'.setting('seo_description').'">';
         }
         if (setting('seo_keywords')) {
@@ -143,7 +143,7 @@ class SeoService
 
     private function generateCanonical(): string
     {
-        return '<link rel="canonical" href="' . e(url()->current()) . '">';
+        return '<link rel="canonical" href="'.e(url()->current()).'">';
     }
 
     private function generateOpenGraph(): string
@@ -155,15 +155,15 @@ class SeoService
         $ogImage = setting('seo_og_image') ?: setting('app_logo');
 
         if ($ogTitle) {
-            $og .= '<meta property="og:title" content="' . e($ogTitle) . '">';
+            $og .= '<meta property="og:title" content="'.e($ogTitle).'">';
         }
         if ($ogDesc) {
-            $og .= '<meta property="og:description" content="' . e($ogDesc) . '">';
+            $og .= '<meta property="og:description" content="'.e($ogDesc).'">';
         }
-        $og .= '<meta property="og:url" content="' . e(url()->current()) . '">';
+        $og .= '<meta property="og:url" content="'.e(url()->current()).'">';
         $og .= '<meta property="og:type" content="website">';
         if ($ogImage) {
-            $og .= '<meta property="og:image" content="' . e(asset($ogImage)) . '">';
+            $og .= '<meta property="og:image" content="'.e(asset($ogImage)).'">';
         }
 
         return $og;
@@ -175,7 +175,7 @@ class SeoService
 
         $twitterHandle = setting('seo_twitter_handle');
         if ($twitterHandle) {
-            $twitter .= '<meta name="twitter:site" content="' . e($twitterHandle) . '">';
+            $twitter .= '<meta name="twitter:site" content="'.e($twitterHandle).'">';
         }
 
         return $twitter;
