@@ -118,7 +118,7 @@ class SeoService
     private function generateHead(?string $append = null): string
     {
         $head = '';
-        if (setting('seo_description') && ! str_contains($append, '<meta name="description"') === false) {
+        if (setting('seo_description') && ! str_contains((string) $append, '<meta name="description"')) {
             $head .= '<meta name="description" content="'.setting('seo_description').'">';
         }
         if (setting('seo_keywords')) {
@@ -134,7 +134,51 @@ class SeoService
             $head .= '<meta name="robots" content="noindex, nofollow">';
         }
 
+        $head .= $this->generateCanonical();
+        $head .= $this->generateOpenGraph();
+        $head .= $this->generateTwitterCard();
+
         return $head;
+    }
+
+    private function generateCanonical(): string
+    {
+        return '<link rel="canonical" href="'.e(url()->current()).'">';
+    }
+
+    private function generateOpenGraph(): string
+    {
+        $og = '';
+
+        $ogTitle = setting('seo_og_title') ?: setting('app_name');
+        $ogDesc = setting('seo_og_description') ?: setting('seo_description');
+        $ogImage = setting('seo_og_image') ?: setting('app_logo');
+
+        if ($ogTitle) {
+            $og .= '<meta property="og:title" content="'.e($ogTitle).'">';
+        }
+        if ($ogDesc) {
+            $og .= '<meta property="og:description" content="'.e($ogDesc).'">';
+        }
+        $og .= '<meta property="og:url" content="'.e(url()->current()).'">';
+        $og .= '<meta property="og:type" content="website">';
+        if ($ogImage) {
+            $og .= '<meta property="og:image" content="'.e(asset($ogImage)).'">';
+        }
+
+        return $og;
+    }
+
+    private function generateTwitterCard(): string
+    {
+        $twitter = '<meta name="twitter:card" content="summary_large_image">';
+
+        $twitterHandle = setting('seo_twitter_handle');
+        if ($twitterHandle) {
+            $twitter .= '<meta name="twitter:site" content="'.e($twitterHandle).'">';
+        }
+
+        return $twitter;
     }
 
     private function get(string $key, string $default = '')
