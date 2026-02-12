@@ -417,49 +417,58 @@ if (! function_exists('generate_uuid')) {
     }
 }
 
+if (! function_exists('dangerous_content_patterns')) {
+    /**
+     * Centralized list of regex patterns matching dangerous Blade/PHP
+     * constructs that must never appear in user-editable content
+     * (sections, email templates, etc.).
+     *
+     * @return array<string> PCRE patterns
+     */
+    function dangerous_content_patterns(): array
+    {
+        return [
+            '/<\?(?:php|=)?/i',
+            '/\?>/i',
+            '/@php\b/i',
+            '/@endphp\b/i',
+            '/\{\!\!.*?\!\!\}/s',
+            '/@(include|extends|component|each|includeIf|includeWhen|includeFirst)\s*\(/i',
+            '/@(yield|section|stack|push|prepend)\s*\(/i',
+        ];
+    }
+}
+
 if (! function_exists('sanitize_content')) {
+    /**
+     * Strip dangerous Blade/PHP constructs from user-editable content.
+     * Each pattern is replaced by an empty string (removal), preserving
+     * the rest of the content intact.
+     */
     function sanitize_content(string $content): string
     {
-        if (str_contains($content, '%%')) {
-            $content = str_replace('%%', '%', $content);
-        }
-
-        $badPatterns = [
-            '/<\?(?:php|=)?/i',
-            '/@php\b/i',
-            '/\{\!\!.*?\!\!\}/s',
-            '/@(include|extends|component|each|includeIf|includeWhen)\s*\(/i',
-        ];
-
-        foreach ($badPatterns as $pattern) {
-            if (preg_match($pattern, $content)) {
-                $content = preg_replace_callback($pattern, function ($m) {
-                    return '&lt;?';
-                }, $content);
-            }
+        foreach (dangerous_content_patterns() as $pattern) {
+            $content = preg_replace($pattern, '', $content);
         }
 
         return $content;
     }
 }
 
-if (! function_exists('is_sanitized')) {
-    function is_sanitized(string $content): bool
+if (! function_exists('has_dangerous_content')) {
+    /**
+     * Check whether a string contains any dangerous Blade/PHP construct.
+     * Use this for validation (reject input) rather than silent stripping.
+     */
+    function has_dangerous_content(string $content): bool
     {
-        $badPatterns = [
-            '/<\?(?:php|=)?/i',
-            '/@php\b/i',
-            '/\{\!\!.*?\!\!\}/s',
-            '/@(include|extends|component|each|includeIf|includeWhen)\s*\(/i',
-        ];
-
-        foreach ($badPatterns as $pattern) {
+        foreach (dangerous_content_patterns() as $pattern) {
             if (preg_match($pattern, $content)) {
-                return false;
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 }
 if (! function_exists('get_group_icon')) {

@@ -156,6 +156,6 @@ class EmailTemplate extends Model
         }
         $content = sanitize_content($content);
 
-        return \Blade::render($content, $context, true);
+        return \Blade::render($content, $context);
     }
 }
