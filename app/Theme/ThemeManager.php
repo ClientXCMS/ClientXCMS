@@ -117,7 +117,7 @@ class ThemeManager
 
     public function hasTheme(): bool
     {
-        return $this->theme !== 'default';
+        return $this->theme !== null && $this->theme->uuid !== 'default';
     }
 
     public function getTheme(): ExtensionThemeDTO
