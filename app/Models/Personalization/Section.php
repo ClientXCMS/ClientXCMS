@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -68,20 +69,77 @@ class Section extends Model
     protected $table = 'theme_sections';
 
     const TAGS_DISABLED = [
-        '<?php', '?>', '@php', '@endphp', '@shell', '<?=',
-        'env(', '$_ENV', '$_SERVER', '$_GET', '.env', '.__DIR__',
-        '$_POST', '$_REQUEST', '$_SESSION', '$_COOKIE', 'exec(',
-        'shell_exec(', 'system(', 'passthru(', 'proc_open(', 'popen(',
-        'pcntl_exec(', 'eval(', 'assert(', 'preg_replace(', 'create_function(',
-        'require(', 'unlink(', 'fopen(', 'file_get_contents(', 'file_put_contents(',
-        'file(', 'readfile(', 'base64_decode(', 'gzinflate(', 'gzuncompress(',
-        'gzdecode(', 'gzcompress(', 'gzdeflate(', 'gzencode(', 'gzuncompress(',
-        'ini_set(', 'set_time_limit(', 'error_reporting(', 'ini_get(', 'ini_restore(',
-        'ini_alter(', 'ini_set(', 'unserialize(', 'serialize(', 'var_dump(',
-        'print_r(', 'debug_backtrace(', 'debug_print_backtrace(', 'dump(', 'die(',
-        'exit(', 'phpinfo(', 'php_uname(', 'getenv(', 'get_current_user(',
-        'getmyuid(', 'getmygid(', 'getmypid(', 'getmyinode(', 'getlastmod(',
-        'getprotobyname(', 'getprotobynumber(', 'getservbyname(', 'getservbyport(',
+        '<?php',
+        '?>',
+        '@php',
+        '@endphp',
+        '@shell',
+        '<?=',
+        'env(',
+        '$_ENV',
+        '$_SERVER',
+        '$_GET',
+        '.env',
+        '.__DIR__',
+        '$_POST',
+        '$_REQUEST',
+        '$_SESSION',
+        '$_COOKIE',
+        'exec(',
+        'shell_exec(',
+        'system(',
+        'passthru(',
+        'proc_open(',
+        'popen(',
+        'pcntl_exec(',
+        'eval(',
+        'assert(',
+        'preg_replace(',
+        'create_function(',
+        'require(',
+        'unlink(',
+        'fopen(',
+        'file_get_contents(',
+        'file_put_contents(',
+        'file(',
+        'readfile(',
+        'base64_decode(',
+        'gzinflate(',
+        'gzuncompress(',
+        'gzdecode(',
+        'gzcompress(',
+        'gzdeflate(',
+        'gzencode(',
+        'gzuncompress(',
+        'ini_set(',
+        'set_time_limit(',
+        'error_reporting(',
+        'ini_get(',
+        'ini_restore(',
+        'ini_alter(',
+        'ini_set(',
+        'unserialize(',
+        'serialize(',
+        'var_dump(',
+        'print_r(',
+        'debug_backtrace(',
+        'debug_print_backtrace(',
+        'dump(',
+        'die(',
+        'exit(',
+        'phpinfo(',
+        'php_uname(',
+        'getenv(',
+        'get_current_user(',
+        'getmyuid(',
+        'getmygid(',
+        'getmypid(',
+        'getmyinode(',
+        'getlastmod(',
+        'getprotobyname(',
+        'getprotobynumber(',
+        'getservbyname(',
+        'getservbyport(',
 
     ];
 
@@ -137,10 +195,10 @@ class Section extends Model
             return;
         }
         $theme = app('theme')->getTheme();
-        $path = $theme->path.'/views/sections_copy/'.$this->id.'-'.$this->uuid.'.blade.php';
-        $this->path = 'sections_copy/'.$this->id.'-'.$this->uuid;
-        if (! file_exists($theme->path.'/views/sections_copy')) {
-            mkdir($theme->path.'/views/sections_copy', 0777, true);
+        $path = $theme->path . '/views/sections_copy/' . $this->id . '-' . $this->uuid . '.blade.php';
+        $this->path = 'sections_copy/' . $this->id . '-' . $this->uuid;
+        if (! file_exists($theme->path . '/views/sections_copy')) {
+            mkdir($theme->path . '/views/sections_copy', 0777, true);
         }
         $content = sanitize_content($content);
         file_put_contents($path, $content);
@@ -150,8 +208,8 @@ class Section extends Model
     public function restore()
     {
         $theme = app('theme')->getTheme();
-        $path = 'sections/'.$this->uuid;
-        $newPath = $theme->path.'views/'.$this->path.'.blade.php';
+        $path = 'sections/' . $this->uuid;
+        $newPath = $theme->path . 'views/' . $this->path . '.blade.php';
         unset($newPath);
         $this->path = $path;
         $this->save();
@@ -161,9 +219,8 @@ class Section extends Model
     {
         $fieldDef = $this->getFieldDefinition($key);
         $isTranslatable = $fieldDef && ($fieldDef['translatable'] ?? false);
-
         if ($isTranslatable) {
-            $value = $this->getTranslation('config_'.$key, null, $locale);
+            $value = $this->getTranslation('config_' . $key, null, $locale);
             if ($value === '' || $value === null) {
                 return $default;
             }
@@ -188,7 +245,7 @@ class Section extends Model
 
         if ($isTranslatable) {
             $locale = $locale ?? app()->getLocale();
-            $this->saveTranslation('config_'.$key, $locale, (string) $value);
+            $this->saveTranslation('config_' . $key, $locale, (string) $value);
 
             return;
         }
@@ -209,10 +266,10 @@ class Section extends Model
         if ($isTranslatable) {
             $locale = $locale ?? app()->getLocale();
             $this->translations()
-                ->where('key', 'config_'.$key)
+                ->where('key', 'config_' . $key)
                 ->where('locale', $locale)
                 ->delete();
-            Cache::forget('translations_'.self::class.'_'.$this->id);
+            Cache::forget('translations_' . self::class . '_' . $this->id);
 
             return;
         }
@@ -256,6 +313,7 @@ class Section extends Model
         return match ($type) {
             'boolean' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
             'number' => is_numeric($value) ? (int) $value : $value,
+            'image' => Storage::url($value),
             'json', 'repeater' => is_string($value) ? (json_decode($value, true) ?? []) : (array) $value,
             default => $value,
         };
@@ -298,14 +356,14 @@ class Section extends Model
         }
 
         $theme = app('theme')->getTheme();
-        if (! file_exists($theme->path.'/views/sections_copy')) {
-            mkdir($theme->path.'/views/sections_copy', 0777, true);
+        if (! file_exists($theme->path . '/views/sections_copy')) {
+            mkdir($theme->path . '/views/sections_copy', 0777, true);
         }
-        $path = $theme->path.'/views/sections_copy/'.$clone->id.'-'.$clone->uuid.'.blade.php';
-        $clone->path = 'sections_copy/'.$clone->id.'-'.$clone->uuid;
+        $path = $theme->path . '/views/sections_copy/' . $clone->id . '-' . $clone->uuid . '.blade.php';
+        $clone->path = 'sections_copy/' . $clone->id . '-' . $clone->uuid;
         $clone->save();
-        if (file_exists($theme->path.'/views/'.$this->path.'.blade.php')) {
-            $content = file_get_contents($theme->path.'/views/'.$this->path.'.blade.php');
+        if (file_exists($theme->path . '/views/' . $this->path . '.blade.php')) {
+            $content = file_get_contents($theme->path . '/views/' . $this->path . '.blade.php');
         } else {
             $content = file_get_contents(app('view')->getFinder()->find($this->path));
         }
@@ -318,7 +376,7 @@ class Section extends Model
     public function delete()
     {
         $theme = app('theme')->getTheme();
-        $path = $theme->path.'/views/'.$this->path.'.blade.php';
+        $path = $theme->path . '/views/' . $this->path . '.blade.php';
         if (file_exists($path) && str_contains($path, 'sections_copy')) {
             unlink($path);
         }

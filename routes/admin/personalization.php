@@ -16,6 +16,7 @@
  *
  * Year: 2025
  */
+
 use App\Http\Controllers\Admin\Personalization\EmailTemplateController;
 use App\Http\Controllers\Admin\Personalization\MenuLinkController;
 use App\Http\Controllers\Admin\Personalization\SectionController;
@@ -43,7 +44,6 @@ Route::name('personalization.')->prefix('/personalization')->group(function () {
     Route::post('/sections/{section}/switch', [SectionController::class, 'switch'])->name('sections.switch');
     Route::post('/sections/{section}/restore', [SectionController::class, 'restore'])->name('sections.restore');
     Route::post('/sections/{section}/clone_section', [SectionController::class, 'cloneSection'])->name('sections.clone_section');
-    Route::get('/sections/{section}/config', [SectionController::class, 'showConfig'])->name('sections.config');
     Route::put('/sections/{section}/config', [SectionController::class, 'updateConfig'])->name('sections.config.update');
 });
 Route::resource('email_templates', EmailTemplateController::class)->names('personalization.email_templates');

@@ -346,7 +346,6 @@ class Product extends Model
             }
         }
         if ($this->getMetadata('personalized_product_url') != null) {
-
         }
 
         return true;
@@ -389,8 +388,8 @@ class Product extends Model
         return ! $this->isValid($canUnreferenced);
     }
 
-    public function formattedDescription(): string
+    public function formattedDescription(string $a = '- '): string
     {
-        return \App\Helpers\StringHTML::htmlToPlainLines($this->description);
+        return \App\Helpers\StringHTML::htmlToPlainLines($this->description, $a);
     }
 }

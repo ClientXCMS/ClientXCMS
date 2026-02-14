@@ -87,17 +87,6 @@ class ThemeSectionDTO
         }
     }
 
-    /**
-     * Render a section view without corrupting the parent's Blade section stack.
-     *
-     * Laravel's View::render() calls flushState() on any rendering error, which
-     * wipes ALL ViewFactory state including the parent view's open @section blocks.
-     * When a section sub-view is rendered inside a parent @section (e.g. home.blade.php),
-     * any error causes "Cannot end a section without first starting one" on @endsection.
-     *
-     * This method saves the ViewFactory section state before rendering and restores
-     * it if flushState() was called due to an error in the sub-view.
-     */
     private function renderIsolated(string $path): string
     {
         $factory = app('view');
@@ -112,10 +101,6 @@ class ThemeSectionDTO
         try {
             return view($path, $this->getContextFromUuid())->render();
         } catch (\Throwable $e) {
-            // Restore state wiped by View::render()'s flushState().
-            // renderCount must be restored too: without it, the next successful
-            // sub-view render decrements to 0 and flushStateIfDoneRendering()
-            // wipes the parent's section stack a second time.
             $sectionsRef->setValue($factory, $savedSections);
             $stackRef->setValue($factory, $savedStack);
             $renderCountRef->setValue($factory, $savedRenderCount);

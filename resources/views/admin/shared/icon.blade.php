@@ -21,14 +21,14 @@
 @if(isset($label))
 <label for="{{ $name }}{{ $rand }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">{{ $label }}
     @if (isset($help))
-        <div class="hs-tooltip inline-block">
-            <button type="button" class="hs-tooltip-toggle">
-                <i class="bi bi-info-circle-fill text-gray-500 dark:text-gray-400"></i>
-                <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-white" role="tooltip">
-                    {{ $help }}
-                </span>
-            </button>
-        </div>
+    <div class="hs-tooltip inline-block">
+        <button type="button" class="hs-tooltip-toggle">
+            <i class="bi bi-info-circle-fill text-gray-500 dark:text-gray-400"></i>
+            <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-white" role="tooltip">
+                {{ $help }}
+            </span>
+        </button>
+    </div>
     @endif
 </label>
 @endif
@@ -37,16 +37,16 @@
         <i class="{{ $value ?? old($name) ?? 'bi-star' }}"></i>
     </div>
     <input type="text"
-           name="{{ $name }}"
-           id="{{ $name }}{{ $rand }}"
-           value="{{ $value ?? old($name) }}"
-           placeholder="bi-star"
-           class="input-text flex-1 @error($name) border-red-500 @enderror"
-           oninput="document.getElementById('{{ $name }}_preview{{ $rand }}').innerHTML = '<i class=\'' + this.value + '\'></i>'"
-           @foreach ($attributes ?? [] as $key => $attrValue){{ $key }}="{{ $attrValue }}" @endforeach>
+        name="{{ $name }}"
+        id="{{ $name }}{{ $rand }}"
+        value="{{ $value ?? old($name) }}"
+        placeholder="bi-star"
+        class="input-text flex-1 @error($name) border-red-500 @enderror"
+        oninput="document.getElementById('{{ $name }}_preview{{ $rand }}').innerHTML = '<i class=\'' + this.value + '\'></i>'"
+        @foreach ($attributes ?? [] as $key=> $attrValue){{ $key }}="{{ $attrValue }}" @endforeach>
 </div>
 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-    {{ __('admin.icon_hint', ['url' => 'https://icons.getbootstrap.com/']) }}
+    {{ __('personalization.icon_help', ['url' => 'https://icons.getbootstrap.com/']) }}
 </p>
 @error($name)
 <span class="mt-2 text-sm text-red-500">{{ $message }}</span>

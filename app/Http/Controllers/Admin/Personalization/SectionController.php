@@ -44,7 +44,6 @@ class SectionController extends AbstractCrudController
     {
         $params = parent::getIndexParams($items, $translatePrefix);
         $params['pages'] = app('theme')->getSectionsPages();
-        $params['sectionTypes'] = app('theme')->getSectionsTypes();
         $params['themeSections'] = app('theme')->getThemeSections();
         $params['uuid'] = request()->get('active_page');
         $params['active_page'] = collect($params['pages'])->filter(function ($v, $k) use ($params) {
@@ -56,8 +55,8 @@ class SectionController extends AbstractCrudController
 
     public function show(Section $section)
     {
-        $pages = app('theme')->getSectionsPages(false);
-        $sectionTypes = app('theme')->getSectionsTypes();
+        $themeManager = app('theme');
+        $pages = $themeManager->getSectionsPages(false);
         if (! view()->exists($section->path)) {
             if (\Str::start($section->path, 'advanced_personalization')) {
                 return back()->with('error', __('personalization.sections.errors.advanced_personalization'));
@@ -69,12 +68,52 @@ class SectionController extends AbstractCrudController
         $pages = collect($pages)->mapWithKeys(function ($item) {
             return [$item['url'] => $item['title']];
         })->toArray();
-        $themes = app('theme')->getThemes();
+        $themes = $themeManager->getThemes();
         $themes = collect($themes)->mapWithKeys(function ($item) {
             return [$item->uuid => $item->name];
         })->toArray();
 
-        return $this->showView(['item' => $section, 'content' => $content, 'pages' => $pages, 'sectionTypes' => $sectionTypes, 'themes' => $themes]);
+        $fields = [];
+        $values = [];
+        $locales = LocaleService::getLocales();
+
+        if ($section->isConfigurable()) {
+            $fields = $section->getConfigurableFields();
+            try {
+                foreach ($fields as $field) {
+                    if ($field['translatable'] ?? false) {
+                        foreach (array_keys($locales) as $locale) {
+                            $values[$field['key']][$locale] = $section->getSetting(
+                                $field['key'],
+                                $field['default'] ?? null,
+                                $locale
+                            );
+                        }
+                    } else {
+                        $values[$field['key']] = $section->getSetting(
+                            $field['key'],
+                            $field['default'] ?? null
+                        );
+                    }
+                }
+            } catch (\Exception $e) {
+                foreach ($fields as $field) {
+                    $values[$field['key']] = $field['default'] ?? null;
+                }
+            }
+            $themeManager->setCurrentRenderingSection($section);
+        }
+
+        return $this->showView([
+            'item' => $section,
+            'content' => $content,
+            'pages' => $pages,
+            'themes' => $themes,
+            'section' => $section,
+            'fields' => $fields,
+            'values' => $values,
+            'locales' => $locales,
+        ]);
     }
 
     public function destroy(Section $section)
@@ -175,53 +214,6 @@ class SectionController extends AbstractCrudController
         return back();
     }
 
-    /**
-     * Show the section configuration page
-     */
-    public function showConfig(Section $section)
-    {
-        if (! $section->isConfigurable()) {
-            return back()->with('error', __('personalization.sections.errors.not_configurable'));
-        }
-
-        $fields = $section->getConfigurableFields();
-        $values = [];
-        $locales = LocaleService::getLocales();
-
-        try {
-            foreach ($fields as $field) {
-                if ($field['translatable'] ?? false) {
-                    foreach (array_keys($locales) as $locale) {
-                        $values[$field['key']][$locale] = $section->getSetting(
-                            $field['key'],
-                            $field['default'] ?? null,
-                            $locale
-                        );
-                    }
-                } else {
-                    $values[$field['key']] = $section->getSetting(
-                        $field['key'],
-                        $field['default'] ?? null
-                    );
-                }
-            }
-        } catch (\Exception $e) {
-            foreach ($fields as $field) {
-                $values[$field['key']] = $field['default'] ?? null;
-            }
-        }
-
-        return view('admin.personalization.sections.config', [
-            'section' => $section,
-            'fields' => $fields,
-            'values' => $values,
-            'locales' => $locales,
-        ]);
-    }
-
-    /**
-     * Update the section configuration
-     */
     public function updateConfig(Request $request, Section $section)
     {
         if (! $section->isConfigurable()) {
@@ -235,7 +227,6 @@ class SectionController extends AbstractCrudController
         if (! empty($validationRules)) {
             $request->validate($validationRules);
         }
-
         foreach ($fields as $field) {
             $key = $field['key'];
 
@@ -245,9 +236,9 @@ class SectionController extends AbstractCrudController
                     if ($oldValue && Storage::exists($oldValue)) {
                         Storage::delete($oldValue);
                     }
-                    $path = $request->file($key)->store('public/sections/'.$section->id);
+                    $path = $request->file($key)->store('public/sections/' . $section->id);
                     $section->setSetting($key, $path);
-                } elseif ($request->has('remove_'.$key)) {
+                } elseif ($request->has('remove_' . $key)) {
                     $oldValue = $section->getSetting($key);
                     if ($oldValue && Storage::exists($oldValue)) {
                         Storage::delete($oldValue);
@@ -280,7 +271,6 @@ class SectionController extends AbstractCrudController
             } else {
                 $value = $request->input($key);
                 if ($field['type'] === 'boolean') {
-                    // Handle boolean from AJAX ('1'/'0') or form submission (presence)
                     $value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $request->has($key);
                 }
                 if ($value !== null) {
@@ -290,20 +280,9 @@ class SectionController extends AbstractCrudController
         }
 
         ThemeManager::clearCache();
-
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => __('personalization.sections.config.success'),
-            ]);
-        }
-
         return back()->with('success', __('personalization.sections.config.success'));
     }
 
-    /**
-     * Build Laravel validation rules from field definitions
-     */
     private function buildValidationRules(array $fields, array $locales): array
     {
         $rules = [];
@@ -325,10 +304,10 @@ class SectionController extends AbstractCrudController
                     case 'number':
                         $fieldRules[] = 'numeric';
                         if (isset($field['min'])) {
-                            $fieldRules[] = 'min:'.$field['min'];
+                            $fieldRules[] = 'min:' . $field['min'];
                         }
                         if (isset($field['max'])) {
-                            $fieldRules[] = 'max:'.$field['max'];
+                            $fieldRules[] = 'max:' . $field['max'];
                         }
                         break;
                     case 'image':

@@ -17,6 +17,7 @@
  * Year: 2025
  */
 
+use App\Services\Core\LocaleService;
 use App\Services\SettingsService;
 use App\Services\Store\CurrencyService;
 
@@ -136,22 +137,21 @@ if (! function_exists('format_bytes')) {
 
         $bytes = (int) $bytes;
         if ($bytes >= 1073741824) {
-            $bytes = number_format($bytes / 1073741824, $decimals).($suffix ? ' GB' : '');
+            $bytes = number_format($bytes / 1073741824, $decimals) . ($suffix ? ' GB' : '');
         } elseif ($bytes >= 1048576) {
-            $bytes = number_format($bytes / 1048576, $decimals).($suffix ? ' MB' : '');
+            $bytes = number_format($bytes / 1048576, $decimals) . ($suffix ? ' MB' : '');
         } elseif ($bytes >= 1024) {
-            $bytes = number_format($bytes / 1024, $decimals).($suffix ? ' KB' : '');
+            $bytes = number_format($bytes / 1024, $decimals) . ($suffix ? ' KB' : '');
         } elseif ($bytes > 1) {
-            $bytes = $bytes.($suffix ? ' bytes' : '');
+            $bytes = $bytes . ($suffix ? ' bytes' : '');
         } elseif ($bytes == 1) {
-            $bytes = $bytes.($suffix ? ' byte' : '');
+            $bytes = $bytes . ($suffix ? ' byte' : '');
         } else {
-            $bytes = '0 '.($suffix ? ' byte' : '');
+            $bytes = '0 ' . ($suffix ? ' byte' : '');
         }
 
         return $bytes;
     }
-
 }
 if (! function_exists('currency')) {
     function currency(): string
@@ -217,7 +217,7 @@ if (! function_exists('is_subroute')) {
             $route = parse_url($route, PHP_URL_PATH);
         }
 
-        return Str::startsWith('/'.request()->path(), $route);
+        return Str::startsWith('/' . request()->path(), $route);
     }
 }
 if (! function_exists('ctx_version')) {
@@ -244,7 +244,7 @@ if (! function_exists('formatted_extension_list')) {
     {
         $extensions = explode(',', $string);
         $appenddot = function ($ext) {
-            return '.'.$ext;
+            return '.' . $ext;
         };
         $appenddot = array_map($appenddot, $extensions);
 
@@ -271,7 +271,7 @@ if (! function_exists('admin_prefix')) {
     function admin_prefix(?string $path = null): string
     {
         if ($path) {
-            return env('ADMIN_PREFIX', 'admin').'/'.$path;
+            return env('ADMIN_PREFIX', 'admin') . '/' . $path;
         }
 
         return env('ADMIN_PREFIX', 'admin');
@@ -304,7 +304,7 @@ if (! function_exists('render_theme_sections')) {
     {
         $url = request()->path();
         if (! str_starts_with($url, '/')) {
-            $url = '/'.$url;
+            $url = '/' . $url;
         }
 
         $themeManager = app('theme');
@@ -319,7 +319,7 @@ if (! function_exists('render_theme_sections')) {
                 $themeManager->setCurrentRenderingSection(null);
             }
 
-            return $html.$rendered;
+            return $html . $rendered;
         }, '');
     }
 }
@@ -342,7 +342,6 @@ if (! function_exists('section_config')) {
 
             $fieldDef = $section->getFieldDefinition($key);
             $fieldDefault = $fieldDef['default'] ?? $default;
-
             return $section->getSetting($key, $fieldDefault);
         } catch (\Exception $e) {
             return $default;
@@ -387,21 +386,21 @@ if (! function_exists('extension_view')) {
                 return view()->file(resource_path($file), $data);
             }
 
-            return view($uuid.'_default::'.$view, $data);
+            return view($uuid . '_default::' . $view, $data);
         }
         View::share('share_prefix', '');
         if ($uuid == null) {
             return view($view, $data);
         }
 
-        return view($uuid.'::'.$view, $data);
+        return view($uuid . '::' . $view, $data);
     }
 }
 
 if (! function_exists('theme_asset')) {
     function theme_asset(string $path): string
     {
-        return asset('themes/'.app('theme')->getTheme()->uuid.'/'.$path);
+        return asset('themes/' . app('theme')->getTheme()->uuid . '/' . $path);
     }
 }
 
@@ -455,12 +454,15 @@ if (! function_exists('sanitize_content')) {
     }
 }
 
-if (! function_exists('has_dangerous_content')) {
-    /**
-     * Check whether a string contains any dangerous Blade/PHP construct.
-     * Use this for validation (reject input) rather than silent stripping.
-     */
-    function has_dangerous_content(string $content): bool
+if (! function_exists('current_locale')) {
+    function current_locale(): string
+    {
+        return app(LocaleService::class)->fetchCurrentLocale();
+    }
+}
+
+if (! function_exists('is_sanitized')) {
+    function is_sanitized(string $content): bool
     {
         foreach (dangerous_content_patterns() as $pattern) {
             if (preg_match($pattern, $content)) {
@@ -501,7 +503,7 @@ if (! function_exists('get_group_icon')) {
         ];
         foreach ($map as $key => $cls) {
             if (str_contains($name, $key)) {
-                $icon = $cls.' text-xl';
+                $icon = $cls . ' text-xl';
                 break;
             }
         }

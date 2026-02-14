@@ -2,9 +2,11 @@ import Sortable from 'sortablejs';
 const SortableMixin = Base =>
     class extends Base {
         connectedCallback() {
-            this.saveButton = document.querySelector(this.dataset.button);
-            if (this.saveButton != null) {
-                this.saveButton.addEventListener('click', this.save.bind(this));
+            if (this.dataset.button) {
+                this.saveButton = document.querySelector(this.dataset.button);
+                if (this.saveButton != null) {
+                    this.saveButton.addEventListener('click', this.save.bind(this));
+                }
             }
             this.saveUrl = this.dataset.url;
             this.autosave = this.dataset.autosave !== undefined;
@@ -25,7 +27,7 @@ const SortableMixin = Base =>
                     },
                 },
                 onEnd: (evt) => {
-                    if (evt.from.tagName == 'OL'){
+                    if (evt.from.tagName == 'OL') {
                         evt.item.childNodes[1].classList.remove('ml-4');
                     }
                     if (this.autosave) {
@@ -95,8 +97,8 @@ const SortableMixin = Base =>
         }
     };
 
-class SortList extends SortableMixin(HTMLUListElement) {}
+class SortList extends SortableMixin(HTMLUListElement) { }
 customElements.define("sort-list", SortList, { extends: 'ul' });
 
-class SortList2 extends SortableMixin(HTMLOListElement) {}
+class SortList2 extends SortableMixin(HTMLOListElement) { }
 customElements.define("sort-list2", SortList2, { extends: 'ol' });

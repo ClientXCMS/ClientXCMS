@@ -14,7 +14,7 @@ class StringHTML
         return htmlspecialchars_decode($string);
     }
 
-    public static function htmlToPlainLines(string $input): string
+    public static function htmlToPlainLines(string $input, string $a = '- '): string
     {
         $trimmed = trim($input);
 
@@ -26,8 +26,8 @@ class StringHTML
         \libxml_use_internal_errors(true);
 
         $html =
-            '<!DOCTYPE html><html><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><body>'.
-            $trimmed.
+            '<!DOCTYPE html><html><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><body>' .
+            $trimmed .
             '</body></html>';
 
         $dom->loadHTML($html, \LIBXML_HTML_NOIMPLIED | \LIBXML_HTML_NODEFDTD);
@@ -41,8 +41,8 @@ class StringHTML
             if ($name === 'li') {
                 $text = self::nodeText($node);
                 if ($text !== '') {
-                    $prefix = str_repeat('  ', max(0, $depth - 1)).'- ';
-                    $lines[] = $prefix.$text;
+                    $prefix = str_repeat('  ', max(0, $depth - 1)) . $a;
+                    $lines[] = $prefix . $text;
                 }
 
                 return;
