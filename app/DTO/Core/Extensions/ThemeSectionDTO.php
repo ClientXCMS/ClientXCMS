@@ -67,14 +67,14 @@ class ThemeSectionDTO
         return $this->json['thumbnail'] ?? 'https://via.placeholder.com/1000x250';
     }
 
-    public function render(bool $cache = true): string
+    public function render(bool $useCache = true): string
     {
         $path = $this->json['path'];
         try {
-            if ($cache && app()->isProduction()) {
-                $cache = app('theme')->getSetting()['sections_html'] ?? collect();
-                if ($cache->has($path)) {
-                    return $cache->get($path);
+            if ($useCache && app()->isProduction()) {
+                $cachedHtml = app('theme')->getSetting()['sections_html'] ?? collect();
+                if ($cachedHtml->has($path)) {
+                    return $cachedHtml->get($path);
                 }
             }
             if (! view()->exists($path)) {

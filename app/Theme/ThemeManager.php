@@ -95,13 +95,9 @@ class ThemeManager
     private static function getEnabledLocales(): array
     {
         try {
-            $locales = array_keys(\App\Services\Core\LocaleService::getLocalesNames());
-
-            return array_unique(array_map(function ($locale) {
-                return str_contains($locale, '_') ? explode('_', $locale)[0] : $locale;
-            }, $locales));
+            return array_keys(\App\Services\Core\LocaleService::getLocalesNames());
         } catch (\Exception $e) {
-            return ['fr', 'en'];
+            return ['fr', 'en', 'fr_FR', 'en_GB'];
         }
     }
 
@@ -260,9 +256,6 @@ class ThemeManager
                 'socials' => SocialNetwork::where('hidden', false)->orderBy('position')->get(),
                 'sections_pages' => $this->getSectionsPages(),
                 'sections' => Section::orderBy('order')->get(),
-                'sections_html' => Section::orderBy('order')->get()->mapWithKeys(function (Section $item) {
-                    return [$item->path => $item->toDTO()->render(false)];
-                }),
             ]);
         });
     }
