@@ -32,7 +32,6 @@ class InvoiceServiceTest extends TestCase
         Customer::factory(20)->create();
         $this->createProductModel();
 
-        $this->seed(\Database\Seeders\ModuleSeeder::class);
         app('extension')->autoload(app());
         \Artisan::call('migrate');
 
@@ -50,7 +49,6 @@ class InvoiceServiceTest extends TestCase
         $this->assertEquals($email->recipient_id, $invoice->customer_id);
         $this->assertDatabaseCount('service_renewals', 1);
         $this->assertEquals(true, ServiceRenewals::first()->first_period);
-
     }
 
     public function test_create_invoice_with_coupon()
