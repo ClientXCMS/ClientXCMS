@@ -20,6 +20,7 @@
 namespace App\Helpers;
 
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Artisan;
 use RuntimeException;
 use Str;
 
