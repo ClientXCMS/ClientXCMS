@@ -38,7 +38,7 @@ class EnvEditor
         $content = file_get_contents($envPath);
 
         if ($content === false) {
-            throw new RuntimeException('Unable to read .env file: ' . $envPath);
+            throw new RuntimeException('Unable to read .env file: '.$envPath);
         }
 
         foreach ($values as $key => $value) {
@@ -49,13 +49,13 @@ class EnvEditor
             }
 
             if (Str::contains($value, [' ', '#'])) {
-                $value = '"' . $value . '"';
+                $value = '"'.$value.'"';
             }
 
             $content = str_replace("{$key}={$oldValue}", "{$key}={$value}", $content);
         }
         if (file_put_contents($envPath, $content) === false) {
-            throw new RuntimeException('Unable to write .env file: ' . $envPath);
+            throw new RuntimeException('Unable to write .env file: '.$envPath);
         }
         Artisan::call('config:clear');
     }
