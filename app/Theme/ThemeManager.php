@@ -20,7 +20,6 @@
 namespace App\Theme;
 
 use App\DTO\Core\Extensions\ExtensionThemeDTO;
-use App\DTO\Core\Extensions\SectionTypeDTO;
 use App\Models\Admin\Setting;
 use App\Models\Personalization\MenuLink;
 use App\Models\Personalization\Section;
@@ -29,7 +28,6 @@ use App\Models\Store\Group;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
 
 class ThemeManager
 {
@@ -361,15 +359,6 @@ class ThemeManager
         }
 
         return $pages;
-    }
-
-    public function getSectionsTypes()
-    {
-        return Cache::get('sections_types', function () {
-            return collect(Http::get('https://clientxcms.com/api/sections_types')->json('data'))->map(function ($item) {
-                return new SectionTypeDTO($item, $this->getThemeSections());
-            });
-        });
     }
 
     public function getThemeSections(): array

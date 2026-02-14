@@ -20,7 +20,6 @@ class DatabaseSeeder extends Seeder
             $this->call([
                 ServerSeeder::class,
                 // AdminSeeder::class,
-                ModuleSeeder::class,
                 StoreSeeder::class,
             ]);
             // InvoiceItem::factory(30)->create();
