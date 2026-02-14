@@ -43,13 +43,13 @@ class ServiceControllerTest extends TestCase
         for ($index = 0; $index < 15; $index++) {
             $this->createServiceModel($user->id);
         }
-        $this->actingAs($user)->get(route('front.services.index') . '?filter=active')->assertOk();
+        $this->actingAs($user)->get(route('front.services.index').'?filter=active')->assertOk();
     }
 
     public function test_services_invalid_filter(): void
     {
         $user = $this->createCustomerModel();
-        $this->actingAs($user)->get(route('front.services.index') . '?filter=suuuu')->assertRedirect();
+        $this->actingAs($user)->get(route('front.services.index').'?filter=suuuu')->assertRedirect();
     }
 
     public function test_services_can_show(): void
