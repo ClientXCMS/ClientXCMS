@@ -250,12 +250,14 @@ trait SectionFieldPresets
             $fields[] = SectionField::text(
                 "step{$i}_title",
                 "theme::sections.steps.config.step{$i}_title",
+                default: __('theme::sections.steps.step_' . $i . '_title'),
             );
 
             $fields[] = SectionField::textarea(
                 "step{$i}_desc",
                 "theme::sections.steps.config.step{$i}_desc",
                 rows: 2,
+                default: __('theme::sections.steps.step_' . $i . '_desc'),
             );
 
             $fields[] = SectionField::icon(

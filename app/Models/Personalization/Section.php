@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Str;
 
 /**
  * @property int $id
@@ -177,6 +178,11 @@ class Section extends Model
                 'url' => $section->json['default_url'] ?? '/',
             ]);
         }
+    }
+
+    public function formattedName()
+    {
+        return Str::headline($this->name ?? $this->uuid);
     }
 
     public function getUrlAttribute($value)

@@ -461,6 +461,18 @@ if (! function_exists('current_locale')) {
         return app(LocaleService::class)->fetchCurrentLocale();
     }
 }
+if (! function_exists('has_dangerous_content')) {
+    function has_dangerous_content(string $content): bool
+    {
+        foreach (dangerous_content_patterns() as $pattern) {
+            if (preg_match($pattern, $content)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
 
 if (! function_exists('is_sanitized')) {
     function is_sanitized(string $content): bool

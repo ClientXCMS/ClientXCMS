@@ -236,9 +236,9 @@ class SectionController extends AbstractCrudController
                     if ($oldValue && Storage::exists($oldValue)) {
                         Storage::delete($oldValue);
                     }
-                    $path = $request->file($key)->store('public/sections/'.$section->id);
+                    $path = $request->file($key)->store('public/sections/' . $section->id);
                     $section->setSetting($key, $path);
-                } elseif ($request->has('remove_'.$key)) {
+                } elseif ($request->has('remove_' . $key)) {
                     $oldValue = $section->getSetting($key);
                     if ($oldValue && Storage::exists($oldValue)) {
                         Storage::delete($oldValue);
@@ -280,8 +280,7 @@ class SectionController extends AbstractCrudController
         }
 
         ThemeManager::clearCache();
-
-        return back()->with('success', __('personalization.sections.config.success'));
+        return $this->updateRedirect($section);
     }
 
     private function buildValidationRules(array $fields, array $locales): array
@@ -305,10 +304,10 @@ class SectionController extends AbstractCrudController
                     case 'number':
                         $fieldRules[] = 'numeric';
                         if (isset($field['min'])) {
-                            $fieldRules[] = 'min:'.$field['min'];
+                            $fieldRules[] = 'min:' . $field['min'];
                         }
                         if (isset($field['max'])) {
-                            $fieldRules[] = 'max:'.$field['max'];
+                            $fieldRules[] = 'max:' . $field['max'];
                         }
                         break;
                     case 'image':

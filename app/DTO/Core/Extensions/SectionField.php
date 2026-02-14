@@ -70,7 +70,7 @@ class SectionField
     /**
      * Create a textarea field.
      */
-    public static function textarea(string $key, string $label, int $rows = 2, bool $translatable = true, ?string $hint = null): self
+    public static function textarea(string $key, string $label, int $rows = 2, bool $translatable = true, ?string $hint = null, ?string $default = null): self
     {
         return new self(
             key: $key,
@@ -79,6 +79,7 @@ class SectionField
             translatable: $translatable,
             hint: $hint,
             rows: $rows,
+            default: $default,
         );
     }
 
