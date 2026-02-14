@@ -118,6 +118,7 @@ class SectionDefinition
 
         return $this;
     }
+
     public function toArray(): array
     {
         $data = [
@@ -125,13 +126,13 @@ class SectionDefinition
             'path' => $this->path,
             'uuid' => $this->uuid,
             'default' => $this->isDefault,
-            'default_url' => $this->defaultUrl
+            'default_url' => $this->defaultUrl,
         ];
 
         if ($this->isConfigurable && ! empty($this->fields)) {
             $data['configurable'] = true;
             $data['fields'] = array_map(
-                fn(SectionField $field) => $field->toArray(),
+                fn (SectionField $field) => $field->toArray(),
                 $this->fields
             );
         }

@@ -88,25 +88,25 @@ class ExtensionThemeDTO
         $dto->version = $json['version'];
         $dto->author = $json['author'];
         $dto->demo = $json['demo'] ?? null;
-        $dto->hasConfig = file_exists($dto->path . '/config/config.blade.php');
+        $dto->hasConfig = file_exists($dto->path.'/config/config.blade.php');
         if ($dto->hasConfig) {
-            $dto->configFile = $dto->path . '/config/config.php';
-            if (file_exists($dto->path . '/config/rules.php')) {
-                $dto->configRulesFile = $dto->path . '/config/rules.php';
+            $dto->configFile = $dto->path.'/config/config.php';
+            if (file_exists($dto->path.'/config/rules.php')) {
+                $dto->configRulesFile = $dto->path.'/config/rules.php';
             }
-            if (file_exists($dto->path . '/config/config.json')) {
-                $dto->config = json_decode(file_get_contents($dto->path . '/config/config.json'), true);
+            if (file_exists($dto->path.'/config/config.json')) {
+                $dto->config = json_decode(file_get_contents($dto->path.'/config/config.json'), true);
             }
         }
 
         if (isset($json['seeder'])) {
-            $seederPath = $dto->path . '/' . $json['seeder']['file'];
+            $seederPath = $dto->path.'/'.$json['seeder']['file'];
             if (file_exists($seederPath)) {
                 $dto->seederFile = $seederPath;
                 $dto->seederClass = $json['seeder']['class'];
             }
         }
-        $dbSettingsPath = $dto->path . '/config/db_settings.php';
+        $dbSettingsPath = $dto->path.'/config/db_settings.php';
         if (file_exists($dbSettingsPath)) {
             $dto->dbSettingsFile = $dbSettingsPath;
             $dto->dbSettings = require $dbSettingsPath;
@@ -142,7 +142,7 @@ class ExtensionThemeDTO
         $dto = new self;
         $dto->json = $theme;
         $dto->api = $theme;
-        $dto->path = dirname('resources/themes/' . $theme['uuid']);
+        $dto->path = dirname('resources/themes/'.$theme['uuid']);
         $dto->uuid = $theme['uuid'];
         $dto->name = $dto->getTranslates()['name'];
         $dto->description = $dto->getTranslates()['description'];
@@ -161,7 +161,7 @@ class ExtensionThemeDTO
 
     public function isEnabled(): bool
     {
-        return app('settings')->get('theme.' . $this->uuid . '.enabled', false);
+        return app('settings')->get('theme.'.$this->uuid.'.enabled', false);
     }
 
     public function demoUrl(): string
@@ -189,7 +189,7 @@ class ExtensionThemeDTO
             return '';
         }
 
-        return view()->file($this->path . '/config/config.blade.php', array_merge($params, ['config' => $this->config]))->render();
+        return view()->file($this->path.'/config/config.blade.php', array_merge($params, ['config' => $this->config]))->render();
     }
 
     public function storeConfig(array $data): void
@@ -221,7 +221,7 @@ class ExtensionThemeDTO
 
         if ($this->configRulesFile !== null) {
             file_put_contents(
-                $this->path . '/config/config.json',
+                $this->path.'/config/config.json',
                 json_encode($fileSettings, JSON_PRETTY_PRINT)
             );
         }
@@ -233,7 +233,7 @@ class ExtensionThemeDTO
             return true;
         }
 
-        return file_exists($this->path . '/screenshot.png');
+        return file_exists($this->path.'/screenshot.png');
     }
 
     public function screenshotUrl(): string
@@ -242,27 +242,27 @@ class ExtensionThemeDTO
             return $this->api['thumbnail'];
         }
 
-        return Vite::asset('resources/themes/' . $this->uuid . '/screenshot.png');
+        return Vite::asset('resources/themes/'.$this->uuid.'/screenshot.png');
     }
 
     public function hasSection(string $path): bool
     {
-        return file_exists($this->path . '/sections/' . $path . '.blade.php');
+        return file_exists($this->path.'/sections/'.$path.'.blade.php');
     }
 
     public function hasSections(): bool
     {
-        return file_exists($this->path . '/views/sections');
+        return file_exists($this->path.'/views/sections');
     }
 
     public function scanSections(): array
     {
         $sections = [];
         if ($this->hasSections()) {
-            $files = File::allFiles($this->path . '/views/sections');
+            $files = File::allFiles($this->path.'/views/sections');
             foreach ($files as $file) {
                 if (! str_contains($file->getFilename(), '_copy')) {
-                    $path = str_replace($this->path . '/views/', '', $file->getPathname());
+                    $path = str_replace($this->path.'/views/', '', $file->getPathname());
                     $sections[] = ThemeSectionDTO::fromPathInfo(pathinfo($file), $path, $this->uuid);
                 }
             }
@@ -273,8 +273,8 @@ class ExtensionThemeDTO
 
     public function getSections()
     {
-        $phpFile = $this->path . '/views/sections/sections.php';
-        $jsonFile = $this->path . '/views/sections/sections.json';
+        $phpFile = $this->path.'/views/sections/sections.php';
+        $jsonFile = $this->path.'/views/sections/sections.json';
 
         if (\File::exists($phpFile)) {
             $sectionFile = require $phpFile;

@@ -61,9 +61,9 @@ trait SectionFieldPresets
      * Feature fields: generates N groups of (icon + title + ?description).
      * Replaces the feature1..6 pattern duplicated across ~15 features sections.
      *
-     * @param  int    $count            Number of features (1-based)
-     * @param  bool   $withDescription  Whether to include a description textarea per feature
-     * @param  array  $iconDefaults     Override default icons, keyed by 1-based index
+     * @param  int  $count  Number of features (1-based)
+     * @param  bool  $withDescription  Whether to include a description textarea per feature
+     * @param  array  $iconDefaults  Override default icons, keyed by 1-based index
      * @return SectionField[]
      */
     public static function featureFields(
@@ -111,9 +111,9 @@ trait SectionFieldPresets
      * Feature fields with a number/metric per item.
      * Used by features_numbers sections which add a "number" field to each feature.
      *
-     * @param  int    $count          Number of features
-     * @param  array  $numberDefaults Default values for the number fields, keyed by 1-based index
-     * @param  array  $iconDefaults   Override default icons, keyed by 1-based index
+     * @param  int  $count  Number of features
+     * @param  array  $numberDefaults  Default values for the number fields, keyed by 1-based index
+     * @param  array  $iconDefaults  Override default icons, keyed by 1-based index
      * @return SectionField[]
      */
     public static function featureNumberFields(
@@ -176,7 +176,7 @@ trait SectionFieldPresets
      * Stat fields: generates N groups of (value + label).
      * Replaces stat1..4 pattern duplicated across 4+ stats sections.
      *
-     * @param  int    $count          Number of stats
+     * @param  int  $count  Number of stats
      * @param  array  $valueDefaults  Override default values, keyed by 1-based index
      * @return SectionField[]
      */
@@ -237,7 +237,7 @@ trait SectionFieldPresets
      * Step fields: generates N groups of (title + desc + icon).
      * Replaces step1..3 pattern duplicated across 3 steps sections.
      *
-     * @param  int    $count         Number of steps
+     * @param  int  $count  Number of steps
      * @param  array  $iconDefaults  Override default icons, keyed by 1-based index
      * @return SectionField[]
      */

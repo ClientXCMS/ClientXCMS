@@ -49,13 +49,13 @@ class ExtensionDTO implements Arrayable
     public function extensionPath(): string
     {
         if ($this->type == 'theme') {
-            return base_path('resources/themes/' . $this->uuid);
+            return base_path('resources/themes/'.$this->uuid);
         }
         if ($this->type == 'email_template' || $this->type == 'invoice_template') {
-            return base_path('resources/views/vendor/notifications/' . $this->uuid . '.blade.php');
+            return base_path('resources/views/vendor/notifications/'.$this->uuid.'.blade.php');
         }
 
-        return base_path($this->type() . '/' . $this->uuid);
+        return base_path($this->type().'/'.$this->uuid);
     }
 
     public static function fromArray(array $module)
@@ -122,7 +122,7 @@ class ExtensionDTO implements Arrayable
 
     public function type()
     {
-        return $this->type . 's';
+        return $this->type.'s';
     }
 
     public function name()
@@ -156,9 +156,9 @@ class ExtensionDTO implements Arrayable
 
     public function thumbnail()
     {
-        if ($this->type == 'theme' && file_exists(base_path('resources/themes/' . $this->uuid . '/screenshot.png'))) {
+        if ($this->type == 'theme' && file_exists(base_path('resources/themes/'.$this->uuid.'/screenshot.png'))) {
             try {
-                return \Vite::asset('resources/themes/' . $this->uuid . '/screenshot.png');
+                return \Vite::asset('resources/themes/'.$this->uuid.'/screenshot.png');
             } catch (\Exception $e) {
             }
         }
@@ -239,13 +239,13 @@ class ExtensionDTO implements Arrayable
 
     public function getSections()
     {
-        $dir = $this->extensionPath() . '/views/sections';
+        $dir = $this->extensionPath().'/views/sections';
         if (! \File::exists($dir)) {
             return [];
         }
 
-        $phpFile = $dir . '/sections.php';
-        $jsonFile = $dir . '/sections.json';
+        $phpFile = $dir.'/sections.php';
+        $jsonFile = $dir.'/sections.json';
 
         if (file_exists($phpFile)) {
             $sectionFile = require $phpFile;

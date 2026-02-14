@@ -63,6 +63,7 @@ class SectionField
                 default: $default,
             );
         }
+
         return $fields;
     }
 
@@ -192,7 +193,7 @@ class SectionField
             type: 'repeater',
             label: $label,
             hint: $hint,
-            fields: array_map(fn($field) => $field instanceof self ? $field->toArray() : $field, $fields),
+            fields: array_map(fn ($field) => $field instanceof self ? $field->toArray() : $field, $fields),
             min: $min,
             max: $max,
         );
@@ -201,6 +202,7 @@ class SectionField
     public function default(mixed $default): self
     {
         $this->default = $default;
+
         return $this;
     }
 

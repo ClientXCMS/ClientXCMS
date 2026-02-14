@@ -29,7 +29,7 @@ trait Translatable
     {
         static::deleting(function ($model) {
             $model->translations()->delete();
-            Cache::forget('translations_' . self::class . '_' . $model->id);
+            Cache::forget('translations_'.self::class.'_'.$model->id);
         });
     }
 
@@ -48,13 +48,13 @@ trait Translatable
         if ($locale == null) {
             $locale = LocaleService::fetchCurrentLocale();
         }
-        $cacheKey = 'translations_' . self::class . '_' . $this->id;
+        $cacheKey = 'translations_'.self::class.'_'.$this->id;
         $translations = Cache::rememberForever($cacheKey, function () {
             return $this->translations()->get()->keyBy(function ($translation) {
-                return $translation->key . '_' . $translation->locale;
+                return $translation->key.'_'.$translation->locale;
             });
         });
-        $translationKey = $key . '_' . $locale;
+        $translationKey = $key.'_'.$locale;
         if (isset($translations[$translationKey])) {
             return $translations[$translationKey]->content;
         }
@@ -72,7 +72,7 @@ trait Translatable
         foreach ($translations as $locale => $content) {
             $this->saveTranslation($key, $locale, $content);
         }
-        Cache::forget('translations_' . self::class . '_' . $this->id);
+        Cache::forget('translations_'.self::class.'_'.$this->id);
     }
 
     public function saveTranslation(string $key, string $locale, string $content)
@@ -92,6 +92,6 @@ trait Translatable
             ]);
         }
 
-        Cache::forget('translations_' . self::class . '_' . $this->id);
+        Cache::forget('translations_'.self::class.'_'.$this->id);
     }
 }
