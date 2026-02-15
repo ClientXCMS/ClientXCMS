@@ -217,16 +217,19 @@ trait SectionFieldPresets
                 "testimonial{$i}_text",
                 "theme::sections.testimonials.config.testimonial{$i}_text",
                 rows: 3,
+                default: __('theme::sections.testimonials.testimonial_'.$i.'_text'),
             );
 
             $fields[] = SectionField::text(
                 "testimonial{$i}_author",
                 "theme::sections.testimonials.config.testimonial{$i}_author",
+                default: __('theme::sections.testimonials.testimonial_'.$i.'_author'),
             );
 
             $fields[] = SectionField::text(
                 "testimonial{$i}_role",
                 "theme::sections.testimonials.config.testimonial{$i}_role",
+                default: __('theme::sections.testimonials.testimonial_'.$i.'_role'),
             );
         }
 
