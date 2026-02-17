@@ -118,6 +118,12 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
             </a>
             @endif
 
+            @if ($extension->isInstalled() && !$extension->isEnabled())
+            <button type="button" class="ajax-action-btn w-full btn btn-danger btn-sm flex items-center justify-center gap-1" data-action="uninstall" data-type="{{ $extension->type() }}" data-uuid="{{ $extension->uuid }}">
+                <i class="bi bi-trash"></i>{{ __('extensions.settings.uninstall') }}
+            </button>
+            @endif
+
             @if (isset($extension->api['route']))
             <a class="w-full btn btn-secondary btn-sm flex items-center justify-center gap-1" href="{{ $extension->api['route'] }}" target="_blank">
                 <i class="bi bi-box-arrow-up-right"></i>{{ __('global.details') }}

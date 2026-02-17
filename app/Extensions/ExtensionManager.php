@@ -332,6 +332,29 @@ class ExtensionManager extends ExtensionCollectionsManager
         }
     }
 
+    public function uninstall(string $type, string $extension): void
+    {
+        $extensions = self::readExtensionJson();
+
+        // Remove the entry from extensions.json
+        $extensions[$type] = collect($extensions[$type] ?? [])->filter(function ($item) use ($extension) {
+            return $item['uuid'] !== $extension;
+        })->values()->toArray();
+
+        self::writeExtensionJson($extensions);
+
+        // Determine the physical folder path based on type
+        if ($type === 'themes') {
+            $folderPath = base_path('resources/themes/'.$extension);
+        } else {
+            $folderPath = base_path($type.'/'.$extension);
+        }
+
+        if ($this->files->isDirectory($folderPath)) {
+            $this->files->deleteDirectory($folderPath);
+        }
+    }
+
     public function disable(string $type, string $extension)
     {
         $extensions = self::readExtensionJson();

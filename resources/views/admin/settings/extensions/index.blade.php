@@ -297,7 +297,8 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
                 enable: '{{ route("admin.settings.extensions.enable", ["TYPE", "UUID"]) }}',
                 disable: '{{ route("admin.settings.extensions.disable", ["TYPE", "UUID"]) }}',
                 update: '{{ route("admin.settings.extensions.update", ["TYPE", "UUID"]) }}',
-                bulk: '{{ route("admin.settings.extensions.bulk") }}'
+                bulk: '{{ route("admin.settings.extensions.bulk") }}',
+                uninstall: '{{ route("admin.settings.extensions.uninstall", ["TYPE", "UUID"]) }}'
             },
             translations: {
                 processing: '{{ __("extensions.settings.processing") }}',
