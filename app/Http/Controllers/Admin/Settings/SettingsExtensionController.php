@@ -131,7 +131,9 @@ class SettingsExtensionController
         try {
             app('extension')->uninstall($type, $extension);
         } catch (\Exception $e) {
-            return $this->respondWithError($e->getMessage());
+            \Log::error('Extension uninstall failed', ['extension' => $extension, 'type' => $type, 'error' => $e->getMessage()]);
+
+            return $this->respondWithError(__('extensions.flash.uninstall_failed'));
         }
         \Artisan::call('cache:clear');
         \Artisan::call('view:clear');
