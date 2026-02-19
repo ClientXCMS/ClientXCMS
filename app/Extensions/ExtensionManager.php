@@ -214,6 +214,16 @@ class ExtensionManager extends ExtensionCollectionsManager
         return in_array($uuid, $extensions);
     }
 
+    public function extensionIsEnabledForType(string $type, string $uuid): bool
+    {
+        $extensions = self::readExtensionJson();
+        $entry = collect($extensions[$type] ?? [])->first(function ($item) use ($uuid) {
+            return $item['uuid'] === $uuid;
+        });
+
+        return $entry !== null && ($entry['enabled'] ?? false);
+    }
+
     public function getVersion(string $uuid): ?string
     {
         $extensions = $this->fetchInstalledExtensions();
@@ -334,24 +344,52 @@ class ExtensionManager extends ExtensionCollectionsManager
 
     public function uninstall(string $type, string $extension): void
     {
+        $this->validateExtensionIdentifier($extension);
+
         $extensions = self::readExtensionJson();
 
-        // Remove the entry from extensions.json
+        // Verify the extension exists in the registry before proceeding
+        $exists = collect($extensions[$type] ?? [])->contains('uuid', $extension);
+        if (! $exists) {
+            throw new ExtensionException('Extension not found in registry');
+        }
+
+        // Determine the physical folder path based on type
+        $folderPath = $this->getExtensionPath($type, $extension);
+
+        // Delete the physical directory first (before updating registry)
+        if ($this->files->isDirectory($folderPath)) {
+            if (! $this->files->deleteDirectory($folderPath)) {
+                throw new ExtensionException('Unable to delete extension directory');
+            }
+        }
+
+        // Remove the entry from extensions.json only after successful deletion
         $extensions[$type] = collect($extensions[$type] ?? [])->filter(function ($item) use ($extension) {
             return $item['uuid'] !== $extension;
         })->values()->toArray();
 
         self::writeExtensionJson($extensions);
+    }
 
-        // Determine the physical folder path based on type
+    public function getExtensionPath(string $type, string $extension): string
+    {
         if ($type === 'themes') {
-            $folderPath = base_path('resources/themes/'.$extension);
-        } else {
-            $folderPath = base_path($type.'/'.$extension);
+            return base_path('resources/themes/'.$extension);
         }
 
-        if ($this->files->isDirectory($folderPath)) {
-            $this->files->deleteDirectory($folderPath);
+        return base_path($type.'/'.$extension);
+    }
+
+    public function getMigrationPath(string $type, string $extension): string
+    {
+        return $type.'/'.$extension.'/database/migrations';
+    }
+
+    private function validateExtensionIdentifier(string $extension): void
+    {
+        if (! preg_match('/^[a-zA-Z0-9_-]+$/', $extension)) {
+            throw new ExtensionException('Invalid extension identifier');
         }
     }
 

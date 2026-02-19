@@ -125,10 +125,17 @@ class SettingsExtensionController
         if (! in_array($type, ['modules', 'addons', 'themes', 'email_templates', 'invoice_templates'])) {
             abort(404);
         }
-        if (app('extension')->extensionIsEnabled($extension)) {
+        if (app('extension')->extensionIsEnabledForType($type, $extension)) {
             return $this->respondWithError(__('extensions.flash.uninstall_must_disable_first'));
         }
         try {
+            // Rollback migrations before deleting extension files
+            if (in_array($type, ['modules', 'addons'])) {
+                $migrationPath = app('extension')->getMigrationPath($type, $extension);
+                if (is_dir(base_path($migrationPath))) {
+                    \Artisan::call('migrate:rollback', ['--force' => true, '--path' => $migrationPath]);
+                }
+            }
             app('extension')->uninstall($type, $extension);
         } catch (\Exception $e) {
             return $this->respondWithError($e->getMessage());
@@ -136,7 +143,7 @@ class SettingsExtensionController
         \Artisan::call('cache:clear');
         \Artisan::call('view:clear');
         \Artisan::call('config:clear');
-        ActionLog::log(ActionLog::EXTENSION_DISABLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type, 'action' => 'uninstall']);
+        ActionLog::log(ActionLog::EXTENSION_UNINSTALLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
 
         return $this->respondWithSuccess(__('extensions.flash.uninstalled'));
     }
