@@ -129,13 +129,6 @@ class SettingsExtensionController
             return $this->respondWithError(__('extensions.flash.uninstall_must_disable_first'));
         }
         try {
-            // Rollback migrations before deleting extension files
-            if (in_array($type, ['modules', 'addons'])) {
-                $migrationPath = app('extension')->getMigrationPath($type, $extension);
-                if (is_dir(base_path($migrationPath))) {
-                    \Artisan::call('migrate:rollback', ['--force' => true, '--path' => $migrationPath]);
-                }
-            }
             app('extension')->uninstall($type, $extension);
         } catch (\Exception $e) {
             return $this->respondWithError($e->getMessage());
