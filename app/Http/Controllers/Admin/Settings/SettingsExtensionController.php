@@ -118,6 +118,31 @@ class SettingsExtensionController
         return response()->json(['success' => __('extensions.flash.updated')]);
     }
 
+    public function uninstall(string $type, string $extension)
+    {
+        staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
+
+        if (! in_array($type, ['modules', 'addons', 'themes', 'email_templates', 'invoice_templates'])) {
+            abort(404);
+        }
+        if (app('extension')->extensionIsEnabledForType($type, $extension)) {
+            return $this->respondWithError(__('extensions.flash.uninstall_must_disable_first'));
+        }
+        try {
+            app('extension')->uninstall($type, $extension);
+        } catch (\Exception $e) {
+            \Log::error('Extension uninstall failed', ['extension' => $extension, 'type' => $type, 'error' => $e->getMessage()]);
+
+            return $this->respondWithError(__('extensions.flash.uninstall_failed'));
+        }
+        \Artisan::call('cache:clear');
+        \Artisan::call('view:clear');
+        \Artisan::call('config:clear');
+        ActionLog::log(ActionLog::EXTENSION_UNINSTALLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
+
+        return $this->respondWithSuccess(__('extensions.flash.uninstalled'));
+    }
+
     public function bulkAction(\Illuminate\Http\Request $request)
     {
         staff_aborts_permission(Permission::MANAGE_EXTENSIONS);

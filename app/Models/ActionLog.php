@@ -100,6 +100,8 @@ class ActionLog extends Model
 
     const EXTENSION_UPDATED = 'extension_updated';
 
+    const EXTENSION_UNINSTALLED = 'extension_uninstalled';
+
     const THEME_CHANGED = 'theme_changed';
 
     const BALANCE_CHANGED = 'balance_changed';
@@ -137,6 +139,7 @@ class ActionLog extends Model
         self::EXTENSION_DISABLED,
         self::EXTENSION_INSTALLED,
         self::EXTENSION_UPDATED,
+        self::EXTENSION_UNINSTALLED,
         self::THEME_CHANGED,
         self::NEW_LOGIN,
         self::BALANCE_CHANGED,
@@ -229,6 +232,8 @@ class ActionLog extends Model
                 return 'bi bi-box-arrow-down';
             case self::EXTENSION_INSTALLED:
                 return 'bi bi-box-arrow-in-down';
+            case self::EXTENSION_UNINSTALLED:
+                return 'bi bi-trash';
             case self::BALANCE_CHANGED:
                 return 'bi bi-currency-dollar';
             case self::THEME_CHANGED:
