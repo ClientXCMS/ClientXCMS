@@ -16,6 +16,7 @@
  *
  * Year: 2025
  */
+
 use App\Http\Controllers\Admin\Billing\InvoiceController;
 use App\Http\Controllers\Admin\Billing\SubscriptionController;
 use App\Http\Controllers\Admin\Core\DashboardController;
@@ -26,6 +27,7 @@ Route::get('/earn', [DashboardController::class, 'earn'])->name('earn')->middlew
 Route::resource('/invoices', InvoiceController::class)->names('invoices')->except('edit');
 Route::get('/invoices/{invoice}/notify', [InvoiceController::class, 'notify'])->name('invoices.notify');
 Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
+Route::get('/invoices/{invoice}/regenerate', [InvoiceController::class, 'regeneratePdf'])->name('invoices.regenerate_pdf');
 Route::post('/invoices/{invoice}/draft', [InvoiceController::class, 'draft'])->name('invoices.draft');
 Route::post('/invoices/{invoice}/validate', [InvoiceController::class, 'validateInvoice'])->name('invoices.validate');
 Route::post('/invoices/{invoice}/edit', [InvoiceController::class, 'editInvoice'])->name('invoices.edit');
