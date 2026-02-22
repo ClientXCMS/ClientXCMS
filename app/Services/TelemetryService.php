@@ -38,9 +38,6 @@ class TelemetryService
      */
     public function sendTelemetry(): bool
     {
-        if (env('TELEMETRY_ENABLED', 'true') == 'false') {
-            return true;
-        }
         $response = \Http::post(self::TELEMETRY_ENDPOINT, $this->getTelemetryData());
 
         return $response->successful();
@@ -59,7 +56,6 @@ class TelemetryService
                 return 'cloud';
             }
         } catch (\Exception $e) {
-
         }
         if (str_contains(base_path(), 'var/www')) {
             return 'vps';
@@ -141,8 +137,11 @@ class TelemetryService
     {
         try {
             $license = app('license')->getLicense();
+            if ($license->get('supportExpiration') && $license->get('supportExpiration') > now()->toIso8601String()) {
+                return 'entreprise';
+            }
 
-            return 'entreprise';
+            return 'community';
         } catch (\Exception $e) {
             return 'inactive';
         }

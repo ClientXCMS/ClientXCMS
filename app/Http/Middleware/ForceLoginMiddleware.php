@@ -50,6 +50,8 @@ class ForceLoginMiddleware
             'password/reset*',
             'password/email',
             'licensing/return',
+            'gateways/**',
+            'source/gateway/**',
         ];
     }
 }
