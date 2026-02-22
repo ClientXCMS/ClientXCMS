@@ -85,7 +85,7 @@ class ThemeManager
     {
         $enabledLocales = self::getEnabledLocales();
         foreach ($enabledLocales as $locale) {
-            Cache::forget(self::CACHE_KEY_PREFIX.'_'.$locale);
+            Cache::forget(self::CACHE_KEY_PREFIX . '_' . $locale);
         }
         Cache::forget(self::CACHE_KEY_PREFIX);
     }
@@ -130,23 +130,6 @@ class ThemeManager
             return $item->uuid == $theme;
         });
         Setting::updateSettings(['theme' => $theme]);
-        $sections1 = $this->fetchThemeSection($oldTheme);
-        $sections2 = $this->fetchThemeSection($this->theme);
-        $existing = collect($sections1)->pluck('uuid')->intersect(collect($sections2)->pluck('uuid'));
-        foreach ($existing as $uuid) {
-            $sections = Section::where('uuid', $uuid)->get();
-            foreach ($sections as $section) {
-                $section->theme_uuid = $this->theme->uuid;
-                $section->save();
-                if (File::exists($oldTheme->path.'/views/sections_copy/'.$section->id.'-'.$section->uuid.'.blade.php')) {
-                    try {
-                        File::copy($oldTheme->path.'/views/sections_copy/'.$section->id.'-'.$section->uuid.'.blade.php', $this->theme->path.'/views/sections_copy/'.$section->id.'-'.$section->uuid.'.blade.php');
-                    } catch (\Exception $e) {
-                        // do nothing
-                    }
-                }
-            }
-        }
         $this->createAssetsLink($theme);
     }
 
@@ -164,12 +147,12 @@ class ThemeManager
 
     public function themesPath(string $path = ''): string
     {
-        return $this->themesPath.$path;
+        return $this->themesPath . $path;
     }
 
     public function themesPublicPath(string $path = ''): string
     {
-        return $this->themesPublicPath.$path;
+        return $this->themesPublicPath . $path;
     }
 
     public function getSocialsNetworks()
@@ -212,7 +195,7 @@ class ThemeManager
             return collect();
         }
         $support = $this->getTheme()->supportOption('menu_dropdown');
-        $items = $this->getSetting()[$type.'_links'] ?? collect();
+        $items = $this->getSetting()[$type . '_links'] ?? collect();
 
         return $items->filter(function (MenuLink $item) use ($support) {
             return $item->canShowed($support);
@@ -246,12 +229,12 @@ class ThemeManager
     public function getSetting()
     {
         $locale = app()->getLocale();
-        $cacheKey = self::CACHE_KEY_PREFIX.'_'.$locale;
+        $cacheKey = self::CACHE_KEY_PREFIX . '_' . $locale;
 
         return Cache::remember($cacheKey, 60 * 60 * 24 * 7, function () {
             $types = \App\Models\Personalization\MenuLink::pluck('type')->unique()->toArray();
             $links = collect($types)->mapWithKeys(function ($type) {
-                return [$type.'_links' => MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get()];
+                return [$type . '_links' => MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get()];
             });
 
             return $links->merge([
@@ -269,7 +252,7 @@ class ThemeManager
 
     public function themeExists(string $theme): bool
     {
-        return file_exists($this->themesPath.$theme);
+        return file_exists($this->themesPath . $theme);
     }
 
     public function publicPath(string $path = '', ?string $theme = null): ?string
@@ -292,14 +275,14 @@ class ThemeManager
             return;
         }
         foreach (File::directories($this->themesPath) as $theme) {
-            if (File::exists($theme.'/theme.json') && $theme != $this->themesPath.'default') {
-                $this->themes[] = ExtensionThemeDTO::fromJson($theme.'/theme.json');
+            if (File::exists($theme . '/theme.json') && $theme != $this->themesPath . 'default') {
+                $this->themes[] = ExtensionThemeDTO::fromJson($theme . '/theme.json');
             }
         }
-        if (! is_dir($this->themesPath.'/default')) {
+        if (! is_dir($this->themesPath . '/default')) {
             throw new \Exception('Default theme is missing');
         }
-        array_unshift($this->themes, ExtensionThemeDTO::fromJson($this->themesPath.'/default/theme.json'));
+        array_unshift($this->themes, ExtensionThemeDTO::fromJson($this->themesPath . '/default/theme.json'));
         if ($this->theme == null) {
             $currentTheme = \setting('theme', 'default');
             if ($currentTheme && ! empty($this->themes)) {
@@ -347,7 +330,7 @@ class ThemeManager
         ];
         $sections = Section::orderBy('order')->get();
         foreach (Group::getAvailable()->get() as $group) {
-            $pages['group_'.$group->slug] = [
+            $pages['group_' . $group->slug] = [
                 'title' => __('personalization.sections.pages.page_group', ['name' => $group->name]),
                 'url' => $group->route(false),
                 'icon' => 'bi bi-boxes',
@@ -400,7 +383,7 @@ class ThemeManager
 
     public static function getColorsArray()
     {
-        $file = storage_path('app'.DIRECTORY_SEPARATOR.'theme.json');
+        $file = storage_path('app' . DIRECTORY_SEPARATOR . 'theme.json');
         if (file_exists($file)) {
             $theme = json_decode(file_get_contents($file), true);
         } else {

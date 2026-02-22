@@ -102,10 +102,8 @@ class RegisteredUserController extends Controller
             $user->attachMetadata('origin_url', str_replace(url('/'), '', $request->get('origin')));
         }
 
-        // Save "How did you find us" origin source
         if ($request->filled('origin_source')) {
             $originValue = $request->origin_source;
-            // If "Other" is selected and a custom value is provided, use the custom value
             if (strtolower($originValue) === 'autre' || strtolower($originValue) === 'other') {
                 if ($request->filled('origin_other')) {
                     $originValue = $request->origin_other;
