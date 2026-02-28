@@ -49,7 +49,7 @@ class TicketControllerTest extends TestCase
     {
         SupportTicket::factory()->create(['status' => SupportTicket::STATUS_OPEN]);
         SupportTicket::factory()->create(['status' => SupportTicket::STATUS_CLOSED]);
-        
+
         $response = $this->performAction('GET', self::API_URL.'?filter[status]=open', [self::ABILITY_INDEX]);
         $response->assertStatus(200);
         $this->assertCount(1, $response->json('data'));
@@ -59,7 +59,7 @@ class TicketControllerTest extends TestCase
     {
         SupportTicket::factory()->create(['priority' => 'high']);
         SupportTicket::factory()->create(['priority' => 'low']);
-        
+
         $response = $this->performAction('GET', self::API_URL.'?filter[priority]=high', [self::ABILITY_INDEX]);
         $response->assertStatus(200);
         $this->assertCount(1, $response->json('data'));
@@ -80,7 +80,7 @@ class TicketControllerTest extends TestCase
         $this->seed(StoreSeeder::class);
         $department = SupportDepartment::factory()->create();
         $customer = Customer::factory()->create();
-        
+
         $response = $this->performAction('POST', self::API_URL, [self::ABILITY_STORE], [
             'department_id' => $department->id,
             'customer_id' => $customer->id,
@@ -106,7 +106,7 @@ class TicketControllerTest extends TestCase
     {
         $ticket = SupportTicket::factory()->create();
         $department = SupportDepartment::factory()->create();
-        
+
         $response = $this->performAction('POST', self::API_URL.'/'.$ticket->id, [self::ABILITY_UPDATE], [
             'department_id' => $department->id,
             'subject' => 'Updated subject',
@@ -119,10 +119,10 @@ class TicketControllerTest extends TestCase
     public function test_api_application_ticket_delete_open_ticket(): void
     {
         $ticket = SupportTicket::factory()->create(['status' => SupportTicket::STATUS_OPEN]);
-        
+
         $response = $this->performAction('DELETE', self::API_URL.'/'.$ticket->id, [self::ABILITY_DELETE]);
         $response->assertStatus(200);
-        
+
         // Open ticket should be closed, not deleted
         $ticket->refresh();
         $this->assertEquals(SupportTicket::STATUS_CLOSED, $ticket->status);
@@ -131,7 +131,7 @@ class TicketControllerTest extends TestCase
     public function test_api_application_ticket_delete_closed_ticket(): void
     {
         $ticket = SupportTicket::factory()->create(['status' => SupportTicket::STATUS_CLOSED]);
-        
+
         $response = $this->performAction('DELETE', self::API_URL.'/'.$ticket->id, [self::ABILITY_DELETE]);
         $response->assertStatus(200);
         $this->assertSoftDeleted('support_tickets', ['id' => $ticket->id]);
@@ -140,7 +140,7 @@ class TicketControllerTest extends TestCase
     public function test_api_application_ticket_reply(): void
     {
         $ticket = SupportTicket::factory()->create();
-        
+
         $response = $this->performAction('POST', self::API_URL.'/'.$ticket->id.'/reply', [self::ABILITY_REPLY], [
             'content' => 'This is a reply message to the ticket',
         ]);
@@ -154,12 +154,12 @@ class TicketControllerTest extends TestCase
     public function test_api_application_ticket_close(): void
     {
         $ticket = SupportTicket::factory()->create(['status' => SupportTicket::STATUS_OPEN]);
-        
+
         $response = $this->performAction('POST', self::API_URL.'/'.$ticket->id.'/close', [self::ABILITY_CLOSE], [
             'reason' => 'Issue resolved',
         ]);
         $response->assertStatus(200);
-        
+
         $ticket->refresh();
         $this->assertEquals(SupportTicket::STATUS_CLOSED, $ticket->status);
         $this->assertEquals('Issue resolved', $ticket->close_reason);
@@ -168,7 +168,7 @@ class TicketControllerTest extends TestCase
     public function test_api_application_ticket_close_already_closed(): void
     {
         $ticket = SupportTicket::factory()->create(['status' => SupportTicket::STATUS_CLOSED]);
-        
+
         $response = $this->performAction('POST', self::API_URL.'/'.$ticket->id.'/close', [self::ABILITY_CLOSE]);
         $response->assertStatus(400);
     }
@@ -176,10 +176,10 @@ class TicketControllerTest extends TestCase
     public function test_api_application_ticket_reopen(): void
     {
         $ticket = SupportTicket::factory()->create(['status' => SupportTicket::STATUS_CLOSED]);
-        
+
         $response = $this->performAction('POST', self::API_URL.'/'.$ticket->id.'/reopen', [self::ABILITY_REOPEN]);
         $response->assertStatus(200);
-        
+
         $ticket->refresh();
         $this->assertEquals(SupportTicket::STATUS_OPEN, $ticket->status);
     }
@@ -187,7 +187,7 @@ class TicketControllerTest extends TestCase
     public function test_api_application_ticket_reopen_not_closed(): void
     {
         $ticket = SupportTicket::factory()->create(['status' => SupportTicket::STATUS_OPEN]);
-        
+
         $response = $this->performAction('POST', self::API_URL.'/'.$ticket->id.'/reopen', [self::ABILITY_REOPEN]);
         $response->assertStatus(400);
     }

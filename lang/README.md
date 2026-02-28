@@ -67,6 +67,3 @@ Puedes participar en la mejora de las traducciones:
 * Solicitando acceso a través de nuestro sitio web para unirte a nuestra plataforma colaborativa de traducción.
 * Contribuyendo directamente en GitHub enviando **pull requests** con correcciones o propuestas.
 
----
-
-Veux-tu que je te génère aussi une **version compacte** (par exemple en tableau FR/EN/ES) pour que ce soit plus facile à intégrer dans la doc ?

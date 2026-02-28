@@ -9,14 +9,13 @@ use Carbon\Carbon;
 use Database\Seeders\EmailTemplateSeeder;
 use Database\Seeders\GatewaySeeder;
 use Database\Seeders\StoreSeeder;
-use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class ServiceTest extends TestCase
 {
-
     use RefreshDatabase;
-    
+
     public function test_renew_simple_service_if_active()
     {
         $this->seed(StoreSeeder::class);
@@ -190,7 +189,7 @@ class ServiceTest extends TestCase
         $service->status = Service::STATUS_CANCELLED;
         $service->save();
         $this->assertFalse($service->canRenew());
-        
+
         // Test billing types
         $service->status = Service::STATUS_ACTIVE;
         $service->billing = 'free';

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,6 +17,7 @@
  * Year: 2025
  */
 
+use App\Services\Core\LocaleService;
 use App\Services\SettingsService;
 use App\Services\Store\CurrencyService;
 
@@ -150,7 +152,6 @@ if (! function_exists('format_bytes')) {
 
         return $bytes;
     }
-
 }
 if (! function_exists('currency')) {
     function currency(): string
@@ -206,7 +207,7 @@ if (! function_exists('is_subroute')) {
         if (is_array($route)) {
             return in_array(request()->path(), $route);
         }
-        if ($route instanceof \App\Models\Personalization\MenuLink){
+        if ($route instanceof \App\Models\Personalization\MenuLink) {
             $route = $route->trans('url');
         }
         if ($route == '/' || $route == '/client') {
@@ -306,9 +307,72 @@ if (! function_exists('render_theme_sections')) {
             $url = '/'.$url;
         }
 
-        return collect(app('theme')->getSectionsForUrl($url))->reduce(function (string $html, \App\Models\Personalization\Section $section) {
-            return $html.$section->toDTO()->render();
+        $themeManager = app('theme');
+
+        return collect($themeManager->getSectionsForUrl($url))->reduce(function (string $html, \App\Models\Personalization\Section $section) use ($themeManager) {
+            try {
+                $themeManager->setCurrentRenderingSection($section);
+                $rendered = $section->toDTO()->render();
+            } catch (\Throwable $e) {
+                $rendered = '';
+            } finally {
+                $themeManager->setCurrentRenderingSection(null);
+            }
+
+            return $html.$rendered;
         }, '');
+    }
+}
+
+if (! function_exists('section_config')) {
+    /**
+     * Get a configuration value for the current rendering section
+     *
+     * @param  string  $key  The configuration key
+     * @param  mixed  $default  Default value if not configured
+     */
+    function section_config(string $key, mixed $default = null): mixed
+    {
+        try {
+            $section = app('theme')->getCurrentRenderingSection();
+
+            if (! $section) {
+                return $default;
+            }
+
+            $fieldDef = $section->getFieldDefinition($key);
+            $fieldDefault = $fieldDef['default'] ?? $default;
+
+            return $section->getSetting($key, $fieldDefault);
+        } catch (\Exception $e) {
+            return $default;
+        }
+    }
+}
+
+if (! function_exists('section_config_all')) {
+    /**
+     * Get all configuration values for the current rendering section
+     */
+    function section_config_all(): array
+    {
+        $section = app('theme')->getCurrentRenderingSection();
+
+        if (! $section) {
+            return [];
+        }
+
+        $fields = $section->getConfigurableFields();
+        $config = [];
+
+        foreach ($fields as $field) {
+            $config[$field['key']] = $section->getSetting(
+                $field['key'],
+                $field['default'] ?? null
+            );
+        }
+
+        return $config;
     }
 }
 
@@ -348,51 +412,78 @@ if (! function_exists('generate_uuid')) {
         if ($class::where('uuid', $uuid)->exists()) {
             return generate_uuid($class);
         }
+
         return $uuid;
     }
 }
 
+if (! function_exists('dangerous_content_patterns')) {
+    /**
+     * Centralized list of regex patterns matching dangerous Blade/PHP
+     * constructs that must never appear in user-editable content
+     * (sections, email templates, etc.).
+     *
+     * @return array<string> PCRE patterns
+     */
+    function dangerous_content_patterns(): array
+    {
+        return [
+            '/<\?(?:php|=)?/i',
+            '/\?>/i',
+            '/@php\b/i',
+            '/@endphp\b/i',
+            '/\{\!\!.*?\!\!\}/s',
+            '/@(include|extends|component|each|includeIf|includeWhen|includeFirst)\s*\(/i',
+            '/@(yield|section|stack|push|prepend)\s*\(/i',
+        ];
+    }
+}
+
 if (! function_exists('sanitize_content')) {
+    /**
+     * Strip dangerous Blade/PHP constructs from user-editable content.
+     * Each pattern is replaced by an empty string (removal), preserving
+     * the rest of the content intact.
+     */
     function sanitize_content(string $content): string
     {
-        if (str_contains($content, '%%')) {
-            $content = str_replace('%%', '%', $content);
+        foreach (dangerous_content_patterns() as $pattern) {
+            $content = preg_replace($pattern, '', $content);
         }
 
-        $badPatterns = [
-            '/<\?(?:php|=)?/i',
-            '/@php\b/i',
-            '/\{\!\!.*?\!\!\}/s',
-            '/@(include|extends|component|each|includeIf|includeWhen)\s*\(/i',
-        ];
+        return $content;
+    }
+}
 
-        foreach ($badPatterns as $pattern) {
+if (! function_exists('current_locale')) {
+    function current_locale(): string
+    {
+        return app(LocaleService::class)->fetchCurrentLocale();
+    }
+}
+if (! function_exists('has_dangerous_content')) {
+    function has_dangerous_content(string $content): bool
+    {
+        foreach (dangerous_content_patterns() as $pattern) {
             if (preg_match($pattern, $content)) {
-                $content = preg_replace_callback($pattern, function($m){
-                    return '&lt;?';
-                }, $content);
+                return true;
             }
         }
-        return $content;
+
+        return false;
     }
 }
 
 if (! function_exists('is_sanitized')) {
     function is_sanitized(string $content): bool
     {
-        $badPatterns = [
-            '/<\?(?:php|=)?/i',
-            '/@php\b/i',
-            '/\{\!\!.*?\!\!\}/s',
-            '/@(include|extends|component|each|includeIf|includeWhen)\s*\(/i',
-        ];
-
-        foreach ($badPatterns as $pattern) {
+        foreach (dangerous_content_patterns() as $pattern) {
             if (preg_match($pattern, $content)) {
-                return false;
+                return true;
             }
         }
-        return true;
+
+        return false;
     }
 }
 if (! function_exists('get_group_icon')) {
@@ -402,34 +493,38 @@ if (! function_exists('get_group_icon')) {
         $name = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name);
         $icon = 'bi bi-cloud text-xl';
         $map = [
-            'vps'          => 'bi bi-server',
-            'hosting'      => 'bi bi-globe',
-            'hebergement'  => 'bi bi-globe',
-            'dedicated'    => 'bi bi-hdd-rack',
-            'dedie'        => 'bi bi-hdd-rack',
-            'domain'       => 'bi bi-globe2',
-            'domaine'      => 'bi bi-globe2',
-            'fivem'        => 'bi bi-controller',
-            'gmod'         => 'bi bi-joystick',
-            'garry'        => 'bi bi-joystick',
-            'ark'          => 'bi bi-rocket-takeoff',
-            'minecraft'    => 'bi bi-box',
-            'rust'         => 'bi bi-fire',
-            'valheim'      => 'bi bi-shield',
-            'palworld'     => 'bi bi-stars',
-            'cs2'          => 'bi bi-bullseye',
-            'csgo'         => 'bi bi-bullseye',
-            'dayz'         => 'bi bi-compass',
-            'terraria'     => 'bi bi-tree',
+            'vps' => 'bi bi-server',
+            'hosting' => 'bi bi-globe',
+            'hebergement' => 'bi bi-globe',
+            'dedicated' => 'bi bi-hdd-rack',
+            'dedie' => 'bi bi-hdd-rack',
+            'domain' => 'bi bi-globe2',
+            'domaine' => 'bi bi-globe2',
+            'fivem' => 'bi bi-controller',
+            'gmod' => 'bi bi-joystick',
+            'garry' => 'bi bi-joystick',
+            'ark' => 'bi bi-rocket-takeoff',
+            'minecraft' => 'bi bi-box',
+            'rust' => 'bi bi-fire',
+            'valheim' => 'bi bi-shield',
+            'palworld' => 'bi bi-stars',
+            'cs2' => 'bi bi-bullseye',
+            'csgo' => 'bi bi-bullseye',
+            'dayz' => 'bi bi-compass',
+            'terraria' => 'bi bi-tree',
             'satisfactory' => 'bi bi-gear',
         ];
         foreach ($map as $key => $cls) {
-            if (str_contains($name, $key)) { $icon = $cls.' text-xl'; break; }
+            if (str_contains($name, $key)) {
+                $icon = $cls.' text-xl';
+                break;
+            }
         }
 
         if ($icon === 'bi bi-cloud text-xl' && preg_match('/\bmc\b/', $name)) {
             $icon = 'bi bi-box text-xl';
         }
+
         return $icon;
     }
 }

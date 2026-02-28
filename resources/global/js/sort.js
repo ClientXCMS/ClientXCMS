@@ -2,11 +2,14 @@ import Sortable from 'sortablejs';
 const SortableMixin = Base =>
     class extends Base {
         connectedCallback() {
-            this.saveButton = document.querySelector(this.dataset.button);
-            if (this.saveButton != null) {
-                this.saveButton.addEventListener('click', this.save.bind(this));
+            if (this.dataset.button) {
+                this.saveButton = document.querySelector(this.dataset.button);
+                if (this.saveButton != null) {
+                    this.saveButton.addEventListener('click', this.save.bind(this));
+                }
             }
             this.saveUrl = this.dataset.url;
+            this.autosave = this.dataset.autosave !== undefined;
             if (this.dataset.form !== undefined) {
                 this.form = document.querySelector(this.dataset.form);
             }
@@ -15,7 +18,7 @@ const SortableMixin = Base =>
         }
 
         initSortable() {
-            this.sortable = Sortable.create(this, {
+            const options = {
                 animation: 150,
                 group: {
                     name: 'item',
@@ -24,60 +27,78 @@ const SortableMixin = Base =>
                     },
                 },
                 onEnd: (evt) => {
-                    if (evt.from.tagName == 'OL'){
+                    if (evt.from.tagName == 'OL') {
                         evt.item.childNodes[1].classList.remove('ml-4');
                     }
+                    if (this.autosave) {
+                        this.save();
+                    }
                 }
-            });
+            };
+
+            // Support optional drag handle via data-handle attribute
+            if (this.dataset.handle) {
+                options.handle = this.dataset.handle;
+            }
+
+            this.sortable = Sortable.create(this, options);
+        }
+
+        serializeNode(node) {
+            const nested = node.querySelector(':scope > ul, :scope > ol');
+            if (node.classList.contains('sortable-parent') && nested !== null && nested.children.length > 0) {
+                return {
+                    id: node.id,
+                    children: Array.from(nested.children)
+                        .filter(child => child instanceof HTMLElement)
+                        .map(child => this.serializeNode(child))
+                };
+            }
+            return node.id;
         }
 
         serialize(sortableEl = this.sortable.el) {
             return [].slice.call(sortableEl.children)
                 .filter(child => child instanceof HTMLElement)
-                .map(child => {
-                    if (child.classList.contains('sortable-parent')) {
-                        const childrens = child.querySelector('ul, ol');
-                        if (childrens !== null && childrens.children.length > 0) {
-                            return {
-                                id: child.id,
-                                children: Array.from(childrens.children).map(child => child.id)
-                            };
-                        }
-                    }
-                    return child.id;
-                });
+                .map(child => this.serializeNode(child));
         }
 
         save() {
             if (this.form !== undefined) {
                 return;
             }
-            const data = new FormData(this.form);
-            data.append('items', JSON.stringify(this.serialize()));
 
-            this.saveButton.disabled = true;
+            if (this.saveButton) {
+                this.saveButton.disabled = true;
+            }
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             fetch(this.saveUrl, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
                 },
                 body: JSON.stringify({ items: this.serialize() })
             })
                 .then(response => response.json())
                 .then(data => {
-                    window.location.reload();
+                    if (!this.autosave) {
+                        window.location.reload();
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                 })
                 .finally(() => {
-                    this.saveButton.disabled = false;
+                    if (this.saveButton) {
+                        this.saveButton.disabled = false;
+                    }
                 });
         }
     };
 
-class SortList extends SortableMixin(HTMLUListElement) {}
+class SortList extends SortableMixin(HTMLUListElement) { }
 customElements.define("sort-list", SortList, { extends: 'ul' });
 
-class SortList2 extends SortableMixin(HTMLOListElement) {}
+class SortList2 extends SortableMixin(HTMLOListElement) { }
 customElements.define("sort-list2", SortList2, { extends: 'ol' });

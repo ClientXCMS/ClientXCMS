@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Http\Controllers\Admin\Security;
 
 use App\Core\License\LicenseGateway;
@@ -27,10 +29,10 @@ class UpdateController
     public function index()
     {
         staff_aborts_permission(Permission::MANAGE_UPDATE);
-        $changelogUrl = LicenseGateway::getDomain() . '/changelogs';
+        $changelogUrl = LicenseGateway::getDomain().'/changelogs';
         $changelog = \Cache::rememberForever('changelogs', function () use ($changelogUrl) {
             try {
-                $response = \Illuminate\Support\Facades\Http::withHeaders([ 'Accept' => 'application/json'])->get($changelogUrl)->throw();
+                $response = \Illuminate\Support\Facades\Http::withHeaders(['Accept' => 'application/json'])->get($changelogUrl)->throw();
 
                 if ($response->successful()) {
                     return $response->object();
@@ -38,6 +40,7 @@ class UpdateController
             } catch (\Exception) {
                 return [];
             }
+
             return [];
         });
         $card = app('settings')->getCards()->firstWhere('uuid', 'security');
@@ -49,6 +52,7 @@ class UpdateController
         \View::share('current_item', $item);
         $currentVersion = AppServiceProvider::VERSION;
         $publishedVersions = collect($changelog)->first();
+
         return view('admin.security.update.index', compact('changelogUrl', 'changelog', 'currentVersion', 'publishedVersions'));
     }
 
@@ -56,9 +60,10 @@ class UpdateController
     {
         staff_aborts_permission(Permission::MANAGE_UPDATE);
         try {
-            (new UpdaterManager())->update('core');
+            (new UpdaterManager)->update('core');
+
             return back()->with('success', __('admin.update.updated_success'));
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
         }
     }
 }

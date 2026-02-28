@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,11 +17,9 @@
  * Year: 2025
  */
 
-
 namespace App\Theme;
 
 use App\DTO\Core\Extensions\ExtensionThemeDTO;
-use App\DTO\Core\Extensions\SectionTypeDTO;
 use App\Models\Admin\Setting;
 use App\Models\Personalization\MenuLink;
 use App\Models\Personalization\Section;
@@ -29,7 +28,6 @@ use App\Models\Store\Group;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
 
 class ThemeManager
 {
@@ -40,6 +38,10 @@ class ThemeManager
     private array $themes;
 
     private string $themesPublicPath;
+
+    private ?Section $currentRenderingSection = null;
+
+    private const CACHE_KEY_PREFIX = 'theme_configuration';
 
     public function __construct()
     {
@@ -53,17 +55,67 @@ class ThemeManager
             if (File::exists($this->themePath('lang'))) {
                 app('translator')->addNamespace('theme', $this->themePath('lang'));
             }
+            $this->registerThemeSeeders();
+            $this->bootTheme();
         }
     }
 
-    public static function clearCache()
+    protected function bootTheme(): void
     {
-        Cache::forget('theme_configuration');
+        $bootFile = $this->themePath('boot.php');
+
+        if ($bootFile && File::exists($bootFile)) {
+            require $bootFile;
+        }
+    }
+
+    protected function registerThemeSeeders(): void
+    {
+        if (! $this->theme || ! $this->theme->hasSeeder()) {
+            return;
+        }
+
+        $seederClass = $this->theme->loadSeeder();
+        if ($seederClass !== null) {
+            app('extension')->addSeeder($seederClass);
+        }
+    }
+
+    public static function clearCache(): void
+    {
+        $enabledLocales = self::getEnabledLocales();
+        foreach ($enabledLocales as $locale) {
+            Cache::forget(self::CACHE_KEY_PREFIX . '_' . $locale);
+        }
+        Cache::forget(self::CACHE_KEY_PREFIX);
+    }
+
+    private static function getEnabledLocales(): array
+    {
+        try {
+            $locales = array_keys(\App\Services\Core\LocaleService::getLocalesNames());
+
+            return array_unique(array_map(function ($locale) {
+                return str_contains($locale, '_') ? explode('_', $locale)[0] : $locale;
+            }, $locales));
+        } catch (\Exception $e) {
+            return ['fr', 'en'];
+        }
+    }
+
+    public function setCurrentRenderingSection(?Section $section): void
+    {
+        $this->currentRenderingSection = $section;
+    }
+
+    public function getCurrentRenderingSection(): ?Section
+    {
+        return $this->currentRenderingSection;
     }
 
     public function hasTheme(): bool
     {
-        return $this->theme !== 'default';
+        return $this->theme !== null && $this->theme->uuid !== 'default';
     }
 
     public function getTheme(): ExtensionThemeDTO
@@ -78,23 +130,6 @@ class ThemeManager
             return $item->uuid == $theme;
         });
         Setting::updateSettings(['theme' => $theme]);
-        $sections1 = $this->fetchThemeSection($oldTheme);
-        $sections2 = $this->fetchThemeSection($this->theme);
-        $existing = collect($sections1)->pluck('uuid')->intersect(collect($sections2)->pluck('uuid'));
-        foreach ($existing as $uuid) {
-            $sections = Section::where('uuid', $uuid)->get();
-            foreach ($sections as $section) {
-                $section->theme_uuid = $this->theme->uuid;
-                $section->save();
-                if (File::exists($oldTheme->path.'/views/sections_copy/'.$section->id.'-'.$section->uuid.'.blade.php')) {
-                    try {
-                        File::copy($oldTheme->path.'/views/sections_copy/'.$section->id.'-'.$section->uuid.'.blade.php', $this->theme->path.'/views/sections_copy/'.$section->id.'-'.$section->uuid.'.blade.php');
-                    } catch (\Exception $e) {
-                        // do nothing
-                    }
-                }
-            }
-        }
         $this->createAssetsLink($theme);
     }
 
@@ -112,12 +147,12 @@ class ThemeManager
 
     public function themesPath(string $path = ''): string
     {
-        return $this->themesPath.$path;
+        return $this->themesPath . $path;
     }
 
     public function themesPublicPath(string $path = ''): string
     {
-        return $this->themesPublicPath.$path;
+        return $this->themesPublicPath . $path;
     }
 
     public function getSocialsNetworks()
@@ -131,6 +166,27 @@ class ThemeManager
     public function getBottomLinks(): \Illuminate\Support\Collection
     {
         return $this->getCustomLinks('bottom');
+    }
+
+    /**
+     * Get bottom menu items that act as footer columns (items with children).
+     * Includes both dropdown items and legacy parent items that have children.
+     */
+    public function getFooterColumns(): Collection
+    {
+        return $this->getBottomLinks()->filter(function (MenuLink $item) {
+            return $item->children && $item->children->isNotEmpty();
+        });
+    }
+
+    /**
+     * Get bottom menu items that act as inline footer links (leaf items, no children).
+     */
+    public function getFooterInlineLinks(): Collection
+    {
+        return $this->getBottomLinks()->filter(function (MenuLink $item) {
+            return $item->link_type !== 'dropdown' && (! $item->children || $item->children->isEmpty());
+        });
     }
 
     public function getCustomLinks(string $type): Collection
@@ -172,17 +228,23 @@ class ThemeManager
 
     public function getSetting()
     {
-        return Cache::remember('theme_configuration', 60 * 60 * 24 * 7, function () {
+        $locale = app()->getLocale();
+        $cacheKey = self::CACHE_KEY_PREFIX . '_' . $locale;
+
+        return Cache::remember($cacheKey, 60 * 60 * 24 * 7, function () {
             $types = \App\Models\Personalization\MenuLink::pluck('type')->unique()->toArray();
             $links = collect($types)->mapWithKeys(function ($type) {
                 return [$type . '_links' => MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get()];
             });
+
             return $links->merge([
-                'socials' => SocialNetwork::all()->where('hidden', false),
+                'socials' => SocialNetwork::where('hidden', false)->orderBy('position')->get(),
                 'sections_pages' => $this->getSectionsPages(),
                 'sections' => Section::orderBy('order')->get(),
-                'sections_html' => Section::orderBy('order')->get()->mapWithKeys(function (Section $item) {
-                    return [$item->path => $item->toDTO()->render(false)];
+                'sections_html' => Section::orderBy('order')->get()->mapWithKeys(function (Section $section) {
+                    $this->setCurrentRenderingSection($section);
+
+                    return [$section->path => $section->toDTO()->render(false)];
                 }),
             ]);
         });
@@ -190,7 +252,7 @@ class ThemeManager
 
     public function themeExists(string $theme): bool
     {
-        return file_exists($this->themesPath.$theme);
+        return file_exists($this->themesPath . $theme);
     }
 
     public function publicPath(string $path = '', ?string $theme = null): ?string
@@ -213,14 +275,14 @@ class ThemeManager
             return;
         }
         foreach (File::directories($this->themesPath) as $theme) {
-            if (File::exists($theme.'/theme.json') && $theme != $this->themesPath.'default') {
-                $this->themes[] = ExtensionThemeDTO::fromJson($theme.'/theme.json');
+            if (File::exists($theme . '/theme.json') && $theme != $this->themesPath . 'default') {
+                $this->themes[] = ExtensionThemeDTO::fromJson($theme . '/theme.json');
             }
         }
-        if (! is_dir($this->themesPath.'/default')) {
+        if (! is_dir($this->themesPath . '/default')) {
             throw new \Exception('Default theme is missing');
         }
-        array_unshift($this->themes, ExtensionThemeDTO::fromJson($this->themesPath.'/default/theme.json'));
+        array_unshift($this->themes, ExtensionThemeDTO::fromJson($this->themesPath . '/default/theme.json'));
         if ($this->theme == null) {
             $currentTheme = \setting('theme', 'default');
             if ($currentTheme && ! empty($this->themes)) {
@@ -268,7 +330,7 @@ class ThemeManager
         ];
         $sections = Section::orderBy('order')->get();
         foreach (Group::getAvailable()->get() as $group) {
-            $pages['group_'.$group->slug] = [
+            $pages['group_' . $group->slug] = [
                 'title' => __('personalization.sections.pages.page_group', ['name' => $group->name]),
                 'url' => $group->route(false),
                 'icon' => 'bi bi-boxes',
@@ -282,15 +344,6 @@ class ThemeManager
         }
 
         return $pages;
-    }
-
-    public function getSectionsTypes()
-    {
-        return Cache::get('sections_types', function () {
-            return collect(Http::get('https://clientxcms.com/api/sections_types')->json('data'))->map(function ($item) {
-                return new SectionTypeDTO($item, $this->getThemeSections());
-            });
-        });
     }
 
     public function getThemeSections(): array
@@ -330,7 +383,7 @@ class ThemeManager
 
     public static function getColorsArray()
     {
-        $file = storage_path('app'.DIRECTORY_SEPARATOR.'theme.json');
+        $file = storage_path('app' . DIRECTORY_SEPARATOR . 'theme.json');
         if (file_exists($file)) {
             $theme = json_decode(file_get_contents($file), true);
         } else {

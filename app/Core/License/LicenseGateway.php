@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,11 +17,9 @@
  * Year: 2025
  */
 
-
 namespace App\Core\License;
 
 use App\Exceptions\LicenseInvalidException;
-use App\Models\Provisioning\Service;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
@@ -89,6 +88,7 @@ class LicenseGateway
             if ($response == null) {
                 throw new LicenseInvalidException('Internal error please contact support');
             }
+
             return json_decode($e->getResponse()->getBody(), true);
         }
 
@@ -123,7 +123,7 @@ class LicenseGateway
     {
         $license = $this->getLicense(setting('app.license.access_token'), true);
         $token = $this->refreshAccessToken(setting('app.license.refresh_token'), $license);
-        $url = $this->apiBaseUrl."/update";
+        $url = $this->apiBaseUrl.'/update';
 
         $headers = [
             'Authorization' => 'Bearer '.$token,
@@ -135,7 +135,7 @@ class LicenseGateway
             'sink' => $resource,
         ];
 
-        return $this->httpClient->request("POST", $url, $options);
+        return $this->httpClient->request('POST', $url, $options);
     }
 
     public function refreshAccessToken(string $refreshToken, ?License $license = null)

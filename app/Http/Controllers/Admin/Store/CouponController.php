@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Admin\Store;
 
@@ -102,7 +102,7 @@ class CouponController extends AbstractCrudController
     public function update(CouponRequest $request, Coupon $coupon)
     {
         $this->checkPermission('update');
-        $keys = ['code', 'type', 'applied_month','customer_id', 'free_setup', 'start_at', 'end_at', 'first_order_only', 'max_uses', 'max_uses_per_customer', 'usages', 'required_products', 'minimum_order_amount', 'is_global'];
+        $keys = ['code', 'type', 'applied_month', 'customer_id', 'free_setup', 'start_at', 'end_at', 'first_order_only', 'max_uses', 'max_uses_per_customer', 'usages', 'required_products', 'minimum_order_amount', 'is_global'];
         $coupon->products_required = $request->input('required_products', []);
         $coupon->save();
         $coupon->update($request->only($keys));

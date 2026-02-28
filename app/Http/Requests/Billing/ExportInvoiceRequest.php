@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,17 +16,18 @@
  *
  * Year: 2025
  */
+
 namespace App\Http\Requests\Billing;
 
 use App\Models\Billing\Invoice;
 use App\Services\InvoiceExporterService;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Response;
 
 /**
  * @OA\Schema(
  *     title="ExportInvoiceRequest",
  *     description="Request body for exporting invoices",
+ *
  *     @OA\Property(
  *         property="format",
  *         type="string",
@@ -47,6 +49,7 @@ use Illuminate\Http\Response;
  *     @OA\Property(
  *         property="status",
  *         type="array",
+ *
  *         @OA\Items(type="string", enum={"paid", "unpaid", "cancelled"}),
  *         description="The status of the invoices to export"
  *     )
@@ -70,13 +73,13 @@ class ExportInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'format' => 'required|string|in:'.join(',', array_keys(InvoiceExporterService::getAvailableFormats())),
+            'format' => 'required|string|in:' . implode(',', array_keys(InvoiceExporterService::getAvailableFormats())),
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date',
-            'status' => 'nullable|array|in:'.implode(',', array_keys($this->getIndexFilters())),
+            'status' => 'nullable|array|in:' . implode(',', array_keys($this->getIndexFilters())),
+            'customer_id' => 'nullable|integer|exists:customers,id',
         ];
     }
-
 
     private function getIndexFilters()
     {
@@ -87,16 +90,20 @@ class ExportInvoiceRequest extends FormRequest
     {
         $validatedData = $this->validated();
         $invoices = Invoice::query()
-            ->when($validatedData['date_from'], function ($query) use ($validatedData) {
+            ->when($validatedData['customer_id'] ?? null, function ($query) use ($validatedData) {
+                return $query->where('customer_id', $validatedData['customer_id']);
+            })
+            ->when($validatedData['date_from'] ?? null, function ($query) use ($validatedData) {
                 return $query->where('created_at', '>=', $validatedData['date_from']);
             })
-            ->when($validatedData['date_to'], function ($query) use ($validatedData) {
+            ->when($validatedData['date_to'] ?? null, function ($query) use ($validatedData) {
                 return $query->where('created_at', '<=', $validatedData['date_to']);
             })
-            ->when($validatedData['status'], function ($query) use ($validatedData) {
+            ->when($validatedData['status'] ?? null, function ($query) use ($validatedData) {
                 if (in_array('all', $validatedData['status'])) {
                     return $query;
                 }
+
                 return $query->whereIn('status', $validatedData['status']);
             })
             ->get();
@@ -106,6 +113,5 @@ class ExportInvoiceRequest extends FormRequest
         $filePath = InvoiceExporterService::exportInvoices($invoices, $validatedData['format']);
 
         return response()->download($filePath)->deleteFileAfterSend(true);
-
     }
 }

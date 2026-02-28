@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Traits;
 
@@ -77,6 +77,7 @@ trait HasPaymentMethods
         if ($paymentType === null) {
             throw new WrongPaymentException(__('store.checkout.gateway_not_found'));
         }
+
         return $paymentType->payInvoice($invoice, $sourceDTO);
     }
 
@@ -89,6 +90,7 @@ trait HasPaymentMethods
         if ($source === null) {
             throw new WrongPaymentException(__('store.checkout.payment_method_not_found'));
         }
+
         return $source;
 
     }

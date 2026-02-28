@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\DTO\Core\Extensions;
 
@@ -80,8 +80,31 @@ class ThemeSectionDTO
             if (! view()->exists($path)) {
                 return '';
             }
+
+            return $this->renderIsolated($path);
+        } catch (\Throwable $e) {
+            return '';
+        }
+    }
+
+    private function renderIsolated(string $path): string
+    {
+        $factory = app('view');
+
+        $sectionsRef = new \ReflectionProperty($factory, 'sections');
+        $stackRef = new \ReflectionProperty($factory, 'sectionStack');
+        $renderCountRef = new \ReflectionProperty($factory, 'renderCount');
+        $savedSections = $sectionsRef->getValue($factory);
+        $savedStack = $stackRef->getValue($factory);
+        $savedRenderCount = $renderCountRef->getValue($factory);
+
+        try {
             return view($path, $this->getContextFromUuid())->render();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            $sectionsRef->setValue($factory, $savedSections);
+            $stackRef->setValue($factory, $savedStack);
+            $renderCountRef->setValue($factory, $savedRenderCount);
+
             return '';
         }
     }
@@ -90,9 +113,10 @@ class ThemeSectionDTO
     {
         $path = $this->json['path'];
         $content = File::get(app('view')->getFinder()->find($path));
-        if (!$this->isProtected()) {
+        if (! $this->isProtected()) {
             return sanitize_content($content);
         }
+
         return $content;
     }
 

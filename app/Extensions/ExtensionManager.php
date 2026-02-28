@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Extensions;
 
@@ -55,6 +55,7 @@ class ExtensionManager extends ExtensionCollectionsManager
             if (self::$testExtensions === null) {
                 self::$testExtensions = [];
             }
+
             return self::$testExtensions;
         }
 
@@ -77,6 +78,7 @@ class ExtensionManager extends ExtensionCollectionsManager
     {
         if (app()->environment('testing')) {
             self::$testExtensions = $extensions;
+
             return;
         }
 
@@ -106,6 +108,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         }
         $extensions = self::makeRequest();
         $cache->put('extensions_array', $extensions, now()->addDays(7));
+
         return $extensions;
     }
 
@@ -116,21 +119,23 @@ class ExtensionManager extends ExtensionCollectionsManager
         $items = $this->getAllExtensions();
         $return = [];
         foreach ($groups as $group) {
-            $return[$group['name']] = collect($items)->filter(function (ExtensionDTO $item) use ($group) {
+            $return[$group['name']] = ['items' => collect($items)->filter(function (ExtensionDTO $item) use ($group) {
                 if (! array_key_exists('group_uuid', $item->api)) {
                     return false;
                 }
+
                 return $item->api['group_uuid'] == $group['uuid'];
-            });
+            }), 'icon' => $group['icon']];
         }
-        $return['Un Official'] = collect($items)->filter(function (ExtensionDTO $item) {
+        $return['Un Official'] = ['items' => collect($items)->filter(function (ExtensionDTO $item) {
             return $item->isUnofficial();
-        });
+        }), 'icon' => 'bi bi-star'];
         foreach ($return as $key => $group) {
-            if ($group->isEmpty()) {
+            if ($group['items']->isEmpty()) {
                 unset($return[$key]);
             }
         }
+
         return $return;
     }
 
@@ -140,7 +145,8 @@ class ExtensionManager extends ExtensionCollectionsManager
             return [];
         }
         try {
-            $response = \Http::timeout(10)->get(LicenseGateway::getDomain() . '/api/resources');
+            $response = \Http::timeout(10)->get(LicenseGateway::getDomain().'/api/resources');
+
             return $response->json('data', []);
         } catch (\Exception $e) {
             throw new ExtensionException($e->getMessage());
@@ -169,18 +175,21 @@ class ExtensionManager extends ExtensionCollectionsManager
         $theme = app('theme')->getTheme();
         $enabled = array_merge($enabled, [$theme->uuid]);
         $versions = array_merge($versions, [$theme->version]);
-        if (setting('email_template_name') != null)
+        if (setting('email_template_name') != null) {
             $enabled = array_merge($enabled, [\setting('email_template_name')]);
-        $return = collect($this->fetch()['items'] ?? [])->filter(function(array $extensionDTO) use ($withTheme){
+        }
+        $return = collect($this->fetch()['items'] ?? [])->filter(function (array $extensionDTO) use ($withTheme) {
             $allowedTypes = ['module', 'addon', 'email_template', 'invoice_template'];
             if ($withTheme) {
                 $allowedTypes[] = 'theme';
             }
+
             return in_array($extensionDTO['type'], $allowedTypes);
-        })->map(function ($extension) use ($uuids, $enabled, $versions, $theme) {
+        })->map(function ($extension) use ($uuids, $enabled, $versions) {
             $extension['enabled'] = in_array($extension['uuid'], $enabled);
             $extension['api'] = $extension;
             $extension['version'] = $versions[array_search($extension['uuid'], $uuids)] ?? null;
+
             return ExtensionDTO::fromArray($extension);
         });
         if (! $withUnofficial) {
@@ -205,6 +214,16 @@ class ExtensionManager extends ExtensionCollectionsManager
         return in_array($uuid, $extensions);
     }
 
+    public function extensionIsEnabledForType(string $type, string $uuid): bool
+    {
+        $extensions = self::readExtensionJson();
+        $entry = collect($extensions[$type] ?? [])->first(function ($item) use ($uuid) {
+            return $item['uuid'] === $uuid;
+        });
+
+        return $entry !== null && ($entry['enabled'] ?? false);
+    }
+
     public function getVersion(string $uuid): ?string
     {
         $extensions = $this->fetchInstalledExtensions();
@@ -226,6 +245,7 @@ class ExtensionManager extends ExtensionCollectionsManager
                 });
             }
         }
+
         return $extensions->pluck('uuid')->toArray();
     }
 
@@ -248,9 +268,8 @@ class ExtensionManager extends ExtensionCollectionsManager
         })->toArray();
 
         try {
-            (new UpdaterManager())->update($api['uuid']);
+            (new UpdaterManager)->update($api['uuid']);
             self::writeExtensionJson($extensions);
-
         } catch (\Exception $e) {
             throw new ExtensionException('Error in UpdaterManager: '.$e->getMessage());
         }
@@ -260,7 +279,7 @@ class ExtensionManager extends ExtensionCollectionsManager
     {
         if ($type == 'themes') {
             $file = base_path('resources/themes/'.$extension.'/theme.json');
-        } else if ($type == 'addons' || $type == 'modules') {
+        } elseif ($type == 'addons' || $type == 'modules') {
             $file = base_path($type.'/'.$extension.'/composer.json');
         } else {
             return [];
@@ -268,10 +287,11 @@ class ExtensionManager extends ExtensionCollectionsManager
         if (! file_exists($file)) {
             throw new ExtensionException(__('extensions.flash.composer_not_found'));
         }
-        if ($type == 'themes'){
+        if ($type == 'themes') {
             return [];
         }
         $composerJson = json_decode((new Filesystem)->get($file), true);
+
         return $this->checkPrerequisites($composerJson);
     }
 
@@ -291,11 +311,18 @@ class ExtensionManager extends ExtensionCollectionsManager
             }
             $api = $api->api;
         }
-        if ($type == 'email_templates'){
+        if ($type == 'email_templates') {
             Setting::updateSettings(['email_template_name' => $extension]);
         }
-        if ($type == 'themes'){
+        if ($type == 'themes') {
             app('theme')->setTheme($extension, true);
+            $extensions['themes'] = collect($extensions['themes'] ?? [])->map(function ($item) use ($extension) {
+                if ($item['uuid'] != $extension) {
+                    $item['enabled'] = false;
+                }
+
+                return $item;
+            })->toArray();
         }
         if (collect($extensions[$type] ?? [])->where('uuid', $extension)->isEmpty()) {
             $extensions[$type][] = ['uuid' => $extension, 'version' => $api['version'] ?? 'v1.0', 'type' => $type, 'enabled' => true, 'installed' => true, 'api' => $api];
@@ -315,6 +342,57 @@ class ExtensionManager extends ExtensionCollectionsManager
         }
     }
 
+    public function uninstall(string $type, string $extension): void
+    {
+        $this->validateExtensionIdentifier($extension);
+
+        $extensions = self::readExtensionJson();
+
+        // Verify the extension exists in the registry before proceeding
+        $exists = collect($extensions[$type] ?? [])->contains('uuid', $extension);
+        if (! $exists) {
+            throw new ExtensionException('Extension not found in registry');
+        }
+
+        // Determine the physical folder path based on type
+        $folderPath = $this->getExtensionPath($type, $extension);
+
+        // Delete the physical directory first (before updating registry)
+        if ($this->files->isDirectory($folderPath)) {
+            if (! $this->files->deleteDirectory($folderPath)) {
+                throw new ExtensionException('Unable to delete extension directory');
+            }
+        }
+
+        // Remove the entry from extensions.json only after successful deletion
+        $extensions[$type] = collect($extensions[$type] ?? [])->filter(function ($item) use ($extension) {
+            return $item['uuid'] !== $extension;
+        })->values()->toArray();
+
+        self::writeExtensionJson($extensions);
+    }
+
+    public function getExtensionPath(string $type, string $extension): string
+    {
+        if ($type === 'themes') {
+            return base_path('resources/themes/'.$extension);
+        }
+
+        return base_path($type.'/'.$extension);
+    }
+
+    public function getMigrationPath(string $type, string $extension): string
+    {
+        return $type.'/'.$extension.'/database/migrations';
+    }
+
+    private function validateExtensionIdentifier(string $extension): void
+    {
+        if (! preg_match('/^[a-zA-Z0-9_-]+$/', $extension)) {
+            throw new ExtensionException('Invalid extension identifier');
+        }
+    }
+
     public function disable(string $type, string $extension)
     {
         $extensions = self::readExtensionJson();
@@ -325,7 +403,7 @@ class ExtensionManager extends ExtensionCollectionsManager
 
             return $item;
         })->toArray();
-        if ($type == 'email_templates'){
+        if ($type == 'email_templates') {
             Setting::updateSettings(['email_template_name' => null]);
         }
         try {
@@ -383,6 +461,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         $unofficial = [];
         $unofficial = array_merge($unofficial, $this->scanFolder('modules', 'module', $extensions, $enabled));
         $unofficial = array_merge($unofficial, $this->scanFolder('resources/themes', 'theme', $extensions, $enabled));
+
         return array_merge($unofficial, $this->scanFolder('addons', 'addon', $extensions, $enabled));
     }
 
@@ -426,6 +505,5 @@ class ExtensionManager extends ExtensionCollectionsManager
         }
 
         return $unofficial;
-
     }
 }

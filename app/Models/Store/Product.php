@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Store;
 
@@ -35,13 +35,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @OA\Schema (
  *      schema="ShopProduct",
  *     title="Shop product",
  *     description="Shop product model"
  * )
+ *
  * @property int $id
  * @property string $name
  * @property int $group_id
@@ -64,6 +63,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $pricing_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Personalization\Translation> $translations
  * @property-read int|null $translations_count
+ *
  * @method static \Database\Factories\Store\ProductFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product newQuery()
@@ -84,6 +84,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Product withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Product extends Model
@@ -345,7 +346,6 @@ class Product extends Model
             }
         }
         if ($this->getMetadata('personalized_product_url') != null) {
-
         }
 
         return true;
@@ -388,8 +388,8 @@ class Product extends Model
         return ! $this->isValid($canUnreferenced);
     }
 
-    public function formattedDescription(): string
+    public function formattedDescription(string $a = '- '): string
     {
-        return \App\Helpers\StringHTML::htmlToPlainLines($this->description);
+        return \App\Helpers\StringHTML::htmlToPlainLines($this->description, $a);
     }
 }

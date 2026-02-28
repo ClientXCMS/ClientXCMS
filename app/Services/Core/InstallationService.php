@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Services\Core;
 
@@ -36,9 +36,30 @@ class InstallationService
         return file_exists(base_path('.env'));
     }
 
-    public function isFolderWritable(): bool
+    public function isStorageWritable(): bool
     {
-        return is_writable(base_path());
+        return is_writable(storage_path());
+    }
+
+    public function getUnwritableDirectories(): array
+    {
+        $directories = [
+            'storage' => storage_path(),
+            'bootstrap/cache' => base_path('bootstrap/cache'),
+            'modules' => base_path('modules'),
+            'addons' => base_path('addons'),
+            'resources/themes' => resource_path('themes'),
+            'resources/views/vendor/notifications' => resource_path('views/vendor/notifications'),
+        ];
+
+        $unwritable = [];
+        foreach ($directories as $name => $path) {
+            if (is_dir($path) && ! is_writable($path)) {
+                $unwritable[] = $name;
+            }
+        }
+
+        return $unwritable;
     }
 
     public function canInstalled(): bool
@@ -57,8 +78,9 @@ class InstallationService
         if (! $this->tryConnectDatabase()) {
             return new Response('Please check database connection.', 500);
         }
-        if (! $this->isFolderWritable()) {
-            return new Response('Please make root folder writable.', 500);
+        $unwritable = $this->getUnwritableDirectories();
+        if (! empty($unwritable)) {
+            return new Response('Please make the following folders writable: '.implode(', ', $unwritable), 500);
         }
         if (! $this->hasAppKey()) {
             return new Response('Please generate app key with "php artisan key:generate" command on your CLIENTXCMS folder', 500);

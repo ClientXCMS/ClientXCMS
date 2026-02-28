@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,13 +17,11 @@
  * Year: 2025
  */
 
-
 namespace App\DTO\Store;
 
 use App\Models\Billing\Upgrade;
 use App\Models\Provisioning\Service;
 use App\Models\Store\Product;
-use App\Services\Store\TaxesService;
 use Carbon\Carbon;
 
 class UpgradeDTO
@@ -129,6 +128,7 @@ class UpgradeDTO
     public function toInvoiceItem(Product $newProduct, Upgrade $upgrade)
     {
         $price = $this->generatePrice($newProduct);
+
         return [
             'name' => $this->getUpgradeName($newProduct),
             'description' => $this->getUpgradeDescription($newProduct),

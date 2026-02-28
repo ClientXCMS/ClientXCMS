@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Billing\Traits;
 
@@ -43,6 +43,7 @@ trait InvoiceStateTrait
         });
         $this->clearServiceAssociation();
         $this->clearBasket($clearBasket);
+        $this->generatePdf(true);
         event(new InvoiceCancelled($this));
     }
 
@@ -64,7 +65,7 @@ trait InvoiceStateTrait
         });
 
         $this->clearBasket($clearBasket);
-        $this->generatePdf();
+        $this->generatePdf(true);
         event(new InvoiceCompleted($this));
     }
 
@@ -80,6 +81,7 @@ trait InvoiceStateTrait
             $item->refund();
         });
         $this->clearBasket($clearBasket);
+        $this->generatePdf(true);
         event(new InvoiceRefunded($this));
     }
 
@@ -95,6 +97,7 @@ trait InvoiceStateTrait
             $item->cancel();
         });
         $this->clearBasket($clearBasket);
+        $this->generatePdf(true);
         event(new InvoiceFailed($this));
     }
 

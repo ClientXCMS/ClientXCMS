@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,13 +17,11 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Admin\Personalization;
 
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Models\Admin\EmailTemplate;
 use App\Models\Admin\Setting;
-use App\Models\Personalization\Section;
 use App\Services\Core\LocaleService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
@@ -81,11 +80,8 @@ class EmailTemplateController extends AbstractCrudController
             'content' => 'required',
             'button_text' => 'required',
         ]);
-        $bannedValues = Section::TAGS_DISABLED;
-        foreach ($bannedValues as $bannedValue) {
-            if (str_contains($validated['content'], $bannedValue)) {
-                return back()->with('error', sprintf('Tag %s is not allowed', $bannedValue));
-            }
+        if (has_dangerous_content($validated['content'])) {
+            return back()->with('error', __('personalization.email_templates.errors.dangerous_content'))->withInput();
         }
         $validated['hidden'] = $request->has('hidden');
         $this->checkPermission('update');
@@ -104,11 +100,8 @@ class EmailTemplateController extends AbstractCrudController
             'button_text' => 'required',
         ]);
 
-        $bannedValues = Section::TAGS_DISABLED;
-        foreach ($bannedValues as $bannedValue) {
-            if (str_contains($validated['content'], $bannedValue)) {
-                return back()->with('error', 'Tag '.$bannedValue.' is not allowed');
-            }
+        if (has_dangerous_content($validated['content'])) {
+            return back()->with('error', __('personalization.email_templates.errors.dangerous_content'))->withInput();
         }
         $this->checkPermission('create');
         $validated['hidden'] = $request->has('hidden');
@@ -167,11 +160,8 @@ class EmailTemplateController extends AbstractCrudController
             $name = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $name = \Str::slug($name, '.');
             $content = file_get_contents($file->getRealPath());
-            $bannedValues = Section::TAGS_DISABLED;
-            foreach ($bannedValues as $bannedValue) {
-                if (str_contains($content, $bannedValue)) {
-                    return redirect()->back()->with('error', sprintf('Tag %s is not allowed', $bannedValue));
-                }
+            if (has_dangerous_content($content)) {
+                return redirect()->back()->with('error', __('personalization.email_templates.errors.dangerous_content'));
             }
             EmailTemplate::saveTemplate($name, $file);
         }

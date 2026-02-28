@@ -54,7 +54,6 @@ class ServiceControllerTest extends TestCase
 
     public function test_services_can_show(): void
     {
-        $this->seed(\Database\Seeders\ModuleSeeder::class);
         app('extension')->autoload(app());
 
         $this->seed(ServerSeeder::class);
@@ -308,7 +307,6 @@ class ServiceControllerTest extends TestCase
     {
         $this->seed(ServerSeeder::class);
 
-        $this->seed(\Database\Seeders\ModuleSeeder::class);
         app('extension')->autoload(app());
 
         $this->seed(StoreSeeder::class);
@@ -327,7 +325,6 @@ class ServiceControllerTest extends TestCase
     {
         $this->seed(ServerSeeder::class);
 
-        $this->seed(\Database\Seeders\ModuleSeeder::class);
         app('extension')->autoload(app());
 
         $this->seed(StoreSeeder::class);

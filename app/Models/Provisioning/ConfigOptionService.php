@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Provisioning;
 
 use App\DTO\Store\ConfigOptionDTO;
@@ -25,8 +25,6 @@ use App\Models\Billing\Traits\PricingInteractTrait;
 use Carbon\Carbon;
 
 /**
- * 
- *
  * @property int $id
  * @property int $config_option_id
  * @property int $service_id
@@ -37,6 +35,7 @@ use Carbon\Carbon;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read ConfigOption $option
  * @property-read \App\Models\Provisioning\Service $service
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionService newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionService newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionService query()
@@ -48,6 +47,7 @@ use Carbon\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionService whereServiceId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionService whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionService whereValue($value)
+ *
  * @mixin \Eloquent
  */
 class ConfigOptionService extends \Illuminate\Database\Eloquent\Model

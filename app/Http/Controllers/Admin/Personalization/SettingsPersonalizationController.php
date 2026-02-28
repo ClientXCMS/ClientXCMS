@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Admin\Personalization;
 
 use App\Exceptions\LicenseInvalidException;
@@ -31,11 +31,21 @@ class SettingsPersonalizationController extends Controller
 {
     public function showFrontMenu()
     {
-        $menus = MenuLink::where('type', 'front')->whereNull('parent_id')->orderBy('position')->get();
+        $menus = MenuLink::where('type', 'front')
+            ->whereNull('parent_id')
+            ->orderBy('position')
+            ->with(['children' => function ($query) {
+                $query->orderBy('position')->with(['children' => function ($q) {
+                    $q->orderBy('position');
+                }]);
+            }])
+            ->get();
 
-        return view('admin.personalization.settings.front', [
+        $menuData = $this->getMenuEditorData('front');
+
+        return view('admin.personalization.settings.front', array_merge([
             'menus' => $menus,
-        ]);
+        ], $menuData));
     }
 
     public function showCustomMenu(string $type)
@@ -46,6 +56,7 @@ class SettingsPersonalizationController extends Controller
         if (! $card) {
             abort(404);
         }
+
         return view('admin.personalization.settings.custom', [
             'menus' => $menus,
             'type' => $type,
@@ -55,19 +66,59 @@ class SettingsPersonalizationController extends Controller
 
     public function showBottomMenu()
     {
-        $menus = MenuLink::where('type', 'bottom')->whereNull('parent_id')->orderBy('position')->get();
+        $menus = MenuLink::where('type', 'bottom')
+            ->whereNull('parent_id')
+            ->orderBy('position')
+            ->with(['children' => function ($query) {
+                $query->orderBy('position')->with(['children' => function ($q) {
+                    $q->orderBy('position');
+                }]);
+            }])
+            ->get();
 
-        return view('admin.personalization.settings.bottom', [
+        $menuData = $this->getMenuEditorData('bottom');
+
+        return view('admin.personalization.settings.bottom', array_merge([
             'menus' => $menus,
-        ]);
+        ], $menuData));
+    }
+
+    /**
+     * Get common data needed for the menu inline editor.
+     */
+    private function getMenuEditorData(string $type): array
+    {
+        $supportDropdown = app('theme')->getTheme()->supportOption(
+            $type === 'front' ? 'menu_dropdown' : 'multi_footer_columns'
+        );
+
+        $linkTypes = [
+            'link' => __('personalization.menu_links.link'),
+            'new_tab' => __('personalization.menu_links.new_tab'),
+        ];
+
+        if ($supportDropdown) {
+            $linkTypes['dropdown'] = __('personalization.menu_links.dropdown');
+        }
+
+        return [
+            'roles' => [
+                'all' => __('personalization.menu_links.allowed_roles.all'),
+                'staff' => __('personalization.menu_links.allowed_roles.staff'),
+                'customer' => __('personalization.menu_links.allowed_roles.customer'),
+                'logged' => __('personalization.menu_links.allowed_roles.logged'),
+            ],
+            'linkTypes' => $linkTypes,
+            'supportDropDropdown' => $supportDropdown,
+        ];
     }
 
     public function storeBottomMenu(Request $request)
     {
         staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $this->validate($request, [
-            'theme_footer_description' => ['required', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags()],
-            'theme_footer_topheberg' => ['nullable', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags()],
+            'theme_footer_description' => ['required', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags],
+            'theme_footer_topheberg' => ['nullable', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags],
         ]);
         Setting::updateSettings([
             'theme_footer_description' => $request->get('theme_footer_description'),
@@ -88,8 +139,30 @@ class SettingsPersonalizationController extends Controller
             'seo_themecolor' => 'nullable|string|max:1000',
             'seo_disablereferencement' => 'in:true,false',
             'seo_site_title' => 'required|string|max:1000',
+            'seo_og_title' => 'nullable|string|max:200',
+            'seo_og_description' => 'nullable|string|max:300',
+            'seo_og_image' => 'nullable|image|max:2048',
+            'seo_twitter_handle' => 'nullable|string|max:50',
         ]);
         $data['seo_disablereferencement'] = $data['seo_disablereferencement'] ?? 'false';
+
+        if ($request->hasFile('seo_og_image')) {
+            if (setting('seo_og_image') && \Storage::exists(setting('seo_og_image'))) {
+                \Storage::delete(setting('seo_og_image'));
+            }
+            $file = 'og-image.'.$request->file('seo_og_image')->getClientOriginalExtension();
+            $data['seo_og_image'] = $request->file('seo_og_image')->storeAs('public'.DIRECTORY_SEPARATOR.'uploads', $file);
+        } else {
+            unset($data['seo_og_image']);
+        }
+
+        if ($request->input('remove_seo_og_image') === 'true') {
+            if (setting('seo_og_image') && \Storage::exists(setting('seo_og_image'))) {
+                \Storage::delete(setting('seo_og_image'));
+            }
+            $data['seo_og_image'] = null;
+        }
+
         Setting::updateSettings($data);
         \Cache::delete('seo_head');
         \Cache::delete('seo_footer');
@@ -179,7 +252,7 @@ class SettingsPersonalizationController extends Controller
         try {
             app('license')->restartNPM();
         } catch (LicenseInvalidException $e) {
-            \Session::flash('error', "Error in restart NPM : " . $e->getMessage());
+            \Session::flash('error', 'Error in restart NPM : '.$e->getMessage());
         }
 
         return redirect()->back()->with('success', __('personalization.config.success'));

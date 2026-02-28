@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 use App\Http\Controllers\Admin\Personalization\EmailTemplateController;
 use App\Http\Controllers\Admin\Personalization\MenuLinkController;
 use App\Http\Controllers\Admin\Personalization\SectionController;
@@ -23,14 +25,15 @@ use App\Http\Controllers\Admin\Personalization\SocialCrudController;
 use App\Http\Controllers\Admin\Personalization\ThemeController;
 use Illuminate\Support\Facades\Route;
 
-if (!is_installed() || app()->runningInConsole()) {
+if (! is_installed() || app()->runningInConsole()) {
     $types = ['front', 'bottom'];
 } else {
     $types = \App\Models\Personalization\MenuLink::pluck('type')->unique()->toArray();
 }
 
 Route::name('personalization.')->prefix('/personalization')->group(function () {
-    Route::resource('/socials', SocialCrudController::class)->names('socials')->except('index')->except('edit');
+    Route::resource('/socials', SocialCrudController::class)->names('socials')->except('edit');
+    Route::post('/socials/sort', [SocialCrudController::class, 'sort'])->name('socials.sort');
     Route::put('/primary', [SettingsPersonalizationController::class, 'storePrimaryColors'])->name('primary');
     Route::post('/bottom_menu', [SettingsPersonalizationController::class, 'storeBottomMenu'])->name('bottom_menu');
     Route::post('/switch_theme/{theme}', [ThemeController::class, 'switchTheme'])->name('switch_theme');
@@ -41,6 +44,7 @@ Route::name('personalization.')->prefix('/personalization')->group(function () {
     Route::post('/sections/{section}/switch', [SectionController::class, 'switch'])->name('sections.switch');
     Route::post('/sections/{section}/restore', [SectionController::class, 'restore'])->name('sections.restore');
     Route::post('/sections/{section}/clone_section', [SectionController::class, 'cloneSection'])->name('sections.clone_section');
+    Route::put('/sections/{section}/config', [SectionController::class, 'updateConfig'])->name('sections.config.update');
 });
 Route::resource('email_templates', EmailTemplateController::class)->names('personalization.email_templates');
 Route::post('email_templates/import', [EmailTemplateController::class, 'import'])->name('personalization.email_templates.import');

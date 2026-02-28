@@ -1,6 +1,6 @@
 <?php
 
-namespace Client;
+namespace Tests\Feature\Client;
 
 use App\Models\Account\Customer;
 use App\Models\Account\EmailMessage;

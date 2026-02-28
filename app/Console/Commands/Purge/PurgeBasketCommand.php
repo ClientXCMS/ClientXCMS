@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Console\Commands\Purge;
 
@@ -55,17 +55,17 @@ class PurgeBasketCommand extends Command
         $batchSize = $this->argument('batchSize');
         $this->info('Purging basket records in batches of '.$batchSize.'...');
         $limit = now()->subWeeks(2);
-
         $baskets = Basket::where('created_at', '<', $limit)->whereNull('completed_at')->whereNull('user_id')->get();
-        $nb = $baskets->count();
-        $count = 0;
+        $emptyBasket = Basket::where('created_at', '<', $limit)->whereNull('completed_at')->whereNull('user_id')->whereNull('ipaddress')->get();
+        $nb = $baskets->count() + $emptyBasket->count();
         $this->info('Found '.$nb.' basket records to purge.');
         foreach ($baskets as $basket) {
-            if ($basket->rows->count() == 0) {
-                $basket->delete();
-                $count++;
-            }
+            $basket->items()->delete();
+            $basket->delete();
         }
-        $this->info('Purged '.$count.' basket records.');
+        foreach ($emptyBasket as $basket) {
+            $basket->delete();
+        }
+        $this->info('Purged '.$nb.' basket records.');
     }
 }

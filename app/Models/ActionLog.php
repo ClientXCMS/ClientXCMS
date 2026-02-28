@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models;
 
 use App\Models\Account\Customer;
@@ -27,8 +27,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
- *
  * @property int $id
  * @property int|null $customer_id
  * @property int|null $staff_id
@@ -42,6 +40,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ActionLogEntries> $entries
  * @property-read int|null $entries_count
  * @property-read Admin|null $staff
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActionLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActionLog newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActionLog query()
@@ -54,6 +53,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActionLog wherePayload($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActionLog whereStaffId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ActionLog whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class ActionLog extends Model
@@ -100,6 +100,8 @@ class ActionLog extends Model
 
     const EXTENSION_UPDATED = 'extension_updated';
 
+    const EXTENSION_UNINSTALLED = 'extension_uninstalled';
+
     const THEME_CHANGED = 'theme_changed';
 
     const BALANCE_CHANGED = 'balance_changed';
@@ -115,6 +117,8 @@ class ActionLog extends Model
     const TWO_FACTOR_RECOVERY_CODES_GENERATED = 'two_factor_recovery_codes_generated';
 
     const FAILED_LOGIN = 'failed_login';
+
+    const ACCOUNT_DELETED = 'account_deleted';
 
     const ALL_ACTIONS = [
         self::SETTINGS_UPDATED,
@@ -135,6 +139,7 @@ class ActionLog extends Model
         self::EXTENSION_DISABLED,
         self::EXTENSION_INSTALLED,
         self::EXTENSION_UPDATED,
+        self::EXTENSION_UNINSTALLED,
         self::THEME_CHANGED,
         self::NEW_LOGIN,
         self::BALANCE_CHANGED,
@@ -144,14 +149,16 @@ class ActionLog extends Model
         self::TWO_FACTOR_DISABLED,
         self::TWO_FACTOR_RECOVERY_CODES_GENERATED,
         self::FAILED_LOGIN,
+        self::ACCOUNT_DELETED,
     ];
 
     protected static array $ignoreKeys = [];
 
     protected static array $extensionActions = [];
-    protected static array $extensionIcons = [];
-    protected static array $extensionTranslations = [];
 
+    protected static array $extensionIcons = [];
+
+    protected static array $extensionTranslations = [];
 
     protected $fillable = [
         'customer_id',
@@ -225,6 +232,8 @@ class ActionLog extends Model
                 return 'bi bi-box-arrow-down';
             case self::EXTENSION_INSTALLED:
                 return 'bi bi-box-arrow-in-down';
+            case self::EXTENSION_UNINSTALLED:
+                return 'bi bi-trash';
             case self::BALANCE_CHANGED:
                 return 'bi bi-currency-dollar';
             case self::THEME_CHANGED:
@@ -238,12 +247,15 @@ class ActionLog extends Model
             case self::TWO_FACTOR_DISABLED:
             case self::FAILED_LOGIN:
                 return 'bi bi-shield-slash';
+            case self::ACCOUNT_DELETED:
+                return 'bi bi-person-x';
             case self::TWO_FACTOR_RECOVERY_CODES_GENERATED:
                 return 'bi bi-shield-check';
             default:
                 if (isset(self::$extensionIcons[$this->action])) {
                     return self::$extensionIcons[$this->action];
                 }
+
                 return 'bi bi-question-circle';
         }
     }
@@ -274,7 +286,7 @@ class ActionLog extends Model
         return $this->hasMany(ActionLogEntries::class);
     }
 
-   public function getFormattedName()
+    public function getFormattedName()
     {
         $parameters = $this->getParameters();
 

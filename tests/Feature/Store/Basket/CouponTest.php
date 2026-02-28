@@ -1,6 +1,6 @@
 <?php
 
-namespace Store\Basket;
+namespace Tests\Feature\Store\Basket;
 
 use App\Models\Account\Customer;
 use App\Models\Store\Basket\Basket;
