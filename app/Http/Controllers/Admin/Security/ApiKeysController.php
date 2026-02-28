@@ -50,7 +50,7 @@ class ApiKeysController extends AbstractCrudController
                 'groups:update' => __('global.update'),
                 'groups:delete' => __('global.delete'),
             ],
-            __('admin.products.tariff').'s' => [
+            __('admin.products.tariff') . 's' => [
                 'pricing:index' => __('global.listing'),
                 'pricing:store' => __('global.store'),
                 'pricing:show' => __('global.show'),
@@ -168,7 +168,7 @@ class ApiKeysController extends AbstractCrudController
         if (array_key_exists('is_admin', $validated)) {
             $validated['permissions'] = ['*'];
         } else {
-            $validated['permissions'] = $validated['permissions'] + ['hearth', 'license'];
+            $validated['permissions'] = array_merge(array_keys($validated['permissions']), ['hearth', 'license']);
         }
         $token = auth('admin')->user()->createToken($validated['name'], $validated['permissions']);
 
