@@ -50,18 +50,6 @@ return [
       'description' => 'Département commercial',
     ],
   ],
-  'billing' => [
-    'name' => 'Facturation',
-    'description' => 'Département de la facturation',
-  ],
-  'technical' => [
-    'name' => 'Technique',
-    'description' => 'Département technique',
-  ],
-  'sales' => [
-    'name' => 'Commercial',
-    'description' => 'Département commercial',
-  ],
   'security_questions' => [
     'pet_name' => 'Quel est le nom de votre premier animal de compagnie ?',
     'birth_city' => 'Dans quelle ville êtes-vous né(e) ?',

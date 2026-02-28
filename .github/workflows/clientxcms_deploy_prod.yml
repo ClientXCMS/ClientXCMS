@@ -23,6 +23,8 @@ jobs:
           port:     ${{ secrets[ format('VPS_PORT_{0}', matrix.server) ] }}
           script: |
             SKIP_LIST=($SKIP_LIST)
+            UPDATED_SITES=()
+            SKIPPED_SITES=()
             for site_dir in /var/www/*; do
               if [ ! -d "$site_dir/storage/app/invoices" ]; then
                  site=$(basename "$site_dir")
@@ -42,16 +44,38 @@ jobs:
               done
               if [[ "$skip" == true ]]; then
                 echo "→ Ignoring $site"
+                SKIPPED_SITES+=("$site")
                 continue
               fi
               echo "Deploying $site on $HOST..."
               cd "/var/www/$site" || continue
-              git pull origin --force $COMMIT_MSG
-              ./composer.phar install --no-interaction --prefer-dist
-              npm install
-              npm run build
-              php artisan migrate --force --no-interaction --seed
-              php artisan clientxcms:db-extension --all
-              php artisan cache:clear
-              php artisan clientxcms:on-update
+              if git pull origin --force $COMMIT_MSG; then
+                ./composer.phar install --no-interaction --prefer-dist
+                npm install
+                npm run build
+                php artisan migrate --force --no-interaction --seed
+                php artisan clientxcms:db-extension --all
+                php artisan cache:clear
+                php artisan clientxcms:on-update
+                php artisan translations:import
+                UPDATED_SITES+=("$site")
+              else
+                echo "→ Git pull failed for $site, skipping."
+                SKIPPED_SITES+=("$site")
+              fi
             done
+
+            echo ""
+            echo "========================================"
+            echo "DEPLOYMENT SUMMARY"
+            echo "========================================"
+            echo "Updated versions (${#UPDATED_SITES[@]}):"
+            for site in "${UPDATED_SITES[@]}"; do
+              echo " - $site"
+            done
+            echo ""
+            echo "Skipped versions (${#SKIPPED_SITES[@]}):"
+            for site in "${SKIPPED_SITES[@]}"; do
+              echo " - $site"
+            done
+            echo "========================================"
