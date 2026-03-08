@@ -295,10 +295,29 @@ class ServiceController extends Controller
         if (! $service->canCancel()) {
             return redirect()->route('front.services.show', ['service' => $service->uuid])->with('error', __('client.alerts.cannot_cancel'));
         }
-        $reason = \App\Models\Provisioning\CancellationReason::find($request->reason)->reason;
-        $reason = $reason.(! empty($request->details) ? ' - '.$request->details : '');
+        $cancellationReason = \App\Models\Provisioning\CancellationReason::findOrFail($request->reason);
+
+        if ($cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_SUPPORT_TICKET) {
+            return redirect()->route('front.support.create')
+                ->with('info', __('features.cancellation.requires_ticket'));
+        }
+
+        if ($cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_AFTER_EXPIRATION
+            && $service->expires_at !== null
+            && $service->expires_at->isFuture()) {
+            return redirect()->route('front.services.show', ['service' => $service->uuid])
+                ->with('error', __('features.cancellation.after_expiration_only'));
+        }
+
+        $reason = $cancellationReason->reason.(! empty($request->details) ? ' - '.$request->details : '');
+
+        if ($cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_IMMEDIATE) {
+            $request->request->set('expiration', 'now');
+        }
+
         $date = $request->expiration == 'end_of_period' ? $service->expires_at : new \DateTime;
         $service->cancel($reason, $date, $request->expiration == 'now');
+        $service->update(['cancellation_reason_id' => $cancellationReason->id]);
 
         return redirect()->route('front.services.show', ['service' => $service->uuid])->with('success', __('client.alerts.service_cancelled'));
     }

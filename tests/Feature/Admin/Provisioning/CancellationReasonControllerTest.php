@@ -32,11 +32,13 @@ class CancellationReasonControllerTest extends TestCase
         $this->seed(AdminSeeder::class);
         $request = $this->performAdminAction('POST', self::API_URL, [
             'reason' => 'Je ne suis pas satisfait du service',
+            'cancellation_mode' => CancellationReason::MODE_IMMEDIATE,
             'status' => 'active',
         ]);
         $request->assertStatus(302);
         $this->assertDatabaseHas('cancellation_reasons', [
             'reason' => 'Je ne suis pas satisfait du service',
+            'cancellation_mode' => CancellationReason::MODE_IMMEDIATE,
             'status' => 'active',
         ]);
     }
@@ -46,6 +48,7 @@ class CancellationReasonControllerTest extends TestCase
         $this->seed(AdminSeeder::class);
         $request = $this->performAdminAction('POST', self::API_URL, [
             'reason' => '',
+            'cancellation_mode' => 'invalid',
             'status' => 'invalid',
         ]);
         $request->assertStatus(422);
@@ -72,12 +75,14 @@ class CancellationReasonControllerTest extends TestCase
         ]);
         $request = $this->performAdminAction('PUT', self::API_URL.'/'.$reason->id, [
             'reason' => 'Updated reason',
+            'cancellation_mode' => CancellationReason::MODE_SUPPORT_TICKET,
             'status' => 'hidden',
         ]);
         $request->assertStatus(302);
         $this->assertDatabaseHas('cancellation_reasons', [
             'id' => $reason->id,
             'reason' => 'Updated reason',
+            'cancellation_mode' => CancellationReason::MODE_SUPPORT_TICKET,
             'status' => 'hidden',
         ]);
     }

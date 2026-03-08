@@ -21,6 +21,7 @@ namespace App\Mail\Helpdesk;
 
 use App\Models\Admin\EmailTemplate;
 use App\Models\Helpdesk\SupportTicket;
+use App\Services\Helpdesk\InboundReplyService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
@@ -48,10 +49,12 @@ class NotifyCustomerEmail extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         $ticketUrl = route('front.support.show', $this->ticket->id);
+        $replyAddress = InboundReplyService::replyAddress($this->ticket);
 
         return EmailTemplate::getMailMessage('support_customer_ticket_reply', $ticketUrl, [
             'ticket' => $this->ticket,
-            'message' => $this->message,
-        ], $notifiable);
+            'message' => (string) $this->message,
+            'reply_address' => $replyAddress,
+        ], $notifiable)->replyTo($replyAddress);
     }
 }

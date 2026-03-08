@@ -39,6 +39,8 @@ class HelpdeskSettingsController extends \App\Http\Controllers\Controller
             'helpdesk_attachments_allowed_types' => 'required|string',
             'helpdesk_webhook_url' => 'nullable|url',
             'helpdesk_reopen_days' => 'required|integer|min:-1',
+            'helpdesk_reply_mailbox' => 'required|string|max:64|regex:/^[a-zA-Z0-9._+-]+$/',
+            'helpdesk_inbound_webhook_token' => 'required|string|min:16|max:128',
         ]);
         $data['helpdesk_allow_attachments'] = $request->has('helpdesk_allow_attachments');
         Setting::updateSettings($data);

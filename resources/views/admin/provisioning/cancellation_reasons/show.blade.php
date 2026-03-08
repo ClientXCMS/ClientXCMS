@@ -64,6 +64,10 @@
                 </div>
 
                 <div>
+                    @include('admin/shared/select', ['name' => 'cancellation_mode', 'label' => __('features.cancellation.rule_label'), 'options' => \App\Models\Provisioning\CancellationReason::getCancellationModes(), 'value' => old('cancellation_mode', $item->cancellation_mode)])
+                </div>
+
+                <div>
                     @include('admin/shared/status-select', ['name' => 'status', 'label' => __('global.status'), 'value' => old('status', $item->status)])
                 </div>
             </div>
