@@ -39,6 +39,7 @@ Route::name('settings.')->prefix('settings')->middleware('admin')->group(functio
     Route::delete('/extensions/{type}/{extension}/uninstall', [SettingsExtensionController::class, 'uninstall'])->name('extensions.uninstall');
     Route::get('/extensions', [SettingsExtensionController::class, 'showExtensions'])->name('extensions.index');
     Route::post('/extensions/bulk', [SettingsExtensionController::class, 'bulkAction'])->name('extensions.bulk');
+    Route::post('/extensions/import', [SettingsExtensionController::class, 'importZip'])->name('extensions.import');
     Route::post('/extensions/clear', [SettingsExtensionController::class, 'clear'])->name('extensions.clear');
 });
 
