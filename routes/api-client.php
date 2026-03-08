@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\Client\PaymentMethodController;
 use App\Http\Controllers\Api\Client\ProfileController;
 use App\Http\Controllers\Api\Client\ServiceController;
 use App\Http\Controllers\Api\Client\TicketController;
+use App\Http\Controllers\Webhook\HelpdeskInboundEmailController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -37,6 +38,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public authentication routes (no auth required)
+Route::post('/webhooks/helpdesk/inbound-email', HelpdeskInboundEmailController::class)->middleware('throttle:30,1')->name('helpdesk.inbound-email');
+
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register'])->name('register');

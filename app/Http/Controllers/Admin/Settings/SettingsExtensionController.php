@@ -20,8 +20,12 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
+use App\Extensions\ExtensionManager;
 use App\Models\ActionLog;
 use App\Models\Admin\Permission;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
 
 class SettingsExtensionController
 {
@@ -52,6 +56,7 @@ class SettingsExtensionController
         }
         try {
             $extensiondto = app('extension')->getExtension($type, $extension);
+            $prerequisites = app('extension')->checkPrerequisitesForEnable($type, $extension);
         } catch (\Exception $e) {
             return $this->respondWithError($e->getMessage());
         }
@@ -141,6 +146,149 @@ class SettingsExtensionController
         ActionLog::log(ActionLog::EXTENSION_UNINSTALLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
 
         return $this->respondWithSuccess(__('extensions.flash.uninstalled'));
+    }
+    public function importZip(Request $request)
+    {
+        staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
+
+        $validated = $request->validate([
+            'extension_zip' => 'required|file|mimes:zip|max:51200',
+            'extension_type' => 'required|string|in:modules,addons,themes',
+            'extension_checksum' => 'nullable|string|size:64',
+        ]);
+
+        $lock = Cache::lock('extensions:import', 120);
+        if (! $lock->get()) {
+            return $this->respondWithError(__('features.extensions.import_lock'));
+        }
+
+        try {
+            $uploadedFile = $validated['extension_zip'];
+            $zipPath = $uploadedFile->getRealPath();
+
+            if (! empty($validated['extension_checksum'])) {
+                $hash = hash_file('sha256', $zipPath);
+                if (! hash_equals(strtolower($validated['extension_checksum']), strtolower($hash))) {
+                    return $this->respondWithError(__('features.extensions.checksum_invalid'));
+                }
+            }
+
+            $zip = new \ZipArchive;
+            if ($zip->open($zipPath) !== true) {
+                return $this->respondWithError("Impossible de lire l'archive ZIP.");
+            }
+
+            $maxFiles = 4000;
+            $maxUncompressedSize = 250 * 1024 * 1024;
+            $totalUncompressed = 0;
+
+            if ($zip->numFiles > $maxFiles) {
+                $zip->close();
+
+                return $this->respondWithError(__('features.extensions.zip_too_many_files'));
+            }
+
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $stat = $zip->statIndex($i);
+                $name = $zip->getNameIndex($i);
+
+                if (str_starts_with($name, '/') || str_contains($name, '..')) {
+                    $zip->close();
+
+                    return $this->respondWithError("Archive ZIP invalide.");
+                }
+
+                $totalUncompressed += (int) ($stat['size'] ?? 0);
+                if ($totalUncompressed > $maxUncompressedSize) {
+                    $zip->close();
+
+                    return $this->respondWithError(__('features.extensions.zip_too_large_uncompressed'));
+                }
+            }
+
+            $tmpRoot = storage_path('app/tmp/extensions-import-'.uniqid());
+            File::ensureDirectoryExists($tmpRoot);
+            $zip->extractTo($tmpRoot);
+            $zip->close();
+
+            $entries = collect(File::directories($tmpRoot));
+            if ($entries->count() !== 1) {
+                File::deleteDirectory($tmpRoot);
+
+                return $this->respondWithError(__('features.extensions.zip_invalid_single_folder'));
+            }
+
+            $extensionPath = $entries->first();
+            $extension = basename($extensionPath);
+            $type = $validated['extension_type'];
+
+            if ($type === 'themes' && ! File::exists($extensionPath.'/theme.json')) {
+                File::deleteDirectory($tmpRoot);
+
+                return $this->respondWithError("Le ZIP ne ressemble pas à un thème valide.");
+            }
+
+            if (in_array($type, ['modules', 'addons']) && ! File::exists($extensionPath.'/composer.json')) {
+                File::deleteDirectory($tmpRoot);
+
+                return $this->respondWithError("Le ZIP doit contenir un composer.json valide.");
+            }
+
+            $destination = $type === 'themes'
+                ? base_path('resources/themes/'.$extension)
+                : base_path($type.'/'.$extension);
+
+            $backupPath = null;
+
+            try {
+                if (File::isDirectory($destination)) {
+                    $backupPath = storage_path('app/extensions-backups/'.$type.'-'.$extension.'-'.date('YmdHis'));
+                    File::ensureDirectoryExists(dirname($backupPath));
+                    File::copyDirectory($destination, $backupPath);
+                    File::deleteDirectory($destination);
+                }
+
+                File::ensureDirectoryExists(dirname($destination));
+                File::copyDirectory($extensionPath, $destination);
+
+                $extensions = ExtensionManager::readExtensionJson();
+                $existing = collect($extensions[$type] ?? [])->firstWhere('uuid', $extension);
+                if (! $existing) {
+                    $extensions[$type][] = [
+                        'uuid' => $extension,
+                        'version' => 'v1.0',
+                        'type' => $type,
+                        'enabled' => false,
+                        'installed' => true,
+                        'api' => null,
+                    ];
+                }
+                ExtensionManager::writeExtensionJson($extensions);
+
+                \Artisan::call('cache:clear');
+                \Artisan::call('view:clear');
+                \Artisan::call('config:clear');
+
+                ActionLog::log(ActionLog::EXTENSION_UPDATED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type, 'source' => 'zip']);
+
+                File::deleteDirectory($tmpRoot);
+
+                return $this->respondWithSuccess("Extension importée avec succès.");
+            } catch (\Throwable $e) {
+                if (File::isDirectory($destination)) {
+                    File::deleteDirectory($destination);
+                }
+                if ($backupPath && File::isDirectory($backupPath)) {
+                    File::copyDirectory($backupPath, $destination);
+                }
+                File::deleteDirectory($tmpRoot);
+                \Log::error('Extension ZIP import failed with rollback', ['error' => $e->getMessage()]);
+
+                return $this->respondWithError("Import échoué, rollback appliqué automatiquement.");
+            }
+        } finally {
+            optional($lock)->release();
+        }
     }
 
     public function bulkAction(\Illuminate\Http\Request $request)

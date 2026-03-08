@@ -49,15 +49,32 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class CancellationReason extends Model
 {
+
+    public const MODE_IMMEDIATE = 'immediate';
+
+    public const MODE_SUPPORT_TICKET = 'support_ticket';
+
+    public const MODE_AFTER_EXPIRATION = 'after_expiration';
+
+    public static function getCancellationModes(): array
+    {
+        return [
+            self::MODE_IMMEDIATE => __('features.cancellation.mode_immediate'),
+            self::MODE_SUPPORT_TICKET => __('features.cancellation.mode_support_ticket'),
+            self::MODE_AFTER_EXPIRATION => __('features.cancellation.mode_after_expiration'),
+        ];
+    }
     use HasFactory, ModelStatutTrait, SoftDeletes;
 
     protected $fillable = [
         'reason',
+        'cancellation_mode',
         'status',
     ];
 
     protected $attributes = [
         'status' => 'active',
+        'cancellation_mode' => 'immediate',
     ];
 
     public static function getReasons()
