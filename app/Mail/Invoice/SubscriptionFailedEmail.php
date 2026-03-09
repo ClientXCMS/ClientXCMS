@@ -24,11 +24,10 @@ use App\Models\Admin\EmailTemplate;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\Subscription;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
 
-class SubscriptionFailedEmail extends Notification implements ShouldQueue
+class SubscriptionFailedEmail extends Notification 
 {
     use Queueable, SerializesModels;
 

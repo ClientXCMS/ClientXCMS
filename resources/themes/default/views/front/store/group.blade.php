@@ -47,6 +47,14 @@
                                 </span>
                             @endif
                             <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 dark:hover:text-white">
+                                @if ($group->badge_title)
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium mb-1" style="background-color: {{ $group->badge_color ?: '#e0e7ff' }}; color: #111827;">
+                                        @if($group->badge_icon)
+                                            <i class="{{ $group->badge_icon }}"></i>
+                                        @endif
+                                        {{ $group->trans('badge_title', $group->badge_title) }}
+                                    </span><br>
+                                @endif
                                 {{ $group->trans('name') }}
                             </h3>
                             <p class="mt-3 text-gray-500">
