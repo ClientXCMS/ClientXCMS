@@ -21,7 +21,6 @@ namespace App\Mail\Helpdesk;
 
 use App\Models\Admin\EmailTemplate;
 use App\Models\Helpdesk\SupportTicket;
-use App\Services\Helpdesk\HelpdeskMailerService;
 use App\Services\Helpdesk\InboundReplyService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
@@ -55,18 +54,6 @@ class NotifyCustomerEmail extends Notification
             'ticket' => $this->ticket,
             'message' => (string) $this->message,
             'reply_address' => $replyAddress,
-        ], $notifiable);
-
-        if (filter_var($replyAddress, FILTER_VALIDATE_EMAIL)) {
-            $mail->replyTo($replyAddress);
-            $mail->line('Répondez directement à cet email pour ajouter votre message au ticket.');
-            $mail->line('Adresse de réponse : '.$replyAddress);
-        }
-
-        if (! empty($this->message)) {
-            $mail->line('Dernière réponse : '.(string) $this->message);
-        }
-
-        return HelpdeskMailerService::apply($mail);
+        ], $notifiable)->replyTo($replyAddress);
     }
 }
