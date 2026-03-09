@@ -364,7 +364,6 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
 
         return new GatewayPayInvoiceResultDTO(true, 'Done', $invoice, $sourceDTO);
     }
-
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
     {
         if ($invoice->external_id) {

@@ -336,7 +336,6 @@ class StripeType extends AbstractGatewayType
 
         return new GatewayPayInvoiceResultDTO($intent->status == 'succeeded', $intent->status, $invoice, $sourceDTO);
     }
-
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
     {
         if ($invoice->external_id) {

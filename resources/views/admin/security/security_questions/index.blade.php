@@ -89,7 +89,7 @@
                     </td>
                     <td class="h-px w-px whitespace-nowrap">
                         <span class="block px-6 py-2">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ \Str::limit($item->question, 50) }}</span>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ \Str::limit($item->getTranslatedQuestion(), 50) }}</span>
                         </span>
                     </td>
                     <td class="h-px w-px whitespace-nowrap">

@@ -18,7 +18,7 @@
 ?>
 
 @if (isset($label))
-    <label for="{{ $name }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">{{ $label }}
+    <label for="{{ $name }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">{{ $label }}@if(isset($optional)) ({{ __('global.optional') }}) @endif
         @if (isset($help))
 
             <div class="hs-tooltip inline-block">

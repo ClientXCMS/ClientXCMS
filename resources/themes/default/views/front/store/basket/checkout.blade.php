@@ -319,7 +319,7 @@
                                 <span class="font-semibold" id="total">{{ formatted_price($basket->total(), $basket->currency()) }}</span>
                             </div>
                         </div>
-                        <button type="submit"  @guest disabled @endguest class="btn-primary mt-4 w-full" id="btnCheckout">Checkout</button>
+                        <button type="submit"  @guest disabled @endguest class="btn-primary mt-4 w-full" id="btnCheckout">{{ __('store.basket.finish') }}</button>
 
                     </div>
             </div>
