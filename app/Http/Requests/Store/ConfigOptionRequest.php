@@ -41,7 +41,7 @@ class ConfigOptionRequest extends FormRequest
             'min_value' => 'nullable|numeric',
             'max_value' => 'nullable|numeric',
             'unit' => 'nullable|required_if:type,slider',
-            'step' => 'nullable|required_if:type,slider|numeric|min:1',
+            'step' => 'nullable|required_if:type,slider|numeric|min:0.000001',
             'default_value' => 'nullable',
             'products' => 'required|array',
             'products.*' => 'exists:products,id',

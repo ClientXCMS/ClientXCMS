@@ -38,14 +38,21 @@
 
 
                     <div class="sm:col-span-3">
-                        @include("shared.input", ["name" => "phone", "label" => __('global.phone')])
+                        @include("shared.input", ["name" => "phone", "label" => __('global.phone'), "optional" => true])
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800">
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Indicatif / pays sélectionné</div>
+                            <div id="phone-country-meta" class="mt-1 text-sm font-medium text-gray-800 dark:text-gray-200">-</div>
+                        </div>
                     </div>
 
                     <div class="sm:col-span-3">
                         @include("shared.input", ["name" => "address", "label" => __('global.address')])
                     </div>
                     <div class="sm:col-span-2">
-                        @include("shared.input", ["name" => "address2", "label" => __('global.address2')])
+                        @include("shared.input", ["name" => "address2", "label" => __('global.address2'), "optional" => true])
                     </div>
 
                     <div class="sm:col-span-1">
@@ -91,3 +98,35 @@
         </div>
     </div>
 </form>
+
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const meta = @json($countryPhoneMeta ?? []);
+        const countrySelect = document.getElementById('country');
+        const phoneInput = document.getElementById('phone');
+        const metaEl = document.getElementById('phone-country-meta');
+
+        const updatePhoneMeta = () => {
+            if (!countrySelect || !metaEl) return;
+            const selected = countrySelect.value;
+            const item = meta[selected];
+            if (!item) {
+                metaEl.textContent = '-';
+                return;
+            }
+
+            const dial = item.dial_code ?? '';
+            metaEl.textContent = `${item.flag ?? ''} ${item.name} (${dial}) · Langue: ${item.language ?? 'n/a'}`;
+
+            if (phoneInput && dial && !phoneInput.value) {
+                phoneInput.placeholder = `${dial} 6 12 34 56 78`;
+            }
+        };
+
+        countrySelect?.addEventListener('change', updatePhoneMeta);
+        updatePhoneMeta();
+    });
+</script>
+@endsection
