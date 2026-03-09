@@ -28,6 +28,8 @@ use App\Helpers\EnvEditor;
 use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
+use App\Models\Billing\Subscription;
+use App\Models\Provisioning\Service;
 use Illuminate\Http\Request;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\InvalidRequestException;
@@ -335,6 +337,59 @@ class StripeType extends AbstractGatewayType
         }
 
         return new GatewayPayInvoiceResultDTO($intent->status == 'succeeded', $intent->status, $invoice, $sourceDTO);
+    }
+
+
+    public function createRemoteSubscription(Service $service, PaymentMethodSourceDTO $sourceDTO, Subscription $subscription): ?string
+    {
+        $intervalMap = [
+            'monthly' => ['month', 1],
+            'quarterly' => ['month', 3],
+            'semiannually' => ['month', 6],
+            'annually' => ['year', 1],
+            'biennially' => ['year', 2],
+            'triennially' => ['year', 3],
+            'weekly' => ['week', 1],
+        ];
+
+        if (! isset($intervalMap[$service->billing])) {
+            return null;
+        }
+
+        $priceDTO = $service->getBillingPrice($service->billing);
+        $amount = (float) ($priceDTO->price_ttc ?? 0);
+        if ($amount <= 0) {
+            return null;
+        }
+
+        $this->initStripe();
+        $customerId = $this->getCustomerStripe($service->customer)->id;
+        [$interval, $intervalCount] = $intervalMap[$service->billing];
+
+        $remote = $this->stripe->subscriptions->create([
+            'customer' => $customerId,
+            'default_payment_method' => $sourceDTO->id,
+            'collection_method' => 'charge_automatically',
+            'items' => [[
+                'price_data' => [
+                    'currency' => strtolower($service->currency),
+                    'unit_amount' => (int) round($amount * 100),
+                    'recurring' => [
+                        'interval' => $interval,
+                        'interval_count' => $intervalCount,
+                    ],
+                    'product_data' => [
+                        'name' => 'Service #'.$service->id,
+                    ],
+                ],
+            ]],
+            'metadata' => [
+                'service_id' => $service->id,
+                'subscription_id' => $subscription->id,
+            ],
+        ]);
+
+        return $remote->id ?? null;
     }
 
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
