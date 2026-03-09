@@ -41,6 +41,22 @@
                     @include('admin/shared/input', ['label' => __('provisioning.admin.settings.services.fields.notifications_expiration_days'), 'name' => 'notifications_expiration_days', 'value' => setting('notifications_expiration_days'), 'help' => __('global.separebycomma')])
                 </div>
             </div>
+
+            <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('features.services.lifecycle_title') }}</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    @include('admin/shared/input', ['label' => __('features.services.suspend_after_unpaid_days'), 'name' => 'services_suspend_after_unpaid_days', 'value' => setting('services_suspend_after_unpaid_days', 0), 'type' => 'number', 'min' => 0, 'max' => 365, 'step' => 1])
+                </div>
+                <div>
+                    @include('admin/shared/input', ['label' => __('features.services.renewal_grace_days'), 'name' => 'services_renewal_grace_days', 'value' => setting('services_renewal_grace_days', 7), 'type' => 'number', 'min' => 0, 'max' => 365, 'step' => 1])
+                </div>
+                <div>
+                    @include('admin/shared/input', ['label' => __('features.services.late_fee_until_days'), 'name' => 'services_late_fee_until_days', 'value' => setting('services_late_fee_until_days', 30), 'type' => 'number', 'min' => 0, 'max' => 365, 'step' => 1])
+                </div>
+                <div>
+                    @include('admin/shared/input', ['label' => __('features.services.expire_delete_after_days'), 'name' => 'services_expire_and_delete_after_days', 'value' => setting('services_expire_and_delete_after_days', 90), 'type' => 'number', 'min' => 1, 'max' => 3650, 'step' => 1])
+                </div>
+            </div>
             <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('provisioning.admin.settings.services.subscription') }}</h3>
             <div class="grid md:grid-cols-1 gap-4">
                 <div>

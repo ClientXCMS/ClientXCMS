@@ -64,9 +64,9 @@ class ProductPriceDTO implements Jsonable
         $this->base_setup = $this->resolveBaseAmount($setup ?? 0.0, $amountsAreHt);
         $this->base_firstpayment = $firstpayment !== null ? $this->resolveBaseAmount($firstpayment, $amountsAreHt) : null;
 
-        $this->price_ht = $amountsAreHt ? round($recurringprice, 2) : $this->normalizeToHt($recurringprice);
-        $this->setup_ht = $setup !== null ? ($amountsAreHt ? round($setup, 2) : $this->normalizeToHt($setup)) : 0.0;
-        $this->firstpayment_ht = $firstpayment !== null ? ($amountsAreHt ? round($firstpayment, 2) : $this->normalizeToHt($firstpayment)) : null;
+        $this->price_ht = $amountsAreHt ? store_round($recurringprice, 2) : $this->normalizeToHt($recurringprice);
+        $this->setup_ht = $setup !== null ? ($amountsAreHt ? store_round($setup, 2) : $this->normalizeToHt($setup)) : 0.0;
+        $this->firstpayment_ht = $firstpayment !== null ? ($amountsAreHt ? store_round($firstpayment, 2) : $this->normalizeToHt($firstpayment)) : null;
 
         $this->currency = $currency;
         $this->recurring = $recurring;
@@ -114,18 +114,18 @@ class ProductPriceDTO implements Jsonable
     {
 
         if ($this->isModeHT()) {
-            return round($amount, 2);
+            return store_round($amount, 2);
         }
 
         $rate = $this->vatRate();
         $ht = $amount / (1 + $rate / 100);
 
-        return round($ht, 2);
+        return store_round($ht, 2);
     }
 
     private function format(float $number): float
     {
-        return fmod($number, 1.0) === 0.0 ? (float) (int) $number : round($number, 2);
+        return fmod($number, 1.0) === 0.0 ? (float) (int) $number : store_round($number, 2);
     }
 
     public function priceHT(): float
@@ -286,7 +286,7 @@ class ProductPriceDTO implements Jsonable
             return 0;
         }
 
-        return round(($monthlyprice - $this->price_ht - $this->setup_ht) / $monthlyprice * 100, 2);
+        return store_round(($monthlyprice - $this->price_ht - $this->setup_ht) / $monthlyprice * 100, 2);
     }
 
     public function hasDiscountOnRecurring(ProductPriceDTO $monthlyprice): bool

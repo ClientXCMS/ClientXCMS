@@ -313,6 +313,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         'suspended_at',
         'cancelled_at',
         'cancelled_reason',
+        'cancellation_reason_id',
         'notes',
         'delivery_errors',
         'delivery_attempts',
@@ -332,6 +333,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         'cancelled_at' => 'datetime',
         'trial_ends_at' => 'datetime',
         'data' => 'array',
+        'cancellation_reason_id' => 'integer',
     ];
 
     protected $attributes = [
@@ -406,13 +408,15 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public static function getShouldSuspend()
     {
+        $suspendAfterDays = (int) setting('services_suspend_after_unpaid_days', 0);
+
         return self::whereIn('status', [self::STATUS_ACTIVE, self::STATUS_CANCELLED])
             ->where(function ($query) {
                 $query->whereNull('cancelled_at')
                     ->orWhere('cancelled_at', '<=', now());
             })
             ->whereNotNull('expires_at')
-            ->where('expires_at', '<=', now())
+            ->where('expires_at', '<=', now()->subDays($suspendAfterDays))
             ->get();
     }
 
@@ -427,8 +431,10 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public static function getShouldHidden()
     {
+        $retentionDays = (int) setting('services_expire_and_delete_after_days', 90);
+
         return self::where('status', self::STATUS_EXPIRED)
-            ->whereRaw('NOW() >= DATE_ADD(expires_at, INTERVAL 15 DAY)')
+            ->whereRaw('NOW() >= DATE_ADD(expires_at, INTERVAL ? DAY)', [$retentionDays])
             ->get();
     }
 
@@ -615,6 +621,12 @@ class Service extends Model implements HasNotifiableVariablesInterface
         return $this->hasMany(Upgrade::class);
     }
 
+
+    public function cancellationReason()
+    {
+        return $this->belongsTo(CancellationReason::class, 'cancellation_reason_id');
+    }
+
     public function canRenew()
     {
         if ($this->expires_at == null) {
@@ -636,6 +648,14 @@ class Service extends Model implements HasNotifiableVariablesInterface
         }
 
         if (! is_null($this->max_renewals) && $this->renewals >= $this->max_renewals) {
+            return false;
+        }
+
+        $renewalGraceDays = (int) setting('services_renewal_grace_days', 7);
+        $lateFeeDays = (int) setting('services_late_fee_until_days', 30);
+        $renewalWindowDays = max(0, $renewalGraceDays + $lateFeeDays);
+
+        if ($this->expires_at->copy()->addDays($renewalWindowDays)->isPast()) {
             return false;
         }
 
