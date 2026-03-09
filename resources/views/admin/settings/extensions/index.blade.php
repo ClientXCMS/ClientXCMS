@@ -44,8 +44,8 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
                     </h1>
                     <p class="text-white/80 text-lg max-w-xl">{{ __('extensions.settings.description') }}</p>
                 </div>
-                <div class="flex flex-col xl:flex-row gap-3 w-full xl:w-auto">
-                    <form action="{{ route('admin.settings.extensions.import') }}" method="POST" enctype="multipart/form-data" class="flex flex-col lg:flex-row items-stretch lg:items-center gap-2 bg-white/15 rounded-xl px-3 py-3 border border-white/20 backdrop-blur-sm w-full xl:w-auto">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <form action="{{ route('admin.settings.extensions.import') }}" method="POST" enctype="multipart/form-data" class="flex flex-col md:flex-row items-stretch md:items-center gap-2 bg-white/20 rounded-xl px-3 py-2 border border-white/20">
                         @csrf
                         <select name="extension_type" class="bg-white/20 text-white rounded-lg px-2 py-2 border border-white/20">
                             <option value="modules">Module</option>
@@ -53,9 +53,8 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
                             <option value="themes">Thème</option>
                         </select>
                         <input type="text" name="extension_checksum" placeholder="SHA-256 (optionnel)" class="bg-white/20 text-white placeholder:text-white/70 rounded-lg px-3 py-2 border border-white/20 text-sm">
-                        <label for="extension_zip" id="extension-dropzone" class="cursor-pointer text-white text-sm rounded-lg border border-dashed border-white/40 px-3 py-2 hover:bg-white/10 transition min-w-[220px]">
+                        <label for="extension_zip" id="extension-dropzone" class="cursor-pointer text-white text-sm rounded-lg border border-dashed border-white/40 px-3 py-2 hover:bg-white/10 transition">
                             <i class="bi bi-cloud-arrow-up"></i> Glisser-déposer un ZIP ou cliquer
-                            <div id="extension-dropzone-filename" class="text-xs text-white/80 mt-1 truncate">Aucun fichier sélectionné</div>
                         </label>
                         <input id="extension_zip" type="file" name="extension_zip" accept=".zip" required class="hidden">
                         <button type="submit" class="flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-medium transition-all duration-200 backdrop-blur-sm border border-white/20">
@@ -332,12 +331,12 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
         dropzone.addEventListener('drop', (e) => {
             if (!e.dataTransfer?.files?.length) return;
             fileInput.files = e.dataTransfer.files;
-            document.getElementById('extension-dropzone-filename').textContent = e.dataTransfer.files[0].name;
+            dropzone.innerHTML = `<i class="bi bi-file-earmark-zip"></i> ${e.dataTransfer.files[0].name}`;
         });
 
         fileInput.addEventListener('change', () => {
             if (!fileInput.files?.length) return;
-            document.getElementById('extension-dropzone-filename').textContent = fileInput.files[0].name;
+            dropzone.innerHTML = `<i class="bi bi-file-earmark-zip"></i> ${fileInput.files[0].name}`;
         });
     });
 </script>

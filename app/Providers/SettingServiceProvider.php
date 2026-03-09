@@ -110,14 +110,6 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('helpdesk_reopen_days', 7);
             $service->setDefaultValue('helpdesk_reply_mailbox', 'support-reply');
             $service->setDefaultValue('helpdesk_inbound_webhook_token', substr(hash('sha256', (string) env('APP_KEY', 'clientxcms')), 0, 32));
-            $service->setDefaultValue('helpdesk_smtp_enable', false);
-            $service->setDefaultValue('helpdesk_mail_fromaddress', env('MAIL_FROM_ADDRESS'));
-            $service->setDefaultValue('helpdesk_mail_fromname', env('MAIL_FROM_NAME'));
-            $service->setDefaultValue('helpdesk_mail_smtp_host', env('MAIL_HOST'));
-            $service->setDefaultValue('helpdesk_mail_smtp_port', env('MAIL_PORT', '587'));
-            $service->setDefaultValue('helpdesk_mail_smtp_username', env('MAIL_USERNAME'));
-            $service->setDefaultValue('helpdesk_mail_smtp_password', env('MAIL_PASSWORD'));
-            $service->setDefaultValue('helpdesk_mail_smtp_encryption', env('MAIL_ENCRYPTION'));
             $service->setDefaultValue('billing_mode', InvoiceService::INVOICE);
             $service->setDefaultValue('allow_registration', true);
             $service->setDefaultValue('auto_confirm_registration', false);

@@ -28,6 +28,8 @@ use App\Helpers\EnvEditor;
 use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
+use App\Models\Billing\Subscription;
+use App\Models\Provisioning\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use PayPalCheckoutSdk\Core\ProductionEnvironment;
@@ -364,6 +366,15 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
 
         return new GatewayPayInvoiceResultDTO(true, 'Done', $invoice, $sourceDTO);
     }
+
+
+    public function createRemoteSubscription(Service $service, PaymentMethodSourceDTO $sourceDTO, Subscription $subscription): ?string
+    {
+        // PayPal vault tokens are currently used for direct invoice captures.
+        // A dedicated PayPal Billing Plan agreement flow can be added later.
+        return null;
+    }
+
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
     {
         if ($invoice->external_id) {
