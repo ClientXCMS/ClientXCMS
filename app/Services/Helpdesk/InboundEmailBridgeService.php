@@ -2,6 +2,8 @@
 
 namespace App\Services\Helpdesk;
 
+use App\Models\Account\Customer;
+use App\Models\Helpdesk\SupportDepartment;
 use App\Models\Helpdesk\SupportTicket;
 use Illuminate\Http\Request;
 
@@ -17,7 +19,7 @@ class InboundEmailBridgeService
         $recipient = (string) ($request->input('recipient') ?? $request->input('to') ?? '');
         $parsed = InboundReplyService::extractFromRecipient($recipient);
         if (! $parsed) {
-            return ['status' => 422, 'payload' => ['error' => 'invalid_recipient']];
+            return $this->handleNewTicket($request);
         }
 
         $ticket = SupportTicket::where('uuid', $parsed['uuid'])->first();
@@ -49,5 +51,64 @@ class InboundEmailBridgeService
         }
 
         return ['status' => 200, 'payload' => ['success' => true]];
+    }
+
+    private function handleNewTicket(Request $request): array
+    {
+        $sender = $this->extractEmail((string) ($request->input('sender') ?? $request->input('from') ?? ''));
+        if (! $sender) {
+            return ['status' => 422, 'payload' => ['error' => 'invalid_sender']];
+        }
+
+        $customer = Customer::whereRaw('LOWER(email) = ?', [strtolower($sender)])->first();
+        if (! $customer) {
+            return ['status' => 422, 'payload' => ['error' => 'sender_not_client']];
+        }
+
+        $department = SupportDepartment::query()->first();
+        if (! $department) {
+            return ['status' => 422, 'payload' => ['error' => 'department_not_configured']];
+        }
+
+        $subject = trim((string) ($request->input('subject') ?? $request->input('stripped-subject') ?? ''));
+        if ($subject === '') {
+            $subject = 'Inbound email';
+        }
+
+        $content = trim((string) ($request->input('stripped-text') ?? $request->input('text') ?? $request->input('body-plain') ?? ''));
+        if ($content === '') {
+            return ['status' => 422, 'payload' => ['error' => 'empty_content']];
+        }
+
+        $ticket = new SupportTicket;
+        $ticket->fill([
+            'department_id' => $department->id,
+            'priority' => 'medium',
+            'subject' => $subject,
+        ]);
+        $ticket->customer_id = $customer->id;
+        $ticket->status = SupportTicket::STATUS_OPEN;
+        $ticket->save();
+
+        $ticket->addMessage($content, $customer->id, null);
+        foreach ($request->file('attachments', []) as $attachment) {
+            $ticket->addAttachment($attachment, $customer->id, null);
+        }
+
+        return ['status' => 200, 'payload' => ['success' => true, 'ticket_uuid' => $ticket->uuid]];
+    }
+
+    private function extractEmail(string $raw): ?string
+    {
+        $raw = trim($raw);
+        if ($raw === '') {
+            return null;
+        }
+
+        if (preg_match('/<([^>]+)>/', $raw, $m)) {
+            $raw = trim($m[1]);
+        }
+
+        return filter_var($raw, FILTER_VALIDATE_EMAIL) ? strtolower($raw) : null;
     }
 }
