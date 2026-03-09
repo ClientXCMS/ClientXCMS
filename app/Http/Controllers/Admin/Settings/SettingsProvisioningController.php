@@ -38,6 +38,10 @@ class SettingsProvisioningController extends \App\Http\Controllers\Controller
         $data = $this->validate($request, [
             'days_before_creation_invoice_renewal' => 'required|integer|min:1',
             'days_before_expiration' => 'required|integer|min:1',
+            'services_suspend_after_unpaid_days' => 'required|integer|min:0|max:365',
+            'services_renewal_grace_days' => 'required|integer|min:0|max:365',
+            'services_late_fee_until_days' => 'required|integer|min:0|max:365',
+            'services_expire_and_delete_after_days' => 'required|integer|min:1|max:3650',
             'webhook_renewal_url' => 'nullable|url',
             'notifications_expiration_days' => 'nullable|string',
             'max_subscription_tries' => 'required|integer|min:0',
