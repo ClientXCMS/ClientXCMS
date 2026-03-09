@@ -65,8 +65,21 @@ class SecurityQuestion extends Model
     {
         return self::active()
             ->ordered()
-            ->pluck('question', 'id')
+            ->get()
+            ->mapWithKeys(fn (self $question) => [$question->id => $question->getTranslatedQuestion()])
             ->toArray();
+    }
+
+    public function getTranslatedQuestion(): string
+    {
+        if (is_string($this->question) && str_contains($this->question, '.')) {
+            $translated = __($this->question);
+            if ($translated !== $this->question) {
+                return $translated;
+            }
+        }
+
+        return $this->question;
     }
 
     /**

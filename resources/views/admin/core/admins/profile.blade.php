@@ -124,7 +124,7 @@
             </h2>
             @if ($item->hasSecurityQuestion())
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                {{ __('client.profile.security_question.current') }}: <strong>{{ $item->securityQuestion?->question }}</strong>
+                {{ __('client.profile.security_question.current') }}: <strong>{{ $item->securityQuestion?->getTranslatedQuestion() }}</strong>
             </p>
             @else
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
