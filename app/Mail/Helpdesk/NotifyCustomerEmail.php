@@ -54,18 +54,6 @@ class NotifyCustomerEmail extends Notification
             'ticket' => $this->ticket,
             'message' => (string) $this->message,
             'reply_address' => $replyAddress,
-        ], $notifiable);
-
-        if (filter_var($replyAddress, FILTER_VALIDATE_EMAIL)) {
-            $mail->replyTo($replyAddress);
-            $mail->line('Répondez directement à cet email pour ajouter votre message au ticket.');
-            $mail->line('Adresse de réponse : '.$replyAddress);
-        }
-
-        if (! empty($this->message)) {
-            $mail->line('Dernière réponse : '.(string) $this->message);
-        }
-
-        return $mail;
+        ], $notifiable)->replyTo($replyAddress);
     }
 }
