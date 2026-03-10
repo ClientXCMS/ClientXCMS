@@ -54,7 +54,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
     {
         $priorities = SupportTicket::PRIORITIES;
         $prioritiesArray = collect($priorities)->mapWithKeys(function ($key) {
-            return [$key => [__('helpdesk.priorities.'.$key), 'priority']];
+            return [$key => [__('helpdesk.priorities.' . $key), 'priority']];
         })->toArray();
 
         return \App\Models\Helpdesk\SupportDepartment::all()->pluck('name', 'id')->toArray() + $prioritiesArray;
@@ -63,6 +63,18 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
     public function getIndexParams($items, string $translatePrefix): array
     {
         $params = parent::getIndexParams($items, $translatePrefix);
+        $ticketStatsService = new TicketStatisticsService;
+
+        $params['tickets_to_reply'] = $ticketStatsService->getTicketsToReply();
+        $params['active_tickets'] = $ticketStatsService->getActiveTickets();
+
+        return $params;
+    }
+
+    public function statistics()
+    {
+        abort_if(! staff_has_permission('admin.show_helpdesk_analytics'), 403);
+
         $ticketStatsService = new TicketStatisticsService;
         $pending_tickets = SupportTicket::where('status', SupportTicket::STATUS_OPEN)->count();
         $active_tickets = SupportTicket::whereIn('status', [SupportTicket::STATUS_ANSWERED, SupportTicket::STATUS_OPEN])->count();
@@ -78,15 +90,16 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         $widgets->push(new AdminCountWidget('avg_reply_time', 'bi bi-clock-history', 'helpdesk.admin.widgets.avg_reply_time', $stats['avg_reply_time'], true, true));
         $widgets->push(new AdminCountWidget('avg_resolution_time', 'bi bi-stopwatch', 'helpdesk.admin.widgets.avg_resolution_time', $stats['avg_resolution_time'], true, true));
 
-        $params['helpdesk_widgets'] = $widgets;
-        $params['tickets_to_reply'] = $ticketStatsService->getTicketsToReply();
-        $params['active_tickets'] = $ticketStatsService->getActiveTickets();
-        $params['staff_message_counts'] = $ticketStatsService->getStaffMessageCounts();
-        $params['department_ticket_counts'] = $ticketStatsService->getDepartmentTicketCounts();
-        $params['graph_labels'] = $ticketStatsService->getWeeklyGraphLabels();
-        $params['graph_data'] = $ticketStatsService->getWeeklyGraphData();
+        $data = [
+            'helpdesk_widgets' => $widgets,
+            'staff_message_counts' => $ticketStatsService->getStaffMessageCounts(),
+            'department_ticket_counts' => $ticketStatsService->getDepartmentTicketCounts(),
+            'graph_labels' => $ticketStatsService->getWeeklyGraphLabels(),
+            'graph_data' => $ticketStatsService->getWeeklyGraphData(),
+            'translatePrefix' => $this->translatePrefix,
+        ];
 
-        return $params;
+        return view('admin.helpdesk.tickets.statistics', $data);
     }
 
     protected function queryIndex(): LengthAwarePaginator
@@ -156,7 +169,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         $data['related'] = $ticket->customer->supportRelatedItems();
         $data['priorities'] = SupportTicket::getPriorities();
         $data['staffs'] = \App\Models\Admin\Admin::all()->filter(function ($staff) use ($ticket) {
-            return $staff->can('admin.manage_tickets_department.'.$ticket->department_id);
+            return $staff->can('admin.manage_tickets_department.' . $ticket->department_id);
         })->pluck('fullname', 'id');
         $data['staffs']->put('none', __('global.none'));
         $data['departments'] = \App\Models\Helpdesk\SupportDepartment::all()->pluck('name', 'id')->toArray();
@@ -176,7 +189,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
             'admin_id' => auth('admin')->id(),
         ]);
 
-        return redirect()->route($this->routePath.'.show', $ticket)->with('success', __('helpdesk.support.show.comments.added'));
+        return redirect()->route($this->routePath . '.show', $ticket)->with('success', __('helpdesk.support.show.comments.added'));
     }
 
     public function deleteComment(Request $request, SupportTicket $ticket, SupportComment $comment)
@@ -185,7 +198,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         $this->checkPermission('reply', $ticket);
         $comment->delete();
 
-        return redirect()->route($this->routePath.'.show', $ticket)->with('success', __('helpdesk.support.show.comments.deleted'));
+        return redirect()->route($this->routePath . '.show', $ticket)->with('success', __('helpdesk.support.show.comments.deleted'));
     }
 
     public function destroy(SupportTicket $ticket)
@@ -195,7 +208,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         if ($ticket->isClosed()) {
             try {
                 foreach ($ticket->attachments as $attachment) {
-                    \File::delete(storage_path('app/'.$attachment->path));
+                    \File::delete(storage_path('app/' . $attachment->path));
                 }
                 \File::deleteDirectory(storage_path("app/helpdesk/attachments/{$ticket->id}"));
             } catch (\Exception $e) {
@@ -208,7 +221,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         }
         $ticket->close('admin', auth('admin')->id());
 
-        return redirect()->route($this->routePath.'.index')->with('success', __('helpdesk.support.ticket_closed'));
+        return redirect()->route($this->routePath . '.index')->with('success', __('helpdesk.support.ticket_closed'));
     }
 
     public function reply(ReplyTicketRequest $request, SupportTicket $ticket)
@@ -222,10 +235,10 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         if ($request->has('close')) {
             $ticket->close('admin', auth('admin')->id());
 
-            return redirect()->route($this->routePath.'.index')->with('success', __('helpdesk.support.ticket_closed'));
+            return redirect()->route($this->routePath . '.index')->with('success', __('helpdesk.support.ticket_closed'));
         }
 
-        return redirect()->route($this->routePath.'.show', $ticket)->with('success', __('helpdesk.support.ticket_replied'));
+        return redirect()->route($this->routePath . '.show', $ticket)->with('success', __('helpdesk.support.ticket_replied'));
     }
 
     public function close(Request $request, SupportTicket $ticket)
@@ -255,22 +268,22 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
             'content' => 'required|string|max:10000',
         ]);
         if ($message->admin_id != auth('admin')->id() || $ticket->id != $message->ticket_id || $message->isCustomer()) {
-            return redirect()->route($this->routePath.'.show', $ticket)->with('error', 'You are not allowed to edit this message');
+            return redirect()->route($this->routePath . '.show', $ticket)->with('error', 'You are not allowed to edit this message');
         }
         $message->update(['message' => $validated['content'], 'edited_at' => Carbon::now()]);
 
-        return redirect()->route($this->routePath.'.show', $ticket)->with('success', __('helpdesk.support.message_updated'));
+        return redirect()->route($this->routePath . '.show', $ticket)->with('success', __('helpdesk.support.message_updated'));
     }
 
     public function destroyMessage(SupportTicket $ticket, SupportMessage $message): \Illuminate\Http\RedirectResponse
     {
         abort_if(! $ticket->staffCanView(auth('admin')->user()), 403);
         if ($message->admin_id != auth('admin')->id() || $ticket->id != $message->ticket_id || $message->isCustomer()) {
-            return redirect()->route($this->routePath.'.show', $ticket)->with('error', 'You are not allowed to destroy this message');
+            return redirect()->route($this->routePath . '.show', $ticket)->with('error', 'You are not allowed to destroy this message');
         }
         $message->delete();
 
-        return redirect()->route($this->routePath.'.show', $ticket)->with('success', __($this->flashs['deleted']));
+        return redirect()->route($this->routePath . '.show', $ticket)->with('success', __($this->flashs['deleted']));
     }
 
     public function reopen(SupportTicket $ticket)
@@ -278,7 +291,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         $this->checkPermission('update', $ticket);
         $ticket->reopen();
 
-        return redirect()->route($this->routePath.'.show', $ticket)->with('success', __('helpdesk.support.ticket_reopened'));
+        return redirect()->route($this->routePath . '.show', $ticket)->with('success', __('helpdesk.support.ticket_reopened'));
     }
 
     public function update(UpdateTicketRequest $request, SupportTicket $ticket)
@@ -294,7 +307,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         $this->checkPermission('create');
         $validated = $request->validated();
         if ($request->query->has('customer_id') && ! Customer::find($request->query->get('customer_id'))) {
-            return redirect()->route($this->routePath.'.create')->with('error', __('helpdesk.tickets.customer_not_found'));
+            return redirect()->route($this->routePath . '.create')->with('error', __('helpdesk.tickets.customer_not_found'));
         }
         $validated['customer_id'] = $request->query->get('customer_id');
         $ticket = SupportTicket::create($validated);
@@ -303,7 +316,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
             $ticket->addAttachment($attachment, null, auth('web')->id());
         }
 
-        return redirect()->route($this->routePath.'.show', $ticket)->with('success', __('global.created'));
+        return redirect()->route($this->routePath . '.show', $ticket)->with('success', __('global.created'));
     }
 
     public function download(SupportTicket $ticket, $attachment)
@@ -321,22 +334,22 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
 
         return [
             'showAny' => [
-                'admin.manage_'.$tablename,
+                'admin.manage_' . $tablename,
             ],
             'show' => [
-                'admin.manage_'.$tablename,
+                'admin.manage_' . $tablename,
             ],
             'update' => [
-                'admin.manage_'.$tablename,
+                'admin.manage_' . $tablename,
             ],
             'delete' => [
-                'admin.close_'.$tablename,
+                'admin.close_' . $tablename,
             ],
             'create' => [
-                'admin.manage_'.$tablename,
+                'admin.manage_' . $tablename,
             ],
             'reply' => [
-                'admin.reply_'.$tablename,
+                'admin.reply_' . $tablename,
             ],
         ];
     }
