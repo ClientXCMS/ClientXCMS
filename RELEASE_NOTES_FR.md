@@ -1,0 +1,312 @@
+# 📘 RELEASE NOTES (FR)
+
+> Document consolidé et **exhaustif** des évolutions du projet depuis le premier commit, mis à jour automatiquement à partir de l’historique Git.
+
+## ✅ Vérification effectuée
+
+- Historique Git relu depuis l’origine (`git log --reverse`).
+- Aucun changement de code fonctionnel ajouté dans cette mise à jour : uniquement la documentation des releases.
+
+## 🧭 Évolutions majeures (synthèse)
+
+- Noyau applicatif, sécurité et durcissement global (sanitization, permissions, proxies, installation).
+- Store/Billing enrichis : prix, taxes, facturation, renouvellements, exports, paiements, options de configuration.
+- Helpdesk étendu : workflow tickets, réponses clients, inbound email sécurisé, pièces jointes et éditeur Markdown.
+- Provisioning/Services : règles d’annulation, cycle de vie (suspension/expiration), APIs et contrôles additionnels.
+- Écosystème extensions/thèmes/addons : import ZIP, désinstallation sécurisée, overrides de vues, seeders et DB settings.
+- Front/UI/UX : amélioration formulaires, composants partagés, traductions, SEO, menus/sections/social links.
+- CI/CD/tests : ajustements workflows, matrices, stabilité des tests et scripts de validation.
+
+## 📜 Journal complet des commits (depuis le début)
+
+- `6bb5f47 feat(core): start of new adventure`
+- `f4c2676 feat(core): re-import clientxcms v2.14.8 version!`
+- `6c12799 feat(core): update license file`
+- `ea3c423 feat(core): update README.md`
+- `7a37bb5 feat(core): v2.14.7 pre-release`
+- `3cdb372 feat(core): remove unused files`
+- `92328c7 feat(history): remove clear, delete and deleteall functions for better security`
+- `b65c6e2 feat(billing): create directories for CSV and XLSX exports invoices if they do not exist`
+- `76e1161 feat(section): add additional tags to TAGS_DISABLED for enhanced security`
+- `7f936d7 refactor(views): remove unnecessary closing PHP tags for cleaner code`
+- `7eb1e87 fix(paypal): handle potential null payment_tokens in getSources method`
+- `66c552c fix(routes): update is_subroute function to handle additional client path`
+- `ed6c47a fix(license): correct access token setting key in restartNPM method`
+- `2be8afd fix(service): update permission checks for service actions in ServiceController`
+- `13473ea feat(extensions): add author field to extension data in scanFolder method`
+- `de46556 fix(install): update storeRegister method to use request data for Admin insertion`
+- `d7e424d fix(pricing): ensure billing price returns 0 for null values in getBillingPrice method`
+- `6f8728f fix(docker): add error handling for cache clearing in entrypoint script and set supervisord user to nginx`
+- `658b6b0 First Commit For Init Dev Projet`
+- `7093b6c chore: update .gitignore to exclude temporary files`
+- `1b69495 feat(reviews): add trusted customer verification method`
+- `471cbc5 fix(email): pass context to bladeRender for proper placeholder replacement`
+- `5405b5a feat(views): add extension injection points for product customization`
+- `d2d4c43 feat(config): add getFieldType method to determine field type based on key prefix; update form input type in config options view`
+- `8ec4536 feat(docker): add example docker-compose file for application setup; enhance content sanitization functions in various models and controllers`
+- `7e88337 fix(core): Refactor code structure for improved readability and maintainability`
+- `ad13287 feat(personalization): add theme_home_redirect_route for customizable redirection and update related views`
+- `ffc957f feat(functions):  add get_group_icon function for icon mapping`
+- `9c72b91 feat(migration): normalize last_login date format and add StringHTML helper for description formatting`
+- `ed703ba fix(invoices): spit invoices show into more tabs file`
+- `1ca4661 feat(layout): update layout classes for consistent styling across multiple views`
+- `e1d38c5 fix(workflow): update branch triggers and reorder steps for translation export process`
+- `41a5f45 fix(workflow): update branch names from 'main' to 'master' in workflow triggers`
+- `dcbef24 fix(workflow): update branch reference from 'main' to 'master' for translation export steps`
+- `7f8b8e1 fix(workflow): refactor export translations job to improve structure and add conditional commit logic`
+- `43b6e02 fix(workflow): add missing checkout step for export translations job`
+- `85a8a78 fix(workflow): restore export translations job with updated branch condition`
+- `b58c1fa fix(workflow): update branch reference from 'main' to 'master' for translation export steps`
+- `d3d19d0 fix(workflow): update checkout step to use 'ref' instead of 'branch' for translations repository`
+- `c02d1f3 fix(workflow): update checkout step to include SSH key and known hosts for translations repository`
+- `85e6ba4 fix(invoices): invoice logs display`
+- `741f1a8 fix(custom_items): remove unused fields 'unit_price' and 'unit_setupfees'`
+- `b2136d5 fix(helpdesk): update ticket query to include 'answered' status for auto-closing`
+- `c1a75fa feat(seo): add methods for header manipulation and include header in layouts`
+- `1316bda fix(seeder): correct method call for extension type in EmailTemplateSeeder`
+- `b05a95f fix(workflow): comment out translation export and related steps in GitHub Actions`
+- `8f08447 fix(invoice): adjust price calculation in appendServiceOnExistingInvoice method`
+- `b293ad6 fix(profile): remove 'required' validation from 2fa field in ProfilePasswordRequest`
+- `b2097a9 fix(AddressIPAM): correct variable name from 'mut' to 'mtu' in AddressIPAM class`
+- `797b015 fix(store): standardize route naming conventions in basket routes`
+- `8dbb2c1 fix(service-providers): prevent widget registration in console environment`
+- `5264bf6 fix(WebhookDTO): enhance webhook handling for Discord URLs and clean variable keys`
+- `b621728 fix(CustomerObserver): restrict balance change logging to admin users only`
+- `760e2cd fix(MenuLink): add HasMetadata trait and update show view for metadata management`
+- `495a1e4 fix(ThemeSeeder): add error handling for menus.json parsing and attach metadata to MenuLink`
+- `af80bb3 Add conditional inclusion of free trial store card`
+- `c37532e fix(AddonManager, ModuleManager): unify provider retrieval logic and enhance autoloading`
+- `1b69c2a feat(tailwind.config): add support for addon and module blade and js files`
+- `f05038a feat(WebhookNotification): add support for HelpdeskTicketClosedEvent and enhance webhook payloads`
+- `b76f83d fix(ConfigOptionDTO): improve expiration date handling in getBillingName and data methods`
+- `4c715aa Add conditional inclusion of free trial store card`
+- `4543560 fix(AddonManager, ModuleManager): unify provider retrieval logic and enhance autoloading`
+- `8cc9455 feat(tailwind.config): add support for addon and module blade and js files`
+- `d93ac22 fix(permissions): correct invalid permission names throughout the application`
+- `418a4da fix(permissions): correct additional permission name mismatches`
+- `8c08e16 feat(settings): display disabled settings cards as grayed out`
+- `e2bc49f feat(permissions): add PHP constants for all permissions`
+- `fb1d4f6 feat(permissions): add Artisan command for permission audit`
+- `5705bd1 feat(permissions): add validation script`
+- `ba468fe refactor(permissions): use PHP constants instead of string literals`
+- `bc63590 fix(EmailController): correct permission check in destroy method and use constants`
+- `05dfc2c feat(permissions): add admin.manage_emails permission`
+- `83c8f28 fix(EmailController): add email validation and use MANAGE_EMAILS permission`
+- `7f17855 refactor(controllers): use Permission constants instead of string literals`
+- `740966c feat(Customer): add support for searching and handling support_id field`
+- `adf6418 Update limit for value metadata in UpdateMetadataRequest.php`
+- `d86e349 feat(issues): adding bug report template`
+- `ce182bd fix(WebhookNotification, Blade views): standardize action names and improve layout classes`
+- `e5981dd fix(seeder): adding department seeder in install translations`
+- `535e54c fix(InvoiceService): refine price calculation in appendServiceOnExistingInvoice method`
+- `b70d04b refactor(InvoiceController, routes, views): standardize variable naming for invoice items`
+- `54b8b4d fix(invoice): missing parameters in fulfillment`
+- `10a82e9 merge(permissions): merge alexwrite:master into master`
+- `967db47 fix: some bugs`
+- `ccaeb92 fix: update version number to 2.14.9`
+- `1f55cd1 feat(security): add 'allow_plus_in_email' setting and update related validation`
+- `904bf28 feat(update): enhance extension update process with status messages`
+- `eeec9ad feat(admin): dynamically assign default role when creating admin user`
+- `f8311c0 feat(notifications): add error logging for failed expiration notifications`
+- `49312c0 feat(basket): implement product configuration preview functionality`
+- `b542a93 feat(update): improve extension update error handling and UI logic`
+- `a08a88f feat(extension): update DatabaseExtensionCommand to use option for extension and improve error handling in thumbnail method`
+- `ad9dea9 fix: fixing unit tests`
+- `2a46bcf feat(csrf): add custom cookie handling for CSRF token`
+- `9a42700 fix(customer): wrong customer show placeholder route`
+- `767728e fix(service): fix notify expiration was never send`
+- `f2451ac feat(product): support customers_reviews badge in product default theme`
+- `8d2f722 feat(ci): uncomment phpunit workflows`
+- `fdf9c26 merge(master): merge master into fix/unit-tests`
+- `a8ea93e fix: enhance theme management`
+- `58d35c7 v2.14.10`
+- `91e3140 fix: upgrade unit tests`
+- `bdf2f3b fix(personnalization): remove used code`
+- `71ddc26 fix(tests): fix unit tests`
+- `bd02045 feat(deploy): add GitHub Actions workflow for production deployment`
+- `960a690 Add 'pelican' labels to ServerController`
+- `bbcb798 fix: add translations:import-file in workflow`
+- `4c9b48b fix: fix some bugs with copilot`
+- `b91602f fix(deploy): wrong import translation commands`
+- `5e8de24 fix(invoice): fix test_invoices_can_show test`
+- `16f48be feat(helpdesk): adding tickets and departments API`
+- `8797e33 feat(api): adding server, subdomain, actionlog and coupon controller`
+- `58420f4 fix(checkout): fix test_minimal_amount_for_gateway`
+- `dd4cca4 merge(master): merge fix/unit-tests into master`
+- `1949366 feat(customers): adding temporary note`
+- `8c1b836 feat(customers): adding account deletion`
+- `2e28d8a merge(feat/delete-account): merge main into feat/delete-account`
+- `6b8b6b2 feat(apikeys): add abilities`
+- `8f674b9 fix(invoices): wrong data formating in invoice add`
+- `cb490ea test(invoices): add more tests`
+- `f257c46 fix(tests): lint namespace`
+- `e11a835 feat(extensions): change extensions layouts`
+- `d53b76b feat(services): adding cancellation reason crud and API`
+- `696f1c3 feat(security): adding security questions for customers`
+- `cc36da0 feat(extensions): adding missing includes`
+- `25d6112 feat(security): adding security questions for staffs`
+- `8a7ebce fix(kernel): fix typo in basket commands`
+- `6e2f215 feat(payments): adding mollie, squareup and sumup type`
+- `99a9f47 feat(composer): add dependancing`
+- `1646441 feat(payment): adding square and sumup icon`
+- `74078bc fix(theme): change default version to 1.0`
+- `6b398fd feat(settings): add icon to settings card`
+- `3201e06 fix(tests): fixe some bugs`
+- `66fb004 fix(database): set only modules, themes and addons migrations`
+- `b514b88 feat: adding test matrics`
+- `4968011 merge(feat/security-questions): merge feat/security-questions into v2.15`
+- `de27ed3 feat: add customer api`
+- `bc11c78 fix: some fixes`
+- `e7a13b3 feat(ci): add linter`
+- `fe2c8b6 fix: lint`
+- `ce0f9d3 merge(v2.15): merge feat/client-api into v2.15`
+- `8c82303 Apply automatic changes`
+- `aee090b merge(fix/lint): merge fix/lint into v2.15`
+- `6685e72 feat(core): update to laravel 12`
+- `06b9908 fix(ci): fix branches`
+- `9f3b8f8 fix(ci): change php version of matrix`
+- `2589bb0 fix(core): update dependances`
+- `cf77875 Apply automatic changes`
+- `1846547 fix(ci): fix some bugs`
+- `8e2e3b2 feat: add Tailwind safelist for dynamic hero colors and Vite addon support`
+- `57d157a feat(invoices): add extension point for invoice sidebar`
+- `1c8bce8 fix(invoice): add default description in config`
+- `2df806d fix(invoice): generating pdf`
+- `1f913d7 fix(core): fix header file`
+- `a07022b merge(master): merge alexwrite:fix/vite-addon-support into master`
+- `5cbbeab merge(master): merge alexwrite:feat/invoice-sidebar-stack into master`
+- `c5f296f fix(ci): rollback ci`
+- `e6b71c3 Apply automatic changes`
+- `82e0c05 feat: add Tailwind safelist for dynamic hero colors and Vite addon support`
+- `e3834da feat(invoices): add extension point for invoice sidebar`
+- `0c2f74a fix(ci): change php version to php 8.3`
+- `e1a62d9 fix(ci): try to fix unit tests`
+- `a5121c2 Apply automatic changes`
+- `0d7cf90 fix(ci): try to fix unit tests`
+- `1e7baaa fix(tests): remove usued tests`
+- `ac9bb68 Apply automatic changes`
+- `bcb6066 feat(sections): add configurable section settings system`
+- `7265dbc fix(seo): integrate SEO service in cerbonix and add dynamic robots.txt`
+- `ab276b5 fix(i18n): add locale-aware caching for theme sections`
+- `849cdb7 fix(i18n): use LocaleService for dynamic locale detection`
+- `2f8c01a refactor(theme): clean up comments in ThemeManager`
+- `ce8ecb0 Merge pull request #15 from alexwrite/fix/i18n-locale-cache`
+- `f7553ad Apply automatic changes`
+- `47f23a6 merge(v2.15): merge alexwrite:fix/seo-cerbonix-robots into v2.15`
+- `0786601 feat(customers): adding temporary note`
+- `d40214f feat(security): adding security questions for customers`
+- `22f0c97 feat(composer): add dependancing`
+- `999d447 feat(settings): add icon to settings card`
+- `83efdcc fix(payment): add PaymentTypeService singleton`
+- `6ef782d feat(store): add store redirect`
+- `209670d fix(email_template): add fallback locale`
+- `e4b34fd fix(service): wrong label in getInvoiceName`
+- `9709ab9 Apply automatic changes`
+- `53d54aa fix(composer): fixe dependancing`
+- `22722fe fix(install): fix translations`
+- `6baf574 Apply automatic changes`
+- `a0e4a29 refactor(sections): use existing Translatable system instead of new table`
+- `6ec38d9 fix(settings): prevent orphan translations when clearing settings`
+- `c162b96 feat(themes): add seeder support for themes`
+- `74c1bfa feat(themes): add DB settings support for translatable config`
+- `0991617 feat(menu): add inline editing for front and bottom menus`
+- `5860fb1 merge(v2.15): merge alexwrite:fix/orphan-translations-cleanup into ClientXCMS/v2.15`
+- `4133509 Apply automatic changes`
+- `b382bb7 Merge branch 'v2.15' into feat/theme-db-settings`
+- `b5e4c05 merge(v2.15): merge alexwrite:feat/theme-db-settings into v2.15`
+- `992c60f Apply automatic changes`
+- `9d049f0 Merge branch 'v2.15' into feat/theme-seeders`
+- `05c9dcf merge(v2.15): merge alexwrite/feat/theme-seeders into v2.15`
+- `25d9541 Apply automatic changes`
+- `e6e5e13 Merge branch 'v2.15' into feat/section-config-system`
+- `f3542fc merge(v2.15): merge alexwrite:feat/section-config-system into v2.15`
+- `e4e4792 Apply automatic changes`
+- `ec5c173 feat:  update the extension database command`
+- `d20cf64 refactor(menu): replace Alpine.js inline editor with vanilla JS drawer pattern`
+- `3c8daf8 feat(footer): add getFooterColumns and getFooterInlineLinks helpers to ThemeManager`
+- `d9ff348 Apply automatic changes`
+- `10132ba merge(v2.15): merge alexwrite/feat/menu-inline-editing into v2.15`
+- `be6119a Apply automatic changes`
+- `1f46c4f feat(socials): add position field for drag-and-drop ordering`
+- `c4de194 fix(socials): add csrf-token meta and clean up sort route`
+- `4b37cd2 feat(socials): replace create/show pages with inline drawer`
+- `c80e477 test(socials): add CRUD tests and fix testing environment`
+- `847c62f Apply automatic changes`
+- `788260a merge(v2.15): merge alexwrite/feat/social-network-position into v2.15`
+- `406aa9e fix(themes): allow themes to override admin and addon views`
+- `ef313e3 Apply automatic changes`
+- `0fbe2fe Update database and Redis configuration for testing`
+- `de95e8f merge(v2.15): merge alexwrite/feat/theme-view-overrides into v2.15`
+- `405e3af Update SECURITY.md for vulnerability reporting`
+- `b04e059 Update SECURITY.md`
+- `b2c5c41 Translate SECURITY.md to French and update contact info`
+- `29f5900 fix(view): reload paths after lazy ThemeManager construction`
+- `34bbf8f fix(tests): correct route names in SecurityQuestionTest`
+- `d903d4f merge(v2.15): merge alexwrite/fix/theme-view-finder-race-condition into v2.15`
+- `aa931a7 merge(v2.15): merge alexwrite/fix/security-question-route-names into v2.15`
+- `7fea826 merge(v2.15): merge boomerangBS/patch-1 into v2.15`
+- `27d5d5a fix(sections): isolate sub-view rendering to protect parent Blade section stack`
+- `16b00ca merge(v2.15): merge alexwrite/fix/blade-section-stack-isolation into v2.15`
+- `8b592ca fix: some bugs`
+- `bd8079e fix(extensions): add bulk action to extensions to smooth interactions`
+- `ed3d012 fix(support): fix can edit message on closed message`
+- `12a53f3 feat(security): add more details for security.md and translations`
+- `6e5fd8e Apply automatic changes`
+- `216d492 fix(extensions): wrong asset function`
+- `e5650a1 fix: check specific directory writability instead of root folder in installation wizard`
+- `67a6b49 Apply automatic changes`
+- `b39f583 merge(v2.15): merge alexwrite/fix/install-wizard-least-privilege-clean into v2.15`
+- `aa93857 fix(install): remove duplicate writable checks from Prerequisites`
+- `88e7537 merge(v2.15): merge alexwrite/fix/prerequisites-remove-basepath-check into v2.15`
+- `ca8b3ac feat(seo): add Open Graph, Twitter Card and canonical URL support`
+- `55d4a5c Apply automatic changes`
+- `7d664c1 fix(mail): remove deleteCachedView flag from Blade::render`
+- `17d37b9 fix(security): refactor content sanitization functions`
+- `626f1dd merge(v2.15): merge alexwrite/feature/seo into v2.15`
+- `68bc947 fix(addons): fallback to addon default views when theme overrides namespace`
+- `a8d1f8a merge(v2.15): merge alexwrite/fix/addon-view-fallback into v2.15`
+- `47681b4 fix(views): correct theme detection and module view fallback`
+- `32ad915 merge(v2.15): merge alexwrite/fix/view-resolution-theme-detection into v2.15`
+- `2b0aaa5 merge(v2.15): merge alexwrite/fix/blade-render-delete-cached-view into v2.15`
+- `decdd52 feat(sections): add Section Field Definition`
+- `f31767a fix(core): remove used code`
+- `6c50d8a Apply automatic changes`
+- `08f1298 fix(sections): some fixes`
+- `b19d6c1 Apply automatic changes`
+- `2e1a919 fix(env): missing dependances`
+- `b02964b fix(tests): fix unit test`
+- `798ad54 Apply automatic changes`
+- `9351cab fix(tests): fix unit test`
+- `ad92889 fix(sections): some bugs`
+- `1d7c068 fix(sections): some bugs`
+- `083fe5f Apply automatic changes`
+- `8316be7 Apply automatic changes`
+- `ecd8ab3 fix(sections): current rendering section`
+- `7d309ca fix(sections): current rendering section`
+- `31a1590 Apply automatic changes`
+- `deede7d Apply automatic changes`
+- `1d01ff1 feat(extensions): add uninstall action for installed extensions`
+- `8df37f1 fix: trust all proxies in TrustProxiesMiddleware`
+- `3425401 fix(extensions): secure uninstall with path validation, migration rollback and proper audit logging`
+- `c12a6b0 met a jour les informations de connexion a la base de données`
+- `06a579a met a jour l'hôte de redis dans .env.testing`
+- `9e5a574 ajoute la configuration de la base de données`
+- `8f457c2 revert: restore .env.testing to match CI configuration`
+- `02071c5 revert: restore TrustProxiesMiddleware to Cloudflare IPs (separate concern)`
+- `2b579da revert: restore phpunit.xml to original state`
+- `765b4c3 corrige le rollback des migrations lors de l'uninstall des extensions`
+- `6ac111d corrige — gère les erreurs d'uninstall des extensions et logue l'erreur`
+- `ad74016 ajoute une confirmation avant désinstallation de l'extension`
+- `831b5bc merge(v2.15): merge alexwrite/feature/admin-settings-extensions into v2.15`
+- `abb9f16 fix(login): add source and gateway URL whitelist`
+- `4f52efd feat(invoices): export invoice for specical user`
+- `00d24a4 feat(invoices): add button to regenerate pdf`
+- `f7cdd27 fix(apikeys): fix bugs on API key creation`
+- `761653f Merge pull request #43 from ClientXCMS/v2.15`
+- `42eb1dd v2.15`
+- `816887f fix deployement`
+- `ac4ee98 Add cancellation rules & lifecycle settings; extension ZIP import; editor and registration UX improvements`
+- `9d62dc7 feat: enhance markdown preview, pricing precision, checkout i18n and support email replies`
+
+---
+Total commits listés : **288**.

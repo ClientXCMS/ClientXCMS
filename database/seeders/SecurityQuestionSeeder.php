@@ -22,6 +22,7 @@ namespace Database\Seeders;
 use App\Models\Admin\SecurityQuestion;
 use App\Models\Personalization\Translation;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class SecurityQuestionSeeder extends Seeder
 {
