@@ -79,7 +79,14 @@ class SecurityQuestion extends Model
 
     public function getTranslatedQuestion(): string
     {
-        return $this->trans('question', $this->question);
+        if (is_string($this->question) && str_contains($this->question, '.')) {
+            $translated = __($this->question);
+            if ($translated !== $this->question) {
+                return $translated;
+            }
+        }
+
+        return $this->question;
     }
 
     /**

@@ -1,3 +1,5 @@
 *
 !.gitignore
 !/advanced_personalization/
+!/helpdesk-bridge/
+!/helpdesk-bridge/**
