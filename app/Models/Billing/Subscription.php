@@ -29,6 +29,7 @@ use App\Services\Core\PaymentTypeService;
 use App\Services\Store\RecurringService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -121,24 +122,27 @@ class Subscription extends Model
 
     public static function createOrUpdateForService(Service $service, string $paymentMethodId)
     {
-        if ($service->subscription) {
-            $service->subscription->payment_method_id = $paymentMethodId;
-            $service->cancelled_at = null;
-            $service->subscription->state = 'active';
-            $service->subscription->save();
+        return DB::transaction(function () use ($service, $paymentMethodId) {
+            $service->update(['cancelled_at' => null]);
 
-            return $service->subscription;
-        }
-        $subscription = new static;
-        $subscription->service_id = $service->id;
-        $service->cancelled_at = null;
-        $subscription->customer_id = $service->customer_id;
-        $subscription->payment_method_id = $paymentMethodId;
-        $subscription->state = 'active';
-        $subscription->billing_day = $subscription->getFirstBillingDay();
-        $subscription->save();
+            if ($service->subscription) {
+                $service->subscription->payment_method_id = $paymentMethodId;
+                $service->subscription->state = 'active';
+                $service->subscription->save();
 
-        return $subscription;
+                return $service->subscription;
+            }
+
+            $subscription = new static;
+            $subscription->service_id = $service->id;
+            $subscription->customer_id = $service->customer_id;
+            $subscription->payment_method_id = $paymentMethodId;
+            $subscription->state = 'active';
+            $subscription->billing_day = $subscription->getFirstBillingDay();
+            $subscription->save();
+
+            return $subscription;
+        });
     }
 
     public function cancel()
@@ -156,42 +160,50 @@ class Subscription extends Model
     public function tryRenew()
     {
         $service = $this->service;
+        if (! $service) {
+            throw new \Exception('No service found for subscription '.$this->id);
+        }
+
         $invoice = $service->invoice;
-        if (! $invoice) {
+        if (! $invoice || $invoice->status !== 'pending') {
             $invoice = InvoiceService::createInvoiceFromService($service);
             $service->update(['invoice_id' => $invoice->id]);
         }
-        if ($invoice->status == 'pending') {
-            $source = $invoice->customer->getSourceById($this->payment_method_id);
-            /** @var GatewayTypeInterface $gateway */
-            $gateway = app(PaymentTypeService::class)->get($source->gateway_uuid);
-            if (! $gateway) {
-                throw new \Exception('No gateway found for service '.$service->id);
-            }
-            $result = $gateway->payInvoice($invoice, $source);
-            if (! $result->success) {
-                $this->notifyUser($source);
-                throw new \Exception('Failed to pay invoice for service '.$service->id.'('.$result->invoice->id.') :'.$result->message);
-            }
-            if ($result->invoice->status == 'paid') {
-                SubscriptionLog::insert([
-                    'subscription_id' => $this->id,
-                    'invoice_id' => $invoice->id,
-                    'paid_at' => now(),
-                    'start_date' => $service->expires_at,
-                    'amount' => $invoice->subtotal,
-                    'end_date' => app(RecurringService::class)->addFrom($service->expires_at, $service->billing),
-                ]);
-                $result->invoice->attachMetadata('subscription_id', $this->id);
-                $result->invoice->update(['payment_method_id' => $this->payment_method_id, 'paymethod' => $source->gateway_uuid]);
-                $this->last_payment_at = now();
-                $this->cycles++;
-                $this->save();
-            }
 
-            return $result;
+        $source = $invoice->customer->getSourceById($this->payment_method_id);
+        if (! $source) {
+            throw new \Exception('No payment source found for service '.$service->id.' and source '.$this->payment_method_id);
         }
-        throw new \Exception('The invoice for service '.$service->id.' is not pending ('.$invoice->status.')');
+
+        /** @var GatewayTypeInterface $gateway */
+        $gateway = app(PaymentTypeService::class)->get($source->gateway_uuid);
+        if (! $gateway) {
+            throw new \Exception('No gateway found for service '.$service->id);
+        }
+
+        $result = $gateway->payInvoice($invoice, $source);
+        if (! $result->success) {
+            $this->notifyUser($source);
+            throw new \Exception('Failed to pay invoice for service '.$service->id.'('.$result->invoice->id.') :'.$result->message);
+        }
+
+        if ($result->invoice->status == 'paid') {
+            SubscriptionLog::insert([
+                'subscription_id' => $this->id,
+                'invoice_id' => $invoice->id,
+                'paid_at' => now(),
+                'start_date' => $service->expires_at,
+                'amount' => $invoice->subtotal,
+                'end_date' => app(RecurringService::class)->addFrom($service->expires_at, $service->billing),
+            ]);
+            $result->invoice->attachMetadata('subscription_id', $this->id);
+            $result->invoice->update(['payment_method_id' => $this->payment_method_id, 'paymethod' => $source->gateway_uuid]);
+            $this->last_payment_at = now();
+            $this->cycles++;
+            $this->save();
+        }
+
+        return $result;
     }
 
     public function toggle()

@@ -69,7 +69,7 @@ class CancellationReasonController extends AbstractCrudController
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
 
-        $statsQuery = Service::selectRaw('cancelled_reason, COUNT(*) as count')
+        $statsQuery = Service::selectRaw('cancellation_reason_id, COUNT(*) as count')
             ->whereNotNull('cancelled_reason')
             ->whereNotNull('cancelled_at');
 
@@ -81,7 +81,7 @@ class CancellationReasonController extends AbstractCrudController
             $statsQuery->where('cancelled_at', '<=', $endDate.' 23:59:59');
         }
 
-        $stats = $statsQuery->groupBy('cancelled_reason')->get();
+        $stats = $statsQuery->groupBy('cancellation_reason_id')->get();
 
         $reasons = CancellationReason::all()->keyBy('id');
 
@@ -95,7 +95,7 @@ class CancellationReasonController extends AbstractCrudController
         $i = 0;
 
         foreach ($stats as $stat) {
-            $reason = $reasons->firstWhere('reason', $stat->cancelled_reason);
+            $reason = $reasons->get((int) $stat->cancellation_reason_id);
             $chartData['labels'][] = $reason ? $reason->reason : __('global.unknown');
             $chartData['data'][] = $stat->count;
             $chartData['colors'][] = $colors[$i % count($colors)];
@@ -133,7 +133,7 @@ class CancellationReasonController extends AbstractCrudController
     {
         $this->checkPermission('show');
         $params['item'] = $cancellationReason;
-        $params['usageCount'] = Service::where('cancelled_reason', $cancellationReason->id)->count();
+        $params['usageCount'] = Service::where('cancellation_reason_id', $cancellationReason->id)->count();
 
         return $this->showView($params);
     }
@@ -143,6 +143,7 @@ class CancellationReasonController extends AbstractCrudController
         $this->checkPermission('create');
         $validated = $request->validate([
             'reason' => 'required|string|max:255',
+            'cancellation_mode' => 'required|in:immediate,support_ticket,after_expiration',
             'status' => 'required|in:active,hidden,unreferenced',
         ]);
 
@@ -156,6 +157,7 @@ class CancellationReasonController extends AbstractCrudController
         $this->checkPermission('update');
         $validated = $request->validate([
             'reason' => 'required|string|max:255',
+            'cancellation_mode' => 'required|in:immediate,support_ticket,after_expiration',
             'status' => 'required|in:active,hidden,unreferenced',
         ]);
 

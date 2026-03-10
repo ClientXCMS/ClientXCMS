@@ -74,7 +74,7 @@ class RegisteredUserController extends Controller
             'city' => $request->city,
             'zipcode' => $request->zipcode,
             'region' => $request->region,
-            'phone' => $request->phone,
+            'phone' => $data['phone'],
             'country' => $request->country,
             'password' => Hash::make($request->password),
             'locale' => LocaleService::fetchCurrentLocale(),
