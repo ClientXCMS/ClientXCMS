@@ -299,14 +299,14 @@ class ServiceController extends Controller
 
         if ($cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_SUPPORT_TICKET) {
             return redirect()->route('front.support.create')
-                ->with('info', __('provisioning.cancellation.requires_ticket'));
+                ->with('info', __('features.cancellation.requires_ticket'));
         }
 
         if ($cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_AFTER_EXPIRATION
             && $service->expires_at !== null
             && $service->expires_at->isFuture()) {
             return redirect()->route('front.services.show', ['service' => $service->uuid])
-                ->with('error', __('provisioning.cancellation.after_expiration_only'));
+                ->with('error', __('features.cancellation.after_expiration_only'));
         }
 
         $reason = $cancellationReason->reason.(! empty($request->details) ? ' - '.$request->details : '');

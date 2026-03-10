@@ -22,12 +22,11 @@ namespace App\Mail\Invoice;
 use App\Models\Admin\EmailTemplate;
 use App\Models\Billing\Invoice;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
 
-class InvoicePaidEmail extends Notification implements ShouldQueue
+class InvoicePaidEmail extends Notification 
 {
     use Queueable, SerializesModels;
 

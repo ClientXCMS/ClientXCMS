@@ -36,60 +36,12 @@ class SecurityQuestionSeeder extends Seeder
         }
 
         $questions = [
-            [
-                'question' => 'What was the name of your first pet?',
-                'sort_order' => 1,
-                'translations' => [
-                    'en' => 'What was the name of your first pet?',
-                    'fr' => 'Quel était le nom de votre premier animal de compagnie ?',
-                    'es' => '¿Cuál era el nombre de tu primera mascota?',
-                ],
-            ],
-            [
-                'question' => 'In which city were you born?',
-                'sort_order' => 2,
-                'translations' => [
-                    'en' => 'In which city were you born?',
-                    'fr' => 'Dans quelle ville êtes-vous né(e) ?',
-                    'es' => '¿En qué ciudad naciste?',
-                ],
-            ],
-            [
-                'question' => 'What is your mother\'s maiden name?',
-                'sort_order' => 3,
-                'translations' => [
-                    'en' => 'What is your mother\'s maiden name?',
-                    'fr' => 'Quel est le nom de jeune fille de votre mère ?',
-                    'es' => '¿Cuál es el apellido de soltera de tu madre?',
-                ],
-            ],
-            [
-                'question' => 'What was the name of your first school?',
-                'sort_order' => 4,
-                'translations' => [
-                    'en' => 'What was the name of your first school?',
-                    'fr' => 'Quel était le nom de votre première école ?',
-                    'es' => '¿Cuál era el nombre de tu primera escuela?',
-                ],
-            ],
-            [
-                'question' => 'What is your favorite movie?',
-                'sort_order' => 5,
-                'translations' => [
-                    'en' => 'What is your favorite movie?',
-                    'fr' => 'Quel est votre film préféré ?',
-                    'es' => '¿Cuál es tu película favorita?',
-                ],
-            ],
-            [
-                'question' => 'What was your childhood nickname?',
-                'sort_order' => 6,
-                'translations' => [
-                    'en' => 'What was your childhood nickname?',
-                    'fr' => 'Quel était votre surnom d\'enfance ?',
-                    'es' => '¿Cuál era tu apodo de infancia?',
-                ],
-            ],
+            ['question' => 'install.security_questions.pet_name', 'sort_order' => 1],
+            ['question' => 'install.security_questions.birth_city', 'sort_order' => 2],
+            ['question' => 'install.security_questions.mother_maiden_name', 'sort_order' => 3],
+            ['question' => 'install.security_questions.first_school', 'sort_order' => 4],
+            ['question' => 'install.security_questions.favorite_movie', 'sort_order' => 5],
+            ['question' => 'install.security_questions.childhood_nickname', 'sort_order' => 6],
         ];
 
         foreach ($questions as $question) {
@@ -99,17 +51,15 @@ class SecurityQuestionSeeder extends Seeder
                 'sort_order' => $question['sort_order'],
             ]);
 
-            if (Schema::hasTable('translations')) {
-                foreach ($question['translations'] as $locale => $content) {
-                    Translation::updateOrCreate([
-                        'model' => SecurityQuestion::class,
-                        'model_id' => $securityQuestion->id,
-                        'key' => 'question',
-                        'locale' => $locale,
-                    ], [
-                        'content' => $content,
-                    ]);
-                }
+            foreach ($question['translations'] as $locale => $content) {
+                Translation::updateOrCreate([
+                    'model' => SecurityQuestion::class,
+                    'model_id' => $securityQuestion->id,
+                    'key' => 'question',
+                    'locale' => $locale,
+                ], [
+                    'content' => $content,
+                ]);
             }
         }
     }

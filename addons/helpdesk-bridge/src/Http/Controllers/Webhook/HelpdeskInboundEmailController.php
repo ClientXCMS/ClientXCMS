@@ -1,22 +1,18 @@
 <?php
 
-namespace App\Addons\HelpdeskBridge\Http\Controllers\Webhook;
+namespace App\Http\Controllers\Webhook;
 
-use App\Addons\HelpdeskBridge\Services\Helpdesk\InboundEmailBridgeService;
 use App\Http\Controllers\Controller;
+use App\Services\Helpdesk\InboundEmailBridgeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class HelpdeskInboundEmailController extends Controller
 {
-    public function __construct(private readonly InboundEmailBridgeService $bridge)
+    public function __invoke(Request $request): JsonResponse
     {
-    }
+        $result = app(InboundEmailBridgeService::class)->handle($request);
 
-    public function handle(Request $request): JsonResponse
-    {
-        $result = $this->bridge->handle($request);
-
-        return response()->json($result, $result['status']);
+        return response()->json($result['payload'], $result['status']);
     }
 }
