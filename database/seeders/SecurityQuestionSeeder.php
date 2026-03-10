@@ -20,6 +20,7 @@
 namespace Database\Seeders;
 
 use App\Models\Admin\SecurityQuestion;
+use App\Models\Personalization\Translation;
 use Illuminate\Database\Seeder;
 
 class SecurityQuestionSeeder extends Seeder
@@ -43,11 +44,22 @@ class SecurityQuestionSeeder extends Seeder
         ];
 
         foreach ($questions as $question) {
-            SecurityQuestion::create([
+            $securityQuestion = SecurityQuestion::create([
                 'question' => $question['question'],
                 'is_active' => true,
                 'sort_order' => $question['sort_order'],
             ]);
+
+            foreach ($question['translations'] as $locale => $content) {
+                Translation::updateOrCreate([
+                    'model' => SecurityQuestion::class,
+                    'model_id' => $securityQuestion->id,
+                    'key' => 'question',
+                    'locale' => $locale,
+                ], [
+                    'content' => $content,
+                ]);
+            }
         }
     }
 }

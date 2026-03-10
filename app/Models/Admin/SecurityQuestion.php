@@ -19,6 +19,7 @@
 
 namespace App\Models\Admin;
 
+use App\Models\Traits\Translatable;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -31,6 +32,12 @@ use Illuminate\Database\Eloquent\Model;
  */
 class SecurityQuestion extends Model
 {
+    use Translatable;
+
+    protected array $translatableKeys = [
+        'question',
+    ];
+
     protected $fillable = [
         'question',
         'is_active',
