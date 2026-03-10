@@ -72,10 +72,15 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('store_mode_tax', TaxesService::MODE_TAX_EXCLUDED);
             $service->setDefaultValue('store_vat_enabled', true);
             $service->setDefaultValue('store_enabled', true);
+            $service->setDefaultValue('store_price_precision', 6);
             $service->setDefaultValue('store_redirect_url', null);
             $service->setDefaultValue('billing_invoice_prefix', 'CTX');
             $service->setDefaultValue('days_before_creation_renewal_invoice', 7);
             $service->setDefaultValue('days_before_expiration', 7);
+            $service->setDefaultValue('services_suspend_after_unpaid_days', 0);
+            $service->setDefaultValue('services_renewal_grace_days', 7);
+            $service->setDefaultValue('services_late_fee_until_days', 30);
+            $service->setDefaultValue('services_expire_and_delete_after_days', 90);
             $service->setDefaultValue('notifications_expiration_days', '7,5,3,1');
             $service->setDefaultValue('days_before_subscription_renewal', 7);
             $service->setDefaultValue('allow_add_balance_to_invoices', true);

@@ -21,6 +21,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Helpers\Countries;
 use App\Http\Controllers\Controller;
+use libphonenumber\PhoneNumberUtil;
 
 class RegisterController extends Controller
 {
@@ -35,6 +36,18 @@ class RegisterController extends Controller
             $providers = collect([]);
         }
 
-        return view('front.auth.register', ['countries' => Countries::names(), 'providers' => $providers]);
+                $countryPhoneMeta = collect(Countries::names())->mapWithKeys(function ($name, $iso2) {
+            $code = PhoneNumberUtil::getInstance()->getCountryCodeForRegion($iso2);
+            $flag = mb_chr(127397 + ord($iso2[0])).mb_chr(127397 + ord($iso2[1]));
+
+            return [$iso2 => [
+                'name' => $name,
+                'dial_code' => $code ? '+'.$code : null,
+                'flag' => $flag,
+                'language' => app()->getLocale(),
+            ]];
+        })->toArray();
+
+        return view('front.auth.register', ['countries' => Countries::names(), 'providers' => $providers, 'countryPhoneMeta' => $countryPhoneMeta]);
     }
 }

@@ -182,6 +182,21 @@ if (! function_exists('currency')) {
         return (new NumberFormatter($locale, NumberFormatter::CURRENCY))->formatCurrency($price, $currency);
     }
 }
+
+if (! function_exists('store_price_precision')) {
+    function store_price_precision(): int
+    {
+        return max(2, (int) setting('store_price_precision', 6));
+    }
+}
+
+if (! function_exists('store_round')) {
+    function store_round(float $value, ?int $precision = null): float
+    {
+        return round($value, $precision ?? store_price_precision());
+    }
+}
+
 if (! function_exists('module_path')) {
     function module_path(string $uuid, string $path = ''): string
     {
