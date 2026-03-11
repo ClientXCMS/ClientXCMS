@@ -44,12 +44,30 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
                     </h1>
                     <p class="text-white/80 text-lg max-w-xl">{{ __('extensions.settings.description') }}</p>
                 </div>
-                <form action="{{ route('admin.settings.extensions.clear') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-medium transition-all duration-200 backdrop-blur-sm border border-white/20">
-                        <i class="bi bi-arrow-clockwise"></i> {{ __('extensions.settings.clearcache') }}
-                    </button>
-                </form>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <form action="{{ route('admin.settings.extensions.import') }}" method="POST" enctype="multipart/form-data" class="flex flex-col md:flex-row items-stretch md:items-center gap-2 bg-white/20 rounded-xl px-3 py-2 border border-white/20">
+                        @csrf
+                        <select name="extension_type" class="bg-white/20 text-white rounded-lg px-2 py-2 border border-white/20">
+                            <option value="modules">Module</option>
+                            <option value="addons">Addon</option>
+                            <option value="themes">Thème</option>
+                        </select>
+                        <input type="text" name="extension_checksum" placeholder="SHA-256 (optionnel)" class="bg-white/20 text-white placeholder:text-white/70 rounded-lg px-3 py-2 border border-white/20 text-sm">
+                        <label for="extension_zip" id="extension-dropzone" class="cursor-pointer text-white text-sm rounded-lg border border-dashed border-white/40 px-3 py-2 hover:bg-white/10 transition">
+                            <i class="bi bi-cloud-arrow-up"></i> Glisser-déposer un ZIP ou cliquer
+                        </label>
+                        <input id="extension_zip" type="file" name="extension_zip" accept=".zip" required class="hidden">
+                        <button type="submit" class="flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-medium transition-all duration-200 backdrop-blur-sm border border-white/20">
+                            <i class="bi bi-upload"></i> Import ZIP
+                        </button>
+                    </form>
+                    <form action="{{ route('admin.settings.extensions.clear') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-medium transition-all duration-200 backdrop-blur-sm border border-white/20">
+                            <i class="bi bi-arrow-clockwise"></i> {{ __('extensions.settings.clearcache') }}
+                        </button>
+                    </form>
+                </div>
             </div>
 
             {{-- Search Bar --}}
@@ -289,6 +307,40 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
 <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
 <script src="{{ Vite::asset('resources/global/js/admin/extensions.js') }}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropzone = document.getElementById('extension-dropzone');
+        const fileInput = document.getElementById('extension_zip');
+        if (!dropzone || !fileInput) return;
+
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                dropzone.classList.add('bg-white/20');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('bg-white/20');
+            });
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            if (!e.dataTransfer?.files?.length) return;
+            fileInput.files = e.dataTransfer.files;
+            dropzone.innerHTML = `<i class="bi bi-file-earmark-zip"></i> ${e.dataTransfer.files[0].name}`;
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (!fileInput.files?.length) return;
+            dropzone.innerHTML = `<i class="bi bi-file-earmark-zip"></i> ${fileInput.files[0].name}`;
+        });
+    });
+</script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         new ExtensionManager({

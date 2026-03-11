@@ -108,6 +108,8 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('helpdesk_allow_attachments', true);
             $service->setDefaultValue('helpdesk_attachments_allowed_types', 'jpg,jpeg,png,pdf,doc,docx,xls,xlsx');
             $service->setDefaultValue('helpdesk_reopen_days', 7);
+            $service->setDefaultValue('helpdesk_reply_mailbox', 'support-reply');
+            $service->setDefaultValue('helpdesk_inbound_webhook_token', substr(hash('sha256', (string) env('APP_KEY', 'clientxcms')), 0, 32));
             $service->setDefaultValue('billing_mode', InvoiceService::INVOICE);
             $service->setDefaultValue('allow_registration', true);
             $service->setDefaultValue('auto_confirm_registration', false);
