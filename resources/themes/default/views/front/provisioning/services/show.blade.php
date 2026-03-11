@@ -114,24 +114,103 @@
                                 </p>
                                 <form action="{{ route('front.services.cancel', ['service' => $service]) }}" method="post" class="w-full">
                                     @csrf
+                                    @php
+                                        $cancellationReasons = \App\Models\Provisioning\CancellationReason::getAvailable(false)->get(['id', 'cancellation_mode']);
+                                        $reasonModes = $cancellationReasons->mapWithKeys(fn ($item) => [$item->id => $item->cancellation_mode])->toArray();
+                                        $expirationOptions = \App\Models\Provisioning\CancellationReason::getCancellationMode($service);
+                                    @endphp
 
                                     <p class="text-gray-800 dark:text-gray-400">
                                         {{ __('client.services.cancel.index_description') }}
                                     </p>
                                     @include('shared/select', ['name' => 'reason', 'label' => __('client.services.cancel.reason'), 'options' => \App\Models\Provisioning\CancellationReason::getReasons(), 'value' => old('reason')])
                                     @include('shared/textarea', ['name' => 'message', 'label' => __('client.services.cancel.message'), 'value' => old('message')])
-                                    @if (!$service->isOnetime())
-                                        @include('shared/select', ['name' => 'expiration', 'label' => __('client.services.cancel.expiration'), 'options' => \App\Models\Provisioning\CancellationReason::getCancellationMode($service), 'value' => old('expiration')])
-                                    @endif
+                                    <div id="cancel-expiration-wrapper" class="{{ $service->isOnetime() ? 'hidden' : '' }}">
+                                        @if (!$service->isOnetime())
+                                            @include('shared/select', ['name' => 'expiration', 'label' => __('client.services.cancel.expiration'), 'options' => $expirationOptions, 'value' => old('expiration')])
+                                        @endif
+                                    </div>
+                                    <div id="cancel-warning" class="hidden text-sm text-amber-600 dark:text-amber-400 mt-2"></div>
                                     <div class="flex">
                                         <button type="button" data-hs-overlay="#hs-cancel" class="mt-2 mr-3 py-3 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-green-500 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
                                             {{ __('client.services.cancel.back') }}
                                         </button>
-                                        <button type="submit" class="mt-2 py-2 px-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-red-500 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
+                                        <button id="cancel-submit-btn" type="submit" class="mt-2 py-2 px-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-red-500 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
                                             {{ __('client.services.cancel.index') }}
                                         </button>
+                                        <a id="cancel-open-support-btn" href="{{ route('front.support.create') }}" class="hidden mt-2 py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-amber-600 shadow-sm hover:bg-gray-50 dark:bg-slate-900 dark:border-gray-700 dark:hover:bg-gray-800">
+                                            {{ __('provisioning.cancellation.requires_ticket') }}
+                                        </a>
                                     </div>
                                 </form>
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function () {
+                                        const reasonModes = @json($reasonModes);
+                                        const reasonSelect = document.getElementById('reason');
+                                        const expirationWrapper = document.getElementById('cancel-expiration-wrapper');
+                                        const expirationSelect = document.getElementById('expiration');
+                                        const warning = document.getElementById('cancel-warning');
+                                        const submitBtn = document.getElementById('cancel-submit-btn');
+                                        const supportBtn = document.getElementById('cancel-open-support-btn');
+                                        const isOneTime = @json($service->isOnetime());
+                                        const isExpired = @json($service->expires_at !== null && $service->expires_at->isPast());
+
+                                        if (!reasonSelect) return;
+
+                                        const baseOptions = expirationSelect ? Array.from(expirationSelect.options).map((opt) => ({ value: opt.value, label: opt.text })) : [];
+
+                                        const setExpirationOptions = (mode) => {
+                                            if (!expirationSelect) return;
+
+                                            let allowed = baseOptions;
+                                            if (mode === 'immediate') {
+                                                allowed = baseOptions.filter((item) => item.value === 'now');
+                                            }
+                                            if (mode === 'after_expiration') {
+                                                allowed = baseOptions.filter((item) => item.value === 'end_of_period');
+                                            }
+
+                                            expirationSelect.innerHTML = '';
+                                            allowed.forEach((item) => {
+                                                const option = document.createElement('option');
+                                                option.value = item.value;
+                                                option.textContent = item.label;
+                                                expirationSelect.appendChild(option);
+                                            });
+                                        };
+
+                                        const applyModeUi = () => {
+                                            const mode = reasonModes[reasonSelect.value] || 'immediate';
+
+                                            warning.classList.add('hidden');
+                                            warning.textContent = '';
+                                            submitBtn.classList.remove('hidden');
+                                            submitBtn.disabled = false;
+                                            supportBtn.classList.add('hidden');
+
+                                            if (!isOneTime) {
+                                                expirationWrapper.classList.remove('hidden');
+                                                setExpirationOptions(mode);
+                                            }
+
+                                            if (mode === 'support_ticket') {
+                                                submitBtn.classList.add('hidden');
+                                                supportBtn.classList.remove('hidden');
+                                                expirationWrapper.classList.add('hidden');
+                                            }
+
+                                            if (mode === 'after_expiration' && !isExpired) {
+                                                submitBtn.classList.add('hidden');
+                                                expirationWrapper.classList.add('hidden');
+                                                warning.textContent = @json(__('provisioning.cancellation.after_expiration_only'));
+                                                warning.classList.remove('hidden');
+                                            }
+                                        };
+
+                                        reasonSelect.addEventListener('change', applyModeUi);
+                                        applyModeUi();
+                                    });
+                                </script>
                             </div>
                         </div>
                     @endif

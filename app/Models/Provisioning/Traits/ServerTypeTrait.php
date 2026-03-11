@@ -274,6 +274,7 @@ trait ServerTypeTrait
         }
         $this->cancelled_at = null;
         $this->cancelled_reason = null;
+        $this->cancellation_reason_id = null;
         $this->status = self::STATUS_ACTIVE;
         ActionLog::log(ActionLog::SERVICE_UNCANCELLED, get_class($this), $this->id, auth('admin')->id(), auth('web')->id(), ['message' => 'Service uncanceled']);
         $this->save();
