@@ -1,0 +1,16 @@
+{
+  "name": "clientxcms/helpdesk-bridge",
+  "description": "Helpdesk inbound email bridge addon",
+  "type": "clientxcms-addon",
+  "license": "proprietary",
+  "autoload": {
+    "psr-4": {
+      "App\\Addons\\HelpdeskBridge\\": "src/"
+    }
+  },
+  "extra": {
+    "clientxcms": {
+      "uuid": "helpdesk-bridge"
+    }
+  }
+}

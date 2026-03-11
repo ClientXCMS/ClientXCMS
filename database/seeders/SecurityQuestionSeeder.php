@@ -62,5 +62,7 @@ class SecurityQuestionSeeder extends Seeder
                 ]);
             }
         }
+
+        return collect($locales)->mapWithKeys(fn (string $locale) => [$locale => $question])->toArray();
     }
 }
