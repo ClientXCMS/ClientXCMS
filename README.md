@@ -36,16 +36,6 @@ Recurring tasks are automated to handle email reminders, service life cycles, an
 For detailed installation instructions and usage guides, visit the official documentation:  
 [📖 CLIENTXCMS Documentation](https://docs.clientxcms.com/)
 
-### Latest release notes (FR)
-- [✨ RELEASE_NOTES_FR.md](./RELEASE_NOTES_FR.md)
-
-### Translation locations
-- Core translation files: `lang/{locale}/`
-- Internal instance translations (CTXTranslate): stored in database table `translations`.
-- Addon translation directory convention (when an addon is used): `addons/{addon_name}/src/lang/`
-
----
-
 ## Need a VPS or hosting?
 
 If you require VPS hosting, check out **CTXHosting**, our VPS website:  
