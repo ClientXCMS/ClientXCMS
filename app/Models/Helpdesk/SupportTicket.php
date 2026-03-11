@@ -34,6 +34,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
@@ -293,14 +294,14 @@ class SupportTicket extends Model
         return false;
     }
 
-    public function notifySubscriber(Admin $subscriber, string $message, bool $firstMessage)
+    public function notifySubscriber(Admin $subscriber, SupportMessage|string $message, bool $firstMessage)
     {
-        $subscriber->notify(new NotifySubscriberEmail($this, $message, $firstMessage));
+        $subscriber->notify(new NotifySubscriberEmail($this, $message instanceof SupportMessage ? $message->message : $message, $firstMessage));
     }
 
-    public function notifyCustomer(string $message)
+    public function notifyCustomer(SupportMessage|string $message)
     {
-        $this->customer->notify(new NotifyCustomerEmail($this, $message));
+        $this->customer->notify(new NotifyCustomerEmail($this, $message instanceof SupportMessage ? $message->message : $message));
     }
 
     public function addMessage(string $content, ?int $customerId = null, ?int $staffId = null)
@@ -426,15 +427,18 @@ class SupportTicket extends Model
     {
         $lastMessage = $this->messages()->latest()->first();
         $folder = "helpdesk/attachments/{$this->id}/";
-        $attachmentName = $attachment->getClientOriginalName();
-        $attachmentName = str_replace(' ', '_', $attachmentName);
-        $attachmentName = rand(1000, 9999).'_'.$attachmentName;
-        $attachment->storeAs($folder, $attachmentName);
+
+        $originalName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $attachment->getClientOriginalName());
+        $extension = strtolower($attachment->getClientOriginalExtension() ?: 'bin');
+        $safeName = Str::random(32).'.'.$extension;
+
+        Storage::disk('local')->putFileAs($folder, $attachment, $safeName);
+
         $file = new SupportAttachment;
         $file->fill([
-            'filename' => $attachment->getClientOriginalName(),
-            'path' => 'helpdesk/attachments/'.$this->id.'/'.$attachmentName,
-            'mime' => $attachment->getClientMimeType(),
+            'filename' => $originalName,
+            'path' => 'helpdesk/attachments/'.$this->id.'/'.$safeName,
+            'mime' => $attachment->getMimeType() ?? $attachment->getClientMimeType(),
             'size' => $attachment->getSize(),
             'ticket_id' => $this->id,
             'customer_id' => $customerId,
