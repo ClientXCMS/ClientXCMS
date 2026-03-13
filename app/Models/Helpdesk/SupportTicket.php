@@ -211,7 +211,7 @@ class SupportTicket extends Model
 
     public function staffCanView(Admin $admin)
     {
-        return $admin->can('admin.manage_tickets') || $admin->can('admin.manage_tickets_department.'.$this->department_id);
+        return $admin->can('admin.manage_tickets') || $admin->can('admin.manage_tickets_department.' . $this->department_id);
     }
 
     public function comments()
@@ -222,13 +222,13 @@ class SupportTicket extends Model
     public static function getPriorities()
     {
         return collect(self::PRIORITIES)->mapWithKeys(function ($value, $key) {
-            return [$key => __('helpdesk.priorities.'.$key)];
+            return [$key => __('helpdesk.priorities.' . $key)];
         });
     }
 
     public function priorityLabel()
     {
-        return __('helpdesk.priorities.'.$this->priority);
+        return __('helpdesk.priorities.' . $this->priority);
     }
 
     public function assignedTo()
@@ -363,12 +363,12 @@ class SupportTicket extends Model
     {
         $users = [];
         foreach ($this->messages as $message) {
-            if ($message->customer_id != null) {
-                $initial = $message->customer->firstname[0].$message->customer->lastname[0];
+            if ($message->customer != null) {
+                $initial = $message->customer->firstname[0] . $message->customer->lastname[0];
                 $users[$initial] = $message->customer->excerptFullName();
             }
-            if ($message->admin_id != null) {
-                $initial = $message->admin->firstname[0].$message->admin->lastname[0];
+            if ($message->admin != null) {
+                $initial = $message->admin->firstname[0] . $message->admin->lastname[0];
                 $users[$initial] = $message->admin->username;
             }
         }
@@ -428,12 +428,12 @@ class SupportTicket extends Model
         $folder = "helpdesk/attachments/{$this->id}/";
         $attachmentName = $attachment->getClientOriginalName();
         $attachmentName = str_replace(' ', '_', $attachmentName);
-        $attachmentName = rand(1000, 9999).'_'.$attachmentName;
+        $attachmentName = rand(1000, 9999) . '_' . $attachmentName;
         $attachment->storeAs($folder, $attachmentName);
         $file = new SupportAttachment;
         $file->fill([
             'filename' => $attachment->getClientOriginalName(),
-            'path' => 'helpdesk/attachments/'.$this->id.'/'.$attachmentName,
+            'path' => 'helpdesk/attachments/' . $this->id . '/' . $attachmentName,
             'mime' => $attachment->getClientMimeType(),
             'size' => $attachment->getSize(),
             'ticket_id' => $this->id,
