@@ -19,6 +19,7 @@
 
 namespace App\Models\Admin;
 
+use App\Models\Account\Customer;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -56,6 +57,21 @@ class SecurityQuestion extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function canDelete(): bool
+    {
+        return $this->customers()->count() == 0 && $this->admins()->count() == 0;
+    }
+
+    public function customers()
+    {
+        return $this->hasMany(Customer::class);
+    }
+
+    public function admins()
+    {
+        return $this->hasMany(Admin::class);
     }
 
     /**
