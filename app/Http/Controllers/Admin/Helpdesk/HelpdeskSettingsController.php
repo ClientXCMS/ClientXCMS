@@ -43,6 +43,7 @@ class HelpdeskSettingsController extends \App\Http\Controllers\Controller
             'helpdesk_inbound_webhook_token' => 'required|string|min:16|max:128',
         ]);
         $data['helpdesk_allow_attachments'] = $request->has('helpdesk_allow_attachments');
+        $data['helpdesk_smtp_enable'] = $request->has('helpdesk_smtp_enable');
         Setting::updateSettings($data);
 
         return back()->with('success', __('helpdesk.admin.settings.success'));

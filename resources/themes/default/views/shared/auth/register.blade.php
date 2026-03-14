@@ -17,7 +17,6 @@
  */
 ?>
 
-
 <form method="POST" action="{{ route('register') }}">
     @csrf
     <div class="space-y-12">
@@ -35,7 +34,6 @@
                     <div class="sm:col-span-3">
                         @include("shared.input", ["name" => "email", "label" => __('global.email'), "type" => "email"])
                     </div>
-
 
                     <div class="sm:col-span-3">
                         @include("shared.input", ["name" => "phone", "label" => __('global.phone'), "optional" => true])
@@ -58,8 +56,6 @@
                     <div class="sm:col-span-1">
                         @include("shared.input", ["name" => "zipcode", "label" => __('global.zip')])
                     </div>
-
-
 
                     <div class="sm:col-span-2">
                         @include("shared.select", ["name" => "country", "label" => __('global.country'), "options" => $countries, "value" => old("country", "FR")])

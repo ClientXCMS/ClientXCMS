@@ -371,6 +371,7 @@ class InvoiceService
             'created_at' => Carbon::now(),
         ]);
         $invoice->recalculate();
+        $invoice->refresh();
     }
 
     public static function appendProductOnExistingInvoice(AddProductToInvoiceDTO $dto)

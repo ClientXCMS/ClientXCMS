@@ -119,7 +119,8 @@ class CancellationReasonControllerTest extends TestCase
         $customer = $this->createCustomerModel();
         $service = $this->createServiceModel($customer->id);
         $service->update([
-            'cancelled_reason' => $reason->id,
+            'cancelled_reason' => $reason->reason,
+            'cancellation_reason_id' => $reason->id,
             'cancelled_at' => now(),
             'status' => 'cancelled',
         ]);
