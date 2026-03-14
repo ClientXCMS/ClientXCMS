@@ -178,12 +178,11 @@ class ServiceController extends Controller
             logger()->error($e->getMessage());
             $message = __('store.checkout.wrong_payment');
             if (auth('admin')->check()) {
-                $message .= ' Debug admin : '.$e->getMessage();
+                $message .= ' Debug admin : ' . $e->getMessage();
             }
 
             return back()->with('error', $message);
         }
-
     }
 
     public function tab(Service $service, string $tab)
@@ -232,8 +231,8 @@ class ServiceController extends Controller
         })->join(',');
         $gateways = Gateway::getAvailable();
         $this->validate($request, [
-            'billing' => 'required|in:'.$recurrings,
-            'gateway' => 'nullable|in:'.$gateways->pluck('uuid')->join(','),
+            'billing' => 'required|in:' . $recurrings,
+            'gateway' => 'nullable|in:' . $gateways->pluck('uuid')->join(','),
         ]);
         $service->billing = $request->get('billing');
         event(new \App\Events\Core\Service\ServiceChangeBillingEvent($service, $request->get('billing')));
@@ -248,7 +247,7 @@ class ServiceController extends Controller
                 logger()->error($e->getMessage());
                 $message = __('store.checkout.wrong_payment');
                 if (auth('admin')->check()) {
-                    $message .= ' Debug admin : '.$e->getMessage();
+                    $message .= ' Debug admin : ' . $e->getMessage();
                 }
 
                 return back()->with('error', $message);
@@ -299,17 +298,19 @@ class ServiceController extends Controller
 
         if ($cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_SUPPORT_TICKET) {
             return redirect()->route('front.support.create')
-                ->with('info', __('features.cancellation.requires_ticket'));
+                ->with('info', __('provisioning.cancellation.requires_ticket'));
         }
 
-        if ($cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_AFTER_EXPIRATION
+        if (
+            $cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_AFTER_EXPIRATION
             && $service->expires_at !== null
-            && $service->expires_at->isFuture()) {
+            && $service->expires_at->isFuture()
+        ) {
             return redirect()->route('front.services.show', ['service' => $service->uuid])
-                ->with('error', __('features.cancellation.after_expiration_only'));
+                ->with('error', __('provisioning.cancellation.after_expiration_only'));
         }
 
-        $reason = $cancellationReason->reason.(! empty($request->details) ? ' - '.$request->details : '');
+        $reason = $cancellationReason->reason . (! empty($request->details) ? ' - ' . $request->details : '');
 
         if ($cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_IMMEDIATE) {
             $request->request->set('expiration', 'now');

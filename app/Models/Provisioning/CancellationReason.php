@@ -59,9 +59,9 @@ class CancellationReason extends Model
     public static function getCancellationModes(): array
     {
         return [
-            self::MODE_IMMEDIATE => __('features.cancellation.mode_immediate'),
-            self::MODE_SUPPORT_TICKET => __('features.cancellation.mode_support_ticket'),
-            self::MODE_AFTER_EXPIRATION => __('features.cancellation.mode_after_expiration'),
+            self::MODE_IMMEDIATE => __('provisioning.cancellation.mode_immediate'),
+            self::MODE_SUPPORT_TICKET => __('provisioning.cancellation.mode_support_ticket'),
+            self::MODE_AFTER_EXPIRATION => __('provisioning.cancellation.mode_after_expiration'),
         ];
     }
     use HasFactory, ModelStatutTrait, SoftDeletes;

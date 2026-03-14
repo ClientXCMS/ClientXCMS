@@ -39,16 +39,15 @@ Route::name('settings.')->prefix('settings')->middleware('admin')->group(functio
     Route::delete('/extensions/{type}/{extension}/uninstall', [SettingsExtensionController::class, 'uninstall'])->name('extensions.uninstall');
     Route::get('/extensions', [SettingsExtensionController::class, 'showExtensions'])->name('extensions.index');
     Route::post('/extensions/bulk', [SettingsExtensionController::class, 'bulkAction'])->name('extensions.bulk');
-    Route::post('/extensions/import', [SettingsExtensionController::class, 'importZip'])->name('extensions.import');
     Route::post('/extensions/clear', [SettingsExtensionController::class, 'clear'])->name('extensions.clear');
 });
 
-require __DIR__.'/admin/auth.php';
-require __DIR__.'/admin/personalization.php';
-require __DIR__.'/admin/provisioning.php';
-require __DIR__.'/admin/billing.php';
-require __DIR__.'/admin/customers.php';
-require __DIR__.'/admin/helpdesk.php';
-require __DIR__.'/admin/store.php';
-require __DIR__.'/admin/core.php';
-require __DIR__.'/admin/security.php';
+require __DIR__ . '/admin/auth.php';
+require __DIR__ . '/admin/personalization.php';
+require __DIR__ . '/admin/provisioning.php';
+require __DIR__ . '/admin/billing.php';
+require __DIR__ . '/admin/customers.php';
+require __DIR__ . '/admin/helpdesk.php';
+require __DIR__ . '/admin/store.php';
+require __DIR__ . '/admin/core.php';
+require __DIR__ . '/admin/security.php';
