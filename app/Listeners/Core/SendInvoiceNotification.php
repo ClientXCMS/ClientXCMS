@@ -53,7 +53,9 @@ class SendInvoiceNotification
 
     private function sendInvoiceCreatedNotification(Invoice $invoice): void
     {
-        $invoice->notifyCustomer();
+        if ($invoice->status != Invoice::STATUS_DRAFT) {
+            $invoice->notifyCustomer();
+        }
     }
 
     private function sendInvoiceCompletedNotification(Invoice $invoice): void

@@ -122,7 +122,7 @@ class ProfileController extends \App\Http\Controllers\Controller
                 return $code;
             });
             echo $codes->join("\n");
-        }, '2fa_recovery_codes_'.\Str::slug(config('app.name')).'.txt');
+        }, '2fa_recovery_codes_' . \Str::slug(config('app.name')) . '.txt');
     }
 
     public function deleteAccount(DeleteAccountRequest $request): RedirectResponse
@@ -152,7 +152,7 @@ class ProfileController extends \App\Http\Controllers\Controller
         $request->validate([
             'security_question_id' => ['required', 'exists:security_questions,id'],
             'security_answer' => ['required', 'string', 'min:2', 'max:100'],
-            'currentpassword' => ['required', 'current_password'],
+            'currentpassword_sq' => ['required', 'current_password'],
         ]);
 
         $request->user('web')->setSecurityQuestion(

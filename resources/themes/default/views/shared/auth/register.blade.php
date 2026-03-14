@@ -85,7 +85,7 @@
                         <input type="hidden" name="redirect" value="{{ $redirect }}">
                     @endif
                     @include('shared.captcha')
-
+                    @includeWhen(app('extension')->extensionIsEnabled('how-did-you-find-us'), 'how-did-you-find-us::shared.register_field')
                 </div>
             </div>
             <button class="btn-primary block w-full">

@@ -33,11 +33,12 @@ class DatabaseSeeder extends Seeder
             SupportDepartmentSeeder::class,
             PermissionSeeder::class,
             RoleSeeder::class,
+            SecurityQuestionSeeder::class,
         ]);
         $seeders = (app('extension')->getSeeders());
         foreach ($seeders as $seeder) {
             if (! class_exists($seeder) || ! is_subclass_of($seeder, Seeder::class)) {
-                $this->command->error("Seeder class $seeder not found or not a subclass of ".Seeder::class);
+                $this->command->error("Seeder class $seeder not found or not a subclass of " . Seeder::class);
 
                 continue;
             }
