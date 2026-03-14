@@ -31,7 +31,7 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    const VERSION = '2.15.0';
+    const VERSION = '2.15.1';
 
     /**
      * Register any application services.

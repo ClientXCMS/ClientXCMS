@@ -50,13 +50,13 @@ class BillingServiceProvider extends ServiceProvider
         $this->app['extension']->addAdminCountWidget($invoiceWidgets);
         $this->app['extension']->addAdminMenuItem((new AdminMenuItem('services', 'admin.services.index', 'bi bi-box2', 'provisioning.admin.services.title', 3, 'admin.show_services')));
         $this->app['extension']->addAdminMenuItem((new AdminMenuItem('invoices', 'admin.invoices.index', 'bi bi-receipt-cutoff', 'admin.invoices.title', 4, 'admin.show_invoices')));
-        $this->app['extension']->addAdminCardsWidget(new AdminCardWidget('best_products', function () {
-            $dto = \App\DTO\Admin\Dashboard\BestSellingProductsDTO::getBestProducts();
-            $week = \App\DTO\Admin\Dashboard\BestSellingProductsDTO::getBestProductsLastWeek();
-            $month = \App\DTO\Admin\Dashboard\BestSellingProductsDTO::getBestProductsLastMonth();
+        // $this->app['extension']->addAdminCardsWidget(new AdminCardWidget('best_products', function () {
+        //     $dto = \App\DTO\Admin\Dashboard\BestSellingProductsDTO::getBestProducts();
+        //     $week = \App\DTO\Admin\Dashboard\BestSellingProductsDTO::getBestProductsLastWeek();
+        //     $month = \App\DTO\Admin\Dashboard\BestSellingProductsDTO::getBestProductsLastMonth();
 
-            return view('admin.dashboard.cards.best-selling', compact('dto', 'week', 'month'));
-        }, 'admin.earn_page', 2));
+        //     return view('admin.dashboard.cards.best-selling', compact('dto', 'week', 'month'));
+        // }, 'admin.earn_page', 2));
 
         $subscriptions = function () {
             return Subscription::where('state', 'active')->count();

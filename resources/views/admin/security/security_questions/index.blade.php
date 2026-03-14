@@ -138,11 +138,6 @@
                                             </span>
                                         </button>
                                     </form>
-                                @else
-                                    <span
-                                        class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full dark:bg-gray-500/10 dark:text-gray-500">
-                                        {{ __('global.states.used') }}
-                                    </span>
                                 @endif
                             </td>
                         </tr>

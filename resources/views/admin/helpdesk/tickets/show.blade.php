@@ -203,6 +203,11 @@
                                     </div>
                                 @endif
                             </div>
+
+                            @includeWhen(app('extension')->extensionIsEnabled('helpdesk_autoreply'),
+                                'helpdesk_autoreply_admin::predefined_responses._ticket_panel',
+                                ['ticket' => $ticket]
+                            )
                         </div>
 
                         <div class="lg:col-span-4 col-span-4">
@@ -402,10 +407,6 @@
                                 </form>
                             </div>
 
-                            @includeWhen(app('extension')->extensionIsEnabled('helpdesk_autoreply'),
-                                'helpdesk_autoreply_admin::predefined_responses._ticket_panel',
-                                ['ticket' => $ticket]
-                            )
                         </div>
 
                     </div>
