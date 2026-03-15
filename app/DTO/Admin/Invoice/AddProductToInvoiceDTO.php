@@ -78,7 +78,7 @@ class AddProductToInvoiceDTO implements Arrayable
             'tax' => $this->tax(),
             'subtotal' => $this->subtotal(),
             'setupfee' => $this->setup(),
-            'type' => 'service',
+            'type' => $this->product->type,
             'related_id' => $this->product->id,
             'data' => $this->itemData,
         ];

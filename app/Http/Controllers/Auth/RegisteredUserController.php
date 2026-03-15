@@ -47,6 +47,14 @@ class RegisteredUserController extends Controller
         $data = $request->all();
         $data['email'] = strtolower($request->email);
         $data['phone'] = $this->formatPhone($request->phone, $request->country ?? '');
+        if (app('extension')->extensionIsEnabled('how-did-you-find-us')) {
+            $rules['origin_source'] = ['required'];
+            $data['origin_source'] = $request->origin_source;
+            if ((new \App\Addons\HowDidYouFindUs\Models\OriginSource(['name' => $request->origin_source]))->isOther()) {
+                $rules['origin_other'] = ['required'];
+                $data['origin_other'] = $request->origin_other;
+            }
+        }
         $validator = \Validator::make($data, $rules);
         if ($validator->fails()) {
             if ($request->has('redirect')) {
@@ -82,7 +90,6 @@ class RegisteredUserController extends Controller
             'gdpr_compliment' => is_gdpr_compliment(),
         ]);
 
-        // Save security question if provided
         if ($request->filled('security_question_id') && $request->filled('security_answer')) {
             $user->setSecurityQuestion(
                 (int) $request->security_question_id,
@@ -98,14 +105,14 @@ class RegisteredUserController extends Controller
         if ($request->wantsJson()) {
             return response()->noContent();
         }
-        if ($request->has('origin') && $request->get('origin') != null) {
-            $user->attachMetadata('origin_url', str_replace(url('/'), '', $request->get('origin')));
+        if ($request->has('redirect') && $request->get('redirect') != null) {
+            $user->attachMetadata('origin_url', str_replace(url('/'), '', $request->get('redirect')));
         }
 
         if ($request->filled('origin_source')) {
             $originValue = $request->origin_source;
-            if (strtolower($originValue) === 'autre' || strtolower($originValue) === 'other') {
-                if ($request->filled('origin_other')) {
+            if (app('extension')->extensionIsEnabled('how-did-you-find-us')) {
+                if ((new \App\Addons\HowDidYouFindUs\Models\OriginSource(['name' => $originValue]))->isOther()) {
                     $originValue = $request->origin_other;
                 }
             }

@@ -243,56 +243,81 @@
             </form>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div class="card p-6">
-                <div class="flex items-center">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div
+                class="flex flex-col shadow-sm rounded-xl dark:bg-gray-800 bg-white border border-gray-200 dark:border-gray-700">
+                <div class="p-4 md:p-5 flex gap-x-4">
                     <div
-                        class="flex-shrink-0 w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+                        class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-red-100 rounded-lg dark:bg-red-900/30">
                         <i class="bi bi-x-circle text-red-600 dark:text-red-400 text-xl"></i>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                            {{ __($translatePrefix . '.analytics.total_cancellations') }}</p>
-                        <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ $totalCancellations }}</p>
+
+                    <div class="grow">
+                        <div class="flex items-center gap-x-2">
+                            <p class="text-xs uppercase tracking-wide text-gray-500">
+                                {{ __($translatePrefix . '.analytics.total_cancellations') }}
+                            </p>
+                        </div>
+                        <div class="mt-1 flex items-center gap-x-2">
+                            <h3 class="text-xl sm:text-2xl font-medium text-gray-800 dark:text-gray-200">
+                                {{ $totalCancellations }}
+                            </h3>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card p-6">
-                <div class="flex items-center">
+            <div
+                class="flex flex-col shadow-sm rounded-xl dark:bg-gray-800 bg-white border border-gray-200 dark:border-gray-700">
+                <div class="p-4 md:p-5 flex gap-x-4">
                     <div
-                        class="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                        class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-blue-100 rounded-lg dark:bg-blue-900/30">
                         <i class="bi bi-list-ul text-blue-600 dark:text-blue-400 text-xl"></i>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                            {{ __($translatePrefix . '.analytics.reasons_count') }}</p>
-                        <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ count($chartData['labels']) }}</p>
+
+                    <div class="grow">
+                        <div class="flex items-center gap-x-2">
+                            <p class="text-xs uppercase tracking-wide text-gray-500">
+                                {{ __($translatePrefix . '.analytics.reasons_count') }}
+                            </p>
+                        </div>
+                        <div class="mt-1 flex items-center gap-x-2">
+                            <h3 class="text-xl sm:text-2xl font-medium text-gray-800 dark:text-gray-200">
+                                {{ count($chartData['labels']) }}
+                            </h3>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card p-6">
-                <div class="flex items-center">
+            <div
+                class="flex flex-col shadow-sm rounded-xl dark:bg-gray-800 bg-white border border-gray-200 dark:border-gray-700">
+                <div class="p-4 md:p-5 flex gap-x-4">
                     <div
-                        class="flex-shrink-0 w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                        class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-purple-100 rounded-lg dark:bg-purple-900/30">
                         <i class="bi bi-calendar-range text-purple-600 dark:text-purple-400 text-xl"></i>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                            {{ __($translatePrefix . '.analytics.period') }}</p>
-                        <p class="text-sm font-medium text-gray-800 dark:text-white">
-                            @if ($startDate && $endDate)
-                                {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} -
-                                {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}
-                            @elseif($startDate)
-                                {{ __('global.from') }} {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }}
-                            @elseif($endDate)
-                                {{ __('global.until') }} {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}
-                            @else
-                                {{ __($translatePrefix . '.analytics.all_data') }}
-                            @endif
-                        </p>
+
+                    <div class="grow">
+                        <div class="flex items-center gap-x-2">
+                            <p class="text-xs uppercase tracking-wide text-gray-500">
+                                {{ __($translatePrefix . '.analytics.period') }}
+                            </p>
+                        </div>
+                        <div class="mt-1 flex items-center gap-x-2">
+                            <h3 class="text-sm font-medium text-gray-800 dark:text-gray-200">
+                                @if ($startDate && $endDate)
+                                    {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} -
+                                    {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}
+                                @elseif($startDate)
+                                    {{ __('global.from') }} {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }}
+                                @elseif($endDate)
+                                    {{ __('global.until') }} {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}
+                                @else
+                                    {{ __($translatePrefix . '.analytics.all_data') }}
+                                @endif
+                            </h3>
+                        </div>
                     </div>
                 </div>
             </div>
