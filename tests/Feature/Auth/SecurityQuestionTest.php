@@ -280,7 +280,7 @@ class SecurityQuestionTest extends TestCase
             ->post(route('front.profile.security_question'), [
                 'security_question_id' => $question->id,
                 'security_answer' => 'Smith',
-                'currentpassword' => 'password',
+                'currentpassword_sq' => 'password',
             ]);
 
         $response->assertRedirect(route('front.profile.index'));
@@ -307,10 +307,10 @@ class SecurityQuestionTest extends TestCase
             ->post(route('front.profile.security_question'), [
                 'security_question_id' => $question->id,
                 'security_answer' => 'Smith',
-                'currentpassword' => 'wrongpassword',
+                'currentpassword_sq' => 'wrongpassword',
             ]);
 
-        $response->assertSessionHasErrors('currentpassword');
+        $response->assertSessionHasErrors('currentpassword_sq');
     }
 
     // ==========================================
