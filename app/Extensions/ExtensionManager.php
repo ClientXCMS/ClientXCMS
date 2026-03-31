@@ -22,6 +22,7 @@ namespace App\Extensions;
 use App\Core\License\LicenseGateway;
 use App\DTO\Core\Extensions\ExtensionDTO;
 use App\Exceptions\ExtensionException;
+use App\Models\Admin\EmailTemplate;
 use App\Models\Admin\Setting;
 use Composer\Autoload\ClassLoader;
 use Composer\Semver\VersionParser;
@@ -312,6 +313,7 @@ class ExtensionManager extends ExtensionCollectionsManager
             $api = $api->api;
         }
         if ($type == 'email_templates') {
+            // TODO : a revérifier
             Setting::updateSettings(['email_template_name' => $extension]);
         }
         if ($type == 'themes') {
@@ -346,25 +348,16 @@ class ExtensionManager extends ExtensionCollectionsManager
     {
         $this->validateExtensionIdentifier($extension);
 
-        $extensions = self::readExtensionJson();
-
-        // Verify the extension exists in the registry before proceeding
-        $exists = collect($extensions[$type] ?? [])->contains('uuid', $extension);
-        if (! $exists) {
-            throw new ExtensionException('Extension not found in registry');
+        if ($type == 'email_templates') {
+            EmailTemplate::removeTemplate($extension);
         }
-
-        // Determine the physical folder path based on type
+        $extensions = self::readExtensionJson();
         $folderPath = $this->getExtensionPath($type, $extension);
-
-        // Delete the physical directory first (before updating registry)
         if ($this->files->isDirectory($folderPath)) {
             if (! $this->files->deleteDirectory($folderPath)) {
                 throw new ExtensionException('Unable to delete extension directory');
             }
         }
-
-        // Remove the entry from extensions.json only after successful deletion
         $extensions[$type] = collect($extensions[$type] ?? [])->filter(function ($item) use ($extension) {
             return $item['uuid'] !== $extension;
         })->values()->toArray();
@@ -376,6 +369,10 @@ class ExtensionManager extends ExtensionCollectionsManager
     {
         if ($type === 'themes') {
             return base_path('resources/themes/'.$extension);
+        }
+
+        if ($type == 'email_template' || $type == 'invoice_template') {
+            return base_path('resources/views/vendor/notifications/'.$extension.'.blade.php');
         }
 
         return base_path($type.'/'.$extension);
