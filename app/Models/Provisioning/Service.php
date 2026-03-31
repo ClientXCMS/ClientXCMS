@@ -582,6 +582,11 @@ class Service extends Model implements HasNotifiableVariablesInterface
         return $this->hasMany(ConfigOptionService::class);
     }
 
+
+    public function pricing()
+    {
+        return $this->hasMany(Pricing::class, 'related_id')->where('related_type', $this->pricing_key);
+    }
     /**
      * @return Pricing[]
      */
