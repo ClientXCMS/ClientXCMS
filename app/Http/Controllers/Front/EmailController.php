@@ -30,23 +30,32 @@ class EmailController extends Controller
     {
         $search = $request->query('search');
         if ($search != null) {
-            $emails = EmailMessage::where('recipient_id', auth()->user()->id)->where('subject', 'LIKE', "%{$search}%")->orderBy('id', 'DESC')->paginate(10);
+            $emails = EmailMessage::where('recipient_id', auth('web')->user()->id)->where('subject', 'LIKE', "%{$search}%")->orderBy('id', 'DESC')->paginate(10);
 
             return view('front.emails.index', compact('emails', 'search'));
         }
-        $emails = EmailMessage::where('recipient_id', auth()->user()->id)->orderBy('id', 'DESC')->paginate(10);
+        $emails = EmailMessage::where('recipient_id', auth('web')->user()->id)->orderBy('id', 'DESC')->paginate(10);
 
         return view('front.emails.index', compact('emails'));
     }
 
     public function show(EmailMessage $email)
     {
-        if ($email->recipient_id != auth()->user()->id) {
+        if ($email->recipient_id != auth('web')->user()->id) {
             abort(404);
         }
+
+        $email->update(['read_at' => now()]);
 
         return new Response($email->content, 200, [
             'Content-Type' => 'text/html; charset=UTF-8',
         ]);
+    }
+
+    public function readAll()
+    {
+        EmailMessage::where('recipient_id', auth()->guard('web')->user()->id)->whereNull('read_at')->update(['read_at' => now()]);
+
+        return redirect()->route('client.emails.index');
     }
 }
