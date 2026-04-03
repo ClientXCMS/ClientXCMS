@@ -102,7 +102,7 @@ class RegisteredUserController extends Controller
             $user->markEmailAsVerified();
         }
         event(new Registered($user));
-        ActionLog::log(ActionLog::NEW_REGISTERED, get_class($user), $user->getKey(), $user->getKey(), null, ['ip' => request()->ip()]);
+        ActionLog::log(ActionLog::NEW_REGISTERED, get_class($user), $user->id, null, $user->id, ['ip' => request()->ip()]);
 
         if ($request->wantsJson()) {
             return response()->noContent();

@@ -286,7 +286,7 @@ class ActionLog extends Model
         }
     }
 
-    public static function log($action, $model, $modelId, $staffId = null, $customerId = null, $payload = [], $old = [], $new = [])
+    public static function log(string $action, string $model, int $modelId, ?int $staffId = null, ?int $customerId = null, array $payload = [], array $old = [], array $new = [])
     {
         if (collect($old)->keys()->filter(fn ($key) => in_array($key, self::$ignoreKeys ?? []))->isNotEmpty()) {
             return null;

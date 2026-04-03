@@ -343,11 +343,11 @@ class SupportTicket extends Model
                 event(new HelpdeskTicketAnsweredCustomer($this, $message));
                 $this->update(['status' => self::STATUS_OPEN]);
                 $message->update(['read_at' => now()]);
-                ActionLog::log(ActionLog::TICKET_REPLIED, $this, $this->id, $staffId, $customerId, ['subject' => $this->subject]);
+                ActionLog::log(ActionLog::TICKET_REPLIED, get_class($this), $this->id, $staffId, $customerId, ['subject' => $this->subject]);
             } else {
                 $this->update(['status' => self::STATUS_ANSWERED]);
                 event(new HelpdeskTicketAnsweredStaff($this, $message));
-                ActionLog::log(ActionLog::TICKET_REPLIED, $this, $this->id, $staffId, $customerId, ['subject' => $this->subject]);
+                ActionLog::log(ActionLog::TICKET_REPLIED, get_class($this), $this->id, $staffId, $customerId, ['subject' => $this->subject]);
             }
         }
     }
@@ -397,7 +397,7 @@ class SupportTicket extends Model
         $this->closed_by = $closedBy;
         $this->closed_by_id = $closedById;
         $this->save();
-        ActionLog::log(ActionLog::TICKET_CLOSED, $this, $this->id, $closedById, $this->customer_id, ['subject' => $this->subject]);
+        ActionLog::log(ActionLog::TICKET_CLOSED, get_class($this), $this->id, $closedById, $this->customer_id, ['subject' => $this->subject]);
         event(new HelpdeskTicketClosedEvent($this));
     }
 
@@ -409,7 +409,7 @@ class SupportTicket extends Model
         $this->closed_by = null;
         $this->closed_by_id = null;
         $this->save();
-        ActionLog::log(ActionLog::TICKET_REOPENED, $this, $this->id, $this->assigned_to, $this->customer_id);
+        ActionLog::log(ActionLog::TICKET_REOPENED, get_class($this), $this->id, $this->assigned_to, $this->customer_id);
         event(new HelpdeskTicketReopenEvent($this));
     }
 
