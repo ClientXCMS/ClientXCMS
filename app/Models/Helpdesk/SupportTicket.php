@@ -27,6 +27,7 @@ use App\Events\Helpdesk\HelpdeskTicketReopenEvent;
 use App\Mail\Helpdesk\NotifyCustomerEmail;
 use App\Mail\Helpdesk\NotifySubscriberEmail;
 use App\Models\Account\Customer;
+use App\Models\ActionLog;
 use App\Models\Admin\Admin;
 use App\Models\Billing\Invoice;
 use App\Models\Provisioning\Service;
@@ -342,9 +343,11 @@ class SupportTicket extends Model
                 event(new HelpdeskTicketAnsweredCustomer($this, $message));
                 $this->update(['status' => self::STATUS_OPEN]);
                 $message->update(['read_at' => now()]);
+                ActionLog::log(ActionLog::TICKET_REPLIED, $this, $this->id, $staffId, $customerId, ['subject' => $this->subject]);
             } else {
                 $this->update(['status' => self::STATUS_ANSWERED]);
                 event(new HelpdeskTicketAnsweredStaff($this, $message));
+                ActionLog::log(ActionLog::TICKET_REPLIED, $this, $this->id, $staffId, $customerId, ['subject' => $this->subject]);
             }
         }
     }
@@ -394,6 +397,7 @@ class SupportTicket extends Model
         $this->closed_by = $closedBy;
         $this->closed_by_id = $closedById;
         $this->save();
+        ActionLog::log(ActionLog::TICKET_CLOSED, $this, $this->id, $closedById, $this->customer_id, ['subject' => $this->subject]);
         event(new HelpdeskTicketClosedEvent($this));
     }
 
@@ -405,12 +409,8 @@ class SupportTicket extends Model
         $this->closed_by = null;
         $this->closed_by_id = null;
         $this->save();
+        ActionLog::log(ActionLog::TICKET_REOPENED, $this, $this->id, $this->assigned_to, $this->customer_id);
         event(new HelpdeskTicketReopenEvent($this));
-    }
-
-    public function reply(string $content)
-    {
-        $this->addMessage($content, auth()->id());
     }
 
     public function relatedValue()

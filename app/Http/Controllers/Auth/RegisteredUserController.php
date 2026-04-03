@@ -21,6 +21,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account\Customer;
+use App\Models\ActionLog;
 use App\Services\Account\AccountEditService;
 use App\Services\Core\LocaleService;
 use Illuminate\Auth\Events\Registered;
@@ -101,6 +102,7 @@ class RegisteredUserController extends Controller
             $user->markEmailAsVerified();
         }
         event(new Registered($user));
+        ActionLog::log(ActionLog::NEW_REGISTERED, get_class($user), $user->getKey(), $user->getKey(), null, ['ip' => request()->ip()]);
 
         if ($request->wantsJson()) {
             return response()->noContent();
