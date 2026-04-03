@@ -111,7 +111,7 @@ trait InvoiceStateTrait
                     return;
                 }
                 if ($this->status === self::STATUS_PAID) {
-                    ActionLog::log(ActionLog::BASKET_COMPLETED, get_class($basket), $basket->id, null, $this->user_id, ['invoice' => $this->invoice_number, 'amount' => formatted_price($this->total(), $this->currency()), 'currency' => $this->currency(), 'amount_decimal' => $this->total()]);
+                    ActionLog::log(ActionLog::BASKET_COMPLETED, get_class($basket), $basket->id, null, $this->user_id, ['invoice' => $this->invoice_number, 'amount' => formatted_price($this->total, $this->currency), 'currency' => $this->currency, 'amount_decimal' => $this->total]);
                     event(new CheckoutCompletedEvent($basket, $this));
                 }
                 $basket->clear(true);
