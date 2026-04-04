@@ -171,7 +171,7 @@ class EmailTemplate extends Model
             return [];
         }
         $config = require $file;
-        return $config['rules'];
+        return $config;
     }
 
 
