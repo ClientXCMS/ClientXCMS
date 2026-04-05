@@ -36,6 +36,18 @@ class BillingServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(PaymentTypeService::class);
+        $this->app->booted(function() {
+            $extension = $this->app['extension'];
+            $extension->addInvoiceItem(new \App\Billing\Items\ProductInvoiceItem());
+            $extension->addInvoiceItem(new \App\Billing\Items\RenewalInvoiceItem());
+            $extension->addInvoiceItem(new \App\Billing\Items\CustomInvoiceItem());
+            $extension->addInvoiceItem(new \App\Billing\Items\ConfigOptionInvoiceItem());
+            $extension->addInvoiceItem(new \App\Billing\Items\ConfigOptionServiceInvoiceItem());
+            $extension->addInvoiceItem(new \App\Billing\Items\UpgradeInvoiceItem());
+            $extension->addInvoiceItem(new \App\Billing\Items\AddFundInvoiceItem());
+            $extension->addInvoiceItem(new \App\Billing\Items\FreeTrialInvoiceItem());
+            $extension->addInvoiceItem(new \App\Billing\Items\GiftCardInvoiceItem());
+        });
     }
 
     public function boot(): void
