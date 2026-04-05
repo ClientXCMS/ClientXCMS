@@ -52,7 +52,7 @@ class BasketController extends \App\Http\Controllers\Controller
             'completed_at' => null,
         ]);
 
-        return redirect()->to(route('front.store.basket.config', ['product' => $product]).($request->getQueryString() != null ? '?'.$request->getQueryString() : ''));
+        return redirect()->to(route('front.store.basket.config', ['product' => $product]) . ($request->getQueryString() != null ? '?' . $request->getQueryString() : ''));
     }
 
     public function show(Request $request)
@@ -79,7 +79,7 @@ class BasketController extends \App\Http\Controllers\Controller
         $row = BasketRow::findByProductOnSession($product, false);
         $available = $product->pricingAvailable(currency());
         $validated = $request->validate([
-            'billing' => 'nullable|string:in:'.implode(',', collect($available)->pluck('recurring')->toArray()),
+            'billing' => 'nullable|string:in:' . implode(',', collect($available)->pluck('recurring')->toArray()),
         ]);
         $billing = $validated['billing'] ?? $row->billing;
         if ($product->getPriceByCurrency(currency(), $billing)->price == 0 && count($available) > 0) {
@@ -109,6 +109,9 @@ class BasketController extends \App\Http\Controllers\Controller
 
     public function configProduct(Product $product, BasketConfigRequest $request)
     {
+        if (! $request->passes()) {
+            return back()->with('error', collect($request->errors())->flatten()->values()->implode('<br>'));
+        }
         if ($product->productType()->data($product) != null) {
             $data = $product->productType()->data($product)->parameters(new ProductDataDTO($product, $row->data ?? [], $request->validated())) + $request->validated();
         } else {
@@ -142,8 +145,16 @@ class BasketController extends \App\Http\Controllers\Controller
         if ($product->isNotValid(true) || $product->hasPricesForCurrency() !== true) {
             return response()->json(['message' => __('store.basket.not_valid')], 422);
         }
-
-        $validated = $request->validated();
+        try {
+            $validated = $request->validated();
+            $errors = [];
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $validated = ['billing' => $request->billing, 'currency' => $request->currency];
+            $errors = $e->errors();
+        }
+        if ($validated['billing'] == null || $validated['currency'] == null) {
+            return response()->json(['message' => __('store.basket.validation_failed'), 'errors' => $errors], 422);
+        }
         if (! $product->hasPricesForCurrency($validated['currency'])) {
             return response()->json(['message' => __('store.basket.no_prices')], 422);
         }
@@ -155,7 +166,7 @@ class BasketController extends \App\Http\Controllers\Controller
             $validated['options'] ?? [],
         );
 
-        return response()->json($preview);
+        return response()->json($preview + ['errors' => $errors]);
     }
 
     public function removeRow(Product $product)
@@ -242,7 +253,7 @@ class BasketController extends \App\Http\Controllers\Controller
             logger()->error($e->getMessage());
             $message = __('store.checkout.wrong_payment');
             if (auth('admin')->check()) {
-                $message .= ' Debug admin : '.$e->getMessage();
+                $message .= ' Debug admin : ' . $e->getMessage();
             }
 
             return redirect()->route('front.store.basket.checkout')->with('error', $message);

@@ -313,12 +313,13 @@ class ExtensionManager extends ExtensionCollectionsManager
             $api = $api->api;
         }
         if ($type == 'email_templates') {
-            // TODO : a revérifier
             Setting::updateSettings(['email_template_name' => $extension]);
         }
         if ($type == 'themes') {
             app('theme')->setTheme($extension, true);
-            $extensions['themes'] = collect($extensions['themes'] ?? [])->map(function ($item) use ($extension) {
+        }
+        if (in_array($type, ['email_templates', 'themes'])) {
+            $extensions[$type] = collect($extensions[$type] ?? [])->map(function ($item) use ($extension) {
                 if ($item['uuid'] != $extension) {
                     $item['enabled'] = false;
                 }
@@ -400,8 +401,20 @@ class ExtensionManager extends ExtensionCollectionsManager
 
             return $item;
         })->toArray();
+        if (in_array($type, ['email_templates', 'themes'])) {
+            $extensions[$type] = collect($extensions[$type] ?? [])->map(function ($item) use ($extension) {
+                if ($item['uuid'] != $extension) {
+                    $item['enabled'] = false;
+                }
+
+                return $item;
+            })->toArray();
+        }
         if ($type == 'email_templates') {
             Setting::updateSettings(['email_template_name' => null]);
+        }
+        if ($type == 'themes') {
+            app('theme')->setTheme('default', true);
         }
         try {
             self::writeExtensionJson($extensions);
