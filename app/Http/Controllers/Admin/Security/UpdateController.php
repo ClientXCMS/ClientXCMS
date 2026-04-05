@@ -23,6 +23,7 @@ use App\Core\License\LicenseGateway;
 use App\Extensions\UpdaterManager;
 use App\Models\Admin\Permission;
 use App\Providers\AppServiceProvider;
+use Illuminate\Support\Facades\Artisan;
 
 class UpdateController
 {
@@ -61,9 +62,13 @@ class UpdateController
         staff_aborts_permission(Permission::MANAGE_UPDATE);
         try {
             (new UpdaterManager)->update('core');
+            Artisan::call('optimize:clear');
+            Artisan::call('cache:clear');
+            Artisan::call('migrate', ['--force' => true, '--seed' => true]);
 
             return back()->with('success', __('admin.update.updated_success'));
         } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
     }
 }

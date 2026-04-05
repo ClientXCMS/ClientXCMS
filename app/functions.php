@@ -528,3 +528,10 @@ if (! function_exists('get_group_icon')) {
         return $icon;
     }
 }
+
+if (! function_exists('sanitize')) {
+    function sanitize(string $value): string
+    {
+        return trim(strip_tags($value));
+    }
+}
