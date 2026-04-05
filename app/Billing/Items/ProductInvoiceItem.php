@@ -5,6 +5,7 @@ namespace App\Billing\Items;
 use App\Contracts\Billing\InvoiceItemInterface;
 use App\Models\Billing\InvoiceItem;
 use App\Models\Store\Product;
+use App\Contracts\Store\ProductTypeInterface;
 use App\Services\Billing\InvoiceService;
 use App\Models\Provisioning\Service;
 
@@ -17,7 +18,7 @@ class ProductInvoiceItem implements InvoiceItemInterface
 
     public function type(): string|array
     {
-        return 'product';
+        return array_merge(ProductTypeInterface::ALL, ['product']);
     }
 
     public function relatedType(InvoiceItem $item): mixed

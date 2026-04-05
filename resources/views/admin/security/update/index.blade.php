@@ -73,6 +73,9 @@
                 <div class="mt-4">
                     <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('admin.update.current_version') }}</p>
                     <span class="text-lg font-bold text-gray-800 dark:text-white">v{{ $currentVersion }}</span>
+                    @if ($appIsGit)
+                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ $appVersion }}</span>
+                    @endif
                 </div>
                 <form method="POST" action="{{ route('admin.update') }}" class="ajax-extension-form">
                     @csrf
