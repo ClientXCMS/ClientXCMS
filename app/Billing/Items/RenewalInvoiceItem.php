@@ -10,12 +10,12 @@ class RenewalInvoiceItem implements InvoiceItemInterface
 {
     public function uuid(): string
     {
-        return 'service';
+        return 'renewal';
     }
 
     public function type(): string|array
     {
-        return 'service';
+        return 'renewal';
     }
 
     public function relatedType(InvoiceItem $item): mixed
