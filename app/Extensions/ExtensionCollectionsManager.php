@@ -19,6 +19,7 @@
 
 namespace App\Extensions;
 
+use App\Contracts\Billing\InvoiceItemInterface;
 use App\Contracts\Store\ProductTypeInterface;
 use App\Core\Admin\Dashboard\AdminCardWidget;
 use App\Core\Admin\Dashboard\AdminCountWidget;
@@ -55,6 +56,8 @@ class ExtensionCollectionsManager
 
     public Collection $protectedRoutes;
 
+    public Collection $invoiceItems;
+
     public function __construct()
     {
         $this->productTypes = collect();
@@ -70,6 +73,7 @@ class ExtensionCollectionsManager
         $this->sectionsContexts = collect();
         $this->seeders = collect();
         $this->protectedRoutes = collect();
+        $this->invoiceItems = collect();
     }
 
     public function addProductType(ProductTypeInterface $productType): void
@@ -89,7 +93,7 @@ class ExtensionCollectionsManager
 
     public function getAdminMenuItems(): Collection
     {
-        return collect(\Cache::get('adminMenuItems', $this->adminMenuItems))->sortBy((fn ($item) => $item->position));
+        return collect(\Cache::get('adminMenuItems', $this->adminMenuItems))->sortBy((fn($item) => $item->position));
     }
 
     public function addFrontMenuItem(FrontMenuItem $frontMenuItem): void
@@ -99,7 +103,7 @@ class ExtensionCollectionsManager
 
     public function getFrontMenuItems(): Collection
     {
-        return collect(\Cache::get('frontMenuItems', $this->frontMenuItems))->sortBy((fn ($item) => $item->position));
+        return collect(\Cache::get('frontMenuItems', $this->frontMenuItems))->sortBy((fn($item) => $item->position));
     }
 
     public function addClientMenuItem(ClientMenuItem $clientMenuItem): void
@@ -134,7 +138,7 @@ class ExtensionCollectionsManager
 
     public function addSectionContext(string $uuid, callable $function): void
     {
-        $params = \Cache::get('section_context_'.$uuid, call_user_func($function));
+        $params = \Cache::get('section_context_' . $uuid, call_user_func($function));
         $this->sectionsContexts = $this->sectionsContexts->merge([$uuid => $params]);
     }
 
@@ -166,5 +170,15 @@ class ExtensionCollectionsManager
     public function getProtectedRoutes(): Collection
     {
         return $this->protectedRoutes;
+    }
+
+    public function addInvoiceItem(InvoiceItemInterface $invoiceItem): void
+    {
+        $this->invoiceItems = $this->invoiceItems->merge([$invoiceItem->uuid() => $invoiceItem]);
+    }
+
+    public function getInvoiceItems(): Collection
+    {
+        return $this->invoiceItems;
     }
 }

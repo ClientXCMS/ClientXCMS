@@ -65,4 +65,9 @@ class PaymentTypeService
     {
         $this->paymentMethods = $this->paymentMethods->merge([$uuid => $class]);
     }
+
+    public function has(string $uuid): bool
+    {
+        return $this->paymentMethods->has($uuid);
+    }
 }
