@@ -128,6 +128,8 @@ class LicenseGateway
         $headers = [
             'Authorization' => 'Bearer '.$token,
             'ctx-uuid' => $uuid,
+            'ctx-version' => config('app.version'),
+            'ctx-php-version' => PHP_VERSION,
         ];
 
         $options = [

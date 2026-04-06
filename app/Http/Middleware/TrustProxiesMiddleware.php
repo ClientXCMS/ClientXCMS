@@ -67,8 +67,8 @@ class TrustProxiesMiddleware extends TrustProxies
 
     protected function getProxies(): array
     {
-        if (file_exists(storage_path('app/proxies.json'))) {
-            return json_decode(file_get_contents(storage_path('app/proxies.json')), true);
+        if (getenv('APP_PROXIES')) {
+            return explode(',', getenv('APP_PROXIES'));
         }
 
         return config('app.proxies');

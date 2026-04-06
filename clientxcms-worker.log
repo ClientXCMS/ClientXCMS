@@ -1,0 +1,10 @@
+  2026-04-03 19:54:32 App\Mail\Auth\VerifyEmail ...................... RUNNING
+  2026-04-03 19:54:32 App\Mail\Auth\VerifyEmail ................ 166.55ms DONE
+  2026-04-04 14:57:42 App\Mail\Auth\ResetPasswordEmail ............... RUNNING
+  2026-04-04 14:57:42 App\Mail\Auth\ResetPasswordEmail .......... 43.09ms DONE
+  2026-04-04 15:01:40 App\Mail\Auth\ResetPasswordEmail ............... RUNNING
+  2026-04-04 15:01:40 App\Mail\Auth\ResetPasswordEmail .......... 35.81ms DONE
+  2026-04-04 15:08:07 App\Mail\Auth\ResetPasswordEmail ............... RUNNING
+  2026-04-04 15:08:07 App\Mail\Auth\ResetPasswordEmail .......... 25.84ms DONE
+  2026-04-04 15:09:32 App\Mail\Auth\ResetPasswordEmail ............... RUNNING
+  2026-04-04 15:09:32 App\Mail\Auth\ResetPasswordEmail .......... 33.88ms DONE
