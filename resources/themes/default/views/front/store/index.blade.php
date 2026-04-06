@@ -53,7 +53,7 @@
                                 {{ $group->trans('name') }}
                             </h3>
                             <p class="mt-3 text-gray-500">
-                                {{ nl2br($group->trans('description')) }}
+                                {{ $group->trans('description') }}
                             </p>
                         </div>
                         <div

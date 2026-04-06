@@ -56,6 +56,6 @@ class EmailController extends Controller
     {
         EmailMessage::where('recipient_id', auth()->guard('web')->user()->id)->whereNull('read_at')->update(['read_at' => now()]);
 
-        return redirect()->route('client.emails.index');
+        return redirect()->route('front.emails.index');
     }
 }

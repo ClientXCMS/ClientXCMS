@@ -87,7 +87,7 @@ $maxItems = $max ?? 10;
                             placeholder="bi-star">
                     </div>
                     @else
-                    <input type="{{ ($subfield['type'] ?? 'text') == 'boolean' ? 'checkbox' : 'text' }}"
+                    <input type="{{ ($subfield['type'] ?? 'text') == 'boolean' ? 'checkbox' : $subfield['type'] }}"
                         data-field="{{ $subfieldKey }}"
                         class="input-text text-sm"
                         placeholder="{{ $subfield['placeholder'] ?? '' }}">
@@ -168,7 +168,6 @@ $maxItems = $max ?? 10;
                 itemEl.querySelectorAll('[data-field]').forEach(input => {
                     const key = input.dataset.field;
                     if (item[key] !== undefined) {
-                        console.log(input.type);
                         if (input.type != 'checkbox'){
                             input.value = item[key];
                         } else {

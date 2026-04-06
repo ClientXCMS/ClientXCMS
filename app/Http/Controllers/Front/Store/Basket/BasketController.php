@@ -79,7 +79,7 @@ class BasketController extends \App\Http\Controllers\Controller
         $row = BasketRow::findByProductOnSession($product, false);
         $available = $product->pricingAvailable(currency());
         $validated = $request->validate([
-            'billing' => 'nullable|string:in:' . implode(',', collect($available)->pluck('recurring')->toArray()),
+            'billing' => 'nullable|string|in:' . implode(',', collect($available)->pluck('recurring')->toArray()),
         ]);
         $billing = $validated['billing'] ?? $row->billing;
         if ($product->getPriceByCurrency(currency(), $billing)->price == 0 && count($available) > 0) {

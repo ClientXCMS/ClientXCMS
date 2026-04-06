@@ -145,7 +145,7 @@ class SecurityQuestionController extends AbstractCrudController
         $this->checkPermission('delete');
 
         if (! $security_question->canDelete()) {
-            return back()->with('error', 'Can not delete security question because it is used by some users or admins.');
+            return back()->with('error', __('admin.security_questions.can_not_delete'));
         }
 
         $security_question->delete();

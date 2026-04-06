@@ -50,6 +50,11 @@ class BillingServiceProvider extends ServiceProvider
         });
     }
 
+    public function booted(): void
+    {
+        
+    }
+
     public function boot(): void
     {
         if (! is_installed() || app()->runningUnitTests() || app()->runningInConsole()) {

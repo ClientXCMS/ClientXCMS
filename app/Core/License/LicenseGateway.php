@@ -20,6 +20,7 @@
 namespace App\Core\License;
 
 use App\Exceptions\LicenseInvalidException;
+use App\Providers\AppServiceProvider;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
@@ -128,7 +129,7 @@ class LicenseGateway
         $headers = [
             'Authorization' => 'Bearer '.$token,
             'ctx-uuid' => $uuid,
-            'ctx-version' => config('app.version'),
+            'ctx-version' => AppServiceProvider::VERSION,
             'ctx-php-version' => PHP_VERSION,
         ];
 
