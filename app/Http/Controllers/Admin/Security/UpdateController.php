@@ -20,6 +20,7 @@
 namespace App\Http\Controllers\Admin\Security;
 
 use App\Core\License\LicenseGateway;
+use App\Exceptions\LicenseInvalidException;
 use App\Extensions\UpdaterManager;
 use App\Models\Admin\Permission;
 use App\Providers\AppServiceProvider;
@@ -65,7 +66,11 @@ class UpdateController
             Artisan::call('optimize:clear');
             Artisan::call('cache:clear');
             Artisan::call('migrate', ['--force' => true, '--seed' => true]);
-
+            try {
+                app('license')->restartNPM();
+            } catch (LicenseInvalidException $e) {
+                \Session::flash('error', 'Error in restart NPM : '.$e->getMessage());
+            }
             return back()->with('success', __('admin.update.updated_success'));
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
