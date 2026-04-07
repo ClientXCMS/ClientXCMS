@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Api\Billing;
+namespace Tests\Feature\Api\Application\Billing;
 
 use App\Models\Account\Customer;
 use App\Models\Billing\Invoice;

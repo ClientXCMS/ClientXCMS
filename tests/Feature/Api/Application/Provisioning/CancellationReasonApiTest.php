@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Api\Provisioning;
+namespace Tests\Feature\Api\Application\Provisioning;
 
 use App\Models\Provisioning\CancellationReason;
 use Illuminate\Foundation\Testing\RefreshDatabase;
