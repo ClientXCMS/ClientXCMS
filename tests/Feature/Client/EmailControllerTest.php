@@ -77,8 +77,6 @@ class EmailControllerTest extends TestCase
         EmailMessage::factory(15)->create();
         $user = $this->createCustomerModel();
         $this->actingAs($user)->get(route('front.emails.read-all'))->assertRedirect();
-        $this->assertDatabaseHas('email_messages', [
-            'read_at' => now(),
-        ]);
+        $this->assertNotNull(EmailMessage::where('recipient_id', $user->id)->whereNotNull('read_at')->first());
     }
 }
