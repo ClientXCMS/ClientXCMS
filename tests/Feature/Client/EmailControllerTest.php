@@ -76,6 +76,8 @@ class EmailControllerTest extends TestCase
         Customer::factory(15)->create();
         EmailMessage::factory(15)->create();
         $user = $this->createCustomerModel();
+        // attach user to all emails
+        EmailMessage::where('recipient_id', null)->update(['recipient_id' => $user->id]);
         $this->actingAs($user)->get(route('front.emails.read-all'))->assertRedirect();
         $this->assertNotNull(EmailMessage::where('recipient_id', $user->id)->whereNotNull('read_at')->first());
     }
