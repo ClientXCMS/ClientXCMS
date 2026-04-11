@@ -120,6 +120,18 @@ class ActionLog extends Model
 
     const ACCOUNT_DELETED = 'account_deleted';
 
+    const NEW_REGISTERED = 'new_registered';
+
+    const TICKET_CREATED = 'ticket_created';
+
+    const TICKET_CLOSED = 'ticket_closed';
+
+    const TICKET_REPLIED = 'ticket_replied';
+
+    const TICKET_REOPENED = 'ticket_reopened';
+
+    const BASKET_COMPLETED = 'basket_completed';
+
     const ALL_ACTIONS = [
         self::SETTINGS_UPDATED,
         self::RESOURCE_CREATED,
@@ -150,6 +162,12 @@ class ActionLog extends Model
         self::TWO_FACTOR_RECOVERY_CODES_GENERATED,
         self::FAILED_LOGIN,
         self::ACCOUNT_DELETED,
+        self::NEW_REGISTERED,
+        self::TICKET_CREATED,
+        self::TICKET_CLOSED,
+        self::TICKET_REPLIED,
+        self::TICKET_REOPENED,
+        self::BASKET_COMPLETED,
     ];
 
     protected static array $ignoreKeys = [];
@@ -239,6 +257,7 @@ class ActionLog extends Model
             case self::THEME_CHANGED:
                 return 'bi bi-palette';
             case self::NEW_LOGIN:
+            case self::NEW_REGISTERED:
                 return 'bi bi-door-open';
             case self::PASSWORD_RESET:
                 return 'bi bi-key';
@@ -251,6 +270,13 @@ class ActionLog extends Model
                 return 'bi bi-person-x';
             case self::TWO_FACTOR_RECOVERY_CODES_GENERATED:
                 return 'bi bi-shield-check';
+            case self::TICKET_CREATED:
+                return 'bi bi-ticket';
+            case self::TICKET_CLOSED:
+                return 'bi bi-ticket-x';
+            case self::TICKET_REPLIED:
+            case self::TICKET_REOPENED:
+                return 'bi bi-ticket-perforated';
             default:
                 if (isset(self::$extensionIcons[$this->action])) {
                     return self::$extensionIcons[$this->action];
@@ -260,7 +286,7 @@ class ActionLog extends Model
         }
     }
 
-    public static function log($action, $model, $modelId, $staffId = null, $customerId = null, $payload = [], $old = [], $new = [])
+    public static function log($action, $model, $modelId = null, $staffId = null, $customerId = null, $payload = [], $old = [], $new = [])
     {
         if (collect($old)->keys()->filter(fn ($key) => in_array($key, self::$ignoreKeys ?? []))->isNotEmpty()) {
             return null;

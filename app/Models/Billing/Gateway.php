@@ -21,6 +21,7 @@ namespace App\Models\Billing;
 
 use App\Abstracts\PaymentMethodSourceDTO;
 use App\Contracts\Store\GatewayTypeInterface;
+use App\Core\Gateway\PaymentTypeNotFoundType;
 use App\DTO\Core\Gateway\GatewayUriDTO;
 use App\Models\Traits\ModelStatutTrait;
 use App\Services\Core\PaymentTypeService;
@@ -98,9 +99,12 @@ class Gateway extends Model
     /**
      * @return GatewayTypeInterface
      */
-    public function paymentType()
+    public function paymentType(): GatewayTypeInterface
     {
-        return app(PaymentTypeService::class)->get($this->uuid);
+        if (app(PaymentTypeService::class)->has($this->uuid)) {
+            return app(PaymentTypeService::class)->get($this->uuid);
+        }
+        return new PaymentTypeNotFoundType($this->uuid);
     }
 
     public function createPayment(Invoice $invoice, Request $request)

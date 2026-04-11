@@ -38,6 +38,7 @@ Route::prefix('/client')->name('front.')->group(function () {
     });
     Route::prefix('/emails')->name('emails.')->group(function () {
         Route::get('/', [EmailController::class, 'index'])->middleware(['auth', 'verified'])->name('index');
+        Route::get('/read-all', [EmailController::class, 'readAll'])->middleware(['auth', 'verified'])->name('read-all');
         Route::get('/{email}', [EmailController::class, 'show'])->middleware(['auth', 'verified'])->name('show');
     });
     Route::prefix('/payment-methods')->name('payment-methods.')->group(function () {

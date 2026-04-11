@@ -55,7 +55,11 @@ class EmailTemplateController extends AbstractCrudController
         $translations = __('personalization.email_templates.names');
         $params['translations'] = $translations;
         $params['locales'] = LocaleService::getLocalesNames(false);
-        $params['configForm'] = '';
+        if (EmailTemplate::getConfigFilePath()) {
+            $params['configForm'] = view(EmailTemplate::getConfigFilePath())->render();
+        } else {
+            $params['configForm'] = '';
+        }
 
         return $params;
     }
@@ -143,36 +147,13 @@ class EmailTemplateController extends AbstractCrudController
         return $this->deleteRedirect($emailTemplate);
     }
 
-    public function import(Request $request)
+    public function config(Request $request)
     {
-        $this->checkPermission('import');
-        $validated = $request->validate([
-            'file' => 'nullable|file',
-            'email_template_image' => 'nullable|url|string',
-            'email_template_title' => 'nullable|string',
-            'email_template_description' => 'nullable|string',
-        ]);
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            if (! $file->getMimeType() == 'text/html' || ! str_ends_with($file->getClientOriginalName(), '.blade.php')) {
-                return redirect()->back()->with('error', __('personalization.email_templates.import.invalid_file'));
-            }
-            $name = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $name = \Str::slug($name, '.');
-            $content = file_get_contents($file->getRealPath());
-            if (has_dangerous_content($content)) {
-                return redirect()->back()->with('error', __('personalization.email_templates.errors.dangerous_content'));
-            }
-            EmailTemplate::saveTemplate($name, $file);
-        }
-        if ($request->remove_file == 'true') {
-            $validated['email_template_name'] = null;
-            EmailTemplate::removeTemplate();
-        } else {
-            $validated['email_template_name'] = $name ?? \setting('email_template_name');
-        }
+        $this->checkPermission('config');
+        $validated = $request->validate(EmailTemplate::getConfigRules());
+
         Setting::updateSettings($validated);
 
-        return redirect()->route($this->routePath.'.index')->with('success', __('personalization.email_templates.import.success'));
+        return redirect()->route($this->routePath.'.index')->with('success', __('personalization.email_templates.config.success'));
     }
 }

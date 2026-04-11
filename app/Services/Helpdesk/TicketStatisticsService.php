@@ -31,7 +31,7 @@ class TicketStatisticsService
     {
         $closedTickets = SupportTicket::where('status', SupportTicket::STATUS_CLOSED)
             ->whereNotNull('closed_at')
-            ->with(['messages' => fn ($q) => $q->orderBy('created_at', 'asc')])
+            ->with(['messages' => fn($q) => $q->orderBy('created_at', 'asc')])
             ->get();
 
         $totalReplySeconds = 0;
@@ -63,10 +63,10 @@ class TicketStatisticsService
             ->where('status', SupportTicket::STATUS_ANSWERED)
             ->with('customer:id,firstname,lastname', 'department:id,name')
             ->orderBy('updated_at', 'asc')
-            ->allowedFilters(['department_id', 'priority'])
+            ->allowedFilters(['department_id', 'priority', 'id', 'customer.email', 'subject', 'uuid'])
             ->allowedSorts(['updated_at'])
             ->get()
-            ->filter(fn ($ticket) => $ticket->staffCanView(auth('admin')->user()));
+            ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()));
     }
 
     public function getActiveTickets()
@@ -75,10 +75,10 @@ class TicketStatisticsService
             ->where('status', SupportTicket::STATUS_OPEN)
             ->with('customer:id,firstname,lastname', 'department:id,name')
             ->orderBy('updated_at', 'asc')
-            ->allowedFilters(['department_id', 'priority'])
+            ->allowedFilters(['department_id', 'priority', 'id', 'customer.email', 'uuid'])
             ->allowedSorts(['updated_at'])
             ->get()
-            ->filter(fn ($ticket) => $ticket->staffCanView(auth('admin')->user()));
+            ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()));
     }
 
     public function getStaffMessageCounts()
@@ -107,7 +107,7 @@ class TicketStatisticsService
         $labels = [];
         for ($i = 0; $i < 52; $i++) {
             $date = now()->subWeeks($i);
-            $labels[] = $date->startOfWeek()->format('d/m').' - '.
+            $labels[] = $date->startOfWeek()->format('d/m') . ' - ' .
                 $date->endOfWeek()->format('d/m');
         }
 
@@ -116,12 +116,32 @@ class TicketStatisticsService
 
     public function getWeeklyGraphData()
     {
+        $startDate = now()->subWeeks(51)->startOfWeek();
+        $endDate = now()->endOfWeek();
+
+        $tickets = SupportTicket::query()
+            ->select(DB::raw('count(id) as aggregate'), DB::raw('DATE(created_at) as date'))
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('date')
+            ->get()
+            ->groupBy(fn($item) => Carbon::parse($item->date)->startOfWeek()->format('Y-m-d'))
+            ->map(fn($group) => $group->sum('aggregate'));
+
+        $messagesData = SupportMessage::query()
+            ->select(DB::raw('count(id) as aggregate'), DB::raw('DATE(created_at) as date'))
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('date')
+            ->get()
+            ->groupBy(fn($item) => Carbon::parse($item->date)->startOfWeek()->format('Y-m-d'))
+            ->map(fn($group) => $group->sum('aggregate'));
+
         $data = [];
         $messages = [];
         for ($i = 0; $i < 52; $i++) {
             $date = now()->subWeeks($i);
-            $data[] = SupportTicket::whereBetween('created_at', [$date->startOfWeek()->toDate(), $date->endOfWeek()->toDate()])->count();
-            $messages[] = SupportMessage::whereBetween('created_at', [$date->startOfWeek()->toDate(), $date->endOfWeek()->toDate()])->count();
+            $key = $date->startOfWeek()->format('Y-m-d');
+            $data[] = $tickets->get($key, 0);
+            $messages[] = $messagesData->get($key, 0);
         }
 
         return json_encode([$data, $messages]);

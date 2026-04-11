@@ -73,7 +73,7 @@ class SecurityQuestionController extends AbstractCrudController
                 return $items;
             }
             if (count($items) == 1) {
-                return redirect()->route($this->routePath.'.show', $items->first());
+                return redirect()->route($this->routePath . '.show', $items->first());
             }
         } else {
             $items = SecurityQuestion::orderBy('sort_order')
@@ -81,11 +81,11 @@ class SecurityQuestionController extends AbstractCrudController
                 ->paginate($this->perPage);
 
             if ($items->currentPage() > $items->lastPage()) {
-                return redirect()->route($this->routePath.'.index', array_merge(request()->query(), ['page' => $items->lastPage()]));
+                return redirect()->route($this->routePath . '.index', array_merge(request()->query(), ['page' => $items->lastPage()]));
             }
         }
 
-        return view($this->viewPath.'.index', $this->getIndexParams($items, $this->translatePrefix));
+        return view($this->viewPath . '.index', $this->getIndexParams($items, $this->translatePrefix));
     }
 
     public function create(Request $request)
@@ -143,6 +143,10 @@ class SecurityQuestionController extends AbstractCrudController
     public function destroy(SecurityQuestion $security_question)
     {
         $this->checkPermission('delete');
+
+        if (! $security_question->canDelete()) {
+            return back()->with('error', __('admin.security_questions.can_not_delete'));
+        }
 
         $security_question->delete();
 

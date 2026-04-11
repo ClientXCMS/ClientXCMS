@@ -38,7 +38,7 @@ class ServiceController extends AbstractApiController
     protected array $relations = [
         'customer',
         'metadata',
-        'pricings',
+        'pricing',
         'configoptions',
     ];
 
@@ -49,6 +49,8 @@ class ServiceController extends AbstractApiController
         'created_at',
         'updated_at',
     ];
+
+    protected string $model = Service::class;
 
     /**
      * @OA\Get(
@@ -114,7 +116,7 @@ class ServiceController extends AbstractApiController
      *         description="Related resources to include",
      *         required=false,
      *
-     *         @OA\Schema(type="string", default="customer,metadata,pricings,configoptions")
+     *         @OA\Schema(type="string", default="customer,metadata,pricing,configoptions")
      *     )
      * )
      */

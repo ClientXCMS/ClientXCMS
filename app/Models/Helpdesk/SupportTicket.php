@@ -27,6 +27,7 @@ use App\Events\Helpdesk\HelpdeskTicketReopenEvent;
 use App\Mail\Helpdesk\NotifyCustomerEmail;
 use App\Mail\Helpdesk\NotifySubscriberEmail;
 use App\Models\Account\Customer;
+use App\Models\ActionLog;
 use App\Models\Admin\Admin;
 use App\Models\Billing\Invoice;
 use App\Models\Provisioning\Service;
@@ -211,7 +212,7 @@ class SupportTicket extends Model
 
     public function staffCanView(Admin $admin)
     {
-        return $admin->can('admin.manage_tickets') || $admin->can('admin.manage_tickets_department.'.$this->department_id);
+        return $admin->can('admin.manage_tickets') || $admin->can('admin.manage_tickets_department.' . $this->department_id);
     }
 
     public function comments()
@@ -222,13 +223,13 @@ class SupportTicket extends Model
     public static function getPriorities()
     {
         return collect(self::PRIORITIES)->mapWithKeys(function ($value, $key) {
-            return [$key => __('helpdesk.priorities.'.$key)];
+            return [$key => __('helpdesk.priorities.' . $key)];
         });
     }
 
     public function priorityLabel()
     {
-        return __('helpdesk.priorities.'.$this->priority);
+        return __('helpdesk.priorities.' . $this->priority);
     }
 
     public function assignedTo()
@@ -342,9 +343,11 @@ class SupportTicket extends Model
                 event(new HelpdeskTicketAnsweredCustomer($this, $message));
                 $this->update(['status' => self::STATUS_OPEN]);
                 $message->update(['read_at' => now()]);
+                ActionLog::log(ActionLog::TICKET_REPLIED, get_class($this), $this->id, $staffId, $customerId, ['subject' => $this->subject]);
             } else {
                 $this->update(['status' => self::STATUS_ANSWERED]);
                 event(new HelpdeskTicketAnsweredStaff($this, $message));
+                ActionLog::log(ActionLog::TICKET_REPLIED, get_class($this), $this->id, $staffId, $customerId, ['subject' => $this->subject]);
             }
         }
     }
@@ -363,12 +366,12 @@ class SupportTicket extends Model
     {
         $users = [];
         foreach ($this->messages as $message) {
-            if ($message->customer_id != null) {
-                $initial = $message->customer->firstname[0].$message->customer->lastname[0];
+            if ($message->customer != null) {
+                $initial = $message->customer->firstname[0] . $message->customer->lastname[0];
                 $users[$initial] = $message->customer->excerptFullName();
             }
-            if ($message->admin_id != null) {
-                $initial = $message->admin->firstname[0].$message->admin->lastname[0];
+            if ($message->admin != null) {
+                $initial = $message->admin->firstname[0] . $message->admin->lastname[0];
                 $users[$initial] = $message->admin->username;
             }
         }
@@ -394,6 +397,7 @@ class SupportTicket extends Model
         $this->closed_by = $closedBy;
         $this->closed_by_id = $closedById;
         $this->save();
+        ActionLog::log(ActionLog::TICKET_CLOSED, get_class($this), $this->id, $closedById, $this->customer_id, ['subject' => $this->subject]);
         event(new HelpdeskTicketClosedEvent($this));
     }
 
@@ -405,12 +409,8 @@ class SupportTicket extends Model
         $this->closed_by = null;
         $this->closed_by_id = null;
         $this->save();
+        ActionLog::log(ActionLog::TICKET_REOPENED, get_class($this), $this->id, $this->assigned_to, $this->customer_id);
         event(new HelpdeskTicketReopenEvent($this));
-    }
-
-    public function reply(string $content)
-    {
-        $this->addMessage($content, auth()->id());
     }
 
     public function relatedValue()
@@ -428,12 +428,12 @@ class SupportTicket extends Model
         $folder = "helpdesk/attachments/{$this->id}/";
         $attachmentName = $attachment->getClientOriginalName();
         $attachmentName = str_replace(' ', '_', $attachmentName);
-        $attachmentName = rand(1000, 9999).'_'.$attachmentName;
+        $attachmentName = rand(1000, 9999) . '_' . $attachmentName;
         $attachment->storeAs($folder, $attachmentName);
         $file = new SupportAttachment;
         $file->fill([
             'filename' => $attachment->getClientOriginalName(),
-            'path' => 'helpdesk/attachments/'.$this->id.'/'.$attachmentName,
+            'path' => 'helpdesk/attachments/' . $this->id . '/' . $attachmentName,
             'mime' => $attachment->getClientMimeType(),
             'size' => $attachment->getSize(),
             'ticket_id' => $this->id,

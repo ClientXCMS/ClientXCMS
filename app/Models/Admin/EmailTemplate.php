@@ -103,7 +103,7 @@ class EmailTemplate extends Model
         ];
         if (setting('email_template_name') != null) {
             $colors = ThemeManager::getColorsArray();
-            $mail->view('notifications::'.str_replace('.blade', '', setting('email_template_name')), array_merge($mail->viewData, ['primaryColor' => $colors['600'], 'secondaryColor' => $colors['400']]));
+            $mail->view('notifications::' . str_replace('.blade', '', setting('email_template_name')), array_merge($mail->viewData, ['primaryColor' => $colors['600'], 'secondaryColor' => $colors['400']]));
         }
 
         return $mail;
@@ -118,7 +118,7 @@ class EmailTemplate extends Model
             'fullname' => $notifiable->FullName,
         ];
         foreach ($context as $key => $value) {
-            $content = str_replace('%'.$key.'%', $value, $content);
+            $content = str_replace('%' . $key . '%', $value, $content);
         }
 
         return $content;
@@ -128,26 +128,52 @@ class EmailTemplate extends Model
     {
         $folder = resource_path('views/vendor/notifications');
         $oldTemplate = setting('email_template_name');
-        $file->storeAs('', $name.'.php', ['disk' => 'email']);
+        $file->storeAs('', $name . '.php', ['disk' => 'email']);
         if ($oldTemplate != null && $oldTemplate != $name) {
-            $oldTemplate = $folder.'/'.$oldTemplate.'.blade.php';
+            $oldTemplate = $folder . '/' . $oldTemplate . '.blade.php';
             if (file_exists($oldTemplate)) {
                 unlink($oldTemplate);
             }
         }
     }
 
-    public static function removeTemplate()
+    public static function removeTemplate(?string $template = null)
     {
         $folder = resource_path('views/vendor/notifications');
-        $oldTemplate = setting('email_template_name');
-        if ($oldTemplate != null) {
-            $oldTemplate = $folder.'/'.$oldTemplate.'.blade.php';
-            if (file_exists($oldTemplate)) {
-                unlink($oldTemplate);
+        $files = [
+            $template . '.blade.php',
+            $template . '_config.blade.php',
+            $template . '_config.php',
+        ];
+        foreach ($files as $file) {
+            $file = $folder . '/' . $file;
+            if (file_exists($file)) {
+                unlink($file);
             }
         }
     }
+
+    public static function getConfigFilePath(): ?string
+    {
+        $folder = 'views/vendor/notifications';
+        $file = $folder . '/' . setting('email_template_name') . '_config.blade.php';
+        if (! file_exists(resource_path($file))) {
+            return null;
+        }
+        return 'vendor.notifications.' . setting('email_template_name') . '_config';
+    }
+
+    public static function getConfigRules(): array
+    {
+        $folder = resource_path('views/vendor/notifications');
+        $file = $folder . '/' . setting('email_template_name') . '_config.php';
+        if (! file_exists($file)) {
+            return [];
+        }
+        $config = require $file;
+        return $config;
+    }
+
 
     private static function bladeRender(string $content, array $context = []): string
     {
@@ -155,6 +181,10 @@ class EmailTemplate extends Model
             $content = str_replace('%%', '%', $content);
         }
         $content = sanitize_content($content);
+
+        if (class_exists(\Illuminate\View\Component::class)) {
+            \Illuminate\View\Component::flushCache();
+        }
 
         return \Blade::render($content, $context);
     }

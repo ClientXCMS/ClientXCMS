@@ -32,6 +32,7 @@ Route::get('/profile', [AdminController::class, 'profile'])->name('staffs.profil
 Route::put('/profile', [AdminController::class, 'updateProfile']);
 Route::post('/profile/2fa', [AdminController::class, 'save2fa'])->name('profile.2fa');
 Route::get('/profile/download_codes', [AdminController::class, 'downloadCodes'])->name('profile.2fa_codes');
+Route::put('/profile/password', [AdminController::class, 'updatePassword'])->name('profile.password');
 Route::post('/profile/security_question', [AdminController::class, 'saveSecurityQuestion'])->name('profile.security_question');
 Route::resource('/roles', RoleController::class)->names('roles')->except('edit');
 

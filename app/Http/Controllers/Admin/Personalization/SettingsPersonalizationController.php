@@ -216,8 +216,8 @@ class SettingsPersonalizationController extends Controller
     public function showPrimaryColors()
     {
         $theme = ThemeManager::getColorsArray();
-        $primary_color = $theme['400'];
-        $secondary_color = $theme['600'];
+        $primary_color = $theme['600'];
+        $secondary_color = $theme['400'];
 
         return view('admin.personalization.settings.primary', [
             'primary_color' => $primary_color,

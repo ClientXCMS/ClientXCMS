@@ -299,14 +299,14 @@ class Coupon extends Model
         }
         $value = $this->getPricingRecurring($recurring, $type);
         if ($this->type == self::TYPE_FIXED) {
-            return $amount - $value;
+            return max(0, $amount - $value);
         }
         if ($this->type == self::TYPE_PERCENT) {
-            return $amount - ($amount * ($value / 100));
+            return max(0, $amount - ($amount * ($value / 100)));
         }
         if ($type == BasketRow::OPTION) {
             // TODO: Implement option discount
-            return $amount;
+            return max(0, $amount);
         }
     }
 

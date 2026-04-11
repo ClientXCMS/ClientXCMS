@@ -60,6 +60,11 @@ class EmailMessage extends Model
         'recipient',
         'recipient_id',
         'template',
+        'read_at',
+    ];
+
+    protected $casts = [
+        'read_at' => 'datetime',
     ];
 
     public function template()
