@@ -131,6 +131,8 @@ class PaymentMethodController extends \App\Http\Controllers\Controller
 
     public function pay(Request $request, Invoice $invoice)
     {
+        abort_if($invoice->customer_id != auth()->id(), 404);
+
         $source = $request->get('paymentmethod', '');
         try {
             $source = $invoice->customer->getSourceById($source);
