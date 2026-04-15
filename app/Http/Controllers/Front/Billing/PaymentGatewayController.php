@@ -54,7 +54,9 @@ class PaymentGatewayController extends Controller
     {
         try {
             abort_unless($invoice->customer_id === auth('web')->id(), 403);
-            abort_unless($invoice->status === Invoice::STATUS_PENDING, 403);
+            if ($invoice->status !== Invoice::STATUS_PENDING) {
+                return redirect()->route('front.invoices.show', $invoice);
+            }
 
             $gateway = Gateway::where('uuid', $gateway)->first();
             abort_if(! $gateway, 404);
