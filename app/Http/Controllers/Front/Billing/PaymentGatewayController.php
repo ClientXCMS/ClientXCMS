@@ -43,6 +43,8 @@ class PaymentGatewayController extends Controller
 
     public function cancel(Invoice $invoice)
     {
+        abort_unless($invoice->customer_id === auth('web')->id(), 403);
+
         $invoice->cancel();
 
         return redirect()->route('front.invoices.show', $invoice)->with('warning', __('global.invoice_was_cancelled'));
@@ -51,8 +53,14 @@ class PaymentGatewayController extends Controller
     public function return(Request $request, Invoice $invoice, string $gateway)
     {
         try {
+            abort_unless($invoice->customer_id === auth('web')->id(), 403);
+            abort_unless($invoice->status === Invoice::STATUS_PENDING, 403);
+
             $gateway = Gateway::where('uuid', $gateway)->first();
             abort_if(! $gateway, 404);
+            abort_if($gateway->status === 'hidden', 403);
+            abort_if($invoice->paymethod !== $gateway->uuid, 403);
+            abort_if($invoice->total < $gateway->minimal_amount, 403);
 
             return $gateway->processPayment($invoice, $request);
         } catch (WrongPaymentException $e) {
