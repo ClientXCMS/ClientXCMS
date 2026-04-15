@@ -73,6 +73,46 @@ class EmailTemplateControllerTest extends TestCase
         $response->assertStatus(302);
     }
 
+    public function test_email_template_store_rejects_dangerous_function_calls()
+    {
+        $data = [
+            'name' => 'Test Template',
+            'subject' => 'Test Subject',
+            'content' => "{{ system('id') }}",
+            'button_text' => 'Test Button',
+            'hidden' => false,
+            'locale' => 'fr_FR',
+        ];
+
+        $response = $this->performAdminAction('POST', route('admin.personalization.email_templates.store'), $data);
+
+        $response->assertStatus(302);
+        $response->assertSessionHas('error');
+        $this->assertDatabaseMissing('email_templates', ['name' => 'Test Template']);
+    }
+
+    public function test_email_template_update_rejects_dangerous_function_calls()
+    {
+        $this->seed(EmailTemplateSeeder::class);
+        $emailTemplate = EmailTemplate::first();
+
+        $data = [
+            'name' => 'Updated Template',
+            'subject' => 'Updated Subject',
+            'content' => "{{ file_get_contents('.env') }}",
+            'button_text' => 'Updated Button',
+            'hidden' => true,
+            'locale' => 'fr_FR',
+        ];
+
+        $response = $this->performAdminAction('PUT', route('admin.personalization.email_templates.update', $emailTemplate), $data);
+
+        $response->assertStatus(302);
+        $response->assertSessionHas('error');
+        $this->assertDatabaseMissing('email_templates', ['id' => $emailTemplate->id, 'content' => "{{ file_get_contents('.env') }}"]);
+    }
+
+
     public function test_email_template_delete()
     {
         $this->seed(EmailTemplateSeeder::class);

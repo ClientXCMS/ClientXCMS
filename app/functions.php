@@ -432,9 +432,13 @@ if (! function_exists('dangerous_content_patterns')) {
             '/\?>/i',
             '/@php\b/i',
             '/@endphp\b/i',
+            '/@shell\b/i',
             '/\{\!\!.*?\!\!\}/s',
             '/@(include|extends|component|each|includeIf|includeWhen|includeFirst)\s*\(/i',
             '/@(yield|section|stack|push|prepend)\s*\(/i',
+            '/\b(?:env|exec|shell_exec|system|passthru|proc_open|popen|pcntl_exec|eval|assert|preg_replace|create_function|require|unlink|fopen|file_get_contents|file_put_contents|file|readfile|base64_decode|gzinflate|gzuncompress|gzdecode|gzcompress|gzdeflate|gzencode|ini_set|set_time_limit|error_reporting|ini_get|ini_restore|ini_alter|unserialize|serialize|var_dump|print_r|debug_backtrace|debug_print_backtrace|dump|die|exit|phpinfo|php_uname|getenv|get_current_user|getmyuid|getmygid|getmypid|getmyinode|getlastmod|getprotobyname|getprotobynumber|getservbyname|getservbyport)\s*\(/i',
+            '/\$(?:_ENV|_SERVER|_GET|_POST|_REQUEST|_SESSION|_COOKIE)\b/i',
+            '/\.env\b/i',
         ];
     }
 }
