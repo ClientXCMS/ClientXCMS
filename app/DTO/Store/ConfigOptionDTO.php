@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\DTO\Store;
 
@@ -126,6 +126,7 @@ class ConfigOptionDTO
         if ($this->option->type == ConfigOption::TYPE_SLIDER) {
             return (round($this->option->getPriceByCurrency($currency, $recurring)->recurringPayment(), 2) / $this->option->step) * $quantity;
         }
+
         return $this->option->getPriceByCurrency($currency, $recurring)->recurringPayment() * $quantity;
     }
 
@@ -261,7 +262,8 @@ class ConfigOptionDTO
             return $this->option->name;
         }
         $current = $this->expiresAt ?? Carbon::now();
-        $expiresAt = $this->expiresAt ? clone $this->expiresAt: app(RecurringService::class)->addFrom(clone $current, $billing);
+        $expiresAt = $this->expiresAt ? clone $this->expiresAt : app(RecurringService::class)->addFrom(clone $current, $billing);
+
         return "{$this->option->name} ({$current->format('d/m/y')} - {$expiresAt->format('d/m/y')})";
     }
 
@@ -326,7 +328,7 @@ class ConfigOptionDTO
             if (! $this->expiresAt) {
                 $this->expiresAt = Carbon::now();
             }
-            $expiresAt = $expiresAt ?? ($this->expiresAt? $this->expiresAt->format('d-m-y H:i'): app(RecurringService::class)->addFrom(clone $this->expiresAt, $billing)->format('d-m-y H:i'));
+            $expiresAt = $expiresAt ?? ($this->expiresAt ? $this->expiresAt->format('d-m-y H:i') : app(RecurringService::class)->addFrom(clone $this->expiresAt, $billing)->format('d-m-y H:i'));
         }
 
         return [

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,11 +17,9 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Front\Billing;
 
 use App\Exceptions\WrongPaymentException;
-use App\Helpers\Countries;
 use App\Http\Controllers\Controller;
 use App\Models\Billing\Invoice;
 use App\Services\Store\GatewayService;
@@ -106,7 +105,7 @@ class InvoiceController extends Controller
     public function balance(Request $request, Invoice $invoice)
     {
         abort_if($invoice->customer_id != auth()->id(), 404);
-        abort_if(!setting('allow_add_balance_to_invoices'), 404);
+        abort_if(! setting('allow_add_balance_to_invoices'), 404);
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0',
         ]);
@@ -114,6 +113,7 @@ class InvoiceController extends Controller
             return redirect()->route('front.invoices.show', $request->invoice)->with('error', __('client.invoices.balance.balance_not_enough'));
         }
         $invoice->addBalance($validated['amount']);
+
         return redirect()->route('front.invoices.show', $invoice)->with('success', __('client.invoices.balance.success'));
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,15 +17,12 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Personalization;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
- *
  * @property int $id
  * @property string $model
  * @property int $model_id
@@ -33,6 +31,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $content
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Translation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Translation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Translation query()
@@ -44,6 +43,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Translation whereModel($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Translation whereModelId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Translation whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Translation extends Model

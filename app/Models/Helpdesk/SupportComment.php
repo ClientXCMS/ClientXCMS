@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Models\Helpdesk;
 
 use App\Models\Admin\Admin;
@@ -22,14 +24,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="SupportComment",
  *     title="Support Comment",
  *     description="Internal comment on a support ticket",
  *     required={"ticket_id", "admin_id", "comment"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=14),
  *     @OA\Property(property="ticket_id", type="integer", example=101),
  *     @OA\Property(property="admin_id", type="integer", example=2),
@@ -41,6 +41,7 @@ use Illuminate\Database\Eloquent\Model;
  *         ref="#/components/schemas/Admin"
  *     )
  * )
+ *
  * @property int $id
  * @property int $ticket_id
  * @property int $admin_id
@@ -49,6 +50,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Admin $staff
  * @property-read \App\Models\Helpdesk\SupportTicket $ticket
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportComment newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportComment newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportComment query()
@@ -58,6 +60,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportComment whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportComment whereTicketId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportComment whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class SupportComment extends Model

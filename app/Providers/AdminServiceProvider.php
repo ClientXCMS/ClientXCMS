@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Providers;
 
@@ -98,6 +98,7 @@ class AdminServiceProvider extends ServiceProvider
      * Return version information for the footer.
      *
      * @return array
+     *
      * @see https://github.com/pterodactyl/panel/blob/0.7-develop/app/Providers/AppServiceProvider.php
      */
     protected function versionData()
@@ -107,7 +108,7 @@ class AdminServiceProvider extends ServiceProvider
                 $head = explode(' ', file_get_contents(base_path('.git/HEAD')));
 
                 if (array_key_exists(1, $head)) {
-                    $path = base_path('.git/' . trim($head[1]));
+                    $path = base_path('.git/'.trim($head[1]));
                 }
             }
 

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Billing\Traits;
 
 use App\Events\Core\CheckoutCompletedEvent;
@@ -24,6 +24,7 @@ use App\Events\Core\Invoice\InvoiceCancelled;
 use App\Events\Core\Invoice\InvoiceCompleted;
 use App\Events\Core\Invoice\InvoiceFailed;
 use App\Events\Core\Invoice\InvoiceRefunded;
+use App\Models\ActionLog;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceItem;
 use App\Models\Store\Basket\Basket;
@@ -43,6 +44,7 @@ trait InvoiceStateTrait
         });
         $this->clearServiceAssociation();
         $this->clearBasket($clearBasket);
+        $this->generatePdf(true);
         event(new InvoiceCancelled($this));
     }
 
@@ -64,7 +66,7 @@ trait InvoiceStateTrait
         });
 
         $this->clearBasket($clearBasket);
-        $this->generatePdf();
+        $this->generatePdf(true);
         event(new InvoiceCompleted($this));
     }
 
@@ -80,6 +82,7 @@ trait InvoiceStateTrait
             $item->refund();
         });
         $this->clearBasket($clearBasket);
+        $this->generatePdf(true);
         event(new InvoiceRefunded($this));
     }
 
@@ -95,6 +98,7 @@ trait InvoiceStateTrait
             $item->cancel();
         });
         $this->clearBasket($clearBasket);
+        $this->generatePdf(true);
         event(new InvoiceFailed($this));
     }
 
@@ -107,6 +111,7 @@ trait InvoiceStateTrait
                     return;
                 }
                 if ($this->status === self::STATUS_PAID) {
+                    ActionLog::log(ActionLog::BASKET_COMPLETED, get_class($basket), $basket->id, null, $this->user_id, ['invoice' => $this->invoice_number, 'amount' => formatted_price($this->total, $this->currency), 'currency' => $this->currency, 'amount_decimal' => $this->total]);
                     event(new CheckoutCompletedEvent($basket, $this));
                 }
                 $basket->clear(true);

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,10 +17,10 @@
  * Year: 2025
  */
 
-
 namespace App\Helpers;
 
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Artisan;
 use RuntimeException;
 use Str;
 
@@ -57,6 +58,7 @@ class EnvEditor
         if (file_put_contents($envPath, $content) === false) {
             throw new RuntimeException('Unable to write .env file: '.$envPath);
         }
+        Artisan::call('config:clear');
     }
 
     public static function putEnv(array $values, ?string $path = null)

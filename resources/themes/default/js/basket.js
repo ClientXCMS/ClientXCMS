@@ -91,8 +91,12 @@ const fetchPreview = async () => {
             showError(message);
             return;
         }
-
-        hideError();
+        if (payload.errors && Object.values(payload.errors).length > 0){
+            const message = payload.errors ? Object.values(payload.errors).flat().join(' / ') : null;
+            message ? showError(message) : '';
+        } else {
+            hideError();
+        }
         applySummary(payload);
     } catch (e) {
         showError('Impossible de récupérer le prix pour le moment.');

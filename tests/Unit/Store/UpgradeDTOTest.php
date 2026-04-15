@@ -3,18 +3,15 @@
 namespace Tests\Unit\Store;
 
 use App\DTO\Store\UpgradeDTO;
-use App\DTO\Store\ProductPriceDTO;
 use App\Services\Store\TaxesService;
-use App\Models\Billing\Upgrade as UpgradeModel;
-use Illuminate\Support\Facades\Lang;
-use Illuminate\Support\Facades\Setting;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Carbon\Carbon;
 
 class UpgradeDTOTest extends TestCase
 {
     use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -24,7 +21,7 @@ class UpgradeDTOTest extends TestCase
             'store_vat_enabled' => true,
             'minimum_days_to_force_renewal_with_upgrade' => 3,
             'add_setupfee_on_upgrade' => 'false',
-            'store_currency' => 'USD'
+            'store_currency' => 'USD',
         ]);
     }
 
@@ -71,7 +68,7 @@ class UpgradeDTOTest extends TestCase
     }
 
     /* ------------------------------------------------------------------ */
-    /*                    Tests sur generatePrice()                        */
+    /*                    Tests sur generatePrice() */
     /* ------------------------------------------------------------------ */
 
     public function test_generate_price_returns_free_dto_for_trial_service(): void
@@ -139,7 +136,7 @@ class UpgradeDTOTest extends TestCase
     }
 
     /* ------------------------------------------------------------------ */
-    /*                       Tests toInvoiceItem()                         */
+    /*                       Tests toInvoiceItem() */
     /* ------------------------------------------------------------------ */
 
     public function test_to_invoice_item_structure(): void
@@ -166,22 +163,21 @@ class UpgradeDTOTest extends TestCase
         $upgradeRecord->delete();
     }
 
-
     /* ------------------------------------------------------------------ */
-    /*                Aide pour créer les services/produits               */
+    /*                Aide pour créer les services/produits */
     /* ------------------------------------------------------------------ */
 
     private function prepareService(string $billing = 'monthly', int $daysLeft = 15, array $oldPrices = ['monthly' => 10], array $newPrices = ['monthly' => 20]): array
     {
-        $customer  = $this->createCustomerModel();
+        $customer = $this->createCustomerModel();
         $oldProduct = $this->createProductModel('active', 1, $oldPrices); // Ex : 10 $ / mois
         $newProduct = $this->createProductModel('active', 1, $newPrices); // Ex : 20 $ / mois
 
         // Crée le service existant rattaché à l’ancien produit
         $service = $this->createServiceModel($customer->id);
         $service->product_id = $oldProduct->id;
-        $service->billing    = $billing;         // weekly, monthly, onetime…
-        $service->currency   = 'USD';
+        $service->billing = $billing;         // weekly, monthly, onetime…
+        $service->currency = 'USD';
         $service->expires_at = Carbon::now()->addDays($daysLeft);
         $service->save();
 
@@ -189,7 +185,7 @@ class UpgradeDTOTest extends TestCase
     }
 
     /* ------------------------------------------------------------------ */
-    /*                          Tests prorata HT                          */
+    /*                          Tests prorata HT */
     /* ------------------------------------------------------------------ */
 
     public function test_generate_price_prorata_mid_month()
@@ -198,12 +194,12 @@ class UpgradeDTOTest extends TestCase
 
         $dto = (new UpgradeDTO($service))->generatePrice($newProduct);
 
-        $now = new \DateTime();
+        $now = new \DateTime;
         $daysInMonth = $now->format('t');
         $diff = $now->diff($service->expires_at);
         $diffInDays = $diff->d;
         $daysInMonth = (int) $now->format('t');
-        $priceDiff   = 20 - 10;
+        $priceDiff = 20 - 10;
         $expectedProrata = round($diffInDays / $daysInMonth * $priceDiff, 2);
         $this->assertEquals($expectedProrata, $dto->firstPaymentHT(), 0.01);
         $this->assertEquals(20, $dto->priceHT());
@@ -215,15 +211,16 @@ class UpgradeDTOTest extends TestCase
         [$service, $newProduct] = $this->prepareService('monthly', 2); // ≤ threshold → renouvellement
 
         $dto = (new UpgradeDTO($service))->generatePrice($newProduct);
-        $now = new \DateTime();
+        $now = new \DateTime;
         $diff = $now->diff($service->expires_at);
         $diffInDays = $diff->d;
         $daysInMonth = (int) $now->format('t');
-        $priceDiff   = 20 - 10;
-        $prorata     = round($diffInDays / $daysInMonth * $priceDiff, 2);
+        $priceDiff = 20 - 10;
+        $prorata = round($diffInDays / $daysInMonth * $priceDiff, 2);
         $expectedFirst = $prorata + 20;  // Ajout du mois complet
         $this->assertEquals($expectedFirst, $dto->firstPaymentHT(), 0.01);
     }
+
     public function test_generate_price_includes_setup_fee_when_enabled()
     {
         \App\Models\Admin\Setting::updateSettings(['add_setupfee_on_upgrade' => 'true']);
@@ -248,5 +245,4 @@ class UpgradeDTOTest extends TestCase
         $this->assertEquals(15, $dto->priceHT());
         $this->assertSame('weekly', $dto->recurring);
     }
-
 }

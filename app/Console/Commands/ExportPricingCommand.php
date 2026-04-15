@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,28 +16,29 @@
  *
  * Year: 2025
  */
+
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Store\Group;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Console\Command;
 use Illuminate\Support\Str;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ExportPricingCommand extends Command
 {
     protected $signature = 'pricing:export {filename? : output filename (default: CLIENTXCMS_pricing_YYYYMMDD_HHMMSS.xlsx)}';
+
     protected $description = 'Export all pricing data into an Excel file, grouped by product groups.';
 
     public function handle(): int
     {
         $filename = $this->argument('filename')
-            ?? 'CLIENTXCMS_pricing_' . now()->format('Ymd_His') . '.xlsx';
+            ?? 'CLIENTXCMS_pricing_'.now()->format('Ymd_His').'.xlsx';
 
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $summary = $spreadsheet->getActiveSheet();
         $summary->setTitle('Groupes');
         $summary->setCellValue('A1', 'CLIENTXCMS Pricing – Récapitulatif');
@@ -51,7 +53,7 @@ class ExportPricingCommand extends Command
         $summary->getStyle('A3:G3')->applyFromArray($this->headerStyle());
         $rowSummary = 4;
         Group::with(['products.pricing', 'groups.products.pricing'])
-             ->whereNull('parent_id')
+            ->whereNull('parent_id')
             ->chunk(100, function ($parents) use (&$rowSummary, $summary, $spreadsheet) {
 
                 foreach ($parents as $group) {
@@ -68,7 +70,7 @@ class ExportPricingCommand extends Command
                     );
                     $sheet->getStyle('A3:G3')->applyFromArray($this->headerStyle());
 
-                    $row   = 4;
+                    $row = 4;
                     $zebra = false;
                     $row = $this->dumpProducts($sheet, $group, $row, $zebra);
                     foreach ($group->groups as $child) {
@@ -104,12 +106,13 @@ class ExportPricingCommand extends Command
             $summary->getColumnDimension($col)->setAutoSize(true);
         }
         $summary->freezePane('A4');
-        $summary->getAutoFilter()->setRange('A3:G' . ($rowSummary - 1));
+        $summary->getAutoFilter()->setRange('A3:G'.($rowSummary - 1));
         $writer = new Xlsx($spreadsheet);
-        $path   = storage_path('app/' . $filename);
+        $path = storage_path('app/'.$filename);
         $writer->save($path);
 
-        $this->info('File exported successfully to: ' . $path);
+        $this->info('File exported successfully to: '.$path);
+
         return self::SUCCESS;
     }
 
@@ -118,13 +121,13 @@ class ExportPricingCommand extends Command
         return [
             'font' => ['bold' => true],
             'fill' => [
-                'fillType'   => Fill::FILL_SOLID,
+                'fillType' => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => 'D9E1F2'],
             ],
             'borders' => [
                 'bottom' => [
                     'borderStyle' => Border::BORDER_THIN,
-                    'color'       => ['argb' => '000000'],
+                    'color' => ['argb' => '000000'],
                 ],
             ],
         ];
@@ -154,10 +157,11 @@ class ExportPricingCommand extends Command
                         ->setFillType(Fill::FILL_SOLID)
                         ->getStartColor()->setRGB('F2F6FC');
                 }
-                $zebra = !$zebra;
+                $zebra = ! $zebra;
                 $row++;
             }
         }
+
         return $row + 1;
     }
 }

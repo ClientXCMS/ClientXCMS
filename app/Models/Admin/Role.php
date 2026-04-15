@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Admin;
 
 use App\Models\Traits\Loggable;
@@ -25,14 +25,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="Role",
  *     title="Role",
  *     description="Admin role and associated permissions",
  *     required={"name", "level"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="Administrator"),
  *     @OA\Property(property="level", type="integer", example=100),
@@ -45,10 +43,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *         property="permissions",
  *         type="array",
  *         description="List of permissions attached to this role",
- * 
+ *
  *         @OA\Items(ref="#/components/schemas/Permission")
  *     )
  * )
+ *
  * @property int $id
  * @property string $name
  * @property int $level
@@ -61,6 +60,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $permissions_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Admin\Admin> $staffs
  * @property-read int|null $staffs_count
+ *
  * @method static \Database\Factories\Admin\RoleFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Role newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Role newQuery()
@@ -76,6 +76,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Role withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Role withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Role extends Model

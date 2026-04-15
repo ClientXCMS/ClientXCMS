@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Admin\Personalization;
 
 use App\Events\Resources\ResourceCreatedEvent;
@@ -26,7 +26,6 @@ use App\Http\Requests\Personalization\MenuLinkRequest;
 use App\Models\Admin\Permission;
 use App\Models\Personalization\MenuLink;
 use App\Theme\ThemeManager;
-use GuzzleHttp\Psr7\Response;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
@@ -54,6 +53,7 @@ class MenuLinkController extends AbstractCrudController
         $data['type'] = $type;
 
         $menus = MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get();
+
         return $this->createView($data);
     }
 
@@ -73,36 +73,38 @@ class MenuLinkController extends AbstractCrudController
     public function sort(Request $request, string $type)
     {
         $this->checkPermission('update');
-        $menuLinks = $request->items;
-        $i = 0;
-        foreach ($menuLinks as $menuLink) {
-            if (is_array($menuLink)) {
-                $id = $menuLink['id'];
-                $children = $menuLink['children'];
-            } else {
-                $id = $menuLink;
-                $children = [];
-            }
-            $menu = MenuLink::find($id);
-            $menu->update([
-                'position' => $i,
-                'type' => $type,
-                'parent_id' => null,
-            ]);
-            foreach ($children as $child) {
-                $menu = MenuLink::find($child);
-                $menu->update([
-                    'position' => $i,
-                    'type' => $type,
-                    'parent_id' => $id,
-                ]);
-                $i++;
-            }
-            $i++;
-        }
+
+        $this->sortItems($request->items, $type, null);
+
         ThemeManager::clearCache();
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Recursively sort menu items up to 3 levels deep.
+     */
+    private function sortItems(array $items, string $type, ?int $parentId, int $depth = 0): void
+    {
+        if ($depth >= 3) {
+            return;
+        }
+
+        foreach ($items as $position => $item) {
+            $isNested = is_array($item);
+            $id = $isNested ? $item['id'] : $item;
+            $children = $isNested ? ($item['children'] ?? []) : [];
+
+            MenuLink::where('id', $id)->update([
+                'position' => $position,
+                'type' => $type,
+                'parent_id' => $parentId,
+            ]);
+
+            if (! empty($children)) {
+                $this->sortItems($children, $type, (int) $id, $depth + 1);
+            }
+        }
     }
 
     public function show(Request $request, MenuLink $menulink)

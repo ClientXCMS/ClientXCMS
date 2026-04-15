@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,20 +17,19 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Admin;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
- *
  * @property-read \App\Models\Admin\Permission|null $permission
  * @property-read \App\Models\Admin\Role|null $role
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PermissionRole newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PermissionRole newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PermissionRole query()
+ *
  * @mixin \Eloquent
  */
 class PermissionRole extends Model

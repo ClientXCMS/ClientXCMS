@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Listeners\Core;
 
@@ -53,7 +53,9 @@ class SendInvoiceNotification
 
     private function sendInvoiceCreatedNotification(Invoice $invoice): void
     {
-        $invoice->notifyCustomer();
+        if ($invoice->status != Invoice::STATUS_DRAFT) {
+            $invoice->notifyCustomer();
+        }
     }
 
     private function sendInvoiceCompletedNotification(Invoice $invoice): void

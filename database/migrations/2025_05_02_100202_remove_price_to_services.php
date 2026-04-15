@@ -32,6 +32,7 @@ return new class extends Migration
             foreach ($services as $service) {
                 if ($service->product == null) {
                     Pricing::createFromPrice($service->id, 'services', $service->billing, $service->billing == 'onetime' ? 0 : $service->price, null, $service->billing == 'onetime' ? $service->price : null);
+
                     continue;
                 }
                 if ($service->price != $service->product->getPriceByCurrency($service->currency, $service->billing)->price) {

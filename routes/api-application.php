@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 use App\Http\Controllers\Api\Billing\InvoiceController;
 use App\Http\Controllers\Api\Customers\CustomerController;
@@ -42,6 +42,7 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
 Route::middleware(['ability:health,*'])->get('/health', [ApiController::class, 'health'])->name('health');
 Route::middleware(['ability:license,*'])->get('/license', [ApiController::class, 'license'])->name('license');
 
@@ -136,3 +137,11 @@ Route::middleware(['ability:subdomains:store,*'])->post('/subdomains', [Subdomai
 Route::middleware(['ability:subdomains:show,*'])->get('/subdomains/{subdomain}', [SubdomainHostController::class, 'show'])->name('subdomains.show');
 Route::middleware(['ability:subdomains:update,*'])->post('/subdomains/{subdomain}', [SubdomainHostController::class, 'update'])->name('subdomains.update');
 Route::middleware(['ability:subdomains:delete,*'])->delete('/subdomains/{subdomain}', [SubdomainHostController::class, 'destroy'])->name('subdomains.delete');
+
+// Cancellation Reasons
+Route::middleware(['ability:cancellation_reasons:index,*'])->get('/cancellation_reasons', [\App\Http\Controllers\Api\Provisioning\CancellationReasonController::class, 'index'])->name('cancellation_reasons.index');
+Route::middleware(['ability:cancellation_reasons:store,*'])->post('/cancellation_reasons', [\App\Http\Controllers\Api\Provisioning\CancellationReasonController::class, 'store'])->name('cancellation_reasons.store');
+Route::middleware(['ability:cancellation_reasons:show,*'])->get('/cancellation_reasons/{cancellation_reason}', [\App\Http\Controllers\Api\Provisioning\CancellationReasonController::class, 'show'])->name('cancellation_reasons.show');
+Route::middleware(['ability:cancellation_reasons:update,*'])->post('/cancellation_reasons/{cancellation_reason}', [\App\Http\Controllers\Api\Provisioning\CancellationReasonController::class, 'update'])->name('cancellation_reasons.update');
+Route::middleware(['ability:cancellation_reasons:delete,*'])->delete('/cancellation_reasons/{cancellation_reason}', [\App\Http\Controllers\Api\Provisioning\CancellationReasonController::class, 'destroy'])->name('cancellation_reasons.delete');
+Route::middleware(['ability:cancellation_reasons:analytics,*'])->get('/cancellation_reasons_analytics', [\App\Http\Controllers\Api\Provisioning\CancellationReasonController::class, 'analytics'])->name('cancellation_reasons.analytics');

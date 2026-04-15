@@ -4,12 +4,16 @@ namespace Database\Seeders;
 
 use App\Core\Gateway\BalanceType;
 use App\Core\Gateway\BankTransfertType;
+use App\Core\Gateway\MollieType;
 use App\Core\Gateway\NoneGatewayType;
 use App\Core\Gateway\PayPalExpressCheckoutType;
 use App\Core\Gateway\PayPalMethodType;
+use App\Core\Gateway\SquareType;
 use App\Core\Gateway\StancerType;
 use App\Core\Gateway\StripeType;
+use App\Core\Gateway\SumUpType;
 use App\Models\Billing\Gateway;
+use App\Services\Core\PaymentTypeService;
 use Illuminate\Database\Seeder;
 
 class GatewaySeeder extends Seeder
@@ -20,7 +24,8 @@ class GatewaySeeder extends Seeder
     public function run(): void
     {
         if (Gateway::count() > 0) {
-            foreach ([BankTransfertType::UUID, PayPalExpressCheckoutType::UUID, PayPalMethodType::UUID, BalanceType::UUID, StripeType::UUID, NoneGatewayType::UUID, StancerType::UUID] as $uuid) {
+            $types = app(PaymentTypeService::class)->all()->keys()->toArray();
+            foreach ($types as $uuid) {
                 $first = Gateway::where('uuid', $uuid)->first();
                 if ($first) {
                     $other = Gateway::where('uuid', $uuid)->where('id', '!=', $first->id)->get();
@@ -37,7 +42,9 @@ class GatewaySeeder extends Seeder
         $this->saveGateway(StripeType::UUID, 'Carte bancaire', 'active');
         $this->saveGateway(StancerType::UUID, 'Stancer', 'hidden');
         $this->saveGateway(NoneGatewayType::UUID, 'Aucun', 'hidden', 0);
-
+        $this->saveGateway(MollieType::UUID, 'Mollie', 'hidden');
+        $this->saveGateway(SumUpType::UUID, 'SumUp', 'hidden');
+        $this->saveGateway(SquareType::UUID, 'Square', 'hidden');
     }
 
     private function saveGateway(string $uuid, string $name, string $status, float $minimal_amount = 0.50)

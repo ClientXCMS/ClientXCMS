@@ -8,6 +8,7 @@ use Tests\TestCase;
 class GroupTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_group_has_default_route()
     {
         $group = $this->createGroupModel();

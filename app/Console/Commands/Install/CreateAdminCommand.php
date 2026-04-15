@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -49,8 +50,9 @@ class CreateAdminCommand extends Command
             $username = $this->ask('Admin username');
         }
         $role = Role::where('is_default', true)->first();
-        if (!$role) {
+        if (! $role) {
             $this->error('No default role found. Please create a role first.');
+
             return;
         }
         Admin::insert([

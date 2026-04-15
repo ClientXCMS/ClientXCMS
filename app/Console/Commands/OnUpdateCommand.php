@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,23 +17,10 @@
  * Year: 2025
  */
 
-
 namespace App\Console\Commands;
 
-use App\Core\License\LicenseCache;
-use App\Models\Admin\Permission;
-use App\Models\Billing\Invoice;
-use App\Models\Helpdesk\SupportTicket;
-use App\Models\Provisioning\ConfigOptionService;
-use App\Models\Provisioning\Service;
-use App\Models\Store\Pricing;
-use App\Services\Core\LocaleService;
-use App\Services\Store\PricingService;
 use Illuminate\Console\Command;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Symfony\Component\Finder\Finder;
 
 class OnUpdateCommand extends Command
 {
@@ -53,10 +41,32 @@ class OnUpdateCommand extends Command
     /**
      * Execute the console command.
      */
-
     public function handle()
     {
+        if (Schema::hasColumn('customers', 'notes') && Schema::hasTable('customer_notes')) {
+            $migratedCount = 0;
+            \App\Models\Account\Customer::whereNotNull('notes')
+                ->where('notes', '!=', '')
+                ->chunk(100, function ($customers) use (&$migratedCount) {
+                    foreach ($customers as $customer) {
+                        if (\App\Models\Account\CustomerNote::where('customer_id', $customer->id)->exists()) {
+                            continue;
+                        }
+                        \App\Models\Account\CustomerNote::create([
+                            'customer_id' => $customer->id,
+                            'author_id' => null, // Unknown author
+                            'content' => $customer->notes,
+                            'created_at' => $customer->updated_at ?? now(),
+                            'updated_at' => $customer->updated_at ?? now(),
+                        ]);
+                        $migratedCount++;
+                    }
+                });
+            if ($migratedCount > 0) {
+                $this->info("Migrated {$migratedCount} customer notes to the new table.");
+            }
+        }
+
         $this->info('CLIENTXCMS is up to date.');
     }
-
 }

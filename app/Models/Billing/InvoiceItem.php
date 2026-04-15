@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Billing;
 
@@ -40,14 +40,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="InvoiceItem",
  *     title="Invoice Item",
  *     description="A product or service included in an invoice",
  *     required={"invoice_id", "name", "quantity", "unit_price_ht"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=3001),
  *     @OA\Property(property="invoice_id", type="integer", example=1001),
  *     @OA\Property(property="name", type="string", example="Web Hosting - Premium"),
@@ -66,6 +64,7 @@ use Illuminate\Support\Str;
  *     @OA\Property(property="discount", type="object", description="Optional discount structure for the item"),
  *     @OA\Property(property="parent_id", type="integer", nullable=true, example=null)
  * )
+ *
  * @property int $id
  * @property string $name
  * @property string $description
@@ -94,6 +93,7 @@ use Illuminate\Support\Str;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Metadata> $metadata
  * @property-read int|null $metadata_count
  * @property-read InvoiceItem|null $parent
+ *
  * @method static \Database\Factories\Core\InvoiceItemFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem newQuery()
@@ -123,6 +123,7 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|InvoiceItem withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class InvoiceItem extends Model
@@ -216,34 +217,23 @@ class InvoiceItem extends Model
      */
     public function relatedType()
     {
-        if (in_array($this->type, ProductTypeInterface::ALL)) {
-            return Product::find($this->related_id);
+        $types = collect(app('extension')->getInvoiceItems());
+        $type = $this->type;
+        $itemType = $types->first(function ($item) use ($type) {
+            if (is_array($item->type())) {
+                return in_array($type, $item->type());
+            }
+
+            return $item->type() === $type;
+        });
+
+        if ($itemType) {
+            return $itemType->relatedType($this);
         }
-        if ($this->type == 'renewal') {
-            return Service::find($this->related_id);
-        }
-        if ($this->type == CustomItem::CUSTOM_ITEM) {
-            return CustomItem::find($this->related_id);
-        }
-        if ($this->type == 'config_option') {
-            return ConfigOption::find($this->related_id);
-        }
-        if ($this->type == 'config_option_service') {
-            return ConfigOptionService::find($this->related_id);
-        }
-        if ($this->type == 'upgrade') {
-            return Upgrade::find($this->related_id);
-        }
-        if (class_exists(AddFundDTO::class) && $this->type == AddFundDTO::ADD_FUND_TYPE) {
-            return new AddFundDTO($this->invoice_id);
-        }
-        if (class_exists(FreetrialDTO::class) && $this->type == 'free_trial') {
-            return new FreetrialDTO($this->related_id, $this);
-        }
-        if (class_exists(Giftcard::class) && $this->type == Giftcard::GIFT_CARD_TYPE) {
-            return Giftcard::find($this->related_id);
-        }
-        throw new \Exception('InvoiceItem : Unknown type '.$this->type);
+
+
+
+        throw new \Exception('InvoiceItem : Unknown type ' . $this->type);
     }
 
     public function billing()
@@ -300,6 +290,7 @@ class InvoiceItem extends Model
             if ($force) {
                 return $default;
             }
+
             return null;
         }
         if (is_object($this->discount)) {
@@ -307,8 +298,10 @@ class InvoiceItem extends Model
                 if ($force) {
                     return $default;
                 }
+
                 return null;
             }
+
             return $this->discount;
         }
         $decoded = json_decode($this->discount);
@@ -316,6 +309,7 @@ class InvoiceItem extends Model
             if ($force) {
                 return $default;
             }
+
             return null;
         }
         if (property_exists($decoded, 'value_price')) {
@@ -339,10 +333,10 @@ class InvoiceItem extends Model
             return null;
         }
         if ($discount->type == 'fixed') {
-            return __('coupon.coupon_label', ['code' => $code, 'discount' => '-'.formatted_price($discount->value_price, $this->invoice->currency)]);
+            return __('coupon.coupon_label', ['code' => $code, 'discount' => '-' . formatted_price($discount->value_price, $this->invoice->currency)]);
         }
 
-        return __('coupon.coupon_label', ['code' => $code, 'discount' => '-'.$discount->value_price.'%']);
+        return __('coupon.coupon_label', ['code' => $code, 'discount' => '-' . $discount->value_price . '%']);
     }
 
     public function discountTotal()
@@ -367,144 +361,19 @@ class InvoiceItem extends Model
 
     public function tryDeliver()
     {
-        if ($this->type == 'add_fund') {
-            $this->invoice->customer->addFund($this->unit_price_ht, 'Add funds from invoice #'.$this->invoice->id);
-            $this->delivered_at = now();
-            $this->save();
-            return true;
+        $types = collect(app('extension')->getInvoiceItems());
+        $type = $this->type;
+        $itemType = $types->first(function ($item) use ($type) {
+            if (is_array($item->type())) {
+                return in_array($type, $item->type());
+            }
+
+            return $item->type() === $type;
+        });
+
+        if ($itemType) {
+            return $itemType->tryDeliver($this);
         }
-        if ($this->type == 'custom_item') {
-            $this->delivered_at = now();
-            $this->save();
-            return true;
-        }
-        if ($this->type == 'gift_card') {
-            $giftCard = $this->relatedType();
-            if ($giftCard == null) {
-                throw new \Exception("Gift card not found for invoice item {$this->id}");
-            }
-            if ($giftCard->customer != null){
-                $customer = $giftCard->customer;
-            } else {
-                $customer = $this->invoice->customer;
-            }
-            if ($customer == null) {
-                throw new \Exception("Customer not found for invoice item {$this->id}");
-            }
-            if ($giftCard->isValid($customer)) {
-                $customer->notify(new RedeemGiftcardMail($giftCard, $this->data['message']));
-                $this->delivered_at = now();
-                $this->save();
-                return true;
-            } else {
-                throw new \Exception("Gift card {$giftCard->code} is not valid for invoice item {$this->id}");
-            }
-        }
-        if ($this->type == 'renewal') {
-            $service = $this->relatedType();
-            if ($service == null) {
-                throw new \Exception("Service not found for invoice item {$this->id}");
-            }
-            $service->renew($this->data['billing'] ?? null);
-            $this->delivered_at = now();
-            $this->save();
-            ServiceRenewals::where('invoice_id', $this->invoice_id)->update(['renewed_at' => now()]);
-
-            return true;
-        } elseif ($this->type == 'service' || $this->type == 'free_trial') {
-            $services = $this->getMetadata('services');
-            if ($services == null) {
-                try {
-                    InvoiceService::createServicesFromInvoiceItem($this->invoice, $this);
-                    $services = $this->getMetadata('services');
-                } catch (\Exception $e) {
-                    throw new \Exception("Error creating services for invoice item {$this->id} : ".$e->getMessage());
-                }
-            }
-            $delivered = [];
-            $services = explode(',', $services);
-            foreach ($services as $serviceId) {
-                $service = Service::find($serviceId);
-                if ($service == null) {
-                    $services = collect($services)->filter(fn ($id) => $id != $serviceId)->implode(',');
-                    if (empty($services)) {
-                        $this->detachMetadata('services');
-                    } else {
-                        $this->attachMetadata('services', $services);
-                    }
-                    throw new \Exception("Service {$serviceId} not found for invoice item {$this->id}");
-                }
-                if ($service->status == 'active') {
-                    $delivered[] = $service->id;
-
-                    continue;
-                }
-                $result = $service->deliver();
-                if ($result->success) {
-                    $delivered[] = $service->id;
-                } else {
-                    throw new \Exception("Service {$service->id} delivery failed Error : ".$service->delivery_errors);
-                }
-            }
-            if (count($delivered) == count($services)) {
-                $this->delivered_at = now();
-                $this->save();
-
-                return true;
-            }
-        } elseif ($this->type == 'config_option') {
-            $configOption = $this->relatedType();
-            if ($configOption == null) {
-                throw new \Exception("Config option not found for invoice item {$this->id}");
-            }
-            if ($this->parent_id == null) {
-                throw new \Exception("Parent id not found for invoice item {$this->id}");
-            }
-            if ($this->parent->delivered_at != null) {
-                if (! $configOption->automatic) {
-                    return true;
-                }
-                $this->delivered_at = now();
-                $this->save();
-            }
-
-            return true;
-        } elseif ($this->type == 'config_option_service') {
-            /** @var ConfigOptionService $configOptionService */
-            $configOptionService = $this->relatedType();
-            if ($configOptionService == null) {
-                throw new \Exception("Config option service not found for invoice item {$this->id}");
-            }
-            if ($this->parent_id == null) {
-                throw new \Exception("Parent id not found for invoice item {$this->id}");
-            }
-            if ($this->parent->delivered_at != null) {
-                if (! $configOptionService->option->automatic) {
-                    return true;
-                }
-                $configOptionService->renew($this->data['expires_at']);
-                $this->delivered_at = now();
-                $this->save();
-            }
-
-            return true;
-        } elseif ($this->type == 'upgrade') {
-            /** @var \App\Models\Billing\Upgrade $upgrade */
-            $upgrade = $this->relatedType();
-            if ($upgrade == null) {
-                throw new \Exception("Upgrade not found for invoice item {$this->id}");
-            }
-            $result = $upgrade->deliver();
-            if ($result->success) {
-                $this->delivered_at = now();
-                $this->save();
-            } else {
-                throw new \Exception("Upgrade {$upgrade->id} delivery failed Error : ".$result->message);
-            }
-
-            return true;
-        }
-
         return false;
     }
 

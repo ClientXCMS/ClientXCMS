@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Admin\Provisioning;
 
@@ -169,6 +169,7 @@ class ServiceController extends AbstractCrudController
                 \Session::flash('info', __('client.alerts.service_cancelled_and_not_expired'));
             }
         }
+
         return $this->showView($params);
     }
 
@@ -187,15 +188,17 @@ class ServiceController extends AbstractCrudController
 
         $validated = $request->validate([
             'paymentmethod' => "in:$paymentmethods",
-            'billing_day' => ['nullable', "between:1,28", new isValidBillingDayRule($service)]
+            'billing_day' => ['nullable', 'between:1,28', new isValidBillingDayRule($service)],
         ]);
         $paymentmethod = $validated['paymentmethod'];
         $subscription = Subscription::createOrUpdateForService($service, $paymentmethod);
-        if ($request->has('billing_day')){
+        if ($request->has('billing_day')) {
             $billingDay = $request->get('billing_day');
             $subscription->setBillingDay($billingDay);
+
             return back()->with('success', __('client.services.subscription.billing_day_updated', ['date' => $subscription->getNextPaymentDate()]));
         }
+
         return redirect()->route($this->routePath.'.show', [$service])->with('success', __('client.services.subscription.success', ['date' => $subscription->getNextPaymentDate()->format('d/m')]));
     }
 

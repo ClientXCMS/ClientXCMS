@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Http\Controllers;
 
 class GDPRController
@@ -29,7 +31,7 @@ class GDPRController
         }
         if (auth()->check()) {
             $user = auth()->user();
-            $user->gdpr_compliment = !$user->gdpr_compliment;
+            $user->gdpr_compliment = ! $user->gdpr_compliment;
             $user->save();
         }
     }

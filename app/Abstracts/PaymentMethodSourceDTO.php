@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -62,9 +63,10 @@ class PaymentMethodSourceDTO
 
     public function title()
     {
-        if ($this->gateway_uuid == 'paypal_express_checkout'){
-            return "PayPal (".$this->email.")" . ($this->isDefault() ? ' - '.__('client.payment-methods.default') : '');
+        if ($this->gateway_uuid == 'paypal_express_checkout') {
+            return 'PayPal ('.$this->email.')'.($this->isDefault() ? ' - '.__('client.payment-methods.default') : '');
         }
+
         return $this->brand.' **** **** **** '.$this->last4.' ('.$this->exp_month.'/'.$this->exp_year.')'.($this->isDefault() ? ' - '.__('client.payment-methods.default') : '');
     }
 }

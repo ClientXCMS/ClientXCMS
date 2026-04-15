@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http;
 
@@ -49,6 +49,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        LocaleMiddleware::class,
         InstallationMiddleware::class,
     ];
 
@@ -71,7 +72,6 @@ class Kernel extends HttpKernel
             ForceLoginMiddleware::class,
             Validate2FAMiddleware::class,
             BannedMiddleware::class,
-            LocaleMiddleware::class,
             RecaptchaMiddleware::class,
         ],
         'api' => [
@@ -79,13 +79,12 @@ class Kernel extends HttpKernel
             \Illuminate\Session\Middleware\StartSession::class,
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             ApiJsonMiddleware::class,
-            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            MaintenanceMiddleware::class.':api',
+            MaintenanceMiddleware::class . ':api',
         ],
         'admin' => [
             IsAdminMiddleware::class,
-            LocaleMiddleware::class,
         ],
     ];
 

@@ -55,6 +55,25 @@
                     @include('admin/shared/checkbox', ['label' => __('personalization.seo.fields.disablereferencement'), 'name' => 'seo_disablereferencement', 'value' => setting('seo_disablereferencement', 'false')])
                 </div>
             </div>
+
+            <h4 class="font-semibold uppercase text-gray-600 dark:text-gray-400 mt-6">
+                {{ __('personalization.seo.social_section') }}
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                <div>
+                    @include('admin/shared/input', ['label' => __('personalization.seo.fields.og_title'), 'name' => 'seo_og_title', 'value' => setting('seo_og_title')])
+                </div>
+                <div>
+                    @include('admin/shared/input', ['label' => __('personalization.seo.fields.og_description'), 'name' => 'seo_og_description', 'value' => setting('seo_og_description')])
+                </div>
+                <div>
+                    @include('admin/shared/file', ['label' => __('personalization.seo.fields.og_image'), 'name' => 'seo_og_image', 'help' => __('personalization.seo.fields.og_image_help'), 'canRemove' => setting('seo_og_image') ? true : false])
+                </div>
+                <div>
+                    @include('admin/shared/input', ['label' => __('personalization.seo.fields.twitter_handle'), 'name' => 'seo_twitter_handle', 'value' => setting('seo_twitter_handle'), 'help' => __('personalization.seo.fields.twitter_handle_help')])
+                </div>
+            </div>
+
             <button type="submit" class="btn btn-primary mt-3 ">{{ __('global.save') }}</button>
         </form>
     @include('admin/translations/settings-overlay', ['keys' => ['site_title' => 'text'], 'class' => \App\Models\Admin\Setting::class, 'id' => 0])

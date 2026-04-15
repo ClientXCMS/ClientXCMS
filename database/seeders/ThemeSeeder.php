@@ -48,6 +48,7 @@ class ThemeSeeder extends Seeder
                 $menus = json_decode(file_get_contents($path), true);
                 if ($menus === null) {
                     logger()->info('[ThemeSeeder] Unable to parse menus.json for theme '.$theme->name);
+
                     continue;
                 }
                 if (is_array($menus)) {
@@ -58,7 +59,7 @@ class ThemeSeeder extends Seeder
                             }
                             $created = MenuLink::create([
                                 'name' => $menu['name'],
-                                'url' => $menu['url'] ?? "#",
+                                'url' => $menu['url'] ?? '#',
                                 'icon' => $menu['icon'] ?? null,
                                 'type' => $type,
                                 'position' => $menu['position'] ?? 0,

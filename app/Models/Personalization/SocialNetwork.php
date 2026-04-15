@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,15 +17,12 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Personalization;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
- *
  * @property int $id
  * @property string $icon
  * @property string $name
@@ -32,6 +30,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $hidden
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SocialNetwork newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SocialNetwork newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SocialNetwork query()
@@ -42,6 +41,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SocialNetwork whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SocialNetwork whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SocialNetwork whereUrl($value)
+ *
  * @mixin \Eloquent
  */
 class SocialNetwork extends Model
@@ -54,6 +54,16 @@ class SocialNetwork extends Model
         'icon',
         'name',
         'url',
+        'position',
+    ];
+
+    protected $casts = [
+        'position' => 'integer',
+        'hidden' => 'boolean',
+    ];
+
+    protected $attributes = [
+        'position' => 0,
     ];
 
     public static function getSvgFromResource(string $name): string

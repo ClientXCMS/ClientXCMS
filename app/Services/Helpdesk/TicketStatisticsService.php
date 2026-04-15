@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,10 +16,11 @@
  *
  * Year: 2025
  */
+
 namespace App\Services\Helpdesk;
 
-use App\Models\Helpdesk\SupportTicket;
 use App\Models\Helpdesk\SupportMessage;
+use App\Models\Helpdesk\SupportTicket;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -61,7 +63,7 @@ class TicketStatisticsService
             ->where('status', SupportTicket::STATUS_ANSWERED)
             ->with('customer:id,firstname,lastname', 'department:id,name')
             ->orderBy('updated_at', 'asc')
-            ->allowedFilters(['department_id', 'priority'])
+            ->allowedFilters(['department_id', 'priority', 'id', 'customer.email', 'subject', 'uuid'])
             ->allowedSorts(['updated_at'])
             ->get()
             ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()));
@@ -73,7 +75,7 @@ class TicketStatisticsService
             ->where('status', SupportTicket::STATUS_OPEN)
             ->with('customer:id,firstname,lastname', 'department:id,name')
             ->orderBy('updated_at', 'asc')
-            ->allowedFilters(['department_id', 'priority'])
+            ->allowedFilters(['department_id', 'priority', 'id', 'customer.email', 'uuid'])
             ->allowedSorts(['updated_at'])
             ->get()
             ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()));
@@ -100,14 +102,12 @@ class TicketStatisticsService
             ->get();
     }
 
-
-
     public function getWeeklyGraphLabels()
     {
         $labels = [];
         for ($i = 0; $i < 52; $i++) {
             $date = now()->subWeeks($i);
-            $labels[] = $date->startOfWeek()->format('d/m').' - '.
+            $labels[] = $date->startOfWeek()->format('d/m') . ' - ' .
                 $date->endOfWeek()->format('d/m');
         }
 
@@ -116,12 +116,32 @@ class TicketStatisticsService
 
     public function getWeeklyGraphData()
     {
+        $startDate = now()->subWeeks(51)->startOfWeek();
+        $endDate = now()->endOfWeek();
+
+        $tickets = SupportTicket::query()
+            ->select(DB::raw('count(id) as aggregate'), DB::raw('DATE(created_at) as date'))
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('date')
+            ->get()
+            ->groupBy(fn($item) => Carbon::parse($item->date)->startOfWeek()->format('Y-m-d'))
+            ->map(fn($group) => $group->sum('aggregate'));
+
+        $messagesData = SupportMessage::query()
+            ->select(DB::raw('count(id) as aggregate'), DB::raw('DATE(created_at) as date'))
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('date')
+            ->get()
+            ->groupBy(fn($item) => Carbon::parse($item->date)->startOfWeek()->format('Y-m-d'))
+            ->map(fn($group) => $group->sum('aggregate'));
+
         $data = [];
         $messages = [];
         for ($i = 0; $i < 52; $i++) {
             $date = now()->subWeeks($i);
-            $data[] = SupportTicket::whereBetween('created_at', [$date->startOfWeek()->toDate(), $date->endOfWeek()->toDate()])->count();
-            $messages[] = SupportMessage::whereBetween('created_at', [$date->startOfWeek()->toDate(), $date->endOfWeek()->toDate()])->count();
+            $key = $date->startOfWeek()->format('Y-m-d');
+            $data[] = $tickets->get($key, 0);
+            $messages[] = $messagesData->get($key, 0);
         }
 
         return json_encode([$data, $messages]);

@@ -4,9 +4,6 @@ namespace Tests\Feature\Admin\Security;
 
 use App\Services\Core\LogsReaderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class HistoryControllerTest extends TestCase

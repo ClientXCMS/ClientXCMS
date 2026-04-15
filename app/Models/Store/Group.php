@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Store;
 
 use App\DTO\Store\ProductPriceDTO;
@@ -30,13 +30,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @OA\Schema (
  *      schema="ShopGroup",
  *     title="Shop group",
  *     description="Shop group model"
  * )
+ *
  * @property int $id
  * @property string $name
  * @property string $slug
@@ -57,6 +56,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $products_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Personalization\Translation> $translations
  * @property-read int|null $translations_count
+ *
  * @method static \Database\Factories\Store\GroupFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Group newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Group newQuery()
@@ -76,6 +76,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Group whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Group withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Group withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Group extends Model
@@ -257,10 +258,10 @@ class Group extends Model
             return $this->getMetadata('group_url');
         }
         if ($this->parent_id) {
-            return route('front.store.subgroup', [$this->group()->trans('slug'), $this->trans('slug')], $absolute);
+            return route('front.store.subgroup', [$this->group()->trans('slug', $this->group()->slug), $this->trans('slug', $this->slug)], $absolute);
         }
 
-        return route('front.store.group', $this->trans('slug'), $absolute);
+        return route('front.store.group', $this->trans('slug', $this->slug), $absolute);
     }
 
     public function isSubgroup()
@@ -282,7 +283,12 @@ class Group extends Model
     {
         $attributes = parent::attributesToArray();
         $attributes['start_price'] = $this->startPrice();
-        $attributes['route'] = $this->route();
+        try {
+            $attributes['route'] = $this->route();
+        } catch (\Exception $e) {
+            $attributes['route'] = null;
+        }
+
         return $attributes;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,17 +17,26 @@
  * Year: 2025
  */
 
-use Illuminate\Support\Facades\Route;
+namespace App\Contracts\Billing;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
+use App\Models\Billing\InvoiceItem;
 
-Route::middleware(['ability:customer:me,customer:*'])->get('/me', [\App\Http\Controllers\Api\Customers\MeController::class, 'me']);
+interface InvoiceItemInterface
+{
+    public function uuid(): string;
+
+    /**
+     * @return string|array
+     */
+    public function type(): string|array;
+
+    /**
+     * Get the related type for the invoice item
+     */
+    public function relatedType(InvoiceItem $item): mixed;
+
+    /**
+     * Try to deliver the invoice item
+     */
+    public function tryDeliver(InvoiceItem $item): bool;
+}

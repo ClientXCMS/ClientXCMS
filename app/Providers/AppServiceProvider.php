@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Providers;
 
 use App\Core\License\LicenseGateway;
@@ -31,7 +31,7 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    const VERSION = '2.14.10';
+    const VERSION = '2.15.1';
 
     /**
      * Register any application services.

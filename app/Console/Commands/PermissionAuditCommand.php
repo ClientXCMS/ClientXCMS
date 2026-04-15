@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -95,15 +96,17 @@ class PermissionAuditCommand extends Command
         $this->info('Synchronizing permissions...');
 
         $permissionsFile = resource_path('permissions.json');
-        if (!file_exists($permissionsFile)) {
+        if (! file_exists($permissionsFile)) {
             $this->error('permissions.json not found');
+
             return self::FAILURE;
         }
 
         $definedPermissions = json_decode(file_get_contents($permissionsFile), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->error('Invalid JSON in permissions.json: ' . json_last_error_msg());
+            $this->error('Invalid JSON in permissions.json: '.json_last_error_msg());
+
             return self::FAILURE;
         }
 
@@ -128,10 +131,10 @@ class PermissionAuditCommand extends Command
         }
 
         $this->newLine();
-        $this->info("Synchronization complete!");
+        $this->info('Synchronization complete!');
         $this->line("Created: {$created}");
         $this->line("Updated: {$updated}");
-        $this->line("Total: " . count($definedPermissions));
+        $this->line('Total: '.count($definedPermissions));
 
         return self::SUCCESS;
     }
@@ -190,6 +193,7 @@ class PermissionAuditCommand extends Command
 
         if ($unusedPermissions->isEmpty()) {
             $this->info('All permissions are being used by at least one role.');
+
             return self::SUCCESS;
         }
 

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -45,12 +47,14 @@ class TelemetryCommand extends Command
         try {
             if (env('TELEMETRY_ENABLED', 'true') === 'false') {
                 $this->info('Telemetry is disabled. Skipping telemetry data sending.');
+
                 return;
             }
             $telemetryService = app(\App\Services\TelemetryService::class);
             $result = $telemetryService->sendTelemetry();
-            if (!$result) {
+            if (! $result) {
                 $this->error('Failed to send telemetry data.');
+
                 return;
             }
             $this->info('Telemetry data sent successfully.');

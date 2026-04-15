@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Providers;
 
@@ -70,12 +70,13 @@ class ProvisioningServiceProvider extends ServiceProvider
         /** @var SettingsService $setting */
         $setting = app('settings');
 
-        $setting->addCard('provisioning', 'provisioning.admin.title', 'provisioning.admin.subheading', 2);
+        $setting->addCard('provisioning', 'provisioning.admin.title', 'provisioning.admin.subheading', 2, null, true, 2, 'bi bi-boxes');
         $setting->addCardItem('provisioning', 'services', 'provisioning.admin.settings.services.title', 'provisioning.admin.settings.services.description', 'bi bi-box2', [SettingsProvisioningController::class, 'showServicesSettings'], Permission::MANAGE_SETTINGS);
         $setting->addCardItem('provisioning', 'servers', 'provisioning.admin.servers.title', 'provisioning.admin.servers.subheading', 'bi bi-hdd-rack', route('admin.servers.index'), 'admin.manage_servers');
         $setting->addCardItem('provisioning', 'subdomains_hosts', 'provisioning.admin.subdomains_hosts.title', 'provisioning.admin.subdomains_hosts.subheading', 'bi bi-list-stars', route('admin.subdomains_hosts.index'), 'admin.manage_subdomains_hosts');
         $setting->addCardItem('provisioning', 'configoptions_services', 'provisioning.admin.configoptions_services.title', 'provisioning.admin.configoptions_services.subheading', 'bi bi-boxes', route('admin.configoptions_services.index'), true);
         $setting->addCardItem('provisioning', 'configoptions', 'provisioning.admin.configoptions.title', 'provisioning.admin.configoptions.subheading', 'bi bi-cart-plus', route('admin.configoptions.index'), true);
+        $setting->addCardItem('provisioning', 'cancellation_reasons', 'provisioning.admin.cancellation_reasons.title', 'provisioning.admin.cancellation_reasons.subheading', 'bi bi-x-circle', action([\App\Http\Controllers\Admin\Provisioning\CancellationReasonController::class, 'index']), 'admin.manage_services');
         \View::share('store_groups', \Cache::remember('store_groups', 3600 * 24 * 7, function () {
             try {
                 return \App\Models\Store\Group::getAvailable()->orderBy('sort_order')->orderBy('pinned')->get();

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Billing;
 
 use App\DTO\Store\ConfigOptionDTO;
@@ -30,8 +30,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Str;
 
 /**
- * 
- *
  * @property int $id
  * @property string $type
  * @property string $key
@@ -55,6 +53,7 @@ use Str;
  * @property-read int|null $pricing_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Product> $products
  * @property-read int|null $products_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOption newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOption newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOption onlyTrashed()
@@ -78,6 +77,7 @@ use Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOption whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOption withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOption withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class ConfigOption extends Model
@@ -259,6 +259,7 @@ class ConfigOption extends Model
             $pricing->currency = currency();
             $pricing->save();
         }
+
         return $option;
     }
 

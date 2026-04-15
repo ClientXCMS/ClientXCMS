@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Admin\Core;
 
 use App\Events\Resources\ResourceUpdatedEvent;
@@ -26,6 +26,7 @@ use App\Http\Requests\Admin\Staff\UpdateStaffRequest;
 use App\Models\ActionLog;
 use App\Models\Admin\Admin;
 use App\Models\Admin\Role;
+use App\Models\Admin\SecurityQuestion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
@@ -133,7 +134,7 @@ class AdminController extends AbstractCrudController
 
             $qrcode = $google->getQRCodeInline(
                 config('app.name'),
-                $request->user('admin')->email.' (Admin)',
+                $request->user('admin')->email . ' (Admin)',
                 $secret
             );
             $request->session()->put('2fa_secret_admin', $secret);
@@ -148,8 +149,10 @@ class AdminController extends AbstractCrudController
         $params['code'] = $request->session()->get('2fa_secret');
         $params['logs'] = $request->user('admin')->getLogsAction([ActionLog::NEW_LOGIN, ActionLog::FAILED_LOGIN])->paginate(10);
         $params['locales'] = \App\Services\Core\LocaleService::getLocalesNames();
+        $params['securityQuestions'] = SecurityQuestion::getActiveQuestionsForSelect();
+        $params['securityQuestionsEnabled'] = SecurityQuestion::isFeatureEnabled();
 
-        return view($this->viewPath.'.profile', $params);
+        return view($this->viewPath . '.profile', $params);
     }
 
     public function save2fa(Request $request)
@@ -176,7 +179,7 @@ class AdminController extends AbstractCrudController
                 return $code;
             });
             echo $codes->join("\n");
-        }, '2fa_recovery_codes_'.\Str::slug(config('app.name')).'.txt');
+        }, '2fa_recovery_codes_' . \Str::slug(config('app.name')) . '.txt');
     }
 
     public function updateProfile(Request $request)
@@ -185,19 +188,63 @@ class AdminController extends AbstractCrudController
             'firstname' => 'required|string|max:255',
             'lastname' => 'required|string|max:255',
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('admins', 'email')->ignore(auth('admin')->user()->id)],
-            'password' => 'nullable|string|min:8',
             'username' => 'nullable|string|max:255',
             'signature' => 'nullable|string|max:255',
             'locale' => ['required', 'string', Rule::in(array_keys(\App\Services\Core\LocaleService::getLocalesNames()))],
         ]);
-        if ($request->password != null) {
-            $validated['password'] = bcrypt($request->password);
-        } else {
-            unset($validated['password']);
-        }
         $request->user('admin')->update($validated);
         event(new ResourceUpdatedEvent($request->user('admin')));
 
         return back()->with('success', __('client.profile.updated'));
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $admin = auth('admin')->user();
+        $rules = [
+            'current_password' => ['required', 'current_password:admin'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ];
+
+        if ($admin->hasSecurityQuestion()) {
+            $rules['security_answer'] = ['required', 'string', function ($attribute, $value, $fail) use ($admin) {
+                if (!$admin->verifySecurityAnswer($value)) {
+                    $fail(__('client.profile.security_question.wrong_answer'));
+                }
+            }];
+        }
+
+        $request->validate($rules);
+
+        $admin->update([
+            'password' => bcrypt($request->password),
+        ]);
+
+        return back()->with('success', __('client.profile.password_updated'));
+    }
+
+    public function saveSecurityQuestion(Request $request)
+    {
+        $admin = $request->user('admin');
+
+        // Si l'admin veut supprimer sa question de sécurité
+        if ($request->has('remove_security_question')) {
+            $admin->resetSecurityQuestion();
+
+            return back()->with('success', __('client.profile.security_question_removed'));
+        }
+
+        $request->validate([
+            'security_question_id' => 'required|exists:security_questions,id',
+            'security_answer' => 'required|string|min:2|max:255',
+            'currentpassword_sq' => ['required', 'current_password:admin'],
+        ]);
+
+        $admin->setSecurityQuestion(
+            $request->security_question_id,
+            $request->security_answer
+        );
+
+        return back()->with('success', __('client.profile.security_question_saved'));
     }
 }

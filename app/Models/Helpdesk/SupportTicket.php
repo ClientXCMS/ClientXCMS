@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Helpdesk;
 
 use App\Events\Helpdesk\HelpdeskTicketAnsweredCustomer;
@@ -27,6 +27,7 @@ use App\Events\Helpdesk\HelpdeskTicketReopenEvent;
 use App\Mail\Helpdesk\NotifyCustomerEmail;
 use App\Mail\Helpdesk\NotifySubscriberEmail;
 use App\Models\Account\Customer;
+use App\Models\ActionLog;
 use App\Models\Admin\Admin;
 use App\Models\Billing\Invoice;
 use App\Models\Provisioning\Service;
@@ -37,14 +38,12 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="SupportTicket",
  *     title="Support Ticket",
  *     description="Support ticket model",
  *     required={"subject", "priority", "status", "department_id", "customer_id"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=101),
  *     @OA\Property(property="subject", type="string", example="Problème de facturation"),
  *     @OA\Property(property="priority", type="string", enum={"low", "medium", "high"}, example="medium"),
@@ -77,24 +76,25 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  *     @OA\Property(
  *         property="attachments",
  *         type="array",
- * 
+ *
  *         @OA\Items(ref="#/components/schemas/SupportAttachment")
  *     ),
- * 
+ *
  *     @OA\Property(
  *         property="messages",
  *         type="array",
- * 
+ *
  *         @OA\Items(ref="#/components/schemas/SupportMessage")
  *     ),
- * 
+ *
  *     @OA\Property(
  *         property="comments",
  *         type="array",
- * 
+ *
  *         @OA\Items(ref="#/components/schemas/SupportComment")
  *     )
  * )
+ *
  * @property int $id
  * @property int $department_id
  * @property int $customer_id
@@ -122,6 +122,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  * @property-read \App\Models\Helpdesk\SupportDepartment $department
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Helpdesk\SupportMessage> $messages
  * @property-read int|null $messages_count
+ *
  * @method static \Database\Factories\Helpdesk\TicketFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportTicket newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportTicket newQuery()
@@ -147,6 +148,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportTicket whereUuid($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportTicket withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportTicket withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class SupportTicket extends Model
@@ -210,7 +212,7 @@ class SupportTicket extends Model
 
     public function staffCanView(Admin $admin)
     {
-        return $admin->can('admin.manage_tickets') || $admin->can('admin.manage_tickets_department.'.$this->department_id);
+        return $admin->can('admin.manage_tickets') || $admin->can('admin.manage_tickets_department.' . $this->department_id);
     }
 
     public function comments()
@@ -221,13 +223,13 @@ class SupportTicket extends Model
     public static function getPriorities()
     {
         return collect(self::PRIORITIES)->mapWithKeys(function ($value, $key) {
-            return [$key => __('helpdesk.priorities.'.$key)];
+            return [$key => __('helpdesk.priorities.' . $key)];
         });
     }
 
     public function priorityLabel()
     {
-        return __('helpdesk.priorities.'.$this->priority);
+        return __('helpdesk.priorities.' . $this->priority);
     }
 
     public function assignedTo()
@@ -242,7 +244,19 @@ class SupportTicket extends Model
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withTrashed();
+    }
+
+    /**
+     * Get the customer name or placeholder for deleted users.
+     */
+    public function getCustomerNameAttribute(): string
+    {
+        if ($this->customer_id === null || $this->customer === null) {
+            return __('client.profile.delete.deleted_user_placeholder');
+        }
+
+        return $this->customer->fullName;
     }
 
     public function attachments()
@@ -297,7 +311,7 @@ class SupportTicket extends Model
         if ($lastMessage != null) {
             /** @var Carbon $createdAt */
             $createdAt = $lastMessage->created_at;
-            if ($createdAt->diffInSeconds() < 10) {
+            if ($createdAt->diffInSeconds() < 10 && ! app()->runningUnitTests()) {
                 $isSpam = true;
             }
         }
@@ -329,9 +343,11 @@ class SupportTicket extends Model
                 event(new HelpdeskTicketAnsweredCustomer($this, $message));
                 $this->update(['status' => self::STATUS_OPEN]);
                 $message->update(['read_at' => now()]);
+                ActionLog::log(ActionLog::TICKET_REPLIED, get_class($this), $this->id, $staffId, $customerId, ['subject' => $this->subject]);
             } else {
                 $this->update(['status' => self::STATUS_ANSWERED]);
                 event(new HelpdeskTicketAnsweredStaff($this, $message));
+                ActionLog::log(ActionLog::TICKET_REPLIED, get_class($this), $this->id, $staffId, $customerId, ['subject' => $this->subject]);
             }
         }
     }
@@ -350,18 +366,17 @@ class SupportTicket extends Model
     {
         $users = [];
         foreach ($this->messages as $message) {
-            if ($message->customer_id != null) {
-                $initial = $message->customer->firstname[0].$message->customer->lastname[0];
+            if ($message->customer != null) {
+                $initial = $message->customer->firstname[0] . $message->customer->lastname[0];
                 $users[$initial] = $message->customer->excerptFullName();
             }
-            if ($message->admin_id != null) {
-                $initial = $message->admin->firstname[0].$message->admin->lastname[0];
+            if ($message->admin != null) {
+                $initial = $message->admin->firstname[0] . $message->admin->lastname[0];
                 $users[$initial] = $message->admin->username;
             }
         }
 
         return $users;
-
     }
 
     public function isOpen()
@@ -382,6 +397,7 @@ class SupportTicket extends Model
         $this->closed_by = $closedBy;
         $this->closed_by_id = $closedById;
         $this->save();
+        ActionLog::log(ActionLog::TICKET_CLOSED, get_class($this), $this->id, $closedById, $this->customer_id, ['subject' => $this->subject]);
         event(new HelpdeskTicketClosedEvent($this));
     }
 
@@ -393,12 +409,8 @@ class SupportTicket extends Model
         $this->closed_by = null;
         $this->closed_by_id = null;
         $this->save();
+        ActionLog::log(ActionLog::TICKET_REOPENED, get_class($this), $this->id, $this->assigned_to, $this->customer_id);
         event(new HelpdeskTicketReopenEvent($this));
-    }
-
-    public function reply(string $content)
-    {
-        $this->addMessage($content, auth()->id());
     }
 
     public function relatedValue()
@@ -416,12 +428,12 @@ class SupportTicket extends Model
         $folder = "helpdesk/attachments/{$this->id}/";
         $attachmentName = $attachment->getClientOriginalName();
         $attachmentName = str_replace(' ', '_', $attachmentName);
-        $attachmentName = rand(1000, 9999).'_'.$attachmentName;
+        $attachmentName = rand(1000, 9999) . '_' . $attachmentName;
         $attachment->storeAs($folder, $attachmentName);
         $file = new SupportAttachment;
         $file->fill([
             'filename' => $attachment->getClientOriginalName(),
-            'path' => 'helpdesk/attachments/'.$this->id.'/'.$attachmentName,
+            'path' => 'helpdesk/attachments/' . $this->id . '/' . $attachmentName,
             'mime' => $attachment->getClientMimeType(),
             'size' => $attachment->getSize(),
             'ticket_id' => $this->id,
@@ -443,6 +455,7 @@ class SupportTicket extends Model
         if (! $model) {
             $model = $this->where('id', $value)->first();
         }
+
         return $model ?? abort(404);
     }
 

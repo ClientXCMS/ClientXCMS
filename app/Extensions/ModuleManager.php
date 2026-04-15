@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,11 +17,9 @@
  * Year: 2025
  */
 
-
 namespace App\Extensions;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
-use App\DTO\Core\Extensions\ExtensionInstallDTO;
 use App\Exceptions\ExtensionException;
 use Composer\Autoload\ClassLoader;
 use Illuminate\Filesystem\Filesystem;
@@ -61,7 +60,7 @@ class ModuleManager implements ExtensionInterface
         foreach ($autoload['files'] ?? [] as $file) {
             $this->files->getRequire($this->modulePath($uuid, $file));
         }
-        $providers = ($DTO->api['providers'] ?? []) + ($composerJson['providers'] ?? []); 
+        $providers = ($DTO->api['providers'] ?? []) + ($composerJson['providers'] ?? []);
         foreach ($providers as $provider) {
             if (! class_exists($provider['provider'])) {
                 continue;

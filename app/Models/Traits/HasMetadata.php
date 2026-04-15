@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Models\Traits;
 
@@ -50,6 +50,7 @@ trait HasMetadata
         if ($this->relationLoaded('metadata')) {
             return $this->metadataCache = $this->metadata->pluck('value', 'key')->all();
         }
+
         return $this->metadataCache = $this->metadata()->get()->pluck('value', 'key')->toArray();
     }
 
@@ -160,6 +161,7 @@ trait HasMetadata
                 return $this->hasMetadata($k);
             });
         }
+
         return $this->getCachedMetadata()[$key] ?? false;
     }
 

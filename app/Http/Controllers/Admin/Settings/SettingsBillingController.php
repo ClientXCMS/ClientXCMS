@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Admin\Settings;
 
@@ -69,7 +69,7 @@ class SettingsBillingController extends Controller
             'store_vat_enabled' => 'in:true,false',
             'store_currency' => ['required'],
             'invoice_terms' => 'string|max:1000',
-            'app_address' => ['required', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags()],
+            'app_address' => ['required', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags],
             'billing_invoice_prefix' => 'required|string|max:10',
             'billing_mode' => 'required|in:invoice,proforma',
             'remove_pending_invoice' => 'required|integer|min:0',
@@ -80,7 +80,10 @@ class SettingsBillingController extends Controller
             'minimum_days_to_force_renewal_with_upgrade' => 'required|integer|min:0',
             'vat_default_country' => 'required_if:store_vat_rate,'.TaxesService::VAT_RATE_BY_COUNTRY.'|nullable',
             'allow_add_balance_to_invoices' => 'in:true,false',
+            'store_enabled' => 'in:true,false',
+            'store_redirect_url' => 'nullable|url',
         ]);
+        $validated['store_enabled'] = $validated['store_enabled'] ?? 'false';
         $validated['store_vat_enabled'] = $validated['store_vat_enabled'] ?? 'false';
         $validated['allow_add_balance_to_invoices'] = $validated['allow_add_balance_to_invoices'] ?? 'false';
         $validated['checkout_customermustbeconfirmed'] = $validated['checkout_customermustbeconfirmed'] ?? 'false';
@@ -102,6 +105,5 @@ class SettingsBillingController extends Controller
         Setting::updateSettings($validated);
 
         return redirect()->back()->with('success', __('billing.admin.settings.success'));
-
     }
 }

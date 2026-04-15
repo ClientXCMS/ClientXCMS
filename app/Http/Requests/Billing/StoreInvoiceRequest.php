@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Http\Requests\Billing;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -23,6 +25,7 @@ use Illuminate\Foundation\Http\FormRequest;
  * @OA\Schema(
  *     title="StoreInvoiceRequest",
  *     description="Request body for storing invoices",
+ *
  *     @OA\Property(
  *         property="customer_id",
  *         type="integer",

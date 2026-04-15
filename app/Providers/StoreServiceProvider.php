@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,9 +17,9 @@
  * Year: 2025
  */
 
-
 namespace App\Providers;
 
+use App\Contracts\Store\GatewayTypeInterface;
 use App\Http\Controllers\Admin\Store\CouponController;
 use App\Http\Controllers\Admin\Store\GatewayController;
 use App\Http\Controllers\Admin\Store\GroupController;
@@ -57,16 +58,16 @@ class StoreServiceProvider extends ServiceProvider
         }
         /** @var SettingsService $setting */
         $setting = app('settings');
-        $setting->addCard('store', 'admin.settings.store.title', 'admin.settings.store.description', 2);
+        $setting->addCard('store', 'admin.settings.store.title', 'admin.settings.store.description', 2, null, true, 2, 'bi bi-shop-window');
         $setting->addCardItem('store', 'product', 'admin.products.title', 'admin.products.description', 'bi bi-box', action([ProductController::class, 'index']), 'admin.manage_products');
         $setting->addCardItem('store', 'group', 'admin.groups.title', 'admin.groups.description', 'bi bi-shop', action([GroupController::class, 'index']), 'admin.manage_groups');
         $setting->addCardItem('store', 'coupon', 'coupon.coupons', 'coupon.admin.description', 'bi bi-percent', action([CouponController::class, 'index']), 'admin.manage_coupons');
 
         foreach ($gateways as $gateway) {
-            if ($gateway->uuid == 'none' || $gateway->paymentType() == null) {
+            if ($gateway->uuid == 'none' || $gateway->paymentType() instanceof GatewayTypeInterface == false) {
                 continue;
             }
-            $setting->addCardItem('store', $gateway->uuid, $gateway->name, 'admin.settings.store.gateways.description', $gateway->paymentType()->icon(), [GatewayController::class, 'config'], 'admin.manage_gateways');
+            $setting->addCardItem('store', $gateway->uuid, $gateway->name, 'admin.settings.store.gateways.description', $gateway->paymentType() instanceof GatewayTypeInterface ? $gateway->paymentType()->icon() : 'bi bi-credit-card  ', [GatewayController::class, 'config'], 'admin.manage_gateways');
         }
     }
 }

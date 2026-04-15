@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,12 +17,12 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Requests\Store\Basket;
 
 use App\Contracts\Store\ProductTypeInterface;
 use App\Services\Store\CurrencyService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\Rule;
 
 class BasketConfigRequest extends FormRequest
@@ -52,9 +53,32 @@ class BasketConfigRequest extends FormRequest
         }
         $configOptions = $this->product->configoptions()->orderBy('sort_order')->get();
         foreach ($configOptions as $configOption) {
-            $rules['options.'.$configOption->key] = $configOption->validate();
+            $rules['options.' . $configOption->key] = $configOption->validate();
         }
 
         return $rules;
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        $this->validator = $validator;
+    }
+
+    public function getValidatorInstance()
+    {
+        $validator = parent::getValidatorInstance();
+        $this->validator = $validator;
+
+        return $validator;
+    }
+
+    public function errors()
+    {
+        return $this->validator?->errors();
+    }
+
+    public function passes()
+    {
+        return ! $this->validator?->fails();
     }
 }

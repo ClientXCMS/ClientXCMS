@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Provisioning;
 
 use App\Models\Traits\ModelStatutTrait;
@@ -25,14 +25,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- *
- *
  * @property int $id
  * @property string $reason
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CancellationReason newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CancellationReason newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CancellationReason onlyTrashed()
@@ -45,6 +44,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CancellationReason whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CancellationReason withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CancellationReason withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class CancellationReason extends Model
@@ -54,6 +54,10 @@ class CancellationReason extends Model
     protected $fillable = [
         'reason',
         'status',
+    ];
+
+    protected $attributes = [
+        'status' => 'active',
     ];
 
     public static function getReasons()
@@ -66,6 +70,7 @@ class CancellationReason extends Model
         if ($service->billing == 'onetime') {
             return ['now' => __('client.services.cancel.expiration_now')];
         }
+
         return [
             'end_of_period' => __('client.services.cancel.expiration_end'),
             'now' => __('client.services.cancel.expiration_now'),

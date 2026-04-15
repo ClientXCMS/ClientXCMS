@@ -92,7 +92,7 @@
                                     </h3>
                                     @foreach($row as $key => $label)
                                         <div class="mb-1">
-                                            @include('admin/shared/checkbox', ['name' => 'permissions[]', 'label' => $label, 'value' => $key, 'checked' => false])
+                                            @include('admin/shared/checkbox', ['name' => 'permissions[' . $key . ']', 'label' => $label, 'value' => $key, 'checked' => false])
                                         </div>
                                     @endforeach
                                 </div>

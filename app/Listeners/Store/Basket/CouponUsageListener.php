@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,10 +17,8 @@
  * Year: 2025
  */
 
-
 namespace App\Listeners\Store\Basket;
 
-use App\Events\Core\CheckoutCompletedEvent;
 use App\Events\Core\Invoice\InvoiceCompleted;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceItem;
@@ -65,6 +64,7 @@ class CouponUsageListener
                 $amount += $item->discountTotal();
             }
         }
+
         return $amount;
     }
 }

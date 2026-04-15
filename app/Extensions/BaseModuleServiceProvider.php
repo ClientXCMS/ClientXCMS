@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Extensions;
 
@@ -220,7 +220,13 @@ abstract class BaseModuleServiceProvider extends ServiceProvider
         }
         $defaultPath = $this->modulePath('views/default');
         if (is_dir($defaultPath)) {
+            // Always register under _default for explicit fallback access
             $this->loadViewsFrom($defaultPath, $this->uuid.($hasTheme ? '_default' : ''));
+            // Also register as fallback in the main namespace so themes
+            // can override individual views without having to provide all of them
+            if ($hasTheme) {
+                $this->loadViewsFrom($defaultPath, $this->uuid);
+            }
         }
         $bootstrapPath = $this->modulePath('views/bootstrap');
         if (is_dir($bootstrapPath)) {

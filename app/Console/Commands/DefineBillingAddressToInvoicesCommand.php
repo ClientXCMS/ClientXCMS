@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Console\Commands;
 
 use App\Models\Billing\Invoice;
@@ -44,6 +46,7 @@ class DefineBillingAddressToInvoicesCommand extends Command
         $invoices = \App\Models\Billing\Invoice::whereNull('billing_address')->get();
         if ($invoices->isEmpty()) {
             $this->info('No invoices found without billing address.');
+
             return;
         }
         /** @var Invoice $invoice */

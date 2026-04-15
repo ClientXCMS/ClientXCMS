@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Services\Store;
 
@@ -36,6 +36,7 @@ class GatewayService
         if (! is_installed()) {
             return [];
         }
+
         return Cache::remember('gateways', 60 * 60 * 24, function () {
             return Gateway::getAvailable()->get();
         });

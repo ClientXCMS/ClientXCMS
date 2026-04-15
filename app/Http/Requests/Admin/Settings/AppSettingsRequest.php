@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Requests\Admin\Settings;
 
@@ -45,13 +45,13 @@ class AppSettingsRequest extends FormRequest
             'app_debug' => 'required',
             'app_timezone' => 'required|string|max:255',
             'app_default_locale' => 'required|string|max:255',
-            'app_logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048', new NoScriptOrPhpTags()],
-            'app_favicon' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048', new NoScriptOrPhpTags()],
-            'app_logo_text' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048', new NoScriptOrPhpTags()],
+            'app_logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048', new NoScriptOrPhpTags],
+            'app_favicon' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048', new NoScriptOrPhpTags],
+            'app_logo_text' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048', new NoScriptOrPhpTags],
             'remove_app_logo' => 'nullable|string|in:true,false',
             'remove_app_favicon' => 'nullable|string|in:true,false',
             'remove_app_logo_text' => 'nullable|string|in:true,false',
-            'app_telemetry' => 'nullable'
+            'app_telemetry' => 'nullable',
         ];
     }
 }

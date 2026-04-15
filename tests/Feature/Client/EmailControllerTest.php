@@ -1,6 +1,6 @@
 <?php
 
-namespace Client;
+namespace Tests\Feature\Client;
 
 use App\Models\Account\Customer;
 use App\Models\Account\EmailMessage;
@@ -67,5 +67,20 @@ class EmailControllerTest extends TestCase
         ]);
         $user = Customer::where('id', '!=', $email->recipient_id)->first();
         $this->actingAs($user)->get(route('front.emails.show', ['email' => $email->id]))->assertNotFound();
+    }
+
+    public function test_email_read_all(): void
+    {
+        $this->seed(EmailTemplateSeeder::class);
+        $this->seed(StoreSeeder::class);
+        $user = $this->createCustomerModel();
+        Customer::factory(15)->create();
+        EmailMessage::factory(15)->create();
+        // attach user to all emails
+        $this->actingAs($user)->get(route('front.emails.read-all'))->assertRedirect();
+        $this->assertDatabaseHas('email_messages', [
+            'recipient_id' => $user->id,
+            'read_at' => now(),
+        ]);
     }
 }

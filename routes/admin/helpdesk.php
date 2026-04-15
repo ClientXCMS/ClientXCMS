@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 use App\Http\Controllers\Admin\Helpdesk\HelpdeskSettingsController;
 use App\Http\Controllers\Admin\Helpdesk\Support\DepartmentController;
 use App\Http\Controllers\Admin\Helpdesk\Support\TicketController;
@@ -29,6 +31,7 @@ Route::name('helpdesk.')->prefix('/helpdesk')->group(function () {
     Route::post('/tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
     Route::post('/tickets/{ticket}/comments', [TicketController::class, 'addComment'])->name('tickets.comments');
     Route::delete('/tickets/{ticket}/comments/{comment}', [TicketController::class, 'deleteComment'])->name('tickets.comments.delete');
+    Route::get('/tickets/statistics', [TicketController::class, 'statistics'])->name('tickets.statistics');
     Route::resource('/tickets', TicketController::class)->names('tickets')->except('edit');
     Route::resource('/departments', DepartmentController::class)->names('departments')->except('edit');
 });

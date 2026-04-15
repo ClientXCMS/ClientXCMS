@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -87,9 +88,11 @@ abstract class AbstractGatewayType implements GatewayTypeInterface
 
     abstract public function processPayment(Invoice $invoice, Gateway $gateway, Request $request, GatewayUriDTO $dto);
 
-    public function sourceReturn(Request $request){
+    public function sourceReturn(Request $request)
+    {
         return '';
     }
+
     public function minimalAmount(): float
     {
         return collect(GatewayService::getAvailable())->where('uuid', $this->uuid)->first()->minimal_amount ?? 0;

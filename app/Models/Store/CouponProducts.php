@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,20 +17,18 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Store;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
- *
  * @property int $id
  * @property int $coupon_id
  * @property int $product_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CouponProducts newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CouponProducts newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CouponProducts query()
@@ -38,6 +37,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CouponProducts whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CouponProducts whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CouponProducts whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class CouponProducts extends Model

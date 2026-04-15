@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -42,9 +43,9 @@ class CreateExtensionCommand extends Command
      */
     public function handle()
     {
-        $name = $this->ask('What is the name of the extension?');
-        $uuid = strtolower($this->ask('What is the UUID of the extension?', str_replace(' ', '-', strtolower($name))));
-        $description = $this->ask('What is the description of the extension?', 'This is a new extension.');
+        $name = sanitize($this->ask('What is the name of the extension?'));
+        $uuid = strtolower(sanitize($this->ask('What is the UUID of the extension?', str_replace(' ', '-', strtolower($name)))));
+        $description = sanitize($this->ask('What is the description of the extension?', 'This is a new extension.'));
         $type = $this->choice('What type of extension is this?', ['addon', 'module']);
         if (! in_array($type, ['addon', 'module'])) {
             $this->error('Invalid extension type.');

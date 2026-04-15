@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -44,7 +45,7 @@ class CreateThemeCommand extends Command
     {
 
         $name = $this->ask('What is the name of the theme?');
-        $uuid = $this->ask('What is the UUID of the theme?');
+        $uuid = sanitize($this->ask('What is the UUID of the theme?'));
         $parent = $this->choice('What is framework parent used for this theme?', ['default' => 'Tailwind CSS', 'bootstrap' => 'Bootstrap'], 'default');
         if (File::exists(resource_path("themes/$uuid"))) {
             $this->error('The theme already exists.');
@@ -62,7 +63,7 @@ class CreateThemeCommand extends Command
             'name' => $name,
             'uuid' => $uuid,
             'description' => $description,
-            'version' => '1.0.0',
+            'version' => '1.0',
             'author' => [
                 'name' => $author_name,
                 'email' => $author_email,

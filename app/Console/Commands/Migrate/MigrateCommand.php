@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -479,6 +480,7 @@ class MigrateCommand extends Command
                 return null;
             }
             $dt = \Carbon\Carbon::parse($string);
+
             return $dt;
         } catch (\Throwable $e) {
             return null;

@@ -14,7 +14,7 @@ class StringHTML
         return htmlspecialchars_decode($string);
     }
 
-    public static function htmlToPlainLines(string $input): string
+    public static function htmlToPlainLines(string $input, string $a = '- '): string
     {
         $trimmed = trim($input);
 
@@ -22,12 +22,12 @@ class StringHTML
             return self::normalizeSpaces($trimmed);
         }
 
-        $dom = new \DOMDocument();
+        $dom = new \DOMDocument;
         \libxml_use_internal_errors(true);
 
         $html =
-            '<!DOCTYPE html><html><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><body>' .
-            $trimmed .
+            '<!DOCTYPE html><html><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><body>'.
+            $trimmed.
             '</body></html>';
 
         $dom->loadHTML($html, \LIBXML_HTML_NOIMPLIED | \LIBXML_HTML_NODEFDTD);
@@ -35,15 +35,16 @@ class StringHTML
 
         $lines = [];
 
-        $walker = function (\DOMNode $node, int $depth = 0) use (&$walker, &$lines) {
+        $walker = function (\DOMNode $node, int $depth = 0) use (&$walker, &$lines, $a) {
             $name = strtolower($node->nodeName);
 
             if ($name === 'li') {
                 $text = self::nodeText($node);
                 if ($text !== '') {
-                    $prefix = str_repeat('  ', max(0, $depth - 1)) . '- ';
-                    $lines[] = $prefix . $text;
+                    $prefix = str_repeat('  ', max(0, $depth - 1)).$a;
+                    $lines[] = $prefix.$text;
                 }
+
                 return;
             }
 
@@ -52,11 +53,13 @@ class StringHTML
                 if ($text !== '') {
                     $lines[] = $text;
                 }
+
                 return;
             }
 
             if ($name === 'br') {
                 $lines[] = '';
+
                 return;
             }
 
@@ -64,6 +67,7 @@ class StringHTML
                 foreach ($node->childNodes as $child) {
                     $walker($child, $depth + 1);
                 }
+
                 return;
             }
             foreach ($node->childNodes as $child) {
@@ -87,7 +91,7 @@ class StringHTML
                 $prevEmpty = false;
             }
         }
-        while (!empty($clean) && end($clean) === '') {
+        while (! empty($clean) && end($clean) === '') {
             array_pop($clean);
         }
 
@@ -97,6 +101,7 @@ class StringHTML
     private static function nodeText(\DOMNode $node): string
     {
         $text = $node->textContent ?? '';
+
         return self::normalizeSpaces($text);
     }
 
@@ -104,6 +109,7 @@ class StringHTML
     {
         $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $text = preg_replace('/\s+/u', ' ', $text);
+
         return trim($text);
     }
 }

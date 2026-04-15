@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Front\Provisioning;
 
@@ -54,7 +54,7 @@ class ServiceController extends Controller
                     ->paginate(10);
             } else {
                 $group = Group::where('slug', $filter)->first();
-                if (!$group) {
+                if (! $group) {
                     return redirect()->route('front.services.index');
                 }
                 $products = $group->products->pluck('id');
@@ -76,6 +76,7 @@ class ServiceController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
         }
+
         return view('front.provisioning.services.index', [
             'services' => $services,
             'filter' => $filter,
@@ -83,7 +84,6 @@ class ServiceController extends Controller
             'gateways' => GatewayService::getAvailable(),
         ]);
     }
-
 
     public function upgrade(Service $service)
     {
@@ -172,6 +172,7 @@ class ServiceController extends Controller
         abort_if(! $gateway, 404);
         try {
             $invoice = ServiceService::createRenewalInvoice($service, $service->billing);
+
             return $invoice->pay($gateway, $request);
         } catch (WrongPaymentException $e) {
             logger()->error($e->getMessage());
@@ -179,6 +180,7 @@ class ServiceController extends Controller
             if (auth('admin')->check()) {
                 $message .= ' Debug admin : '.$e->getMessage();
             }
+
             return back()->with('error', $message);
         }
 
@@ -204,6 +206,7 @@ class ServiceController extends Controller
         if ($panel_html instanceof \Illuminate\Http\Response || $panel_html instanceof \Illuminate\Http\RedirectResponse) {
             return $panel_html;
         }
+
         return view('front.provisioning.services.show', compact('current_tab', 'panel_html', 'service', 'customer', 'gateways'));
     }
 
@@ -239,6 +242,7 @@ class ServiceController extends Controller
             try {
                 $invoice = ServiceService::createRenewalInvoice($service, $service->billing);
                 $gateway = $gateways->where('uuid', $request->get('gateway'))->first();
+
                 return $invoice->pay($gateway, $request);
             } catch (WrongPaymentException $e) {
                 logger()->error($e->getMessage());
@@ -246,6 +250,7 @@ class ServiceController extends Controller
                 if (auth('admin')->check()) {
                     $message .= ' Debug admin : '.$e->getMessage();
                 }
+
                 return back()->with('error', $message);
             }
         }
@@ -279,6 +284,7 @@ class ServiceController extends Controller
         }
         if ($service->cancelled_at != null) {
             $service->uncancel();
+
             return redirect()->route('front.services.show', ['service' => $service->uuid])->with('success', __('client.alerts.service_uncancelled'));
         }
         $request->validate([
@@ -293,6 +299,7 @@ class ServiceController extends Controller
         $reason = $reason.(! empty($request->details) ? ' - '.$request->details : '');
         $date = $request->expiration == 'end_of_period' ? $service->expires_at : new \DateTime;
         $service->cancel($reason, $date, $request->expiration == 'now');
+
         return redirect()->route('front.services.show', ['service' => $service->uuid])->with('success', __('client.alerts.service_cancelled'));
     }
 
@@ -306,6 +313,7 @@ class ServiceController extends Controller
         }
         if (array_key_exists('cancel', $request->all())) {
             $service->subscription->cancel();
+
             return back()->with('success', __('client.services.subscription.cancelled', ['date' => $service->expires_at->format('d/m')]));
         }
         $paymentmethods = $service->customer->getPaymentMethodsArray(true)->keys()->join(',');
@@ -314,13 +322,14 @@ class ServiceController extends Controller
         }
         $validated = $request->validate([
             'paymentmethod' => "in:$paymentmethods",
-            'billing_day' => ['nullable', "between:1,28", new isValidBillingDayRule($service)]
+            'billing_day' => ['nullable', 'between:1,28', new isValidBillingDayRule($service)],
         ]);
         $paymentmethod = $validated['paymentmethod'];
         $subscription = Subscription::createOrUpdateForService($service, $paymentmethod);
-        if ($request->has('billing_day')){
+        if ($request->has('billing_day')) {
             $billingDay = $request->get('billing_day');
             $subscription->setBillingDay($billingDay);
+
             return back()->with('success', __('client.services.subscription.billing_day_updated', ['date' => $subscription->getNextPaymentDate()]));
         }
 

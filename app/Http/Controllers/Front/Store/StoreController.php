@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Front\Store;
 
 use App\Http\Controllers\Controller;
@@ -27,6 +27,19 @@ use App\Services\Core\LocaleService;
 
 class StoreController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (! setting('store_enabled', 'true')) {
+                $url = setting('store_redirect_url');
+
+                return redirect($url ?? '/');
+            }
+
+            return $next($request);
+        });
+    }
+
     public function index()
     {
         $groups = Group::getAvailable()->whereNull('parent_id')->orderBy('sort_order')->with('products')->get();

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Personalization;
 
 use App\Models\Traits\HasMetadata;
@@ -24,8 +24,6 @@ use App\Models\Traits\Translatable;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- *
- *
  * @property int $id
  * @property string $name
  * @property int $position
@@ -44,6 +42,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read MenuLink|null $parent
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Personalization\Translation> $translations
  * @property-read int|null $translations_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MenuLink newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MenuLink newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MenuLink query()
@@ -60,12 +59,13 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MenuLink whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MenuLink whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|MenuLink whereUrl($value)
+ *
  * @mixin \Eloquent
  */
 class MenuLink extends Model
 {
-    use Translatable;
     use HasMetadata;
+    use Translatable;
 
     protected $table = 'theme_menu_links';
 

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,23 +17,23 @@
  * Year: 2025
  */
 
-
 namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
 
 class NoScriptOrPhpTags implements Rule
 {
-
     const FORBIDDEN_TAGS_CONTENT = ['<script>', '<?php', '</script>', '?>', '<=', '<?=', '<%=', '<%', '<%', '{{', '{%'];
+
     const FORBIDDEN_TAGS_FILES = [
         '<script>', '<?php', '</script>',
     ];
+
     public function passes($attribute, $value)
     {
         $type = 'content';
         if ($value instanceof \Illuminate\Http\UploadedFile) {
-            if (!$value->isValid() || !$value->isReadable()) {
+            if (! $value->isValid() || ! $value->isReadable()) {
                 return false;
             }
             $content = file_get_contents($value->getRealPath());
@@ -40,7 +41,7 @@ class NoScriptOrPhpTags implements Rule
         } else {
             $content = $value;
         }
-        if (!is_string($content)) {
+        if (! is_string($content)) {
             return false;
         }
         foreach ($type == 'file' ? self::FORBIDDEN_TAGS_FILES : self::FORBIDDEN_TAGS_CONTENT as $tag) {

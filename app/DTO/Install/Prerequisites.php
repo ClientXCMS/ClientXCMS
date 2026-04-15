@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\DTO\Install;
 
@@ -48,25 +48,6 @@ class Prerequisites
 
         $this->checkExtensions();
         $this->checkPhpVersion();
-        $this->checkWritableBase();
-
-    }
-
-    private function checkWritableBase(): void
-    {
-        if (! is_writable(base_path())) {
-            $this->errors[] = 'The base path is not writable. Please check the permissions.';
-        }
-        if (! is_writable(base_path('.env'))) {
-            $this->errors[] = 'The .env file is not writable. Please check the permissions.';
-        }
-        if (! is_writable(base_path('storage'))) {
-            $this->errors[] = 'The storage folder is not writable. Please check the permissions.';
-        }
-        if (! is_writable(base_path('bootstrap/cache'))) {
-            $this->errors[] = 'The bootstrap/cache folder is not writable. Please check the permissions.';
-        }
-
     }
 
     private function checkPhpVersion(): void

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Provisioning;
 
 use App\Models\Billing\Invoice;
@@ -26,14 +26,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="ServiceRenewals",
  *     title="Service Renewals",
  *     description="Information about a service renewal cycle",
  *     required={"service_id", "invoice_id", "start_date", "end_date"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=87),
  *     @OA\Property(property="service_id", type="integer", example=1),
  *     @OA\Property(property="invoice_id", type="integer", example=1001),
@@ -44,6 +42,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *     @OA\Property(property="period", type="string", example="monthly"),
  *     @OA\Property(property="first_period", type="boolean", example=true)
  * )
+ *
  * @property int $id
  * @property int $service_id
  * @property int $invoice_id
@@ -58,6 +57,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read Invoice|null $invoice
  * @property-read \App\Models\Provisioning\Service|null $service
+ *
  * @method static \Database\Factories\Provisioning\ServiceRenewalFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRenewals newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRenewals newQuery()
@@ -77,6 +77,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRenewals whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRenewals withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRenewals withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class ServiceRenewals extends Model

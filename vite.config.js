@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-import {glob} from "glob";
+import { glob } from "glob";
 
 export default defineConfig({
     plugins: [

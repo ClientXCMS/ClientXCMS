@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Services\Provisioning;
 
 use App\DTO\Provisioning\ServiceStateChangeDTO;
@@ -38,7 +40,7 @@ class ServiceService
         } elseif ($status == 'expire') {
             $result = $service->expire(true);
             $status = 'terminate';
-        } elseif ($status == 'cancel_delivery'){
+        } elseif ($status == 'cancel_delivery') {
             $invoice = $service->serviceRenewals->first();
             if ($invoice) {
                 $invoice->invoice->cancel();
@@ -79,6 +81,7 @@ class ServiceService
             if ($existing != null && (($existing->data['billing'] ?? '') != $billing)) {
                 $invoice->cancel();
                 $service->update(['invoice_id' => null]);
+
                 return self::createRenewalInvoice($service, $billing, $mode);
             }
             if ($existing != null) {

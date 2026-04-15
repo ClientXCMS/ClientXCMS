@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,12 +17,9 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Billing;
 
 /**
- * 
- *
  * @property int $config_option_id
  * @property int $product_id
  * @property int $sort_order
@@ -29,6 +27,7 @@ namespace App\Models\Billing;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Billing\ConfigOption $option
  * @property-read \App\Models\Store\Product $product
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionsProduct newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionsProduct newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionsProduct query()
@@ -37,6 +36,7 @@ namespace App\Models\Billing;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionsProduct whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionsProduct whereSortOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionsProduct whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class ConfigOptionsProduct extends \Illuminate\Database\Eloquent\Model

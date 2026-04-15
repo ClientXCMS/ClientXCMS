@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Services\Core;
 
@@ -180,6 +180,7 @@ class LocaleService
     private static function isLocaleEnabled(string $key): bool
     {
         $enabled = json_decode(setting('app_enabled_locales', self::DEFAULT_ENABLED_LOCALES), true);
+
         return in_array($key, $enabled) || self::isLocaleDefault($key);
     }
 

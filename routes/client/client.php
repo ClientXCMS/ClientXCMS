@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 use App\Http\Controllers\Front\Billing\PaymentMethodController;
 use App\Http\Controllers\Front\ClientController;
 use App\Http\Controllers\Front\EmailController;
@@ -31,9 +33,12 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::post('/export', [\App\Http\Controllers\Front\ProfileController::class, 'export'])->name('.export');
         Route::post('/2fa', [\App\Http\Controllers\Front\ProfileController::class, 'save2fa'])->name('.2fa');
         Route::get('/download_codes', [\App\Http\Controllers\Front\ProfileController::class, 'downloadCodes'])->name('.2fa_codes');
+        Route::delete('/delete', [\App\Http\Controllers\Front\ProfileController::class, 'deleteAccount'])->name('.delete.confirm');
+        Route::post('/security-question', [\App\Http\Controllers\Front\ProfileController::class, 'saveSecurityQuestion'])->name('.security_question');
     });
     Route::prefix('/emails')->name('emails.')->group(function () {
         Route::get('/', [EmailController::class, 'index'])->middleware(['auth', 'verified'])->name('index');
+        Route::get('/read-all', [EmailController::class, 'readAll'])->middleware(['auth', 'verified'])->name('read-all');
         Route::get('/{email}', [EmailController::class, 'show'])->middleware(['auth', 'verified'])->name('show');
     });
     Route::prefix('/payment-methods')->name('payment-methods.')->group(function () {

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -24,5 +25,6 @@ Route::get('/customers/{customer}/confirm', [CustomerController::class, 'confirm
 Route::resource('/customers', CustomerController::class)->names('customers')->except('edit');
 Route::get('/customers/{customer}/autologin', [CustomerController::class, 'autologin'])->name('customers.autologin');
 Route::post('/customers/{customer}/action/{action}', [CustomerController::class, 'action'])->name('customers.action');
+Route::post('/customers/{customer}/notes', [CustomerController::class, 'addNote'])->name('customers.notes.store');
 Route::get('/auth/customers/logout', [CustomerController::class, 'logout'])->name('customers.logout');
 Route::get('/search/customers', [CustomerController::class, 'customSearch'])->name('customers.search');

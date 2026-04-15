@@ -13,16 +13,16 @@ class BasketPreviewTest extends TestCase
     public function test_preview_endpoint_returns_totals_and_options_breakdown(): void
     {
         \App\Models\Admin\Setting::updateSettings([
-            'store_mode_tax'    => TaxesService::MODE_TAX_EXCLUDED,
+            'store_mode_tax' => TaxesService::MODE_TAX_EXCLUDED,
             'store_vat_enabled' => true,
         ]);
 
         [$product, $option] = $this->createProductModelWithOption(prices: ['monthly' => 100, 'setup_monthly' => 10]);
 
         $response = $this->postJson(route('front.store.basket.config.preview', $product), [
-            'billing'  => 'monthly',
+            'billing' => 'monthly',
             'currency' => 'USD',
-            'options'  => [
+            'options' => [
                 $option->key => 'value',
             ],
         ]);
@@ -42,16 +42,16 @@ class BasketPreviewTest extends TestCase
     public function test_preview_endpoint_handles_tax_included_mode(): void
     {
         \App\Models\Admin\Setting::updateSettings([
-            'store_mode_tax'    => TaxesService::MODE_TAX_INCLUDED,
+            'store_mode_tax' => TaxesService::MODE_TAX_INCLUDED,
             'store_vat_enabled' => true,
         ]);
 
         [$product] = $this->createProductModelWithOption(prices: ['monthly' => 120]);
 
         $response = $this->postJson(route('front.store.basket.config.preview', $product), [
-            'billing'  => 'monthly',
+            'billing' => 'monthly',
             'currency' => 'USD',
-            'options'  => [],
+            'options' => [],
         ]);
 
         $response->assertOk();

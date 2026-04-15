@@ -51,8 +51,8 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456789',
             'password' => 'password',
         ])->id;
-        $response = $this->performAdminAction('GET', self::API_URL.'/'.$id, ['admin.manage_products']);
-        $response->assertStatus(200);
+        $response = $this->performAdminAction('GET', self::API_URL.'/'.$id, [], ['admin.manage_products']);
+        $response->assertStatus(403);
     }
 
     public function test_admin_customer_get(): void
@@ -97,9 +97,16 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456710',
             'id' => $customer->id,
             'email' => 'admin@administration.com',
+            'address' => 'test',
         ]);
         $response->assertRedirect();
         $this->assertEquals('Martin', $customer->fresh()->firstname);
+        $this->assertEquals('roubaix', $customer->fresh()->city);
+        $this->assertEquals('admin@administration.com', $customer->fresh()->email);
+        $this->assertEquals('test', $customer->fresh()->address);
+        $this->assertEquals('FR', $customer->fresh()->country);
+        $this->assertEquals('Test User', $customer->fresh()->region);
+        $this->assertEquals('59100', $customer->fresh()->zipcode);
     }
 
     public function test_admin_customer_update_with_invalid_data()
@@ -144,6 +151,10 @@ class CustomerControllerTest extends TestCase
             'city' => 'test',
             'phone' => '0323456789',
             'password' => 'password',
+            'address' => 'test',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'zipcode' => '59100',
         ]);
         $response = $this->performAdminAction('PUT', self::API_URL.'/'.$customer->id, [
             'firstname' => 'Martin',
@@ -156,6 +167,7 @@ class CustomerControllerTest extends TestCase
             'id' => $customer->id,
             'email' => 'admin@administration.com',
             'password' => 'newpassword',
+            'address' => 'test',
         ]);
         $response->assertRedirect();
         $this->assertEquals('Martin', $customer->fresh()->firstname);
@@ -175,6 +187,10 @@ class CustomerControllerTest extends TestCase
             'city' => 'test',
             'phone' => '0323456789',
             'password' => 'password',
+            'address' => 'test',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'zipcode' => '59100',
         ])->id;
         $response = $this->performAdminAction('PUT', self::API_URL.'/'.$id, [
             'firstname' => 'Martin',
@@ -185,6 +201,7 @@ class CustomerControllerTest extends TestCase
             'city' => 'roubaix',
             'phone' => '0323456710',
             'id' => $id,
+            'address' => 'test',
             'email' => 'admin@administration.com',
         ], ['admin.show_customers']);
         $response->assertStatus(403);

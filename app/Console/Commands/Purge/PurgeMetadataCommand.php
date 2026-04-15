@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,10 +17,8 @@
  * Year: 2025
  */
 
-
 namespace App\Console\Commands\Purge;
 
-use App\Models\Account\Customer;
 use App\Models\Metadata;
 use Illuminate\Console\Command;
 use Schema;

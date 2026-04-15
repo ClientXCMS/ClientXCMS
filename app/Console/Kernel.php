@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -59,7 +60,7 @@ class Kernel extends ConsoleKernel
             ->weekly()->mondays()
             ->name('clientxcms:purge-metadata')
             ->sendOutputTo(storage_path('logs/purge-metadata.log'))->sentryMonitor();
-        $schedule->command('clientxcms:purge-metadata')
+        $schedule->command('clientxcms:purge-basket')
             ->weekly()->thursdays()
             ->name('clientxcms:purge-basket')
             ->sendOutputTo(storage_path('logs/purge-basket.log'))->sentryMonitor();

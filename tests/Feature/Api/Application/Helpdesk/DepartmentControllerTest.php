@@ -96,7 +96,7 @@ class DepartmentControllerTest extends TestCase
             'department_id' => $department->id,
             'customer_id' => $customer->id,
         ]);
-        
+
         $response = $this->performAction('DELETE', self::API_URL.'/'.$department->id, [self::ABILITY_DELETE]);
         $response->assertStatus(403);
         $this->assertDatabaseHas('support_departments', ['id' => $department->id]);

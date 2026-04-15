@@ -3,7 +3,6 @@
 namespace Tests\Feature\Admin\Provisioning;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Route;
 
 class SubdomainHostTestControllerTest extends \Tests\TestCase
 {
@@ -25,7 +24,7 @@ class SubdomainHostTestControllerTest extends \Tests\TestCase
     public function test_admin_subdomain_host_get(): void
     {
         $this->seed(\Database\Seeders\AdminSeeder::class);
-        $admin = $this->createAdminModel();;
+        $admin = $this->createAdminModel();
         $subdomainHost = \App\Models\Provisioning\SubdomainHost::create([
             'domain' => 'test.com',
         ]);
@@ -36,7 +35,7 @@ class SubdomainHostTestControllerTest extends \Tests\TestCase
     public function test_admin_subdomain_host_update(): void
     {
         $this->seed(\Database\Seeders\AdminSeeder::class);
-        $admin = $this->createAdminModel();;
+        $admin = $this->createAdminModel();
         $subdomainHost = \App\Models\Provisioning\SubdomainHost::create([
             'domain' => 'test.com',
         ]);
@@ -49,7 +48,7 @@ class SubdomainHostTestControllerTest extends \Tests\TestCase
     public function test_admin_subdomain_host_delete(): void
     {
         $this->seed(\Database\Seeders\AdminSeeder::class);
-        $admin = $this->createAdminModel();;
+        $admin = $this->createAdminModel();
         $subdomainHost = \App\Models\Provisioning\SubdomainHost::create([
             'domain' => 'test.com',
         ]);

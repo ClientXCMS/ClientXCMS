@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Http\Controllers\Admin\Provisioning;
 
@@ -139,17 +139,17 @@ class ConfigOptionController extends AbstractCrudController
         $this->checkPermission('update');
         $validated = $request->validated();
         $rules = [
-            'options' => ['required','array'],
-            'options.*.friendly_name' => ['required','string','max:255'],
+            'options' => ['required', 'array'],
+            'options.*.friendly_name' => ['required', 'string', 'max:255'],
             'options.*.value' => [
                 'required',
                 Rule::when(Str::startsWith($configOption->key, 'additional_'), ['numeric'], ['string']),
             ],
-            'options.*.hidden' => ['nullable','boolean'],
+            'options.*.hidden' => ['nullable', 'boolean'],
         ];
         $data = $request->all();
         foreach ($request->input('options') as $id => $option) {
-            $pricing = $request->input('options.' . $id . '.pricing', []);
+            $pricing = $request->input('options.'.$id.'.pricing', []);
             $convertedPricing = [];
             foreach ($pricing as $key => $value) {
                 $convertedPricing[$key]['price'] = isset($value['price']) ? str_replace(',', '.', $value['price']) : null;
@@ -173,6 +173,7 @@ class ConfigOptionController extends AbstractCrudController
             Pricing::createOrUpdateFromArray($option, $id, 'config_options_option');
             PricingService::forgot();
         }
+
         return redirect()->route($this->routePath.'.show', $configOption->id)->with('success', __($this->flashs['updated']));
     }
 

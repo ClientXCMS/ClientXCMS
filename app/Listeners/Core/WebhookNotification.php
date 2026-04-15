@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Listeners\Core;
 
@@ -131,7 +131,7 @@ class WebhookNotification
             ];
         }, setting('helpdesk_webhook_url'));
 
-        $this->webhooks[] = new WebhookDTO(HelpdeskTicketClosedEvent::class, function() {
+        $this->webhooks[] = new WebhookDTO(HelpdeskTicketClosedEvent::class, function () {
             return [
                 'content' => null,
                 'embeds' => [
@@ -490,6 +490,7 @@ class WebhookNotification
             $upgrade = $event->upgrade;
             $customer = $upgrade->customer;
             $service = $upgrade->service;
+
             return [
                 '%action%' => 'service_upgraded',
                 '%customername%' => $customer->excerptFullName(),

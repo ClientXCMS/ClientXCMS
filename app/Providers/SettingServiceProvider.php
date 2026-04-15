@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Providers;
 
@@ -71,6 +71,8 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('app_license_refresh_token', setting('app.license.refresh_token'));
             $service->setDefaultValue('store_mode_tax', TaxesService::MODE_TAX_EXCLUDED);
             $service->setDefaultValue('store_vat_enabled', true);
+            $service->setDefaultValue('store_enabled', true);
+            $service->setDefaultValue('store_redirect_url', null);
             $service->setDefaultValue('billing_invoice_prefix', 'CTX');
             $service->setDefaultValue('days_before_creation_renewal_invoice', 7);
             $service->setDefaultValue('days_before_expiration', 7);
@@ -152,8 +154,8 @@ class SettingServiceProvider extends ServiceProvider
     protected function loadCards(SettingsService $service)
     {
         $service->addCard('core', 'admin.settings.core.title', 'admin.settings.core.description', 1);
-        $service->addCard('extensions', 'extensions.settings.title', 'extensions.settings.description', 3);
-        $service->addCard('security', 'admin.security.title', 'admin.security.description', 4);
+        $service->addCard('extensions', 'extensions.settings.title', 'extensions.settings.description', 3, null, true, 2, 'bi bi-plugin');
+        $service->addCard('security', 'admin.security.title', 'admin.security.description', 4, null, true, 2, 'bi bi-lock');
         $service->addCardItem('core', 'app', 'admin.settings.core.app.title', 'admin.settings.core.app.description', 'bi bi-app-indicator', [SettingsCoreController::class, 'showAppSettings'], Permission::MANAGE_SETTINGS);
         $service->set('app.cron.last_run', setting('app.cron.last_run', null));
         $service->addCardItem('core', 'mail', 'admin.settings.core.mail.title', 'admin.settings.core.mail.description', 'bi bi-envelope-at', [SettingsCoreController::class, 'showEmailSettings'], Permission::MANAGE_SETTINGS);
@@ -163,12 +165,13 @@ class SettingServiceProvider extends ServiceProvider
         $service->addCardItem('security', 'apikeys', 'admin.api_keys.title', 'admin.api_keys.subheading', 'bi bi-key', action([ApiKeysController::class, 'index']), 'admin.manage_api_keys');
         $service->addCardItem('core', 'license', 'admin.license.title', 'admin.license.subheading', 'bi bi-key', action([LicenseController::class, 'index']), 'admin.manage_license');
         $service->addCardItem('security', 'database', 'admin.database.title', 'admin.database.description', 'bi bi-database', action([DatabaseController::class, 'index']), 'admin.manage_database');
-        //$service->addCardItem('security', 'update', 'admin.update.title', 'admin.update.subheading', 'bi bi-cloud-arrow-up-fill', action([UpdateController::class, 'index']), 'admin.manage_update');
+        $service->addCardItem('security', 'update', 'admin.update.title', 'admin.update.subheading', 'bi bi-cloud-arrow-up-fill', action([UpdateController::class, 'index']), 'admin.manage_update');
         $service->addCardItem('security', 'security', 'admin.settings.core.security.title', 'admin.settings.core.security.description', 'bi bi-shield-lock', [SettingsSecurityController::class, 'showSecuritySettings'], Permission::MANAGE_SETTINGS);
-        $service->addCardItem('extensions', 'extensions', 'extensions.title', 'extensions.description', 'bi bi-palette2', [SettingsExtensionController::class, 'showExtensions'], Permission::MANAGE_EXTENSIONS);
+        $service->addCardItem('security', 'security_questions', 'admin.security_questions.title', 'admin.security_questions.description', 'bi bi-question-circle', route('admin.security_questions.index'), Permission::MANAGE_SETTINGS);
+        $service->addCardItem('extensions', 'extensions', 'extensions.title', 'extensions.description', 'bi bi-palette2', action([SettingsExtensionController::class, 'showExtensions']), Permission::MANAGE_EXTENSIONS);
         $service->addCardItem('security', 'history', 'admin.history.title', 'admin.history.description', 'bi bi-archive', action([HistoryController::class, 'index']), 'admin.show_logs');
         $service->addCardItem('security', 'logs', 'actionslog.settings.title', 'actionslog.settings.description', 'bi bi-clock', action([ActionsLogController::class, 'index']), 'admin.show_logs');
-        $this->app['extension']->addAdminMenuItem((new AdminMenuItem('settings', 'admin.settings.index', 'bi bi-gear', 'admin.settings.title', 10, Permission::ALLOWED)));
+        $this->app['extension']->addAdminMenuItem((new AdminMenuItem('settings', 'admin.settings.index', 'bi bi-gear', 'admin.settings.title', 100, \App\Models\Admin\Permission::ALLOWED)));
     }
 
     protected function loadSettings(): array

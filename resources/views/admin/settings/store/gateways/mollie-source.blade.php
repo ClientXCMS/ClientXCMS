@@ -15,11 +15,11 @@
  *
  * Year: 2025
  */
+?>
 
-
-namespace App\Contracts\Theme;
-
-interface ExtensionSectionInterface
-{
-    public function getSections();
-}
+<div class="text-center py-4">
+    <button type="submit" class="flex items-center mb-3 justify-center w-full py-3 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary/80 focus:outline-none focus:ring focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-400">
+        <i class="bi bi-credit-card me-2"></i>
+        {{ __('client.payment-methods.add_method_with', ['method' => 'Mollie']) }}
+    </button>
+</div>

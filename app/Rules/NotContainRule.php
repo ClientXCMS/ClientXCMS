@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,6 +16,7 @@
  *
  * Year: 2025
  */
+
 namespace App\Rules;
 
 use Closure;
@@ -22,7 +24,6 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 class NotContainRule implements ValidationRule
 {
-
     private array $strings = [];
 
     public function __construct(array $strings = [])
@@ -40,6 +41,7 @@ class NotContainRule implements ValidationRule
         foreach ($this->strings as $string) {
             if (str_contains($value, $string)) {
                 $fail("The :attribute field must not contain the value: {$string}.");
+
                 return;
             }
         }

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,15 +17,14 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Requests\Customer;
 
-use App\Helpers\Countries;
-use App\Rules\ZipCode;
+use App\Services\Account\AccountEditService;
+use App\Services\Core\LocaleService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
-use Propaganistas\LaravelPhone\Rules\Phone;
 
 /**
  * @OA\Schema(
@@ -42,7 +42,6 @@ use Propaganistas\LaravelPhone\Rules\Phone;
  *     @OA\Property(property="region", type="string", maxLength=250, example="Auvergne-Rhône-Alpes"),
  *     @OA\Property(property="verified", type="boolean", nullable=true, example=false),
  *     @OA\Property(property="balance", type="number", format="float", example=250.50),
- *     @OA\Property(property="notes", type="string", maxLength=1000, nullable=true, example="Client fidèle"),
  *     @OA\Property(property="country", type="string", maxLength=255, example="FR"),
  *     @OA\Property(property="locale", type="string", maxLength=255, example="fr"),
  * *     @OA\Property(property="company_name", type="string", maxLength=255, nullable=true, example="Doe Industries"),
@@ -66,25 +65,23 @@ class UpdateCustomerRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'email' => ['string', 'lowercase', 'email', 'max:255', Rule::unique('customers', 'email')->ignore($this->id)],
-            'firstname' => ['required', 'string', 'max:50'],
-            'lastname' => ['string', 'max:50'],
-            'address' => ['string', 'max:250'],
-            'address2' => ['nullable', 'string', 'max:250'],
-            'city' => ['string', 'max:250'],
-            'zipcode' => ['required', 'string', 'max:255', new ZipCode($this->country ?? 'FR')],
-            'phone' => ['max:255', 'nullable', (new Phone)->country($this->country ?? 'FR'), Rule::unique('customers', 'phone')->ignore($this->id)],
-            'region' => ['string', 'max:250'],
+        $customer = $this->route('customer');
+
+        // Use AccountEditService as base for common customer fields
+        $baseRules = AccountEditService::rules(
+            $this->country ?? 'FR',
+            email: true,
+            password: false,
+            except: $customer?->id
+        );
+
+        // Merge with admin-specific rules
+        return array_merge($baseRules, [
             'verified' => ['nullable', 'boolean'],
             'balance' => ['numeric', 'min:0', 'max:999999'],
-            'notes' => ['nullable', 'string', 'max:1000'],
             'password' => ['nullable', 'string', 'min:8', Rules\Password::defaults()],
-            'country' => ['string', 'max:255', Rule::in(array_keys(Countries::names()))],
-            'locale' => ['string', 'max:255', Rule::in(array_keys(\App\Services\Core\LocaleService::getLocalesNames()))],
-            'company_name' => ['nullable', 'string', 'max:255'],
-            'billing_details' => ['nullable', 'string', 'max:255'],
-        ];
+            'locale' => ['string', 'max:255', Rule::in(array_keys(LocaleService::getLocalesNames()))],
+        ]);
     }
 
     public function update()

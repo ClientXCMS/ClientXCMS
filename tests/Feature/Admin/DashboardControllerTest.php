@@ -10,6 +10,7 @@ use Tests\TestCase;
 class DashboardControllerTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_dashboard()
     {
         $response = $this->performAdminAction('GET', '/admin/dashboard');

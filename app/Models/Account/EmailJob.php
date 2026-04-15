@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,15 +17,12 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Account;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
- *
  * @property int $id
  * @property \Illuminate\Support\Carbon $send_at
  * @property string $subject
@@ -36,6 +34,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailJob newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailJob newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailJob query()
@@ -50,6 +49,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailJob whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailJob whereSubject($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EmailJob whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class EmailJob extends Model

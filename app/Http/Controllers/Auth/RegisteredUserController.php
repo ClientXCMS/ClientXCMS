@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,11 +17,11 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account\Customer;
+use App\Models\ActionLog;
 use App\Services\Account\AccountEditService;
 use App\Services\Core\LocaleService;
 use Illuminate\Auth\Events\Registered;
@@ -47,6 +48,14 @@ class RegisteredUserController extends Controller
         $data = $request->all();
         $data['email'] = strtolower($request->email);
         $data['phone'] = $this->formatPhone($request->phone, $request->country ?? '');
+        if (app('extension')->extensionIsEnabled('how-did-you-find-us')) {
+            $rules['origin_source'] = ['required'];
+            $data['origin_source'] = $request->origin_source;
+            if ((new \App\Addons\HowDidYouFindUs\Models\OriginSource(['name' => $request->origin_source]))->isOther()) {
+                $rules['origin_other'] = ['required'];
+                $data['origin_other'] = $request->origin_other;
+            }
+        }
         $validator = \Validator::make($data, $rules);
         if ($validator->fails()) {
             if ($request->has('redirect')) {
@@ -82,27 +91,45 @@ class RegisteredUserController extends Controller
             'gdpr_compliment' => is_gdpr_compliment(),
         ]);
 
+        if ($request->filled('security_question_id') && $request->filled('security_answer')) {
+            $user->setSecurityQuestion(
+                (int) $request->security_question_id,
+                $request->security_answer
+            );
+        }
+
         if (setting('auto_confirm_registration', false) === true) {
             $user->markEmailAsVerified();
         }
         event(new Registered($user));
+        ActionLog::log(ActionLog::NEW_REGISTERED, get_class($user), $user->id, null, $user->id, ['ip' => request()->ip()]);
 
         if ($request->wantsJson()) {
             return response()->noContent();
         }
-        if ($request->has('origin') && $request->get('origin') != null) {
-            $user->attachMetadata('origin_url', str_replace(url('/'), '', $request->get('origin')));
+        if ($request->has('redirect') && $request->get('redirect') != null) {
+            $user->attachMetadata('origin_url', str_replace(url('/'), '', $request->get('redirect')));
         }
+
+        if ($request->filled('origin_source')) {
+            $originValue = $request->origin_source;
+            if (app('extension')->extensionIsEnabled('how-did-you-find-us')) {
+                if ((new \App\Addons\HowDidYouFindUs\Models\OriginSource(['name' => $originValue]))->isOther()) {
+                    $originValue = $request->origin_other;
+                }
+            }
+            $user->attachMetadata('origin', $originValue);
+        }
+
         Auth::login($user);
         if (setting('auto_confirm_registration', false) === true) {
             return redirect()->route('front.client.index')->with('success', __('auth.register.success'));
         } else {
             return redirect()->route('front.client.onboarding');
         }
-
     }
 
-    private function formatPhone(?string $phone = null, string $country): ?string
+    private function formatPhone(?string $phone, string $country): ?string
     {
         try {
             if ($phone === null || $phone === '') {

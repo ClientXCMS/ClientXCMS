@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -15,7 +16,6 @@
  *
  * Year: 2025
  */
-
 
 namespace App\Console\Commands\Migrate;
 
@@ -227,11 +227,11 @@ class WhmcsMigrate extends Command
                     'state' => $client->state,
                     'country' => $client->country,
                     'zipcode' => $client->postcode,
-                    'last_login' => $lastLogin,
+                    'last_login' => $this->formatDate($lastLogin),
                     'last_ip' => $client->ip,
                     'email_verified_at' => $user->email_verified_at,
                     'is_confirmed' => $user->email_verified_at ? 1 : 0,
-                    'created_at' => $client->created_at,
+                    'created_at' => $this->formatDate($client->created_at),
                     'updated_at' => now(),
                 ]);
                 $customer->id = $user->id;
@@ -585,7 +585,6 @@ class WhmcsMigrate extends Command
                 $service->id = $result->id;
                 $service->created_at = $this->formatDate($result->regdate);
                 $service->save();
-                dump($this->formatDate($result->regdate), $result->regdate);
                 $this->info(sprintf('[%d] : Service %s migrated ', $result->id, $result->id));
             } catch (\Exception $e) {
                 $this->error(sprintf('[%d] %s', $result->id, $e->getMessage()));

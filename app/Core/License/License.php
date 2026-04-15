@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,13 +17,11 @@
  * Year: 2025
  */
 
-
 namespace App\Core\License;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
 use App\Models\Admin\Setting;
 use Carbon\Carbon;
-use DateTime;
 use Exception;
 
 class License

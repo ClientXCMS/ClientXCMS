@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Helpdesk;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,14 +24,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @OA\Schema (
  *     schema="SupportAttachment",
  *     title="Support Attachment",
  *     description="A file attached to a support ticket message",
  *     required={"filename", "path", "mime", "size", "ticket_id"},
- * 
+ *
  *     @OA\Property(property="id", type="integer", example=102),
  *     @OA\Property(property="filename", type="string", example="screenshot.png"),
  *     @OA\Property(property="path", type="string", example="helpdesk/attachments/1234/8732_screenshot.png"),
@@ -45,6 +43,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-04-14T10:05:00Z"),
  *     @OA\Property(property="deleted_at", type="string", format="date-time", nullable=true, example=null)
  * )
+ *
  * @property int $id
  * @property string $filename
  * @property string $path
@@ -58,6 +57,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\Helpdesk\SupportTicket $ticket
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportAttachment newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportAttachment newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportAttachment onlyTrashed()
@@ -76,6 +76,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportAttachment whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportAttachment withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SupportAttachment withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class SupportAttachment extends Model

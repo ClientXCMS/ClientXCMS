@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,12 +17,10 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Lockout;
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -117,6 +116,7 @@ class LoginRequest extends FormRequest
         if ($this->has('redirect')) {
             return $this->get('redirect');
         }
+
         return parent::getRedirectUrl();
     }
 }

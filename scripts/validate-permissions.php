@@ -1,5 +1,6 @@
 #!/usr/bin/env php
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -27,7 +28,6 @@
  * Usage: php scripts/validate-permissions.php
  * Exit codes: 0 = success, 1 = validation errors found
  */
-
 define('BASE_PATH', dirname(__DIR__));
 
 // ANSI color codes
@@ -40,9 +40,13 @@ define('COLOR_RESET', "\033[0m");
 class PermissionValidator
 {
     private array $definedPermissions = [];
+
     private array $errors = [];
+
     private array $warnings = [];
+
     private int $filesScanned = 0;
+
     private int $permissionUsages = 0;
 
     public function __construct()
@@ -52,9 +56,9 @@ class PermissionValidator
 
     private function loadDefinedPermissions(): void
     {
-        $permissionsFile = BASE_PATH . '/resources/permissions.json';
+        $permissionsFile = BASE_PATH.'/resources/permissions.json';
 
-        if (!file_exists($permissionsFile)) {
+        if (! file_exists($permissionsFile)) {
             $this->error("permissions.json not found at: {$permissionsFile}");
             exit(1);
         }
@@ -62,7 +66,7 @@ class PermissionValidator
         $permissions = json_decode(file_get_contents($permissionsFile), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->error("Invalid JSON in permissions.json: " . json_last_error_msg());
+            $this->error('Invalid JSON in permissions.json: '.json_last_error_msg());
             exit(1);
         }
 
@@ -72,7 +76,7 @@ class PermissionValidator
             }
         }
 
-        $this->info("Loaded " . count($this->definedPermissions) . " defined permissions");
+        $this->info('Loaded '.count($this->definedPermissions).' defined permissions');
     }
 
     public function validate(): bool
@@ -96,19 +100,21 @@ class PermissionValidator
 
     private function validateRolesJson(): void
     {
-        $this->info("Validating roles.json...");
+        $this->info('Validating roles.json...');
 
-        $rolesFile = BASE_PATH . '/resources/roles.json';
+        $rolesFile = BASE_PATH.'/resources/roles.json';
 
-        if (!file_exists($rolesFile)) {
-            $this->warning("roles.json not found");
+        if (! file_exists($rolesFile)) {
+            $this->warning('roles.json not found');
+
             return;
         }
 
         $roles = json_decode(file_get_contents($rolesFile), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->error("Invalid JSON in roles.json: " . json_last_error_msg());
+            $this->error('Invalid JSON in roles.json: '.json_last_error_msg());
+
             return;
         }
 
@@ -117,7 +123,7 @@ class PermissionValidator
 
             if (isset($role['permissions']) && is_array($role['permissions'])) {
                 foreach ($role['permissions'] as $permission) {
-                    if (!in_array($permission, $this->definedPermissions)) {
+                    if (! in_array($permission, $this->definedPermissions)) {
                         $this->error("Invalid permission '{$permission}' in role '{$roleName}' (roles.json)");
                     }
                 }
@@ -127,12 +133,12 @@ class PermissionValidator
 
     private function scanPhpFiles(): void
     {
-        $this->info("Scanning PHP files...");
+        $this->info('Scanning PHP files...');
 
         $directories = [
-            BASE_PATH . '/app/Http/Controllers',
-            BASE_PATH . '/app/Providers',
-            BASE_PATH . '/app/DTO',
+            BASE_PATH.'/app/Http/Controllers',
+            BASE_PATH.'/app/Providers',
+            BASE_PATH.'/app/DTO',
         ];
 
         foreach ($directories as $directory) {
@@ -144,9 +150,9 @@ class PermissionValidator
 
     private function scanBladeFiles(): void
     {
-        $this->info("Scanning Blade files...");
+        $this->info('Scanning Blade files...');
 
-        $directory = BASE_PATH . '/resources/views/admin';
+        $directory = BASE_PATH.'/resources/views/admin';
 
         if (is_dir($directory)) {
             $this->scanDirectory($directory, '*.blade.php', [$this, 'scanBladeFile']);
@@ -170,7 +176,7 @@ class PermissionValidator
     private function scanPhpFile(string $filePath): void
     {
         $content = file_get_contents($filePath);
-        $relativePath = str_replace(BASE_PATH . '/', '', $filePath);
+        $relativePath = str_replace(BASE_PATH.'/', '', $filePath);
 
         // Pattern 1: staff_has_permission('admin.xxx')
         if (preg_match_all("/staff_has_permission\s*\(\s*['\"]([^'\"]+)['\"]\s*\)/", $content, $matches, PREG_OFFSET_CAPTURE)) {
@@ -243,7 +249,7 @@ class PermissionValidator
     private function scanBladeFile(string $filePath): void
     {
         $content = file_get_contents($filePath);
-        $relativePath = str_replace(BASE_PATH . '/', '', $filePath);
+        $relativePath = str_replace(BASE_PATH.'/', '', $filePath);
 
         // Pattern: @if(staff_has_permission('admin.xxx'))
         if (preg_match_all("/@if\s*\(\s*staff_has_permission\s*\(\s*['\"]([^'\"]+)['\"]\s*\)/", $content, $matches, PREG_OFFSET_CAPTURE)) {
@@ -282,41 +288,41 @@ class PermissionValidator
             return;
         }
 
-        if (!in_array($permission, $this->definedPermissions)) {
+        if (! in_array($permission, $this->definedPermissions)) {
             $this->error("Invalid permission '{$permission}' used in {$file}:{$line}");
         }
     }
 
     private function reportResults(): void
     {
-        echo "\n" . str_repeat('=', 60) . "\n";
-        echo COLOR_BLUE . "Validation Report" . COLOR_RESET . "\n";
-        echo str_repeat('=', 60) . "\n\n";
+        echo "\n".str_repeat('=', 60)."\n";
+        echo COLOR_BLUE.'Validation Report'.COLOR_RESET."\n";
+        echo str_repeat('=', 60)."\n\n";
 
         echo "Files scanned: {$this->filesScanned}\n";
         echo "Permission usages found: {$this->permissionUsages}\n";
-        echo "Defined permissions: " . count($this->definedPermissions) . "\n\n";
+        echo 'Defined permissions: '.count($this->definedPermissions)."\n\n";
 
-        if (!empty($this->warnings)) {
-            echo COLOR_YELLOW . "⚠ Warnings (" . count($this->warnings) . "):" . COLOR_RESET . "\n";
+        if (! empty($this->warnings)) {
+            echo COLOR_YELLOW.'⚠ Warnings ('.count($this->warnings).'):'.COLOR_RESET."\n";
             foreach ($this->warnings as $warning) {
                 echo "  - {$warning}\n";
             }
             echo "\n";
         }
 
-        if (!empty($this->errors)) {
-            echo COLOR_RED . "✗ Errors (" . count($this->errors) . "):" . COLOR_RESET . "\n";
+        if (! empty($this->errors)) {
+            echo COLOR_RED.'✗ Errors ('.count($this->errors).'):'.COLOR_RESET."\n";
             foreach ($this->errors as $error) {
                 echo "  - {$error}\n";
             }
             echo "\n";
-            echo COLOR_RED . "Validation FAILED" . COLOR_RESET . "\n";
+            echo COLOR_RED.'Validation FAILED'.COLOR_RESET."\n";
         } else {
-            echo COLOR_GREEN . "✓ Validation PASSED - All permissions are valid!" . COLOR_RESET . "\n";
+            echo COLOR_GREEN.'✓ Validation PASSED - All permissions are valid!'.COLOR_RESET."\n";
         }
 
-        echo str_repeat('=', 60) . "\n";
+        echo str_repeat('=', 60)."\n";
     }
 
     private function error(string $message): void
@@ -331,12 +337,12 @@ class PermissionValidator
 
     private function info(string $message): void
     {
-        echo COLOR_BLUE . $message . COLOR_RESET . "\n";
+        echo COLOR_BLUE.$message.COLOR_RESET."\n";
     }
 }
 
 // Run validation
-$validator = new PermissionValidator();
+$validator = new PermissionValidator;
 $success = $validator->validate();
 
 exit($success ? 0 : 1);

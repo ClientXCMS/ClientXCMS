@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Billing;
 
 use App\Models\Billing\Traits\PricingInteractTrait;
@@ -24,8 +24,6 @@ use App\Models\Store\Pricing;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * 
- *
  * @property int $id
  * @property int $config_option_id
  * @property string|null $friendly_name
@@ -38,6 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read \App\Models\Billing\ConfigOption $configOption
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Pricing> $pricing
  * @property-read int|null $pricing_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionsOption newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionsOption newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionsOption onlyTrashed()
@@ -53,6 +52,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionsOption whereValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionsOption withTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ConfigOptionsOption withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class ConfigOptionsOption extends \Illuminate\Database\Eloquent\Model

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,20 +17,18 @@
  * Year: 2025
  */
 
-
 namespace App\Http\Controllers\Admin\Core;
 
+use App\Addons\SupportID\SupportIdHelper;
 use App\Helpers\Countries;
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Http\Requests\Customer\StoreCustomerRequest;
 use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Models\Account\Customer;
 use App\Models\Billing\Invoice;
-use App\Addons\SupportID\SupportIdHelper;
 use App\Models\Helpdesk\SupportTicket;
 use App\Models\Provisioning\Service;
 use App\Providers\RouteServiceProvider;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
@@ -90,32 +89,33 @@ class CustomerController extends AbstractCrudController
         $params['invoices'] = QueryBuilder::for(Invoice::class)
             ->allowedFilters(['status'])
             ->where(function ($query) {
-                if (!request()->has('filter.status')) {
+                if (! request()->has('filter.status')) {
                     $query->where('status', '!=', 'hidden');
                 }
             })
             ->where('customer_id', $customer->id)
             ->orderBy('id', 'desc')
-            ->paginate(5, ['*'], 'invoices')
+            ->paginate(20, ['*'], 'invoices')
             ->appends(request()->query());
         $params['services'] = QueryBuilder::for(Service::class)
             ->allowedFilters(['status'])
             ->where(function ($query) {
-                if (!request()->has('filter.status')) {
+                if (! request()->has('filter.status')) {
                     $query->where('status', '!=', 'hidden');
                 }
             })
             ->where('customer_id', $customer->id)
             ->orderBy('id', 'desc')
-            ->paginate(5, ['*'], 'services')
+            ->paginate(20, ['*'], 'services')
             ->appends(\request()->query());
-        $params['emails'] = $customer->emails()->orderBy('id', 'desc')->paginate(5, ['*'], 'emails');
-        $params['tickets'] = QueryBuilder::for(SupportTicket::class)->where('customer_id', $customer->id)->allowedFilters(['status'])->orderBy('id', 'desc')->paginate(5, ['*'], 'tickets')->appends(\request()->query());
+        $params['emails'] = $customer->emails()->orderBy('id', 'desc')->paginate(20, ['*'], 'emails');
+        $params['tickets'] = QueryBuilder::for(SupportTicket::class)->where('customer_id', $customer->id)->allowedFilters(['status'])->orderBy('id', 'desc')->paginate(20, ['*'], 'tickets')->appends(\request()->query());
         $params['locales'] = \App\Services\Core\LocaleService::getLocalesNames();
-        $params['logs'] = $customer->getLogsAction()->orderBy('id')->paginate(5, ['*'], 'logs');
+        $params['logs'] = $customer->getLogsAction()->orderBy('id')->paginate(20, ['*'], 'logs');
         $currentPage = LengthAwarePaginator::resolveCurrentPage('paymentmethods');
         $params['checkedFilters'] = $this->getCheckedFilters();
-        $params['paymentmethods'] = new LengthAwarePaginator($customer->paymentMethods(), $customer->paymentMethods()->count(), 5, $currentPage, ['path' => '', 'pageName' => 'paymentmethods']);
+        $params['paymentmethods'] = new LengthAwarePaginator($customer->paymentMethods(), $customer->paymentMethods()->count(), 20, $currentPage, ['path' => '', 'pageName' => 'paymentmethods']);
+        $params['customerNotes'] = $customer->customerNotes()->orderBy('created_at', 'desc')->get();
 
         return $this->showView($params);
     }
@@ -208,17 +208,22 @@ class CustomerController extends AbstractCrudController
         return redirect()->route('admin.customers.show', $customer);
     }
 
-    public function destroy(Customer $customer)
+    public function destroy(Request $request, Customer $customer)
     {
         $this->checkPermission('delete', $customer);
-        if ($customer->invoices()->count() > 0) {
-            \Session::flash('error', __('admin.customers.delete.error'));
+
+        $deletionService = new \App\Services\Account\AccountDeletionService;
+        $force = $request->boolean('force', false);
+
+        try {
+            $deletionService->delete($customer, $force);
+
+            return $this->deleteRedirect($customer);
+        } catch (\App\Services\Account\AccountDeletionException $e) {
+            \Session::flash('error', $e->getFormattedReasons());
 
             return redirect()->back();
         }
-        $customer->delete();
-
-        return $this->deleteRedirect($customer);
     }
 
     public function store(StoreCustomerRequest $request)
@@ -315,10 +320,28 @@ class CustomerController extends AbstractCrudController
             case 'disable2FA':
                 $customer->twoFactorDisable();
                 break;
+            case 'resetSecurityQuestion':
+                $customer->resetSecurityQuestion();
+                break;
             default:
                 break;
         }
 
         return redirect()->back()->with('success', __($this->translatePrefix.'.show.action_success'));
+    }
+
+    public function addNote(Request $request, Customer $customer)
+    {
+        $this->checkPermission('update', $customer);
+        $validated = $request->validate([
+            'content' => 'required|string|max:10000',
+        ]);
+
+        $customer->customerNotes()->create([
+            'author_id' => auth('admin')->id(),
+            'content' => $validated['content'],
+        ]);
+
+        return redirect()->back()->with('success', __($this->translatePrefix.'.show.note_added'));
     }
 }

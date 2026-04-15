@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Store;
 
 use App\Models\Account\Customer;
@@ -24,8 +24,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
- *
  * @property int $id
  * @property int $coupon_id
  * @property int $customer_id
@@ -35,6 +33,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Store\Coupon $coupon
  * @property-read Customer $customer
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CouponUsage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CouponUsage newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CouponUsage query()
@@ -45,6 +44,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CouponUsage whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CouponUsage whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|CouponUsage whereUsedAt($value)
+ *
  * @mixin \Eloquent
  */
 class CouponUsage extends Model

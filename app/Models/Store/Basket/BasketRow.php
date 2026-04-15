@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the CLIENTXCMS project.
  * It is the property of the CLIENTXCMS association.
@@ -16,7 +17,6 @@
  * Year: 2025
  */
 
-
 namespace App\Models\Store\Basket;
 
 use App\Casts\OptionCast;
@@ -28,8 +28,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 
- *
  * @property Product $product
  * @property int $id
  * @property int|null $basket_id
@@ -42,6 +40,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Store\Basket\Basket|null $basket
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BasketRow newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BasketRow newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BasketRow query()
@@ -55,6 +54,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BasketRow whereProductId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BasketRow whereQuantity($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BasketRow whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class BasketRow extends Model
@@ -158,6 +158,7 @@ class BasketRow extends Model
         $this->enableCoupon();
         $amount = $this->product->getPriceByCurrency($this->currency, $this->billing)->billableAmount() * $this->quantity;
         $amount += $this->optionsAmountBillable();
+
         return $this->applyCoupon($amount, self::PRICE);
     }
 
