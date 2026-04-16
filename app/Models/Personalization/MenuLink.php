@@ -242,9 +242,9 @@ class MenuLink extends Model
             return '';
         }
         if (filter_var($this->icon, FILTER_VALIDATE_URL)) {
-            return '<img src="'.$this->icon.'" alt="'.$this->name.'" class="shrink-0 size-8 mt-1 mr-1">';
+            return '<img src="'.e($this->icon).'" alt="'.e($this->name).'" class="shrink-0 size-8 mt-1 mr-1">';
         }
 
-        return $this->icon ? '<i class="'.$this->icon.' shrink-0 size-4 mt-1 text-gray-800 dark:text-neutral-200 mr-1"></i>' : '';
+        return $this->icon ? '<i class="'.e($this->icon).' shrink-0 size-4 mt-1 text-gray-800 dark:text-neutral-200 mr-1"></i>' : '';
     }
 }

@@ -239,4 +239,17 @@ class AuthControllerTest extends TestCase
             'id' => $token->accessToken->id,
         ]);
     }
+
+    public function test_pending_2fa_token_cannot_access_protected_client_resources(): void
+    {
+        $customer = Customer::factory()->create();
+        $pendingToken = $customer->createToken('2fa-pending', ['2fa:pending']);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '.$pendingToken->plainTextToken,
+            'Accept' => 'application/json',
+        ])->getJson('/api/client/profile');
+
+        $response->assertForbidden();
+    }
 }
