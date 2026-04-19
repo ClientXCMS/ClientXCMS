@@ -49,7 +49,6 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        LocaleMiddleware::class,
         InstallationMiddleware::class,
     ];
 
@@ -72,6 +71,7 @@ class Kernel extends HttpKernel
             ForceLoginMiddleware::class,
             Validate2FAMiddleware::class,
             BannedMiddleware::class,
+            LocaleMiddleware::class,
             RecaptchaMiddleware::class,
         ],
         'api' => [

@@ -518,18 +518,18 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public function generateBillingAddress()
     {
         return [
-            'firstname' => $this->firstname,
-            'lastname' => $this->lastname,
-            'company_name' => $this->company_name,
-            'address' => $this->address,
-            'address2' => $this->address2,
-            'city' => $this->city,
-            'country' => $this->country,
-            'region' => $this->region,
-            'zipcode' => $this->zipcode,
-            'phone' => $this->phone,
-            'email' => $this->email,
-            'billing_details' => $this->billing_details,
+            'firstname' => e($this->firstname),
+            'lastname' => e($this->lastname),
+            'company_name' => e($this->company_name),
+            'address' => e($this->address),
+            'address2' => e($this->address2),
+            'city' => e($this->city),
+            'country' => e($this->country),
+            'region' => e($this->region),
+            'zipcode' => e($this->zipcode),
+            'phone' => e($this->phone),
+            'email' => e($this->email),
+            'billing_details' => e($this->billing_details),
         ];
     }
 

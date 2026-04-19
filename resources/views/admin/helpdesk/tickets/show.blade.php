@@ -368,7 +368,7 @@
                                                     <div
                                                         class="space-y-1.5 max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl break-all">
                                                         <p>
-                                                            {!! nl2br($comment->comment) !!}
+                                                            {{ $comment->comment }}
                                                         </p>
                                                     </div>
                                                     <p class="text-sm text-gray-700 mt-2 flex justify-between">

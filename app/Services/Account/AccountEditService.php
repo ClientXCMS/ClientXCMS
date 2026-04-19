@@ -40,17 +40,17 @@ class AccountEditService
         $phoneRule = (new PhoneRule)->country(...array_keys(Countries::names()));
 
         $rules = [
-            'firstname' => ['required', 'string', 'max:50'],
-            'lastname' => ['required', 'string', 'max:50'],
-            'address' => ['required', 'string', 'max:250'],
-            'address2' => ['nullable', 'string', 'max:250'],
-            'city' => ['required', 'string', 'max:250'],
+            'firstname' => ['required', 'string', 'max:50', 'regex:/^[^<>]*$/'],
+            'lastname' => ['required', 'string', 'max:50', 'regex:/^[^<>]*$/'],
+            'address' => ['required', 'string', 'max:250', 'regex:/^[^<>]*$/'],
+            'address2' => ['nullable', 'string', 'max:250', 'regex:/^[^<>]*$/'],
+            'city' => ['required', 'string', 'max:250', 'regex:/^[^<>]*$/'],
             'phone' => ['nullable', 'max:30', $phoneRule, Rule::unique('customers', 'phone')->ignore($except)],
             'zipcode' => ['required', 'string', 'max:255', new ZipCode($country)],
-            'region' => ['required', 'string', 'max:250'],
+            'region' => ['required', 'string', 'max:250' ,'regex:/^[^<>]*$/'],
             'country' => ['required', 'string', 'max:255', Rule::in(array_keys(Countries::names()))],
-            'company_name' => ['nullable', 'string', 'max:255'],
-            'billing_details' => ['nullable', 'string', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255' ,'regex:/^[^<>]*$/'],
+            'billing_details' => ['nullable', 'string', 'max:255' ,'regex:/^[^<>]*$/'],
             'locale' => ['nullable', 'string', 'max:255', Rule::in(array_keys(LocaleService::getLocalesNames()))],
         ];
         if ($email) {

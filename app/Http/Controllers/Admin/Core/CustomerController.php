@@ -191,7 +191,7 @@ class CustomerController extends AbstractCrudController
         \Session::put('autologin', true);
         \Session::put('autologin_customer', $customer->id);
         auth('web')->loginUsingId($customer->id);
-        \Session::flash('success', __('admin.customers.autologin.success', ['name' => $customer->fullName]));
+        \Session::flash('success', __('admin.customers.autologin.success', ['name' => e($customer->fullName)]));
 
         return redirect()->to(RouteServiceProvider::HOME);
     }
@@ -203,7 +203,7 @@ class CustomerController extends AbstractCrudController
         $customer = Customer::find(\Session::get('autologin_customer'));
         \Session::remove('autologin');
         \Session::remove('autologin_customer');
-        \Session::flash('success', __('admin.customers.autologin.logoutsuccess', ['name' => $customer->fullName]));
+        \Session::flash('success', __('admin.customers.autologin.logoutsuccess', ['name' => e($customer->fullName)]));
 
         return redirect()->route('admin.customers.show', $customer);
     }

@@ -408,7 +408,7 @@ if (! function_exists('theme_asset')) {
 if (! function_exists('generate_uuid')) {
     function generate_uuid(string $class): string
     {
-        $uuid = (string) substr(\Illuminate\Support\Str::uuid(), 0, 8);
+        $uuid = (string) Str::uuid();
         if ($class::where('uuid', $uuid)->exists()) {
             return generate_uuid($class);
         }

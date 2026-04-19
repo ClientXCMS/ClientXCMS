@@ -194,4 +194,106 @@ class RegistrationTest extends TestCase
         $this->assertAuthenticated();
         $response->assertRedirect('/client');
     }
+
+    public function test_register_with_plus_in_email()
+    {
+        Setting::updateSettings(['allow_plus_in_email' => 'false']);
+        $response = $this->post('/register', [
+            'firstname' => 'Test User',
+            'lastname' => 'Test User',
+            'zipcode' => '59100',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'email' => 'test+1@clientxcms.com',
+            'address' => 'test',
+            'city' => 'test',
+            'phone' => '0176010380',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+        $response->assertSessionHasErrors(['email']);
+        $this->assertGuest();
+    }
+
+    public function test_register_with_plus_in_email_allowed()
+    {
+        Setting::updateSettings(['allow_plus_in_email' => 'true']);
+        $response = $this->post('/register', [
+            'firstname' => 'Test User',
+            'lastname' => 'Test User',
+            'zipcode' => '59100',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'email' => 'test+1@clientxcms.com',
+            'address' => 'test',
+            'city' => 'test',
+            'phone' => '0176010380',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+        $this->assertAuthenticated();
+        $response->assertRedirect('/client/onboarding');
+    }
+
+    public function test_register_with_xss_in_name()
+    {
+        $response = $this->post('/register', [
+            'firstname' => '<script>alert("xss")</script>',
+            'lastname' => 'Test User',
+            'zipcode' => '59100',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'email' => 'test@example.com',
+            'address' => 'test',
+            'city' => 'test',
+            'phone' => '0176010380',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+        $response->assertSessionHasErrors(['firstname']);
+        $this->assertGuest();
+    }
+
+    public function test_register_with_xss_in_address()
+    {
+        $response = $this->post('/register', [
+            'firstname' => 'Test User',
+            'lastname' => 'Test User',
+            'zipcode' => '59100',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'email' => 'test@example.com',
+            'address' => '<script>alert("xss")</script>',
+            'city' => 'test',
+            'phone' => '0176010380',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+        $response->assertSessionHasErrors(['address']);
+        $this->assertGuest();
+    }
+
+    public function test_register_save_origin_url_metadata()
+    {
+        $response = $this->post('/register?redirect=https://example.com', [
+            'firstname' => 'Test User',
+            'lastname' => 'Test User',
+            'zipcode' => '59100',
+            'region' => 'Test User',
+            'country' => 'FR',
+            'email' => 'test@example.com',
+            'address' => 'test',
+            'city' => 'test',
+            'phone' => '0176010380',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+        $this->assertAuthenticated();
+        $response->assertRedirect('/client/onboarding');
+        $this->assertDatabaseHas('metadata', [
+            'key' => 'origin_url',
+            'value' => 'https://example.com',
+        ]);
+    }
+
 }
