@@ -116,7 +116,7 @@ class AuthController extends Controller
         }
 
         // Create full access token
-        $token = $customer->createToken('client-api', ['*']);
+        $token = $customer->createToken('client-api', ['client-api']);
 
         return response()->json([
             'requires_2fa' => false,
@@ -199,7 +199,7 @@ class AuthController extends Controller
 
         // Revoke the temporary token and create a full access token
         $request->user()->currentAccessToken()->delete();
-        $token = $customer->createToken('client-api', ['*']);
+        $token = $customer->createToken('client-api', ['client-api']);
 
         return response()->json([
             'token' => $token->plainTextToken,
@@ -306,7 +306,7 @@ class AuthController extends Controller
 
         event(new Registered($customer));
 
-        $token = $customer->createToken('client-api', ['*']);
+        $token = $customer->createToken('client-api', ['client-api']);
 
         return response()->json([
             'message' => __('auth.register.success'),

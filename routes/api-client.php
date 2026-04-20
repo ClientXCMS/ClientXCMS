@@ -52,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->post('/auth/2fa/verify', [AuthController::class, 'verify2fa'])
         ->name('auth.2fa.verify');
 
-    Route::middleware('abilities:*')->group(function () {
+    Route::middleware('abilities:client-api')->group(function () {
         // Profile
         Route::prefix('profile')->name('profile.')->group(function () {
             Route::get('/', [ProfileController::class, 'show'])->name('show');
