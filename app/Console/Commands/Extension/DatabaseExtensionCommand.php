@@ -45,7 +45,12 @@ class DatabaseExtensionCommand extends Command
     {
         $folders = [base_path('modules'), base_path('addons'), base_path('resources/themes')];
         $extensions = [];
-        $extension = sanitize($this->option('extension'));
+        if ($this->option('extension') == null && $this->option('all') == null) {
+            $this->error('No extension specified.');
+
+            return;
+        }
+        $extension = $this->option('extension');
         foreach ($folders as $folder) {
             $directories = \File::directories($folder);
             foreach ($directories as $directory) {
@@ -79,11 +84,13 @@ class DatabaseExtensionCommand extends Command
         if ($extension == null) {
             $extension = $this->choice('Which extension do you want to create a migration for?', $extensions);
         }
-        if ($this->option('action') == 'migrate') {
+        $extension = sanitize($extension);
+        $action = sanitize($this->option('action'));
+        if ($action == 'migrate') {
             $this->migrate($extension);
-        } elseif ($this->option('action') == 'rollback') {
+        } elseif ($action == 'rollback') {
             $this->rollback($extension);
-        } elseif ($this->option('action') == 'seed') {
+        } elseif ($action == 'seed') {
             $this->seed($extension);
         } else {
             $this->error('Invalid action. Available actions are migrate, rollback and seed.');
