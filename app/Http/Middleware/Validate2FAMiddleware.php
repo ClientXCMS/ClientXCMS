@@ -31,13 +31,13 @@ class Validate2FAMiddleware
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, ?string $guard = null): Response
     {
         if (! is_installed()) {
             return $next($request);
         }
-        if (auth('web')->user() && ! Session::has('autologin')) {
-            if (auth('web')->user()->twoFactorEnabled() && ! auth('web')->user()->twoFactorVerified() && $request->is('client/*')) {
+        if (auth($guard)->user() && ! Session::has('autologin')) {
+            if (auth($guard)->user()->twoFactorEnabled() && ! auth($guard)->user()->twoFactorVerified() && ($request->is('client/*') || $request->is('client'))) {
                 if ($request->route()->uri() !== '2fa') {
                     return redirect()->route('auth.2fa');
                 }

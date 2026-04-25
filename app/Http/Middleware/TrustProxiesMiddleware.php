@@ -33,7 +33,10 @@ class TrustProxiesMiddleware extends TrustProxies
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $request->headers->set('X-Forwarded-For', $request->header('CF-Connecting-IP'));
+        // if cloudflare is used, set the X-Forwarded-For header
+        if ($request->header('CF-Connecting-IP') && ! in_array($request->header('CF-Connecting-IP'), $this->getProxies())) {
+            $request->headers->set('X-Forwarded-For', $request->header('CF-Connecting-IP'));
+        }
         Request::setTrustedProxies($this->getProxies(), $this->headers);
         if (! $request->secure()) {
             $this->setProtocolForRequest($request);

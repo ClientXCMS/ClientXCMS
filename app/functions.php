@@ -539,3 +539,17 @@ if (! function_exists('sanitize')) {
         return trim(strip_tags($value));
     }
 }
+
+if (! function_exists('secure_redirect')) {
+    function secure_redirect(string $url): \Illuminate\Http\RedirectResponse
+    {
+        $redirectUrl = $url;
+        $redirectDomain = parse_url($redirectUrl, PHP_URL_HOST);
+        $currentDomain = parse_url(url('/'), PHP_URL_HOST);
+        if ($redirectDomain === $currentDomain) {
+            return redirect($redirectUrl);
+        }
+
+        return redirect(url('/'));
+    }
+}

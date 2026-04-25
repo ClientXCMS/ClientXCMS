@@ -15,12 +15,12 @@ class PermissionSeeder extends Seeder
         $permissions = json_decode($permissions, true);
         $extensions = app('extension')->getAllExtensions(false, true);
         foreach ($extensions as $extension) {
-            if (! in_array($extension->type, ['modules', 'addons'])) {
+            if (! in_array($extension->type(), ['modules', 'addons'])) {
                 continue;
             }
-            $path = $extension->type.'/'.$extension->uuid.'/permissions.json';
-            if (file_exists(base_path($path))) {
-                $extensionPermissions = file_get_contents(base_path($path));
+            $path = $extension->extensionPath().'/permissions.json';
+            if (file_exists($path)) {
+                $extensionPermissions = file_get_contents($path);
                 $extensionPermissions = json_decode($extensionPermissions, true);
                 if (is_array($extensionPermissions)) {
                     $permissions = array_merge($permissions, $extensionPermissions);

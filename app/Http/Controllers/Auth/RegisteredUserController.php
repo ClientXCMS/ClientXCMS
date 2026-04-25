@@ -59,9 +59,7 @@ class RegisteredUserController extends Controller
         $validator = \Validator::make($data, $rules);
         if ($validator->fails()) {
             if ($request->has('redirect') && $request->get('redirect') != null) {
-                if (str_contains($request->get('redirect'), url('/'))) {
-                    return redirect($request->get('redirect'))->withErrors($validator)->withInput();
-                }
+                return secure_redirect($request->get('redirect'))->withErrors($validator)->withInput();
             }
 
             return back()->withErrors($validator)->withInput();
