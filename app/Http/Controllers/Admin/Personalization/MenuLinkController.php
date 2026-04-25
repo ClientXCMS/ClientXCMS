@@ -49,10 +49,9 @@ class MenuLinkController extends AbstractCrudController
     public function create(Request $request)
     {
         $type = $request->type;
-        $data = $this->getArray($type);
+        $data = $this->getArray($type, null, $request->get('parent_id'));
         $data['type'] = $type;
-
-        $menus = MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get();
+        $data['item'] = new MenuLink(['type' => $type, 'parent_id' => $request->get('parent_id')]);
 
         return $this->createView($data);
     }
