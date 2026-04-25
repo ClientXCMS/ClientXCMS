@@ -62,7 +62,7 @@ class AdminAutologinCommand extends Command
                 return;
             }
         }
-        $key = Str::uuid();
+        $key = hash('sha256', Str::uuid()->toString());
         $admin->attachMetadata('autologin_key', $key);
         $admin->attachMetadata('autologin_expires_at', now()->addMinutes((int) $this->option('expire')));
         if ($this->option('unique')) {
