@@ -139,6 +139,12 @@ class DashboardController
         if ($tickets_assigned) {
             $heathcheck['blue'][] = __('admin.dashboard.assigned_tickets', ['tickets' => $tickets_assigned]);
         }
+        $license = \App\Core\License\LicenseCache::get();
+        if ($license && ($supportExpiration = $license->getSupportExpiration())) {
+            if ($supportExpiration->isFuture() && $supportExpiration->diffInDays(now()) <= 7) {
+                $heathcheck['yellow'][] = __('admin.dashboard.support_expiration_warning', ['date' => $supportExpiration->isoFormat('LL')]);
+            }
+        }
 
         return $heathcheck;
     }
