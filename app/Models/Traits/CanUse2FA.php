@@ -68,7 +68,7 @@ trait CanUse2FA
 
     public function generateRecoveryCode(): string
     {
-        return rand(100, 999).'-'.rand(100, 999).'-'.rand(100, 999);
+        return bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(4));
     }
 
     public function useRecoveryCode(string $code): void
