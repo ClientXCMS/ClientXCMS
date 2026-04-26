@@ -69,7 +69,7 @@ class Kernel extends HttpKernel
             LicenseMiddleware::class,
             MaintenanceMiddleware::class,
             ForceLoginMiddleware::class,
-            Validate2FAMiddleware::class . ':web',
+            Validate2FAMiddleware::class,
             BannedMiddleware::class,
             LocaleMiddleware::class,
             RecaptchaMiddleware::class,
@@ -82,7 +82,7 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             MaintenanceMiddleware::class . ':api',
-            Validate2FAMiddleware::class . ':api',
+            Validate2FAMiddleware::class,
         ],
         'admin' => [
             IsAdminMiddleware::class,

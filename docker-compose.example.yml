@@ -7,9 +7,7 @@ x-common-variables: &common-variables
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: clientxcms/panel:latest
     restart: always
     volumes:
       - .github/logs/nginx/:/var/log/nginx/

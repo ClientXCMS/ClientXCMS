@@ -1,15 +1,20 @@
-# Stage 0:
+# Stage 0: Build Frontend
 FROM --platform=$TARGETOS/$TARGETARCH node:22-alpine AS build
 WORKDIR /app
-COPY . ./
-RUN npm install \
-    && npm run build
 
-# Stage 1:
+# Copy only package.json and package-lock.json first to cache npm install
+COPY package*.json ./
+RUN npm ci
+
+# Copy the rest of the frontend source code and build
+COPY . ./
+RUN npm run build
+
+# Stage 1: Build Application
 FROM --platform=$TARGETOS/$TARGETARCH php:8.3-fpm-alpine
 WORKDIR /app
-COPY . ./
-COPY --from=0 /app/public/build /app/public/build
+
+# Install system dependencies
 RUN apk add --no-cache --update \
     ca-certificates dcron curl git supervisor tar unzip nginx \
     libpng-dev libxml2-dev libzip-dev icu-dev \
@@ -18,12 +23,23 @@ RUN apk add --no-cache --update \
  && docker-php-ext-configure zip \
  && docker-php-ext-configure gd --with-freetype --with-jpeg \
  && docker-php-ext-install bcmath gd intl pdo_mysql zip \
-    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && cp .env.example .env \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Copy composer files first to cache dependencies
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist \
+    && rm -rf /root/.composer
+
+# Copy the rest of the application
+COPY . ./
+COPY --from=build /app/public/build /app/public/build
+
+# Complete setup
+RUN cp .env.example .env \
     && mkdir -p bootstrap/cache/ storage/logs storage/framework/sessions storage/framework/views storage/framework/cache boostrap/cache \
     && chmod 777 -R bootstrap storage \
     && chmod 777 -R ./bootstrap/cache \
-    && composer install \
+    && composer dump-autoload --optimize \
     && rm -rf .env bootstrap/cache/*.php \
     && mkdir -p /app/storage/logs/ \
     && chown -R nginx:nginx .
