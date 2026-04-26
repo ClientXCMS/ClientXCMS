@@ -426,9 +426,8 @@ class SupportTicket extends Model
     {
         $lastMessage = $this->messages()->latest()->first();
         $folder = "helpdesk/attachments/{$this->id}/";
-        $attachmentName = $attachment->getClientOriginalName();
-        $attachmentName = str_replace(' ', '_', $attachmentName);
-        $attachmentName = rand(1000, 9999) . '_' . $attachmentName;
+        $extension = $attachment->getExtension();
+        $attachmentName = Str::random(16) . '.' . $extension;
         $attachment->storeAs($folder, $attachmentName);
         $file = new SupportAttachment;
         $file->fill([
