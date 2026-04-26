@@ -7,7 +7,7 @@ x-common-variables: &common-variables
 
 services:
   app:
-    image: clientxcms/panel:latest
+    image: clientxcms/panel:master
     restart: always
     volumes:
       - .github/logs/nginx/:/var/log/nginx/
