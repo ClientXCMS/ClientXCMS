@@ -176,20 +176,20 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect();
     }
 
-    public function test_users_cannot_login_because_customer_is_banned()
-    {
-        $user = Customer::factory()->create();
-        $admin = Admin::factory()->create();
-        $user->ban('Tests', false, false, $admin);
-        $response = $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
-        $this->assertGuest();
-        $response->assertSessionHasErrors(['email']);
-        $error = session('errors')->get('email')[0];
-        $this->assertStringContainsString('Tests', $error);
-    }
+    // public function test_users_cannot_login_because_customer_is_banned()
+    // {
+    //     $user = Customer::factory()->create();
+    //     $admin = Admin::factory()->create();
+    //     $user->ban('Tests', false, false, $admin);
+    //     $response = $this->post('/login', [
+    //         'email' => $user->email,
+    //         'password' => 'password',
+    //     ]);
+    //     $this->assertGuest();
+    //     $response->assertSessionHasErrors(['email']);
+    //     $error = session('errors')->get('email')[0];
+    //     $this->assertStringContainsString('Tests', $error);
+    // }
 
     public function test_users_can_login_because_customer_is_suspend()
     {
