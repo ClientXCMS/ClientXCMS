@@ -103,6 +103,7 @@ class AdminServiceProvider extends ServiceProvider
      */
     protected function versionData()
     {
+        try {
         return Cache::remember('git-version', 5, function () {
             if (file_exists(base_path('.git/HEAD'))) {
                 $head = explode(' ', file_get_contents(base_path('.git/HEAD')));
@@ -124,5 +125,11 @@ class AdminServiceProvider extends ServiceProvider
                 'is_git' => false,
             ];
         });
+    } catch (\Exception $e) {
+        return [
+            'version' => AppServiceProvider::VERSION,
+            'is_git' => false,
+        ];
+    }
     }
 }

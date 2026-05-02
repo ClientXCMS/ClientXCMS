@@ -80,6 +80,7 @@ class RoleController extends AbstractCrudController
             return back()->with('error', __('admin.roles.error_update_level'));
         }
         $role->name = $validated['name'];
+        $role->level = $validated['level'];
         if ($request->get('is_admin') && $userRole->is_admin) {
             $role->is_admin = true;
             $permissions = [];

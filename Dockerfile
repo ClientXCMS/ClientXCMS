@@ -27,7 +27,7 @@ RUN apk add --no-cache --update \
 
 # Copy composer files first to cache dependencies
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist \
+RUN composer install --no-scripts --no-autoloader --prefer-dist \
     && rm -rf /root/.composer
 
 # Copy the rest of the application

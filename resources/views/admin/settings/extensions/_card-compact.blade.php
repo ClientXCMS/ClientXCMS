@@ -44,7 +44,7 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
         @if ($extension->isNotInstalled() && $extension->isActivable())
         <form action="{{ route('admin.settings.extensions.update', [$extension->type(), $extension->uuid]) }}" method="POST" class="ajax-extension-form">
             @csrf
-            <button class="p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+            <button type="submit" data-type="{{ $extension->type() }}" data-small="true" data-uuid="{{ $extension->uuid }}" class="p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors ajax-action-btn">
                 <i class="bi bi-cloud-download"></i>
             </button>
         </form>

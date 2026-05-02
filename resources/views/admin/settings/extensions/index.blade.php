@@ -60,7 +60,7 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
                         type="text"
                         id="extension-search"
                         class="w-full pl-12 pr-4 py-4 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl border-0 text-gray-900 dark:text-white placeholder-gray-500 shadow-lg focus:ring-4 focus:ring-white/30 transition-all duration-200"
-                        placeholder="{{ __('extensions.settings.search_placeholder') ?? 'Rechercher une extension...' }}">
+                        placeholder="{{ __('extensions.settings.search_placeholder') }}">
                 </div>
             </div>
         </div>
@@ -69,11 +69,11 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
     @if (!empty($groups))
     <div class="mb-8">
         <div class="flex flex-wrap items-center gap-2 p-1.5 bg-gray-100 dark:bg-slate-800 rounded-xl w-fit">
-            <button class="main-tab-btn active px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" data-tab="installed">
+            <button class="main-tab-btn {{ $installedModulesAddons->count() == 0 ? 'active' : '' }} px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" data-tab="installed">
                 <i class="bi bi-collection-fill mr-2"></i>{{ __('extensions.settings.tabs.my_extensions') }}
                 <span class="ml-2 px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full text-xs">{{ $installedExtensions->count() }}</span>
             </button>
-            <button class="main-tab-btn px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400" data-tab="discover">
+            <button class="main-tab-btn {{ $installedModulesAddons->count() > 0 ? 'active' : '' }} px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400" data-tab="discover">
                 <i class="bi bi-compass-fill mr-2"></i>{{ __('extensions.settings.tabs.discover') }}
                 <span class="ml-2 px-2 py-0.5 bg-gray-200 dark:bg-slate-600 text-gray-600 dark:text-gray-400 rounded-full text-xs">{{ $allExtensions->count() }}</span>
             </button>
@@ -84,7 +84,7 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
         </div>
     </div>
 
-    <div id="tab-installed" class="tab-content">
+    <div id="tab-installed" class="tab-content {{ $installedModulesAddons->count() > 0 ? '' : 'hidden' }}">
         @if ($installedExtensions->count() > 0)
         @if ($installedThemes->count() > 0)
         <div class="mb-10">
@@ -133,7 +133,7 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
         @endif
     </div>
 
-    <div id="tab-discover" class="tab-content hidden">
+    <div id="tab-discover" class="tab-content {{ $installedModulesAddons->count() > 0 ? 'hidden' : '' }}">
         <div class="mb-8">
             <div class="flex flex-wrap gap-2 items-center">
                 <button class="group-filter-btn active px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 bg-indigo-600 text-white shadow-md" data-group="all">
