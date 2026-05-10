@@ -60,7 +60,7 @@ class PaymentGatewayController extends Controller
 
             $gateway = Gateway::where('uuid', $gateway)->first();
             abort_if(! $gateway, 404);
-            abort_if($gateway->status === 'hidden', 403);
+            abort_if($gateway->status === 'hidden' && $gateway->uuid != 'none', 403);
             abort_if($invoice->paymethod !== $gateway->uuid, 403);
             if ($gateway->minimal_amount > 0 && $invoice->total < $gateway->minimal_amount) {
                 return redirect()->route('front.invoices.show', $invoice)->with('error', __('store.checkout.minimal_amount'));
