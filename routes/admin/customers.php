@@ -20,7 +20,7 @@ use App\Http\Controllers\Admin\Core\CustomerController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/customers/{customer}/send_password', [CustomerController::class, 'sendForgotPassword'])->name('customers.send_password');
-Route::get('/customers/{customer}/resend_confirmation', [CustomerController::class, 'resendConfirmation'])->name('customers.resend_confirmation');
+Route::post('/customers/{customer}/resend_confirmation', [CustomerController::class, 'resendConfirmation'])->name('customers.resend_confirmation');
 Route::post('/customers/{customer}/confirm', [CustomerController::class, 'confirm'])->name('customers.confirm');
 Route::resource('/customers', CustomerController::class)->names('customers')->except('edit');
 Route::get('/customers/{customer}/autologin', [CustomerController::class, 'autologin'])->name('customers.autologin');
