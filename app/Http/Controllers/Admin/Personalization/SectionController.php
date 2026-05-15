@@ -55,6 +55,7 @@ class SectionController extends AbstractCrudController
 
     public function show(Section $section)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $themeManager = app('theme');
         $pages = $themeManager->getSectionsPages(false);
         if (! view()->exists($section->path)) {
@@ -118,6 +119,7 @@ class SectionController extends AbstractCrudController
 
     public function destroy(Section $section)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $section->delete();
         ThemeManager::clearCache();
 
@@ -126,6 +128,7 @@ class SectionController extends AbstractCrudController
 
     public function update(Request $request, Section $section)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $validated = $request->validate([
             'content' => ['nullable', 'string', new \App\Rules\ValidHtmlWithoutBlade],
             'url' => 'required',
@@ -145,6 +148,7 @@ class SectionController extends AbstractCrudController
 
     public function switch(Section $section)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $section->is_active = ! $section->is_active;
         $section->save();
         ThemeManager::clearCache();
@@ -154,6 +158,7 @@ class SectionController extends AbstractCrudController
 
     public function restore(Section $section)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $section->restore();
         ThemeManager::clearCache();
 
@@ -162,6 +167,7 @@ class SectionController extends AbstractCrudController
 
     public function sort(Request $request)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $items = $request->get('items');
         $i = 0;
         foreach ($items as $id) {
@@ -175,6 +181,7 @@ class SectionController extends AbstractCrudController
 
     public function clone(Section $section)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $newSection = $section->cloneSection();
         ThemeManager::clearCache();
 
@@ -183,6 +190,7 @@ class SectionController extends AbstractCrudController
 
     public function cloneSection(string $uuid)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $sections = app('theme')->getThemeSections();
         $section = collect($sections)->firstWhere('uuid', $uuid);
         if (! view()->exists($section->json['path'])) {
@@ -216,6 +224,7 @@ class SectionController extends AbstractCrudController
 
     public function updateConfig(Request $request, Section $section)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         if (! $section->isConfigurable()) {
             return back()->with('error', __('personalization.sections.errors.not_configurable'));
         }
