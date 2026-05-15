@@ -35,6 +35,7 @@ class TwoFactorAuthenticationController
             '2fa' => ['required', 'string', new Valid2FACodeRule],
         ]);
         if (auth('admin')->user()->isValidate2FA($request->input('2fa'))) {
+            $request->session()->regenerate();
             \Session::put('2fa_verified', true);
 
             return redirect()->intended(admin_prefix('dashboard'));
