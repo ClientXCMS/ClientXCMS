@@ -28,6 +28,7 @@ class LicenseController
 {
     public function return(Request $request)
     {
+        staff_aborts_permission(Permission::MANAGE_LICENSE);
         $code = $request->get('code');
         if (! $code) {
             return redirect()->route('admin.license.index')->with('error', __('admin.license.invalid'));
