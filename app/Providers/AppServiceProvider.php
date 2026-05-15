@@ -49,6 +49,11 @@ class AppServiceProvider extends ServiceProvider
     {
         date_default_timezone_set('Europe/Paris');
 
+        if ($this->app->environment('production') && config('app.debug')) {
+            config(['app.debug' => false]);
+            logger()->warning('APP_DEBUG was true in production environment - forced to false at boot. Operator must set APP_DEBUG=false explicitly in .env to silence this.');
+        }
+
         if (env('APP_FORCE_HTTPS', $this->app->environment('production'))) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
