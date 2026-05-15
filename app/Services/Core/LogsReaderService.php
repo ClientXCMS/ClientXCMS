@@ -119,8 +119,16 @@ class LogsReaderService
         $logsPath = $this->storage_path;
         $logsPath .= ($this->folder) ? '/'.$this->folder : '';
         $file = $logsPath.'/'.$file;
-        // check if requested file is really in the logs directory
-        if (dirname($file) !== $logsPath) {
+        // Defense-in-depth: reject symlinks anywhere in the chain and
+        // require the real path to stay strictly under the logs root.
+        // Without this, an admin who can plant a symlink under storage/logs
+        // can read /etc/passwd or another tenant's volume on a shared FS.
+        $realFile = realpath($file);
+        $realRoot = realpath($logsPath);
+        if ($realFile === false || $realRoot === false || ! str_starts_with($realFile, $realRoot.DIRECTORY_SEPARATOR)) {
+            throw new \Exception('No such log file: '.$file);
+        }
+        if (is_link($file) || is_link($logsPath)) {
             throw new \Exception('No such log file: '.$file);
         }
 
