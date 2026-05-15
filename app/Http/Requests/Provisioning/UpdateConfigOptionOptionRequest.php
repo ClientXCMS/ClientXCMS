@@ -29,7 +29,7 @@ class UpdateConfigOptionOptionRequest extends FormRequest
 
     public function authorize()
     {
-        return true;
+        return staff_has_permission(\App\Models\Admin\Permission::MANAGE_CONFIGOPTIONS);
     }
 
     public function rules()
