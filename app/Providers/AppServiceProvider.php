@@ -49,6 +49,10 @@ class AppServiceProvider extends ServiceProvider
     {
         date_default_timezone_set('Europe/Paris');
 
+        if (env('APP_FORCE_HTTPS', $this->app->environment('production'))) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         Builder::macro('whereLike', function (string $attribute, string $searchTerm) {
             return $this->orWhere($attribute, 'LIKE', "%{$searchTerm}%");
         });
