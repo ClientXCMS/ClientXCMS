@@ -51,54 +51,58 @@ Route::prefix('auth')->name('auth.')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
-    Route::post('/auth/2fa/verify', [AuthController::class, 'verify2fa'])->name('auth.2fa.verify');
+    Route::middleware('abilities:2fa:pending')
+        ->post('/auth/2fa/verify', [AuthController::class, 'verify2fa'])
+        ->name('auth.2fa.verify');
 
-    // Profile
-    Route::prefix('profile')->name('profile.')->group(function () {
-        Route::get('/', [ProfileController::class, 'show'])->name('show');
-        Route::put('/', [ProfileController::class, 'update'])->name('update');
-        Route::put('/password', [ProfileController::class, 'password'])->name('password');
-        Route::get('/2fa/setup', [ProfileController::class, 'setup2fa'])->name('2fa.setup');
-        Route::post('/2fa', [ProfileController::class, 'toggle2fa'])->name('2fa');
-        Route::get('/2fa/recovery-codes', [ProfileController::class, 'recoveryCodes'])->name('2fa.recovery-codes');
-        Route::post('/security-question', [ProfileController::class, 'saveSecurityQuestion'])->name('security-question');
-        Route::delete('/', [ProfileController::class, 'deleteAccount'])->name('delete');
-    });
+    Route::middleware('abilities:client-api')->group(function () {
+        // Profile
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/', [ProfileController::class, 'show'])->name('show');
+            Route::put('/', [ProfileController::class, 'update'])->name('update');
+            Route::put('/password', [ProfileController::class, 'password'])->name('password');
+            Route::get('/2fa/setup', [ProfileController::class, 'setup2fa'])->name('2fa.setup');
+            Route::post('/2fa', [ProfileController::class, 'toggle2fa'])->name('2fa');
+            Route::get('/2fa/recovery-codes', [ProfileController::class, 'recoveryCodes'])->name('2fa.recovery-codes');
+            Route::post('/security-question', [ProfileController::class, 'saveSecurityQuestion'])->name('security-question');
+            Route::delete('/', [ProfileController::class, 'deleteAccount'])->name('delete');
+        });
 
-    // Tickets
-    Route::prefix('tickets')->name('tickets.')->group(function () {
-        Route::get('/', [TicketController::class, 'index'])->name('index');
-        Route::post('/', [TicketController::class, 'store'])->name('store');
-        Route::get('/departments', [TicketController::class, 'departments'])->name('departments');
-        Route::get('/{ticket}', [TicketController::class, 'show'])->name('show');
-        Route::post('/{ticket}/reply', [TicketController::class, 'reply'])->name('reply');
-        Route::post('/{ticket}/close', [TicketController::class, 'close'])->name('close');
-        Route::post('/{ticket}/reopen', [TicketController::class, 'reopen'])->name('reopen');
-        Route::get('/{ticket}/attachments/{attachment}', [TicketController::class, 'downloadAttachment'])->name('attachment');
-    });
+        // Tickets
+        Route::prefix('tickets')->name('tickets.')->group(function () {
+            Route::get('/', [TicketController::class, 'index'])->name('index');
+            Route::post('/', [TicketController::class, 'store'])->name('store');
+            Route::get('/departments', [TicketController::class, 'departments'])->name('departments');
+            Route::get('/{ticket}', [TicketController::class, 'show'])->name('show');
+            Route::post('/{ticket}/reply', [TicketController::class, 'reply'])->name('reply');
+            Route::post('/{ticket}/close', [TicketController::class, 'close'])->name('close');
+            Route::post('/{ticket}/reopen', [TicketController::class, 'reopen'])->name('reopen');
+            Route::get('/{ticket}/attachments/{attachment}', [TicketController::class, 'downloadAttachment'])->name('attachment');
+        });
 
-    // Invoices
-    Route::prefix('invoices')->name('invoices.')->group(function () {
-        Route::get('/', [InvoiceController::class, 'index'])->name('index');
-        Route::get('/{invoice}', [InvoiceController::class, 'show'])->name('show');
-        Route::get('/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('pdf');
-        Route::get('/{invoice}/download', [InvoiceController::class, 'download'])->name('download');
-        Route::post('/{invoice}/pay/{gateway}', [InvoiceController::class, 'pay'])->name('pay');
-        Route::post('/{invoice}/balance', [InvoiceController::class, 'balance'])->name('balance');
-    });
+        // Invoices
+        Route::prefix('invoices')->name('invoices.')->group(function () {
+            Route::get('/', [InvoiceController::class, 'index'])->name('index');
+            Route::get('/{invoice}', [InvoiceController::class, 'show'])->name('show');
+            Route::get('/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('pdf');
+            Route::get('/{invoice}/download', [InvoiceController::class, 'download'])->name('download');
+            Route::post('/{invoice}/pay/{gateway}', [InvoiceController::class, 'pay'])->name('pay');
+            Route::post('/{invoice}/balance', [InvoiceController::class, 'balance'])->name('balance');
+        });
 
-    // Services
-    Route::prefix('services')->name('services.')->group(function () {
-        Route::get('/', [ServiceController::class, 'index'])->name('index');
-        Route::get('/{service}', [ServiceController::class, 'show'])->name('show');
-    });
+        // Services
+        Route::prefix('services')->name('services.')->group(function () {
+            Route::get('/', [ServiceController::class, 'index'])->name('index');
+            Route::get('/{service}', [ServiceController::class, 'show'])->name('show');
+        });
 
-    // Payment Methods
-    Route::prefix('payment-methods')->name('payment-methods.')->group(function () {
-        Route::get('/', [PaymentMethodController::class, 'index'])->name('index');
-        Route::get('/gateways', [PaymentMethodController::class, 'gateways'])->name('gateways');
-        Route::post('/{gateway}', [PaymentMethodController::class, 'add'])->name('add');
-        Route::put('/{source}/default', [PaymentMethodController::class, 'setDefault'])->name('default');
-        Route::delete('/{source}', [PaymentMethodController::class, 'delete'])->name('delete');
+        // Payment Methods
+        Route::prefix('payment-methods')->name('payment-methods.')->group(function () {
+            Route::get('/', [PaymentMethodController::class, 'index'])->name('index');
+            Route::get('/gateways', [PaymentMethodController::class, 'gateways'])->name('gateways');
+            Route::post('/{gateway}', [PaymentMethodController::class, 'add'])->name('add');
+            Route::put('/{source}/default', [PaymentMethodController::class, 'setDefault'])->name('default');
+            Route::delete('/{source}', [PaymentMethodController::class, 'delete'])->name('delete');
+        });
     });
 });

@@ -232,7 +232,7 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
         } catch (\Exception $e) {
             logger()->error('PayPal source return error: '.$e->getMessage());
 
-            return redirect()->route('front.payment-methods.index')->with('error', __(''));
+            return redirect()->route('front.payment-methods.index')->with('error', __('client.payment-methods.errors.not_found'));
         }
     }
 

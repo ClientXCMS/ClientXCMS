@@ -423,7 +423,7 @@ if (! function_exists('theme_asset')) {
 if (! function_exists('generate_uuid')) {
     function generate_uuid(string $class): string
     {
-        $uuid = (string) substr(\Illuminate\Support\Str::uuid(), 0, 8);
+        $uuid = (string) Str::uuid();
         if ($class::where('uuid', $uuid)->exists()) {
             return generate_uuid($class);
         }
@@ -447,9 +447,13 @@ if (! function_exists('dangerous_content_patterns')) {
             '/\?>/i',
             '/@php\b/i',
             '/@endphp\b/i',
+            '/@shell\b/i',
             '/\{\!\!.*?\!\!\}/s',
             '/@(include|extends|component|each|includeIf|includeWhen|includeFirst)\s*\(/i',
             '/@(yield|section|stack|push|prepend)\s*\(/i',
+            '/\b(?:env|exec|shell_exec|system|passthru|proc_open|popen|pcntl_exec|eval|assert|preg_replace|create_function|require|unlink|fopen|file_get_contents|file_put_contents|file|readfile|base64_decode|gzinflate|gzuncompress|gzdecode|gzcompress|gzdeflate|gzencode|ini_set|set_time_limit|error_reporting|ini_get|ini_restore|ini_alter|unserialize|serialize|var_dump|print_r|debug_backtrace|debug_print_backtrace|dump|die|exit|phpinfo|php_uname|getenv|get_current_user|getmyuid|getmygid|getmypid|getmyinode|getlastmod|getprotobyname|getprotobynumber|getservbyname|getservbyport)\s*\(/i',
+            '/\$(?:_ENV|_SERVER|_GET|_POST|_REQUEST|_SESSION|_COOKIE)\b/i',
+            '/\.env\b/i',
         ];
     }
 }
@@ -541,5 +545,26 @@ if (! function_exists('get_group_icon')) {
         }
 
         return $icon;
+    }
+}
+
+if (! function_exists('sanitize')) {
+    function sanitize(string $value): string
+    {
+        return trim(strip_tags($value));
+    }
+}
+
+if (! function_exists('secure_redirect')) {
+    function secure_redirect(string $url): \Illuminate\Http\RedirectResponse
+    {
+        $redirectUrl = $url;
+        $redirectDomain = parse_url($redirectUrl, PHP_URL_HOST);
+        $currentDomain = parse_url(url('/'), PHP_URL_HOST);
+        if ($redirectDomain === $currentDomain) {
+            return redirect($redirectUrl);
+        }
+
+        return redirect(url('/'));
     }
 }

@@ -49,7 +49,6 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        LocaleMiddleware::class,
         InstallationMiddleware::class,
     ];
 
@@ -72,6 +71,7 @@ class Kernel extends HttpKernel
             ForceLoginMiddleware::class,
             Validate2FAMiddleware::class,
             BannedMiddleware::class,
+            LocaleMiddleware::class,
             RecaptchaMiddleware::class,
         ],
         'api' => [
@@ -82,6 +82,7 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             MaintenanceMiddleware::class . ':api',
+            Validate2FAMiddleware::class,
         ],
         'admin' => [
             IsAdminMiddleware::class,
@@ -111,6 +112,5 @@ class Kernel extends HttpKernel
         'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
         'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
         'csrf' => \App\Http\Middleware\VerifyCsrfToken::class,
-        'has_service_permission' => \App\Http\Middleware\HasServicePermission::class,
     ];
 }

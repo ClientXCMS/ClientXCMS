@@ -63,7 +63,7 @@ class TicketStatisticsService
             ->where('status', SupportTicket::STATUS_ANSWERED)
             ->with('customer:id,firstname,lastname', 'department:id,name')
             ->orderBy('updated_at', 'asc')
-            ->allowedFilters(['department_id', 'priority'])
+            ->allowedFilters(['department_id', 'priority', 'id', 'customer.email', 'subject', 'uuid'])
             ->allowedSorts(['updated_at'])
             ->get()
             ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()));
@@ -75,7 +75,7 @@ class TicketStatisticsService
             ->where('status', SupportTicket::STATUS_OPEN)
             ->with('customer:id,firstname,lastname', 'department:id,name')
             ->orderBy('updated_at', 'asc')
-            ->allowedFilters(['department_id', 'priority'])
+            ->allowedFilters(['department_id', 'priority', 'id', 'customer.email', 'uuid'])
             ->allowedSorts(['updated_at'])
             ->get()
             ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()));

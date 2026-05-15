@@ -89,94 +89,95 @@
                 </div>
             </div>
 
-            <div id="tab-installed" class="tab-content">
-                @if ($installedExtensions->count() > 0)
-                    @if ($installedThemes->count() > 0)
-                        <div class="mb-10">
-                            <div class="flex items-center gap-3 mb-5">
-                                <div
-                                    class="w-10 h-10 bg-gradient-to-br from-violet-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-                                    <i class="bi bi-palette-fill text-white text-lg"></i>
-                                </div>
-                                <h2 class="text-xl font-bold text-gray-900 dark:text-white">
-                                    {{ __('extensions.settings.sections.my_themes') }}</h2>
-                                <span
-                                    class="text-sm text-gray-500 dark:text-gray-400">({{ $installedThemes->count() }})</span>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                                @foreach ($installedThemes as $extension)
-                                    @include('admin.settings.extensions._card', [
-                                        'extension' => $extension,
-                                        'groupName' => 'themes',
-                                    ])
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
+    @if (!empty($groups))
+    <div class="mb-8">
+        <div class="flex flex-wrap items-center gap-2 p-1.5 bg-gray-100 dark:bg-slate-800 rounded-xl w-fit">
+            <button class="main-tab-btn {{ $installedModulesAddons->count() > 0 ? 'active' : '' }} px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" data-tab="installed">
+                <i class="bi bi-collection-fill mr-2"></i>{{ __('extensions.settings.tabs.my_extensions') }}
+                <span class="ml-2 px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full text-xs">{{ $installedExtensions->count() }}</span>
+            </button>
+            <button class="main-tab-btn {{ $installedModulesAddons->count() == 0 ? 'active' : '' }} px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400" data-tab="discover">
+                <i class="bi bi-compass-fill mr-2"></i>{{ __('extensions.settings.tabs.discover') }}
+                <span class="ml-2 px-2 py-0.5 bg-gray-200 dark:bg-slate-600 text-gray-600 dark:text-gray-400 rounded-full text-xs">{{ $allExtensions->count() }}</span>
+            </button>
+            <button class="main-tab-btn px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400" data-tab="themes">
+                <i class="bi bi-palette-fill mr-2"></i>{{ __('extensions.settings.tabs.themes') }}
+                <span class="ml-2 px-2 py-0.5 bg-gray-200 dark:bg-slate-600 text-gray-600 dark:text-gray-400 rounded-full text-xs">{{ $themes->count() }}</span>
+            </button>
+        </div>
+    </div>
 
-                    @if ($installedModulesAddons->count() > 0)
-                        <div class="mb-10">
-                            <div class="flex items-center gap-3 mb-5">
-                                <div
-                                    class="w-10 h-10 bg-gradient-to-br from-indigo-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
-                                    <i class="bi bi-puzzle-fill text-white text-lg"></i>
-                                </div>
-                                <h2 class="text-xl font-bold text-gray-900 dark:text-white">
-                                    {{ __('extensions.settings.sections.my_modules') }}</h2>
-                                <span
-                                    class="text-sm text-gray-500 dark:text-gray-400">({{ $installedModulesAddons->count() }})</span>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
-                                id="installed-grid">
-                                @foreach ($installedModulesAddons as $extension)
-                                    @include('admin.settings.extensions._card', [
-                                        'extension' => $extension,
-                                        'groupName' => $extension->api['group_uuid'] ?? 'unknown',
-                                    ])
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-                @else
-                    <div
-                        class="text-center py-20 bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700">
-                        <div
-                            class="w-20 h-20 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <i class="bi bi-box-seam text-4xl text-gray-400 dark:text-slate-500"></i>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                            {{ __('extensions.settings.no_installed') }}</h3>
-                        <p class="text-gray-500 dark:text-gray-400 mb-6">{{ __('extensions.settings.no_installed_desc') }}
-                        </p>
-                        <button
-                            class="main-tab-btn px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors"
-                            data-tab="discover">
-                            <i class="bi bi-compass mr-2"></i>{{ __('extensions.settings.discover_extensions') }}
-                        </button>
-                    </div>
-                @endif
+    <div id="tab-installed" class="tab-content {{ $installedModulesAddons->count() > 0 ? '' : 'hidden' }}">
+        @if ($installedExtensions->count() > 0)
+        @if ($installedThemes->count() > 0)
+        <div class="mb-10">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 bg-gradient-to-br from-violet-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="bi bi-palette-fill text-white text-lg"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ __('extensions.settings.sections.my_themes') }}</h2>
+                <span class="text-sm text-gray-500 dark:text-gray-400">({{ $installedThemes->count() }})</span>
             </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                @foreach ($installedThemes as $extension)
+                @include('admin.settings.extensions._card', ['extension' => $extension, 'groupName' => 'themes'])
+                @endforeach
+            </div>
+        </div>
+        @endif
 
-            <div id="tab-discover" class="tab-content hidden">
-                <div class="mb-8">
-                    <div class="flex flex-wrap gap-2 items-center">
-                        <button
-                            class="group-filter-btn active px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 bg-indigo-600 text-white shadow-md"
-                            data-group="all">
-                            <i class="bi bi-grid-fill mr-1"></i> {{ __('global.states.all') }}
-                        </button>
-                        @foreach ($groups as $groupName => $groupData)
-                            @php
-                                $groupIcon = $groupData['icon'];
-                                $extensions = $groupData['items'];
-                            @endphp
-                            <button
-                                class="group-filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:text-indigo-600 dark:hover:text-indigo-400"
-                                data-group="{{ Str::slug($groupName) }}">
-                                <i class="{{ $groupIcon }} mr-1"></i> {{ $groupName }}
-                                <span class="ml-1 text-xs opacity-70">({{ count($extensions) }})</span>
-                            </button>
-                        @endforeach
+        @if ($installedModulesAddons->count() > 0)
+        <div class="mb-10">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="bi bi-puzzle-fill text-white text-lg"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ __('extensions.settings.sections.my_modules') }}</h2>
+                <span class="text-sm text-gray-500 dark:text-gray-400">({{ $installedModulesAddons->count() }})</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" id="installed-grid">
+                @foreach ($installedModulesAddons as $extension)
+                @include('admin.settings.extensions._card', ['extension' => $extension, 'groupName' => $extension->api['group_uuid'] ?? 'unknown'])
+                @endforeach
+            </div>
+        </div>
+        @endif
+        @else
+        <div class="text-center py-20 bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700">
+            <div class="w-20 h-20 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="bi bi-box-seam text-4xl text-gray-400 dark:text-slate-500"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">{{ __('extensions.settings.no_installed') }}</h3>
+            <p class="text-gray-500 dark:text-gray-400 mb-6">{{ __('extensions.settings.no_installed_desc') }}</p>
+            <button class="main-tab-btn px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors" data-tab="discover">
+                <i class="bi bi-compass mr-2"></i>{{ __('extensions.settings.discover_extensions') }}
+            </button>
+        </div>
+        @endif
+    </div>
+
+    <div id="tab-discover" class="tab-content {{ $installedModulesAddons->count() > 0 ? 'hidden' : '' }}">
+        <div class="mb-8">
+            <div class="flex flex-wrap gap-2 items-center">
+                <button class="group-filter-btn active px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 bg-indigo-600 text-white shadow-md" data-group="all">
+                    <i class="bi bi-grid-fill mr-1"></i> {{ __('global.states.all') }}
+                </button>
+                @foreach ($groups as $groupName => $groupData)
+                @php $groupIcon = $groupData['icon']; $extensions = $groupData['items']; @endphp
+                <button class="group-filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:text-indigo-600 dark:hover:text-indigo-400" data-group="{{ Str::slug($groupName) }}">
+                    <i class="{{ $groupIcon }} mr-1"></i> {{ $groupName }}
+                    <span class="ml-1 text-xs opacity-70">({{ count($extensions) }})</span>
+                </button>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+            @if ($newExtensions->count() > 0)
+            <div id="section-new">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="bi bi-newspaper text-white text-lg"></i>
                     </div>
                 </div>
 

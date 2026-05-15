@@ -87,7 +87,7 @@ $maxItems = $max ?? 10;
                             placeholder="bi-star">
                     </div>
                     @else
-                    <input type="{{ $subfield['type'] ?? 'text' }}"
+                    <input type="{{ ($subfield['type'] ?? 'text') == 'boolean' ? 'checkbox' : $subfield['type'] }}"
                         data-field="{{ $subfieldKey }}"
                         class="input-text text-sm"
                         placeholder="{{ $subfield['placeholder'] ?? '' }}">
@@ -168,7 +168,11 @@ $maxItems = $max ?? 10;
                 itemEl.querySelectorAll('[data-field]').forEach(input => {
                     const key = input.dataset.field;
                     if (item[key] !== undefined) {
-                        input.value = item[key];
+                        if (input.type != 'checkbox'){
+                            input.value = item[key];
+                        } else {
+                            input.checked = item[key];
+                        }
                     }
 
                     // Trigger initial visual updates if needed (e.g. icons)
@@ -248,7 +252,11 @@ $maxItems = $max ?? 10;
                 const key = target.dataset.field;
 
                 if (!isNaN(index) && key) {
-                    items[index][key] = target.value;
+                    if (target.type != 'checkbox'){
+                        items[index][key] = target.value;
+                    } else {
+                        items[index][key] = target.checked;
+                    }
                     updateOutput();
 
                     // Update icon preview if applicable

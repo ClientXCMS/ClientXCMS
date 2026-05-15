@@ -38,6 +38,16 @@
         </div>
     </div>
     @if ($publishedVersions)
+        @php
+            $icons = [
+                'added' => 'bi bi-plus text-green-500',
+                'removed' => 'bi bi-dash text-red-500',
+                'changed' => 'bi bi-arrow-repeat text-blue-500',
+                'fixed' => 'bi bi-wrench text-yellow-500',
+                'other' => 'bi bi-three-dots text-gray-500',
+                'security' => 'bi bi-shield text-purple-500',
+            ];
+        @endphp
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-1 space-y-6">
             <div class="card p-6 h-full">
@@ -73,6 +83,9 @@
                 <div class="mt-4">
                     <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('admin.update.current_version') }}</p>
                     <span class="text-lg font-bold text-gray-800 dark:text-white">v{{ $currentVersion }}</span>
+                    @if ($appIsGit)
+                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ $appVersion }}</span>
+                    @endif
                 </div>
                 <form method="POST" action="{{ route('admin.update') }}" class="ajax-extension-form">
                     @csrf
@@ -129,36 +142,66 @@
                     </a>
                 </div>
 
-                <div class="mt-6 space-y-6">
-                    @if (!empty($publishedVersions->changelog->added))
-                    <div>
-                        <h3 class="text-md font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-                            <span class="inline-flex items-center justify-center h-6 w-6 rounded-full  mr-2">➕</span>
-                            {{ __('admin.update.added') }}
-                        </h3>
-                        <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400 pl-2">
-                            @foreach ($publishedVersions->changelog->added as $item)
-                            <li class="ml-5">{{ Str::after($item, '➕ ') }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
-
-                    @if (!empty($publishedVersions->changelog->changed))
-                    <div>
-                        <h3 class="text-md font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-                            <span class="inline-flex items-center justify-center h-6 w-6 rounded-full mr-2">🔄</span>
-                            {{ __('admin.update.changed') }}
-                        </h3>
-                        <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400 pl-2">
-                            @foreach ($publishedVersions->changelog->changed as $item)
-                            <li class="ml-5">{{ Str::after($item, '🔄 ') }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
+                <div class="mt-6 space-y-4">
+                    @foreach ($icons as $key => $icon)
+                        @if (!empty($publishedVersions->changelog->$key))
+                            <div>
+                                <h3 class="text-md font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                                    <i class="{{ $icon }} mr-2"></i>
+                                    {{ __('admin.update.' . $key) }}
+                                </h3>
+                                <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400 pl-2">
+                                    @foreach ($publishedVersions->changelog->$key as $item)
+                                        <li class="ml-5">{{ preg_replace('/^[\x{1F000}-\x{1FFFF}\x{2600}-\x{27BF}]+\s*/u', '', $item) }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                    @endforeach
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">
+            {{ __('admin.update.previous_updates') }}
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @foreach (collect($changelog)->skip(1)->take(4) as $version)
+                <div class="card p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-gray-800 dark:text-white">{{ $version->version }}</h3>
+                        <span class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($version->created_at)->isoFormat('LL') }}</span>
+                    </div>
+                    <div class="space-y-2">
+                        @foreach ($icons as $key => $icon)
+                            @if (!empty($version->changelog->$key))
+                                <div class="text-xs">
+                                    <span class="font-semibold text-gray-700 dark:text-gray-300">
+                                        <i class="{{ $icon }} mr-1"></i>
+                                        {{ __('admin.update.' . $key) }}
+                                    </span>
+                                    <ul class="mt-1 space-y-1 text-gray-500 dark:text-gray-400 pl-4">
+                                        @foreach (array_slice($version->changelog->$key, 0, 3) as $item)
+                                            <li>• {{ Str::limit(preg_replace('/^[\x{1F000}-\x{1FFFF}\x{2600}-\x{27BF}]+\s*/u', '', $item), 50) }}</li>
+                                        @endforeach
+                                        @if (count($version->changelog->$key) > 3)
+                                            <li class="italic text-gray-400">+ {{ count($version->changelog->$key) - 3 }} {{ __('admin.update.other') }}...</li>
+                                        @endif
+                                    </ul>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            @endforeach
+        </div>
+        <div class="mt-6 text-center">
+            <a href="{{ $changelogUrl }}" class="btn btn-secondary inline-flex items-center" target="_blank">
+                <i class="bi bi-book mr-2"></i>
+                {{ __('admin.update.changelog') }}
+            </a>
         </div>
     </div>
 

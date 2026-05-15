@@ -30,7 +30,7 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        'pterobox/*',
+        // 'pterobox/*', i don't know if it's needed
     ];
 
     protected function newCookie($request, $config)

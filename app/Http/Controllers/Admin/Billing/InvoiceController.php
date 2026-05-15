@@ -288,7 +288,7 @@ class InvoiceController extends AbstractCrudController
             $product = Product::find($relatedId);
             $service = null;
             if ($product != null && $product->productType()->data($product) != null) {
-                $dataHTML = $product->productType()->data($product)->renderAdmin(new ProductDataDTO($product, $request->all() + ['in_admin' => true], [], []));
+                $dataHTML = $product->productType()->data($product)->renderAdmin(new ProductDataDTO($product, $request->all() + ['in_admin' => true, 'customer' => $invoice->customer], [], []));
             } else {
                 $dataHTML = '';
             }

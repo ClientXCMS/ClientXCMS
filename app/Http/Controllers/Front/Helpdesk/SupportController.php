@@ -146,13 +146,14 @@ class SupportController extends Controller
     {
         abort_if($ticket->customer_id != auth()->id(), 404);
         abort_if($message->customer_id != auth('web')->id(), 404);
+        abort_if($message->ticket_id !== $ticket->id, 404);
         if (! $message->isCustomer()) {
             return back()->with('error', __('helpdesk.support.ticket_message_cannot_edit'));
         }
         $validated = $request->validate([
             'content' => 'required|string',
         ]);
-        $message->update(['message' => $request->get('content'), 'edited_at' => Carbon::now()]);
+        $message->update(['message' => $validated['content'], 'edited_at' => Carbon::now()]);
 
         return back()->with('success', __('helpdesk.support.ticket_replied'));
     }

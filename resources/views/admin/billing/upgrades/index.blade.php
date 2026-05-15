@@ -133,47 +133,67 @@
                                     <td class="h-px w-px whitespace-nowrap">
                     <span class="block px-6 py-2">
                       <span class="text-sm text-gray-600 dark:text-gray-400">
+                          @if (!$item->customer)
+                            <span class="italic text-gray-400 dark:text-gray-600">({{ __('global.deleted') }})</span>
+                        @else
                           <a href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
-                          {{ $item->customer->excerptFullName() }}</span>
-                        </a>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ $item->customer->excerptFullName() }}</span>
+                          </a>
+                        @endif
                     </span>
                                     </td>
 
                                     <td class="h-px w-px whitespace-nowrap">
                     <span class="block px-6 py-2">
                       <span class="text-sm text-gray-600 dark:text-gray-400">
+                          @if (!$item->service)
+                            <span class="italic text-gray-400 dark:text-gray-600">({{ __('global.deleted') }})</span>
+                        @else
                           <a href="{{ route('admin.services.show', ['service' => $item->service]) }}">
-                          {{ $item->service->name }}</span>
-                        </a>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ $item->service->name }}</span>
+                          </a>
+                        @endif
                     </span>
                                     </td>
 
                                     <td class="h-px w-px whitespace-nowrap">
                                                 <span class="block px-6 py-2">
+                                                    @if (!$item->oldProduct)
+                                                  <span class="italic text-gray-400 dark:text-gray-600">({{ __('global.deleted') }})</span>
+                                                    @else
                                                     <a href="{{ route('admin.products.show', ['product' => $item->oldProduct]) }}">
                                                         <span class="text-sm text-gray-600 dark:text-gray-400">{{ $item->oldProduct->trans('name') }}</span>
                                                     </a>
+                                                    @endif
                                                 </span>
                                     </td>
 
                                     <td class="h-px w-px whitespace-nowrap">
                                                 <span class="block px-6 py-2">
+                                                    @if (!$item->newProduct)
+                                                  <span class="italic text-gray-400 dark:text-gray-600">({{ __('global.deleted') }})</span>
+                                                    @else
                                                     <a href="{{ route('admin.products.show', ['product' => $item->newProduct]) }}">
                                                   <span class="text-sm text-gray-600 dark:text-gray-400">{{ $item->newProduct->trans('name') }}</span>
                                                     </a>
+                                                    @endif
                                                 </span>
                                     </td>
 
                                     <td class="h-px w-px whitespace-nowrap">
-                                        @if ($item->invoice == null)
+                                        @if ($item->invoice_id == null)
                                             <span class="block px-6 py-2">
                                                     <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('global.none') }}</span>
                                                     </span>
                                         @else
                                             <span class="block px-6 py-2">
+                                                @if (!$item->invoice)
+                              <span class="italic text-gray-400 dark:text-gray-600">({{ __('global.deleted') }})</span>
+                            @else
                                             <a href="{{ route('admin.invoices.show', ['invoice' => $item->invoice]) }}">
                                                 <span class="text-sm text-gray-600 dark:text-gray-400">{{ $item->invoice->identifier() }}</span>
                                             </a>
+                                            @endif
                                                 </span>
                                         @endif
                                     </td>

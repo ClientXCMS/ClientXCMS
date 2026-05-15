@@ -24,6 +24,7 @@ use App\Events\Core\Invoice\InvoiceCancelled;
 use App\Events\Core\Invoice\InvoiceCompleted;
 use App\Events\Core\Invoice\InvoiceFailed;
 use App\Events\Core\Invoice\InvoiceRefunded;
+use App\Models\ActionLog;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceItem;
 use App\Models\Store\Basket\Basket;
@@ -110,6 +111,7 @@ trait InvoiceStateTrait
                     return;
                 }
                 if ($this->status === self::STATUS_PAID) {
+                    ActionLog::log(ActionLog::BASKET_COMPLETED, get_class($basket), $basket->id, null, $this->user_id, ['invoice' => $this->invoice_number, 'amount' => formatted_price($this->total, $this->currency), 'currency' => $this->currency, 'amount_decimal' => $this->total]);
                     event(new CheckoutCompletedEvent($basket, $this));
                 }
                 $basket->clear(true);

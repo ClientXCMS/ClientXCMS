@@ -21,6 +21,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account\Customer;
+use App\Models\ActionLog;
 use App\Services\Account\AccountEditService;
 use App\Services\Core\LocaleService;
 use Illuminate\Auth\Events\Registered;
@@ -57,8 +58,8 @@ class RegisteredUserController extends Controller
         }
         $validator = \Validator::make($data, $rules);
         if ($validator->fails()) {
-            if ($request->has('redirect')) {
-                return redirect($request->get('redirect'))->withErrors($validator)->withInput();
+            if ($request->has('redirect') && $request->get('redirect') != null) {
+                return secure_redirect($request->get('redirect'))->withErrors($validator)->withInput();
             }
 
             return back()->withErrors($validator)->withInput();
@@ -101,6 +102,7 @@ class RegisteredUserController extends Controller
             $user->markEmailAsVerified();
         }
         event(new Registered($user));
+        ActionLog::log(ActionLog::NEW_REGISTERED, get_class($user), $user->id, null, $user->id, ['ip' => request()->ip()]);
 
         if ($request->wantsJson()) {
             return response()->noContent();

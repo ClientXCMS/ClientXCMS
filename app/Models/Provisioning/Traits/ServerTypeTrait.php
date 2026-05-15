@@ -66,7 +66,7 @@ trait ServerTypeTrait
                     event(new ServiceDeliveryFailed($this, $result));
                 }
             }
-        } catch (ExternalApiException|ProductConfigNotFoundException $e) {
+        } catch (ExternalApiException|ProductConfigNotFoundException|\Exception $e) {
             $this->delivery_errors = $e->getMessage();
             $result = new ServiceStateChangeDTO($this, false, $e->getMessage());
             event(new ServiceDeliveryFailed($this, $result));
@@ -108,7 +108,7 @@ trait ServerTypeTrait
             if ($server != null) {
                 $server->onRenew($this);
             }
-        } catch (ExternalApiException $e) {
+        } catch (ExternalApiException|\Exception $e) {
             $this->delivery_errors = $e->getMessage();
             $this->save();
         }
@@ -149,7 +149,7 @@ trait ServerTypeTrait
                 $this->save();
                 event(new ServiceExpired($this));
             }
-        } catch (ExternalApiException $e) {
+        } catch (ExternalApiException|\Exception $e) {
 
             if ($force) {
                 $this->status = self::STATUS_EXPIRED;
@@ -196,7 +196,7 @@ trait ServerTypeTrait
                     $this->customer->notify(new ServiceSuspendedEmail($this, $reason));
                 }
             }
-        } catch (ExternalApiException $e) {
+        } catch (ExternalApiException|\Exception $e) {
             $result = new ServiceStateChangeDTO($this, false, $e->getMessage());
             $this->delivery_errors = $e->getMessage();
             $this->save();
@@ -226,7 +226,7 @@ trait ServerTypeTrait
                 $this->save();
                 event(new ServiceUnsuspended($this));
             }
-        } catch (ExternalApiException $e) {
+        } catch (ExternalApiException|\Exception $e) {
             $this->delivery_errors = $e->getMessage();
             $result = new ServiceStateChangeDTO($this, false, $e->getMessage());
             event(new ServiceDeliveryFailed($this, $result));
@@ -324,7 +324,7 @@ trait ServerTypeTrait
                     }
                 }
             }
-        } catch (ExternalApiException $e) {
+        } catch (ExternalApiException|\Exception $e) {
         }
         event(new ServiceCancelled($this));
     }

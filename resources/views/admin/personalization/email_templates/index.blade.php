@@ -45,9 +45,11 @@
                                 <a class="btn btn-primary text-sm sm:ml-1 mt-2 sm:mt-0 w-full max-w-md sm:w-auto" href="{{ route($routePath . '.create') }}">
                                     {{ __('admin.create') }}
                                 </a>
-                                <a class="btn btn-secondary text-sm sm:ml-1 mt-2 sm:mt-0 w-full max-w-md sm:w-auto" href="#" data-hs-overlay="#import-overlay">
-                                    {{ __($translatePrefix . '.import.btn') }}
-                                </a>
+                                @if ($configForm != null)
+                                    <a class="btn btn-secondary text-sm sm:ml-1 mt-2 sm:mt-0 w-full max-w-md sm:w-auto" href="#" data-hs-overlay="#config-overlay">
+                                        {{ __($translatePrefix . '.config.btn') }}
+                                    </a>
+                                @endif
                             @endif
 
                         </div>
@@ -182,10 +184,10 @@
             </div>
         </div>
     </div>
-    <div id="import-overlay" class="overflow-x-hidden overflow-y-auto hs-overlay hs-overlay-open:translate-x-0 translate-x-full fixed top-0 end-0 transition-all duration-300 transform h-full max-w-lg w-full w-full z-[80] bg-white border-s dark:bg-gray-800 dark:border-gray-700 hidden" tabindex="-1">
+    <div id="config-overlay" class="overflow-x-hidden overflow-y-auto hs-overlay hs-overlay-open:translate-x-0 translate-x-full fixed top-0 end-0 transition-all duration-300 transform h-full max-w-lg w-full w-full z-[80] bg-white border-s dark:bg-gray-800 dark:border-gray-700 hidden" tabindex="-1">
         <div class="flex justify-between items-center py-3 px-4 border-b dark:border-gray-700">
             <h3 class="font-bold text-gray-800 dark:text-white">
-                {{ __($translatePrefix . '.import.title') }}
+                {{ __($translatePrefix . '.config.title') }}
             </h3>
             <button type="button" class="flex justify-center items-center w-7 h-7 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" data-hs-overlay="#config-overlay">
                 <span class="sr-only">{{ __('global.closemodal') }}</span>
@@ -193,16 +195,8 @@
             </button>
         </div>
         <div class="p-4">
-            <form method="POST" action="{{ route($routePath . '.import') }}" enctype="multipart/form-data">
-                @include('admin/shared/file', ['name' => 'file', 'canRemove' => false, 'extensions' => 'blade.php'])
-                @if (in_array(strtolower(setting('email_template_name')), ['wave.blade', 'welcome.blade']))
-                    @include('admin/shared/input', ['name' => 'email_template_title', 'label' => __('global.name'), 'value' => old('email_template_title', setting('email_template_title'))])
-                    @include('admin/shared/input', ['name' => 'email_template_description', 'label' => __('global.description'), 'value' => old('email_template_description', setting('email_template_description'))])
-                    @include('admin/shared/input', ['name' => 'email_template_image', 'label' => 'Image', 'value' => old('email_template_image', setting('email_template_image', "https://clientxcms.com/Themes/CLIENTXCMS/images/emails/support3.png"))])
-                @endif
-                @if (in_array(strtolower(setting('email_template_name')), ['welcome.blade']))
-                    @include('admin/shared/input', ['name' => 'email_template_image2', 'label' => 'Image 2', 'value' => old('email_template_image2', setting('email_template_image2', 'https://clientxcms.com/Themes/CLIENTXCMS/images/emails/node.png'))])
-                @endif
+            <form method="POST" action="{{ route($routePath . '.config') }}" enctype="multipart/form-data">
+                {!! $configForm !!}
                 @csrf
                 <button class="btn btn-primary mt-2 w-full">{{ __('global.save') }}</button>
 

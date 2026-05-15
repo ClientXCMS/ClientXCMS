@@ -268,7 +268,7 @@ class Subscription extends Model
                 return null;
             }
 
-            return $billingDate->format('d/j');
+            return $billingDate->format('d/m');
         }
 
         return null;

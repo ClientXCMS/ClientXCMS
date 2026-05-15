@@ -47,7 +47,7 @@ Route::name('personalization.')->prefix('/personalization')->group(function () {
     Route::put('/sections/{section}/config', [SectionController::class, 'updateConfig'])->name('sections.config.update');
 });
 Route::resource('email_templates', EmailTemplateController::class)->names('personalization.email_templates');
-Route::post('email_templates/import', [EmailTemplateController::class, 'import'])->name('personalization.email_templates.import');
+Route::post('email_templates/config', [EmailTemplateController::class, 'config'])->name('personalization.email_templates.config');
 Route::put('menulink/{menulink}', [MenuLinkController::class, 'update'])->name('personalization.menulinks.update');
 Route::post('menulink/{type}', [MenuLinkController::class, 'store'])->whereIn('type', $types);
 Route::get('menulink/{type}', [MenuLinkController::class, 'create'])->name('personalization.menulinks.create')->whereIn('type', $types);

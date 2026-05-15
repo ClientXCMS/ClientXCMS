@@ -37,7 +37,7 @@ class Validate2FAMiddleware
             return $next($request);
         }
         if (auth('web')->user() && ! Session::has('autologin')) {
-            if (auth('web')->user()->twoFactorEnabled() && ! auth('web')->user()->twoFactorVerified() && $request->is('client/*')) {
+            if (auth('web')->user()->twoFactorEnabled() && ! auth('web')->user()->twoFactorVerified() && ($request->is('client/*') || $request->is('client'))) {
                 if ($request->route()->uri() !== '2fa') {
                     return redirect()->route('auth.2fa');
                 }

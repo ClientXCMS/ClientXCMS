@@ -119,11 +119,11 @@
                                 @include('admin/shared/select', ['name' => 'product_id', 'label' => __('global.product'), 'options' => $products, 'value' => old('product_id', $product_id)])
                             </div>
                         <div class="flex flex-col">
-                            @include('admin/shared/search-field', ['name' => 'customer_id', 'label' => __('global.customer'), 'apiUrl' => route('admin.customers.search'), 'options' => $item->customer ? [$item->customer_id => $item->customer->excerptFullName()] : [], 'value' => $item->customer_id ])
+                            @include('admin/shared/search-field', ['name' => 'customer_id', 'label' => __('global.customer'), 'apiUrl' => route('admin.customers.search'), 'options' => $item->customer ? [$item->customer_id => $item->customer->excerptFullName()] : [], 'value' => old('customer_id', $item->customer_id) ])
                         </div>
 
                             <div class="flex flex-col">
-                                @include('admin/shared/select', ['name' => 'type', 'label' => __('provisioning.admin.services.show.type'), 'options' => $types, 'value' => $item->type])
+                                @include('admin/shared/select', ['name' => 'type', 'label' => __('provisioning.admin.services.show.type'), 'options' => $types, 'value' => old('type', $item->type)])
                             </div>
                         @else
                             <div class="flex flex-col">
@@ -131,7 +131,7 @@
                             </div>
 
                             <div class="flex flex-col">
-                                @include('admin/shared/flatpickr', ['name' => 'expires_at', 'label' => __('global.expiration'), 'value' => $item->expires_at ? $item->expires_at->format('Y-m-d H:i:s') : null])
+                                @include('admin/shared/flatpickr', ['name' => 'expires_at', 'label' => __('global.expiration'), 'value' => old('expires_at', $item->expires_at ? $item->expires_at->format('Y-m-d H:i:s') : null)])
                             </div>
 
                             <div class="flex flex-col">

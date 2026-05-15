@@ -313,7 +313,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         $ticket = SupportTicket::create($validated);
         $ticket->addMessage($validated['content'], null, auth('admin')->id());
         foreach ($request->file('attachments', []) as $attachment) {
-            $ticket->addAttachment($attachment, null, auth('web')->id());
+            $ticket->addAttachment($attachment, null, auth('admin')->id());
         }
 
         return redirect()->route($this->routePath . '.show', $ticket)->with('success', __('global.created'));

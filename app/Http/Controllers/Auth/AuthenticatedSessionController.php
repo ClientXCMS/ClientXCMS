@@ -37,7 +37,7 @@ class AuthenticatedSessionController extends Controller
             $request->authenticate();
         } catch (ValidationException $e) {
             if ($request->has('redirect')) {
-                return redirect()->away($request->get('redirect'))->with('error', $e->getMessage())->withErrors($e->getMessage());
+                return secure_redirect($request->get('redirect'))->with('error', $e->getMessage())->withErrors($e->getMessage());
             }
             if ($request->expectsJson()) {
                 return response()->json(['error' => $e->getMessage()], 422);

@@ -7,9 +7,7 @@ x-common-variables: &common-variables
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: clientxcms/panel:master
     restart: always
     volumes:
       - .github/logs/nginx/:/var/log/nginx/
@@ -66,20 +64,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    networks:
-      - clientxcms-network
-
-  # A conserver en cas de besoin mais déconseiller pour un déploiement en production.
-  phpmyadmin:
-    image: phpmyadmin:latest
-    restart: always
-    environment:
-      PMA_ABSOLUTE_URI: "${APP_URL}/phpmyadmin/"
-      PMA_HOSTS: ${PMA_HOSTS:-database}
-      UPLOAD_LIMIT: ${UPLOAD_LIMIT:-1024M}
-      HIDE_PHP_VERSION: ${HIDE_PHP_VERSION:-true}
-      MAX_EXECUTION_TIME: ${MAX_EXECUTION_TIME:-600}
-      MEMORY_LIMIT: ${MEMORY_LIMIT:-1024M}
     networks:
       - clientxcms-network
 

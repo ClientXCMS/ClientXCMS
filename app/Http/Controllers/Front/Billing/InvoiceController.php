@@ -109,10 +109,15 @@ class InvoiceController extends Controller
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0',
         ]);
-        if ($validated['amount'] >= auth('web')->user()->balance && $invoice->balance + $validated['amount'] > $invoice->total) {
-            return redirect()->route('front.invoices.show', $request->invoice)->with('error', __('client.invoices.balance.balance_not_enough'));
+        $amount = (float) $validated['amount'];
+        $userBalance = (float) auth('web')->user()->balance;
+        if ($amount > $userBalance) {
+            return redirect()->route('front.invoices.show', $invoice)->with('error', __('client.invoices.balance.balance_not_enough'));
         }
-        $invoice->addBalance($validated['amount']);
+        if ($invoice->balance + $amount > $invoice->total) {
+            $amount = $invoice->total - $invoice->balance;
+        }
+        $invoice->addBalance($amount);
 
         return redirect()->route('front.invoices.show', $invoice)->with('success', __('client.invoices.balance.success'));
     }
