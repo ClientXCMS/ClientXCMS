@@ -64,7 +64,7 @@
                 @endif
             </div>
         </div>
-                {!! nl2br($content) !!}
+                {!! nl2br(e($content)) !!}
     </div>
         </div>
     </div>
