@@ -27,6 +27,8 @@ class HelpdeskSettingsController extends \App\Http\Controllers\Controller
 {
     public function showSettings()
     {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
+
         return view('admin.settings.helpdesk.settings');
     }
 
