@@ -38,4 +38,4 @@ Route::get('/confirm-password', [AuthenticatedSessionController::class, 'confirm
 Route::post('/confirm-password', [AuthenticatedSessionController::class, 'confirm'])->middleware('admin');
 Route::get('/login', [LoginController::class, 'showForm'])->name('login')->withoutMiddleware('admin');
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->withoutMiddleware('admin');
-Route::any('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout')->withoutMiddleware('admin');
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout')->withoutMiddleware('admin');
