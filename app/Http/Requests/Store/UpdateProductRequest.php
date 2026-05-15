@@ -86,7 +86,7 @@ class UpdateProductRequest extends FormRequest
 
         return array_merge([
             'name' => 'string|max:255',
-            'description' => 'string',
+            'description' => ['string', new \App\Rules\NoScriptOrPhpTags],
             'status' => 'string|in:active,hidden,unreferenced',
             'group_id' => 'integer|exists:groups,id',
             'stock' => 'integer',

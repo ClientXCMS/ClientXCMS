@@ -49,7 +49,7 @@ class StoreProductRequest extends FormRequest
 
         return array_merge([
             'name' => 'required|string|max:255',
-            'description' => 'string|required|max:65535',
+            'description' => ['string', 'required', 'max:65535', new \App\Rules\NoScriptOrPhpTags],
             'status' => 'required|string|in:active,hidden,unreferenced',
             'group_id' => 'required|integer|exists:groups,id',
             'stock' => 'required|integer',
