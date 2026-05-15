@@ -36,7 +36,7 @@ class SettingsCoreControllerTest extends \Tests\TestCase
             'mail_salutation' => 'test',
             'mail_domain' => 'test',
             'mail_smtp_enable' => true,
-            'mail_smtp_host' => 'test',
+            'mail_smtp_host' => 'example.com',
             'mail_smtp_port' => 465,
             'mail_smtp_username' => 'test',
             'mail_smtp_password' => 'test',
