@@ -70,7 +70,7 @@ class AdminController extends AbstractCrudController
 
     public function update(UpdateStaffRequest $request, Admin $staff)
     {
-        $this->checkPermission('create', $staff);
+        $this->checkPermission('update', $staff);
         $validated = $request->validated();
         if ($request->password != null) {
             $validated['password'] = bcrypt($request->password);
@@ -134,7 +134,7 @@ class AdminController extends AbstractCrudController
 
             $qrcode = $google->getQRCodeInline(
                 config('app.name'),
-                $request->user('admin')->email . ' (Admin)',
+                $request->user('admin')->email.' (Admin)',
                 $secret
             );
             $request->session()->put('2fa_secret_admin', $secret);
@@ -152,7 +152,7 @@ class AdminController extends AbstractCrudController
         $params['securityQuestions'] = SecurityQuestion::getActiveQuestionsForSelect();
         $params['securityQuestionsEnabled'] = SecurityQuestion::isFeatureEnabled();
 
-        return view($this->viewPath . '.profile', $params);
+        return view($this->viewPath.'.profile', $params);
     }
 
     public function save2fa(Request $request)
@@ -179,7 +179,7 @@ class AdminController extends AbstractCrudController
                 return $code;
             });
             echo $codes->join("\n");
-        }, '2fa_recovery_codes_' . \Str::slug(config('app.name')) . '.txt');
+        }, '2fa_recovery_codes_'.\Str::slug(config('app.name')).'.txt');
     }
 
     public function updateProfile(Request $request)
@@ -208,7 +208,7 @@ class AdminController extends AbstractCrudController
 
         if ($admin->hasSecurityQuestion()) {
             $rules['security_answer'] = ['required', 'string', function ($attribute, $value, $fail) use ($admin) {
-                if (!$admin->verifySecurityAnswer($value)) {
+                if (! $admin->verifySecurityAnswer($value)) {
                     $fail(__('client.profile.security_question.wrong_answer'));
                 }
             }];
