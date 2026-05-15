@@ -125,7 +125,7 @@ class UpdateProductRequest extends FormRequest
             if ($product->image != null) {
                 \Storage::delete($product->image);
             }
-            $filename = $product->id.'.'.$this->file('image')->getClientOriginalExtension();
+            $filename = $product->id.'.'.$this->file('image')->guessExtension();
             $this->file('image')->storeAs('public'.DIRECTORY_SEPARATOR.'products', $filename);
             $product->image = 'products/'.$filename;
             $product->save();

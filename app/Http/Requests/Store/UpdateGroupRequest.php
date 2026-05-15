@@ -79,7 +79,7 @@ class UpdateGroupRequest extends FormRequest
             if ($this->group->image != null) {
                 \Storage::delete($this->group->image);
             }
-            $filename = $this->group->slug.'.'.$this->file('image')->getClientOriginalExtension();
+            $filename = $this->group->slug.'.'.$this->file('image')->guessExtension();
             $this->file('image')->storeAs('public'.DIRECTORY_SEPARATOR.'groups', $filename);
             $validated['image'] = 'groups/'.$filename;
         }

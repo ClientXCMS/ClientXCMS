@@ -59,7 +59,7 @@ class ThemeController extends \App\Http\Controllers\Controller
             if (\setting('theme_home_image') && \Storage::exists(\setting('theme_home_image'))) {
                 \Storage::delete(\setting('theme_home_image'));
             }
-            $file = 'home.'.$request->file('theme_home_image')->getClientOriginalExtension();
+            $file = 'home.'.$request->file('theme_home_image')->guessExtension();
             $file = $request->file('theme_home_image')->storeAs('public'.DIRECTORY_SEPARATOR.'uploads', $file);
             $data['theme_home_image'] = $file;
         }

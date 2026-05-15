@@ -142,7 +142,7 @@ class SettingsPersonalizationController extends Controller
             'seo_site_title' => 'required|string|max:1000',
             'seo_og_title' => 'nullable|string|max:200',
             'seo_og_description' => 'nullable|string|max:300',
-            'seo_og_image' => 'nullable|image|max:2048',
+            'seo_og_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'seo_twitter_handle' => 'nullable|string|max:50',
         ]);
         $data['seo_disablereferencement'] = $data['seo_disablereferencement'] ?? 'false';
@@ -151,7 +151,7 @@ class SettingsPersonalizationController extends Controller
             if (setting('seo_og_image') && \Storage::exists(setting('seo_og_image'))) {
                 \Storage::delete(setting('seo_og_image'));
             }
-            $file = 'og-image.'.$request->file('seo_og_image')->getClientOriginalExtension();
+            $file = 'og-image.'.$request->file('seo_og_image')->guessExtension();
             $data['seo_og_image'] = $request->file('seo_og_image')->storeAs('public'.DIRECTORY_SEPARATOR.'uploads', $file);
         } else {
             unset($data['seo_og_image']);
@@ -196,7 +196,7 @@ class SettingsPersonalizationController extends Controller
             if (\setting('theme_home_image') && \Storage::exists(\setting('theme_home_image'))) {
                 \Storage::delete(\setting('theme_home_image'));
             }
-            $file = 'home.'.$request->file('theme_home_image')->getClientOriginalExtension();
+            $file = 'home.'.$request->file('theme_home_image')->guessExtension();
             $file = $request->file('theme_home_image')->storeAs('public'.DIRECTORY_SEPARATOR.'uploads', $file);
             $data['theme_home_image'] = $file;
         }

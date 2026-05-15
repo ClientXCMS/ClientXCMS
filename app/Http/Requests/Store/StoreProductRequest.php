@@ -78,7 +78,7 @@ class StoreProductRequest extends FormRequest
         Pricing::createFromArray($this->only('pricing'), $product->id);
         PricingService::forgot();
         if ($this->file('image') != null) {
-            $filename = $product->id.'.'.$this->file('image')->getClientOriginalExtension();
+            $filename = $product->id.'.'.$this->file('image')->guessExtension();
             $this->file('image')->storeAs('public'.DIRECTORY_SEPARATOR.'products', $filename);
             $product->image = 'products/'.$filename;
             $product->save();
