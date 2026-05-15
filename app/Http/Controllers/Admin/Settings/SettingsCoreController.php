@@ -20,6 +20,7 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\Helpers\EnvEditor;
+use App\Http\Controllers\Concerns\ManagesSettingUploads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Settings\AppSettingsRequest;
 use App\Mail\MailTested;
@@ -31,6 +32,8 @@ use Illuminate\Http\Request;
 
 class SettingsCoreController extends Controller
 {
+    use ManagesSettingUploads;
+
     public function showEmailSettings()
     {
         return view('admin.settings.core.email');
@@ -139,21 +142,21 @@ class SettingsCoreController extends Controller
         foreach ($fileFields as $field => $path) {
             if ($request->hasFile($field)) {
                 $currentFile = \setting($field);
-                if ($currentFile && \Storage::disk('public')->exists(str_replace('/storage/', '', $currentFile))) {
-                    \Storage::disk('public')->delete(str_replace('/storage/', '', $currentFile));
-                }
                 $file = $request->file($field)->storeAs('public', basename($path));
                 $data[$field] = $file;
+                $this->deleteSettingUpload($currentFile);
             }
             if ($request->input("remove_{$field}") == 'true') {
                 $currentFile = \setting($field);
-                if ($currentFile && \Storage::exists($currentFile)) {
-                    \Storage::delete($currentFile);
-                }
+                $this->deleteSettingUpload($currentFile);
                 $data[$field] = null;
                 unset($data["remove_{$field}"]);
             }
         }
+        $this->cleanupUnusedUploads(array_keys($fileFields), collect(array_keys($fileFields))
+            ->map(fn ($field) => array_key_exists($field, $data) ? $data[$field] : \setting($field))
+            ->filter()
+            ->all());
         EnvEditor::updateEnv([
             'APP_NAME' => $data['app_name'],
             'APP_ENV' => $data['app_env'] == 'production' ? 'production' : 'local',

@@ -20,6 +20,7 @@
 namespace App\Http\Controllers\Admin\Personalization;
 
 use App\Exceptions\LicenseInvalidException;
+use App\Http\Controllers\Concerns\ManagesSettingUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Permission;
 use App\Models\Admin\Setting;
@@ -29,6 +30,8 @@ use Illuminate\Http\Request;
 
 class SettingsPersonalizationController extends Controller
 {
+    use ManagesSettingUploads;
+
     public function showFrontMenu()
     {
         $menus = MenuLink::where('type', 'front')
@@ -147,9 +150,8 @@ class SettingsPersonalizationController extends Controller
         $data['seo_disablereferencement'] = $data['seo_disablereferencement'] ?? 'false';
 
         if ($request->hasFile('seo_og_image')) {
-            if (setting('seo_og_image') && \Storage::exists(setting('seo_og_image'))) {
-                \Storage::delete(setting('seo_og_image'));
-            }
+            $currentFile = setting('seo_og_image');
+            $this->deleteSettingUpload($currentFile);
             $file = 'og-image.'.$request->file('seo_og_image')->getClientOriginalExtension();
             $data['seo_og_image'] = $request->file('seo_og_image')->storeAs('public'.DIRECTORY_SEPARATOR.'uploads', $file);
         } else {
@@ -157,11 +159,10 @@ class SettingsPersonalizationController extends Controller
         }
 
         if ($request->input('remove_seo_og_image') === 'true') {
-            if (setting('seo_og_image') && \Storage::exists(setting('seo_og_image'))) {
-                \Storage::delete(setting('seo_og_image'));
-            }
+            $this->deleteSettingUpload(setting('seo_og_image'));
             $data['seo_og_image'] = null;
         }
+        $this->cleanupUnusedUploads('og-image', array_key_exists('seo_og_image', $data) ? $data['seo_og_image'] : setting('seo_og_image'), 'public'.DIRECTORY_SEPARATOR.'uploads');
 
         Setting::updateSettings($data);
         \Cache::delete('seo_head');
@@ -192,21 +193,19 @@ class SettingsPersonalizationController extends Controller
             'theme_home_redirect_route' => 'nullable|string|max:255',
         ]);
         if ($request->hasFile('theme_home_image')) {
-            if (\setting('theme_home_image') && \Storage::exists(\setting('theme_home_image'))) {
-                \Storage::delete(\setting('theme_home_image'));
-            }
+            $currentFile = \setting('theme_home_image');
+            $this->deleteSettingUpload($currentFile);
             $file = 'home.'.$request->file('theme_home_image')->getClientOriginalExtension();
             $file = $request->file('theme_home_image')->storeAs('public'.DIRECTORY_SEPARATOR.'uploads', $file);
             $data['theme_home_image'] = $file;
         }
 
         if ($request->remove_theme_home_image == 'true') {
-            if (\setting('theme_home_image') && \Storage::exists(\setting('theme_home_image'))) {
-                \Storage::delete(\setting('theme_home_image'));
-            }
+            $this->deleteSettingUpload(\setting('theme_home_image'));
             $data['theme_home_image'] = null;
             unset($data['remove_theme_home_image']);
         }
+        $this->cleanupUnusedUploads('home', array_key_exists('theme_home_image', $data) ? $data['theme_home_image'] : \setting('theme_home_image'), 'public'.DIRECTORY_SEPARATOR.'uploads');
         $data['theme_home_enabled'] = $data['theme_home_enabled'] ?? 'false';
         Setting::updateSettings($data);
 
