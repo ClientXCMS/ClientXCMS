@@ -64,7 +64,7 @@ Route::get('/gdpr', [GDPRController::class, 'gdpr'])->name('gdpr');
 Route::get('/gateways/{invoice:uuid}/{gateway}/return', [PaymentGatewayController::class, 'return'])->middleware(['auth'])->name('gateways.return');
 Route::get('/gateways/{invoice:uuid}/{gateway}/cancel', [PaymentGatewayController::class, 'cancel'])->middleware(['auth'])->name('gateways.cancel');
 Route::get('/source/gateway/{gateway}/return', [PaymentGatewayController::class, 'sourceReturn'])->middleware(['auth'])->name('gateways.source.return');
-Route::any('/gateways/{gateway}/notification', [PaymentGatewayController::class, 'notification'])->withoutMiddleware('csrf')->name('gateways.notification');
+Route::post('/gateways/{gateway}/notification', [PaymentGatewayController::class, 'notification'])->withoutMiddleware('csrf')->name('gateways.notification');
 Route::get('/docs/api-docs.json', [\App\Http\Controllers\ApiController::class, 'apiDocs'])->name('l5-swagger.application.docs');
 Route::get('/docs/asset/{asset}', [\App\Http\Controllers\ApiController::class, 'apiAsset'])->name('l5-swagger.application.asset');
 require __DIR__.'/client/invoices.php';
