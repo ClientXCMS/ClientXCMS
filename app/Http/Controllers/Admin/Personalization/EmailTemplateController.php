@@ -136,6 +136,8 @@ class EmailTemplateController extends AbstractCrudController
 
     public function show(EmailTemplate $emailTemplate)
     {
+        $this->checkPermission('show');
+
         return $this->showView(['item' => $emailTemplate]);
     }
 

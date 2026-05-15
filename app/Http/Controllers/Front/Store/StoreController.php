@@ -33,7 +33,7 @@ class StoreController extends Controller
             if (! setting('store_enabled', 'true')) {
                 $url = setting('store_redirect_url');
 
-                return redirect($url ?? '/');
+                return secure_redirect($url ?? '/');
             }
 
             return $next($request);

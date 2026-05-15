@@ -23,7 +23,7 @@ use App\Http\Controllers\Admin\Store\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::resource('/groups', GroupController::class)->names('groups')->except('edit');
-Route::post('/groups/sort', [GroupController::class, 'sort'])->name('groups.sort')->withoutMiddleware('csrf');
+Route::post('/groups/sort', [GroupController::class, 'sort'])->name('groups.sort');
 Route::put('/groups/{group}/clone', [GroupController::class, 'clone'])->name('groups.clone');
 Route::resource('/products', ProductController::class)->names('products')->except('edit');
 Route::post('/products/{product}/config', [ProductController::class, 'config'])->name('products.config');

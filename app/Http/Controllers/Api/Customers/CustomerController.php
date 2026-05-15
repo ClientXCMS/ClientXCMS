@@ -260,7 +260,7 @@ class CustomerController extends AbstractApiController
      *     @OA\Response(response=200, description="Action performed")
      * )
      */
-    public function action(Customer $customer, string $action)
+    public function action(Request $request, Customer $customer, string $action)
     {
         switch ($action) {
             case 'suspend':

@@ -377,7 +377,7 @@
             @if ($invoice->paymethod == 'bank_transfert' && $invoice->status != 'paid')
                 <div class="footer-section">
                     <h3>{{ __('client.invoices.banktransfer.title') }}</h3>
-                    <span>{!! nl2br(setting('bank_transfert_details', 'You can change this details in Bank transfer configuration.')) !!}</span>
+                    <span>{!! nl2br(e(setting('bank_transfert_details', 'You can change this details in Bank transfer configuration.'))) !!}</span>
                 </div>
             @elseif ($invoice->status == 'paid')
                 <div class="footer-section">
@@ -399,7 +399,7 @@
             @if (!empty(setting('invoice_terms')))
                 <div class="footer-section">
                     <h3>{{ __('client.invoices.terms') }}</h3>
-                    <span>{!! nl2br(setting('invoice_terms', 'You can change this details in Invoice configuration.')) !!}</span>
+                    <span>{!! nl2br(e(setting('invoice_terms', 'You can change this details in Invoice configuration.'))) !!}</span>
                 </div>
             @endif
 

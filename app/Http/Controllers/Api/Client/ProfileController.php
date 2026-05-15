@@ -200,7 +200,11 @@ class ProfileController extends Controller
             'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
         ]);
 
+        $currentTokenId = $request->user()->currentAccessToken()?->id;
         $request->user()->update(['password' => Hash::make($request->password)]);
+        $request->user()->tokens()
+            ->when($currentTokenId, fn ($q) => $q->where('id', '!=', $currentTokenId))
+            ->delete();
 
         return response()->json([
             'message' => __('client.profile.changepassword'),

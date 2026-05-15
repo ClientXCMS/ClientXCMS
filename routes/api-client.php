@@ -37,7 +37,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public authentication routes (no auth required)
-Route::prefix('auth')->name('auth.')->group(function () {
+Route::prefix('auth')->name('auth.')->middleware('throttle:10,1')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register'])->name('register');
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('forgot-password');

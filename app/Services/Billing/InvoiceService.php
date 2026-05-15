@@ -54,6 +54,21 @@ class InvoiceService
 
     public static function createInvoiceFromBasket(Basket $basket, Gateway $gateway): Invoice
     {
+        // Re-validate the coupon at checkout time. The customer applied the
+        // coupon at basket-time (Coupon::isValid), but between that moment
+        // and the actual invoice creation the coupon may have expired,
+        // reached its global cap, lost its first-order eligibility, or had
+        // its product allowlist tightened. Without this guard the invoice
+        // is created with the discount even though the coupon is no longer
+        // valid; a customer who notices the latency window can pin a stale
+        // 'first month free' coupon long after the campaign ended.
+        if ($basket->coupon_id !== null) {
+            $coupon = \App\Models\Store\Coupon::find($basket->coupon_id);
+            if ($coupon === null || ! $coupon->isValid($basket, false)) {
+                $basket->coupon_id = null;
+                $basket->save();
+            }
+        }
         // On sauvegarde tout les champs de la table invoice sans les codes promotionnelle.
         $currency = $basket->items->first()->currency;
         // Si une facture est déjà liée au panier, on la met à jour

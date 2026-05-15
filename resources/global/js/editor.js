@@ -20,12 +20,16 @@ const toolbarOptions = [
 const editors = document.querySelectorAll("[id^='editor-']");
 
 editors.forEach(editor => {
+    const initialContent = editor.dataset.content || "";
     const quill = new Quill(editor, {
         modules: {
             toolbar: toolbarOptions,
         },
         theme: "snow",
     });
+    if (initialContent !== "") {
+        quill.clipboard.dangerouslyPasteHTML(0, initialContent);
+    }
     const name = editor.getAttribute("id").replace("editor-", "");
     quill.on("text-change", function(delta, oldDelta, source) {
         document.getElementById("editor_value-" + name).innerHTML = quill.root.innerHTML;

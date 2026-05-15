@@ -35,6 +35,14 @@ class StoreProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        // Web admin context: enforce capability so a low-priv staff cannot
+        // even reach validation. API context (Sanctum token) is gated by
+        // the route's ability:products:store middleware, so we let the
+        // request through here.
+        if (auth('admin')->check()) {
+            return staff_has_permission(\App\Models\Admin\Permission::MANAGE_PRODUCTS);
+        }
+
         return true;
     }
 
@@ -49,7 +57,7 @@ class StoreProductRequest extends FormRequest
 
         return array_merge([
             'name' => 'required|string|max:255',
-            'description' => 'string|required|max:65535',
+            'description' => ['string', 'required', 'max:65535', new \App\Rules\NoScriptOrPhpTags],
             'status' => 'required|string|in:active,hidden,unreferenced',
             'group_id' => 'required|integer|exists:groups,id',
             'stock' => 'required|integer',
@@ -78,7 +86,7 @@ class StoreProductRequest extends FormRequest
         Pricing::createFromArray($this->only('pricing'), $product->id);
         PricingService::forgot();
         if ($this->file('image') != null) {
-            $filename = $product->id.'.'.$this->file('image')->getClientOriginalExtension();
+            $filename = $product->id.'.'.$this->file('image')->guessExtension();
             $this->file('image')->storeAs('public'.DIRECTORY_SEPARATOR.'products', $filename);
             $product->image = 'products/'.$filename;
             $product->save();

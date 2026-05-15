@@ -20,6 +20,7 @@
 namespace App\Http\Controllers\Admin\Core;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Permission;
 use App\Services\Core\LocaleService;
 use Illuminate\Http\Request;
 
@@ -27,6 +28,7 @@ class TranslationController extends Controller
 {
     public function storeTranslations(Request $request)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $validated = $request->validate([
             'translations' => 'required|array',
             'model' => 'required|string',
@@ -39,6 +41,7 @@ class TranslationController extends Controller
 
     public function storeSettingsTranslations(Request $request)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $validated = $request->validate([
             'translations' => 'required|array',
         ]);

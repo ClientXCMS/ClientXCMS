@@ -57,7 +57,7 @@
                         <span class="mt-1 block text-gray-500">{{ $invoice->identifier() }}</span>
 
                         <address class="mt-4 not-italic text-gray-800 dark:text-gray-200">
-                            {!! nl2br(setting('app_address')) !!}
+                            {!! nl2br(e(setting('app_address'))) !!}
                         </address>
                     </div>
                 </div>
@@ -113,7 +113,7 @@
                                 <h5 class="sm:hidden text-xs font-medium text-gray-500 uppercase">{{ __('client.invoices.itemname') }}</h5>
                                 <p class="font-medium text-gray-800 dark:text-gray-200">{{ $item->name }}</p>
                                 @if ($item->canDisplayDescription())
-                                <p class="font-medium text-gray-400">{!! nl2br($item->description) !!}</p>
+                                <p class="font-medium text-gray-400">{!! nl2br(e($item->description)) !!}</p>
                                 @endif
                                 @if ($item->getDiscount(false) != null)
                                     <p class="font-medium text-gray-400 text-start">{{ $item->getDiscountLabel() }}</p>
@@ -326,11 +326,11 @@
 
                     @if (!empty(setting("invoice_terms")))
                         <h6 class="text-md font-semibold text-gray-800 dark:text-gray-200">{{ __('client.invoices.terms') }}</h6>
-                        <p class="text-gray-500 mb-3">{!! nl2br(setting("invoice_terms", "You can change this details in Invoice configuration.")) !!}</p>
+                        <p class="text-gray-500 mb-3">{!! nl2br(e(setting("invoice_terms", "You can change this details in Invoice configuration."))) !!}</p>
                     @endif
                     @if ($invoice->paymethod == 'bank_transfert' && $invoice->status != 'paid')
                         <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ __('client.invoices.banktransfer.title') }}</h4>
-                        <p class="text-gray-500">{!! nl2br(setting("bank_transfert_details", "You can change this details in Bank transfer configuration.")) !!}</p>
+                        <p class="text-gray-500">{!! nl2br(e(setting("bank_transfert_details", "You can change this details in Bank transfer configuration."))) !!}</p>
                         @elseif ($invoice->status == 'paid')
                     <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ __('client.invoices.thank') }}</h4>
                     <p class="text-gray-500">{{ __('client.invoices.thankmessage') }}</p>

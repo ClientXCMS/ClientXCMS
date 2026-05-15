@@ -38,7 +38,7 @@ class SettingsProvisioningController extends \App\Http\Controllers\Controller
         $data = $this->validate($request, [
             'days_before_creation_invoice_renewal' => 'required|integer|min:1',
             'days_before_expiration' => 'required|integer|min:1',
-            'webhook_renewal_url' => 'nullable|url',
+            'webhook_renewal_url' => ['nullable', 'url', new \App\Rules\PublicHttpUrl],
             'notifications_expiration_days' => 'nullable|string',
             'max_subscription_tries' => 'required|integer|min:0',
         ]);

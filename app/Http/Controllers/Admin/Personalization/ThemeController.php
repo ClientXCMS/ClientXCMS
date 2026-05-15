@@ -62,7 +62,7 @@ class ThemeController extends Controller
         if ($request->hasFile('theme_home_image')) {
             $currentFile = \setting('theme_home_image');
             $this->deleteSettingUpload($currentFile);
-            $file = 'home.'.$request->file('theme_home_image')->getClientOriginalExtension();
+            $file = 'home.'.$request->file('theme_home_image')->guessExtension();
             $file = $request->file('theme_home_image')->storeAs('public'.DIRECTORY_SEPARATOR.'uploads', $file);
             $data['theme_home_image'] = $file;
         }

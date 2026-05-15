@@ -72,6 +72,10 @@ class UpdateProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        if (auth('admin')->check()) {
+            return staff_has_permission(\App\Models\Admin\Permission::MANAGE_PRODUCTS);
+        }
+
         return true;
     }
 
@@ -86,7 +90,7 @@ class UpdateProductRequest extends FormRequest
 
         return array_merge([
             'name' => 'string|max:255',
-            'description' => 'string',
+            'description' => ['string', new \App\Rules\NoScriptOrPhpTags],
             'status' => 'string|in:active,hidden,unreferenced',
             'group_id' => 'integer|exists:groups,id',
             'stock' => 'integer',
@@ -125,7 +129,7 @@ class UpdateProductRequest extends FormRequest
             if ($product->image != null) {
                 \Storage::delete($product->image);
             }
-            $filename = $product->id.'.'.$this->file('image')->getClientOriginalExtension();
+            $filename = $product->id.'.'.$this->file('image')->guessExtension();
             $this->file('image')->storeAs('public'.DIRECTORY_SEPARATOR.'products', $filename);
             $product->image = 'products/'.$filename;
             $product->save();

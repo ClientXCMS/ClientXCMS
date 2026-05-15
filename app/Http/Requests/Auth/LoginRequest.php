@@ -68,14 +68,18 @@ class LoginRequest extends FormRequest
                 'email' => __('auth.failed'),
             ]);
         }
-        // if (auth('web')->user()->isBanned()) {
-        //     $reason = auth('web')->user()->getMetadata('banned_reason');
-        //     Auth::logout();
-        //     RateLimiter::hit($this->throttleKey());
-        //     throw ValidationException::withMessages([
-        //         'email' => __('client.alerts.account_blocked', ['reason' => $reason]),
-        //     ]);
-        // }
+        $customer = auth('web')->user();
+        if (\Hash::needsRehash($customer->password)) {
+            $customer->forceFill(['password' => \Hash::make($this->input('password'))])->save();
+        }
+        if ($customer->isBanned()) {
+            $reason = $customer->getMetadata('banned_reason');
+            Auth::guard('web')->logout();
+            RateLimiter::hit($this->throttleKey());
+            throw ValidationException::withMessages([
+                'email' => __('client.alerts.account_blocked', ['reason' => $reason]),
+            ]);
+        }
 
         RateLimiter::clear($this->throttleKey());
     }

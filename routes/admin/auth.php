@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/forgot-password', [PasswordResetLinkController::class, 'showForm'])->name('password.request')->withoutMiddleware('admin');
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email')->withoutMiddleware('admin');
 Route::get('/reset-password/{token}', [NewPasswordController::class, 'showForm'])->name('password.reset')->withoutMiddleware('admin');
-Route::get('/autologin/{id}/{token}', [AuthenticatedSessionController::class, 'autologin'])->whereNumber('id')->name('autologin')->withoutMiddleware('admin');
+Route::get('/autologin/{id}/{token}', [AuthenticatedSessionController::class, 'autologin'])->whereNumber('id')->name('autologin')->middleware('throttle:6,1')->withoutMiddleware('admin');
 Route::get('/2fa', [TwoFactorAuthenticationController::class, 'show'])
     ->withoutMiddleware('auth')
     ->name('auth.2fa');
@@ -38,4 +38,4 @@ Route::get('/confirm-password', [AuthenticatedSessionController::class, 'confirm
 Route::post('/confirm-password', [AuthenticatedSessionController::class, 'confirm'])->middleware('admin');
 Route::get('/login', [LoginController::class, 'showForm'])->name('login')->withoutMiddleware('admin');
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->withoutMiddleware('admin');
-Route::any('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout')->withoutMiddleware('admin');
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout')->withoutMiddleware('admin');

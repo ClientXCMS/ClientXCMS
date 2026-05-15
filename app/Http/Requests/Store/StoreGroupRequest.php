@@ -74,7 +74,7 @@ class StoreGroupRequest extends FormRequest
     {
         $validated = $this->validated();
         if ($this->file('image') != null) {
-            $filename = Str::slug($this->name).'.'.$this->file('image')->getClientOriginalExtension();
+            $filename = Str::slug($this->name).'.'.$this->file('image')->guessExtension();
             $this->file('image')->storeAs('public'.DIRECTORY_SEPARATOR.'groups', $filename);
             $validated['image'] = 'groups/'.$filename;
         }

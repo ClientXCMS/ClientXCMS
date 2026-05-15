@@ -33,7 +33,7 @@
     @endif</label>
 @endif
 <div class="mt-2{{ isset($translatable) && $translatable ? ' flex' : '' }}">
-    <textarea @if (isset($disabled)) disabled="" @endif @foreach($attributes ?? [] as $key => $value) {{ $key ."=". '"'. $value .'"' }} @endforeach @if (isset($rows)) rows="{{ $rows }}" @endif name="{{ $name }}" id="{{ $name }}{{ $rand }}" rows="{{ $rows ?? 3 }}" class="input-text @error($name) border-red-500 @enderror">@if (isset($Inverifiedvalue)) {!! $Inverifiedvalue !!}@else{{ $value ?? old($name) }}@endif</textarea>
+    <textarea @if (isset($disabled)) disabled="" @endif @foreach($attributes ?? [] as $key => $value) {{ $key ."=". '"'. $value .'"' }} @endforeach @if (isset($rows)) rows="{{ $rows }}" @endif name="{{ $name }}" id="{{ $name }}{{ $rand }}" rows="{{ $rows ?? 3 }}" class="input-text @error($name) border-red-500 @enderror">@if (isset($Inverifiedvalue)){{ $Inverifiedvalue }}@else{{ $value ?? old($name) }}@endif</textarea>
     @if (isset($translatable) && $translatable)
         <button type="button" class="w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-e-md border border-transparent bg-blue-600 text-white hover:bg-blue-700  dark:focus:ring-1 dark:focus:ring-gray-600" data-hs-overlay="#translations-overlay-{{ $name }}">
             <i class="bi bi-translate"></i>

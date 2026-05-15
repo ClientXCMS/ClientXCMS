@@ -318,6 +318,7 @@ class ServiceController extends AbstractCrudController
 
     public function tab(Service $service, string $tab)
     {
+        $this->checkPermission('show', $service);
         $panel = $service->productType()->panel();
         if ($panel == null) {
             return redirect()->route('admin.services.show', ['service' => $service]);

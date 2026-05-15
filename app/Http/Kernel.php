@@ -50,6 +50,7 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         InstallationMiddleware::class,
+        \App\Http\Middleware\SetSecurityHeaders::class,
     ];
 
     /**
@@ -79,9 +80,9 @@ class Kernel extends HttpKernel
             \Illuminate\Session\Middleware\StartSession::class,
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             ApiJsonMiddleware::class,
-            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
+            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            MaintenanceMiddleware::class . ':api',
+            MaintenanceMiddleware::class.':api',
             Validate2FAMiddleware::class,
         ],
         'admin' => [

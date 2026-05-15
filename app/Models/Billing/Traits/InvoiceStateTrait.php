@@ -54,13 +54,29 @@ trait InvoiceStateTrait
             return;
         }
 
+        // Atomic state transition: a single SQL UPDATE WHERE status != 'paid'
+        // is the only way to ensure that two parallel webhooks (or a webhook
+        // racing the customer's manual return) cannot both run the side
+        // effects (event(InvoiceCompleted), service activation, balance
+        // deduction). affected_rows > 0 -> we are the thread that flipped it,
+        // we own the side effects. affected_rows = 0 -> someone else did.
+        $paidAt = now();
+        $newInvoiceNumber = $this->invoice_number;
         if (InvoiceService::getBillingType() == InvoiceService::PRO_FORMA) {
             $date = $this->created_at->format('Y-m');
-            $this->invoice_number = Invoice::generateInvoiceNumber($date, false);
+            $newInvoiceNumber = Invoice::generateInvoiceNumber($date, false);
         }
-        $this->paid_at = now();
-        $this->status = self::STATUS_PAID;
-        $this->save();
+        $affected = static::where('id', $this->id)
+            ->where('status', '!=', self::STATUS_PAID)
+            ->update([
+                'status' => self::STATUS_PAID,
+                'paid_at' => $paidAt,
+                'invoice_number' => $newInvoiceNumber,
+            ]);
+        if ($affected === 0) {
+            return;
+        }
+        $this->refresh();
         $this->items->map(function (InvoiceItem $item) {
             $item->uncancel();
         });

@@ -252,7 +252,7 @@ class CustomerControllerTest extends TestCase
         ]);
         $id = $customer->id;
 
-        $response = $this->performAdminAction('get', self::API_URL.'/'.$id.'/confirm');
+        $response = $this->performAdminAction('post', self::API_URL.'/'.$id.'/confirm');
         $response->assertStatus(302);
         $response->assertSessionHas('success');
         $this->assertEquals(1, $customer->fresh()->is_confirmed);
@@ -275,7 +275,7 @@ class CustomerControllerTest extends TestCase
         $customer->markEmailAsVerified();
         $id = $customer->id;
 
-        $response = $this->performAdminAction('get', self::API_URL.'/'.$id.'/confirm');
+        $response = $this->performAdminAction('post', self::API_URL.'/'.$id.'/confirm');
         $response->assertStatus(302);
         $response->assertSessionHas('error');
     }
@@ -298,6 +298,7 @@ class CustomerControllerTest extends TestCase
         $id = $customer->id;
 
         $response = $this->performAdminAction('get', self::API_URL.'/'.$id.'/send_password');
+        // send_password kept GET intentionally; not part of CSRF migration batch.
         $response->assertStatus(302);
         $response->assertSessionHas('success');
         $this->assertDatabaseCount('email_messages', 1);
@@ -319,7 +320,7 @@ class CustomerControllerTest extends TestCase
             'password' => 'password',
         ]);
         $id = $customer->id;
-        $response = $this->performAdminAction('get', self::API_URL.'/'.$id.'/autologin');
+        $response = $this->performAdminAction('post', self::API_URL.'/'.$id.'/autologin');
         $response->assertSessionHas('autologin');
         $response->assertSessionHas('autologin_customer');
         $this->assertEquals($customer->id, session('autologin_customer'));

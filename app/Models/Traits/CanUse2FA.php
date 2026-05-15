@@ -41,7 +41,7 @@ trait CanUse2FA
     {
         Session::put('2fa_verified', true);
         $codes = $this->generateRecoveryCodes();
-        $this->attachMetadata('2fa_recovery_codes', implode(',', $codes));
+        $this->storeRecoveryCodes($codes);
         $this->attachMetadata('2fa_secret', $secret);
     }
 
@@ -49,16 +49,30 @@ trait CanUse2FA
     {
         if (! $this->hasMetadata('2fa_recovery_codes')) {
             $codes = $this->generateRecoveryCodes();
-            $this->attachMetadata('2fa_recovery_codes', implode(',', $codes));
+            $this->storeRecoveryCodes($codes);
+
+            return $codes;
+        }
+        $raw = $this->getMetadata('2fa_recovery_codes');
+        try {
+            $raw = \Crypt::decryptString($raw);
+        } catch (\Throwable $e) {
+            // Legacy plaintext metadata (pre-encryption fix). Use as-is;
+            // it gets re-encrypted on the next storeRecoveryCodes() call.
         }
 
-        return explode(',', $this->getMetadata('2fa_recovery_codes'));
+        return explode(',', $raw);
     }
 
     public function isValidRecoveryCode(string $code): bool
     {
-        return collect($this->twoFactorRecoveryCodes())
-            ->contains(fn ($recoveryCode) => $recoveryCode == $code);
+        foreach ($this->twoFactorRecoveryCodes() as $stored) {
+            if (is_string($stored) && hash_equals($stored, $code)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function generateRecoveryCodes(): array
@@ -68,14 +82,21 @@ trait CanUse2FA
 
     public function generateRecoveryCode(): string
     {
-        return bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(4));
+        return bin2hex(random_bytes(4)).'-'.bin2hex(random_bytes(4)).'-'.bin2hex(random_bytes(4));
     }
 
     public function useRecoveryCode(string $code): void
     {
-        $recoveryCodes = $this->twoFactorRecoveryCodes();
-        $recoveryCodes = collect($recoveryCodes)->filter(fn ($recoveryCode) => $recoveryCode != $code)->all();
-        $this->attachMetadata('2fa_recovery_codes', implode(',', $recoveryCodes));
+        $remaining = collect($this->twoFactorRecoveryCodes())
+            ->reject(fn ($stored) => is_string($stored) && hash_equals($stored, $code))
+            ->values()
+            ->all();
+        $this->storeRecoveryCodes($remaining);
+    }
+
+    private function storeRecoveryCodes(array $codes): void
+    {
+        $this->attachMetadata('2fa_recovery_codes', \Crypt::encryptString(implode(',', $codes)));
     }
 
     public function isValidate2FA(string $code): bool

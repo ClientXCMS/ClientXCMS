@@ -7,7 +7,7 @@
         <span class="mt-1 block text-gray-500">{{ $invoice->identifier() }}</span>
 
         <address class="mt-4 not-italic text-gray-800 dark:text-gray-200">
-            {!! nl2br(setting('app_address')) !!}
+            {!! nl2br(e(setting('app_address'))) !!}
         </address>
     </div>
 </div>
@@ -96,7 +96,7 @@
                 <div>
                     <p class="font-medium text-gray-800 dark:text-gray-200">{{ $item->name }}</p>
                     @if ($item->canDisplayDescription())
-                    <span class="font-medium text-gray-500 dark:text-gray-400">{!! nl2br($item->description) !!}</span>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">{!! nl2br(e($item->description)) !!}</span>
                     @endif
                     @if ($item->getDiscount(false) != null)
                     <span class="font-medium text-gray-400 text-start">{{ $item->getDiscountLabel() }}</span>

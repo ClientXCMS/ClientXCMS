@@ -87,7 +87,7 @@ class SettingsCoreController extends Controller
                 $data['mail_smtp_enable'] = false;
             }
             $data = $data + $this->validate($request, [
-                'mail_smtp_host' => 'required|string|max:1000',
+                'mail_smtp_host' => ['required', 'string', 'max:1000', new \App\Rules\PublicSmtpHost],
                 'mail_smtp_port' => 'required|integer|between:1,65535',
                 'mail_smtp_username' => 'string|nullable|max:1000',
                 'mail_smtp_password' => ['string', 'nullable', 'max:1000', new NotContainRule(['"'])],
