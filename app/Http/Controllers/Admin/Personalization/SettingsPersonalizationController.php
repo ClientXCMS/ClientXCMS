@@ -50,6 +50,7 @@ class SettingsPersonalizationController extends Controller
 
     public function showCustomMenu(string $type)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $menus = MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get();
 
         $card = app('settings')->getCards()->firstWhere('uuid', 'personalization');
