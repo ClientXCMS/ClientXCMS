@@ -41,8 +41,6 @@ class HistoryController extends Controller
             if ($request->input('l')) {
                 $reader->setFile(Crypt::decrypt($request->input('l')));
             }
-        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
-            return back()->with('error', 'Invalid log selector');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }

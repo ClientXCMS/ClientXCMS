@@ -35,7 +35,15 @@ class StoreProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return staff_has_permission(\App\Models\Admin\Permission::MANAGE_PRODUCTS);
+        // Web admin context: enforce capability so a low-priv staff cannot
+        // even reach validation. API context (Sanctum token) is gated by
+        // the route's ability:products:store middleware, so we let the
+        // request through here.
+        if (auth('admin')->check()) {
+            return staff_has_permission(\App\Models\Admin\Permission::MANAGE_PRODUCTS);
+        }
+
+        return true;
     }
 
     /**

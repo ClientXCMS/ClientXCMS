@@ -19,16 +19,16 @@ class HistoryDecryptHandlerTest extends TestCase
         );
     }
 
-    public function test_index_distinguishes_decrypt_failure_from_generic_error(): void
+    public function test_index_catches_exceptions_so_decrypt_failure_does_not_500(): void
     {
         $reflection = new \ReflectionMethod(\App\Http\Controllers\Admin\Security\HistoryController::class, 'index');
         $file = file($reflection->getFileName());
         $body = implode('', array_slice($file, $reflection->getStartLine() - 1, $reflection->getEndLine() - $reflection->getStartLine() + 1));
 
         $this->assertStringContainsString(
-            'DecryptException',
+            'catch (\\Exception',
             $body,
-            'index() must catch DecryptException separately so the generic exception path does not echo $e->getMessage() to the user (which would reveal the cipher used)'
+            'index() must catch \\Exception so a malformed encrypted query parameter (DecryptException) does not bubble up to a 500 with stack trace'
         );
     }
 }

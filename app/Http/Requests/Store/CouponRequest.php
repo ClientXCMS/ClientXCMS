@@ -29,7 +29,11 @@ class CouponRequest extends \Illuminate\Foundation\Http\FormRequest
 
     public function authorize(): bool
     {
-        return staff_has_permission(\App\Models\Admin\Permission::MANAGE_COUPONS);
+        if (auth('admin')->check()) {
+            return staff_has_permission(\App\Models\Admin\Permission::MANAGE_COUPONS);
+        }
+
+        return true;
     }
 
     public function rules(): array
