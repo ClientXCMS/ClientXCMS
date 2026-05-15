@@ -19,13 +19,17 @@
 
 namespace App\Http\Controllers\Admin\Personalization;
 
+use App\Http\Controllers\Concerns\ManagesSettingUploads;
+use App\Http\Controllers\Controller;
 use App\Models\Admin\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Validation\ValidationException;
 
-class ThemeController extends \App\Http\Controllers\Controller
+class ThemeController extends Controller
 {
+    use ManagesSettingUploads;
+
     public function showTheme()
     {
         staff_aborts_permission(\App\Models\Admin\Permission::MANAGE_PERSONALIZATION);
@@ -56,20 +60,18 @@ class ThemeController extends \App\Http\Controllers\Controller
             'theme_header_logo' => 'in:true,false',
         ]);
         if ($request->hasFile('theme_home_image')) {
-            if (\setting('theme_home_image') && \Storage::exists(\setting('theme_home_image'))) {
-                \Storage::delete(\setting('theme_home_image'));
-            }
+            $currentFile = \setting('theme_home_image');
+            $this->deleteSettingUpload($currentFile);
             $file = 'home.'.$request->file('theme_home_image')->guessExtension();
             $file = $request->file('theme_home_image')->storeAs('public'.DIRECTORY_SEPARATOR.'uploads', $file);
             $data['theme_home_image'] = $file;
         }
         if ($request->remove_theme_home_image == 'true') {
-            if (\setting('theme_home_image') && \Storage::exists(\setting('theme_home_image'))) {
-                \Storage::delete(\setting('theme_home_image'));
-            }
+            $this->deleteSettingUpload(\setting('theme_home_image'));
             $data['theme_home_image'] = null;
             unset($data['remove_theme_home_image']);
         }
+        $this->cleanupUnusedUploads('home', array_key_exists('theme_home_image', $data) ? $data['theme_home_image'] : \setting('theme_home_image'), 'public'.DIRECTORY_SEPARATOR.'uploads');
         Setting::updateSettings($data);
 
         try {
