@@ -99,11 +99,12 @@
                                         </a>
                                     @endif
                                     @if (staff_has_permission('admin.autologin_customer'))
-                                        <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700"
-                                            href="{{ route($routePath . '.autologin', ['customer' => $item]) }}">
-                                            <i
-                                                class="bi bi-person-circle"></i>{{ __($translatePrefix . '.autologin.btn') }}
-                                        </a>
+                                        <form method="POST" action="{{ route($routePath . '.autologin', ['customer' => $item]) }}" class="contents">
+                                            @csrf
+                                            <button type="submit" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 text-left">
+                                                <i class="bi bi-person-circle"></i>{{ __($translatePrefix . '.autologin.btn') }}
+                                            </button>
+                                        </form>
                                     @endif
                                     @if ($item->email_verified_at == null)
                                         <form method="POST" action="{{ route($routePath . '.resend_confirmation', ['customer' => $item]) }}" class="contents">
