@@ -113,7 +113,7 @@
                                 <h5 class="sm:hidden text-xs font-medium text-gray-500 uppercase">{{ __('client.invoices.itemname') }}</h5>
                                 <p class="font-medium text-gray-800 dark:text-gray-200">{{ $item->name }}</p>
                                 @if ($item->canDisplayDescription())
-                                <p class="font-medium text-gray-400">{!! nl2br($item->description) !!}</p>
+                                <p class="font-medium text-gray-400">{!! nl2br(e($item->description)) !!}</p>
                                 @endif
                                 @if ($item->getDiscount(false) != null)
                                     <p class="font-medium text-gray-400 text-start">{{ $item->getDiscountLabel() }}</p>

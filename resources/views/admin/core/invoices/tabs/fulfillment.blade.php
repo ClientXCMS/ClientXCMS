@@ -30,7 +30,7 @@
                 <td class="px-4 py-3">
                     <div class="font-medium text-gray-900 dark:text-gray-100">{{ $item->name }}</div>
                     @if ($item->canDisplayDescription())
-                    <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{!! nl2br($item->description) !!}</div>
+                    <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{!! nl2br(e($item->description)) !!}</div>
                     @endif
                     @if (!empty($item->data))
                     <details class="mt-2">
@@ -104,7 +104,7 @@
                 <div>
                     <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $item->name }}</div>
                     @if ($item->canDisplayDescription())
-                    <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{!! nl2br($item->description) !!}</div>
+                    <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{!! nl2br(e($item->description)) !!}</div>
                     @endif
                 </div>
                 <div>
