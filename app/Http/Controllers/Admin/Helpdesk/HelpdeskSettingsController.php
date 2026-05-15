@@ -39,7 +39,7 @@ class HelpdeskSettingsController extends \App\Http\Controllers\Controller
             'helpdesk_ticket_auto_close_days' => 'required|integer|min:0',
             'helpdesk_attachments_max_size' => 'required|integer|min:1',
             'helpdesk_attachments_allowed_types' => 'required|string',
-            'helpdesk_webhook_url' => 'nullable|url',
+            'helpdesk_webhook_url' => ['nullable', 'url', new \App\Rules\PublicHttpUrl],
             'helpdesk_reopen_days' => 'required|integer|min:-1',
         ]);
         $data['helpdesk_allow_attachments'] = $request->has('helpdesk_allow_attachments');

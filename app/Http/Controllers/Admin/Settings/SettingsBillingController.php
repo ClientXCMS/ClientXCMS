@@ -67,7 +67,7 @@ class SettingsBillingController extends Controller
             'store_mode_tax' => 'in:tax_included,tax_excluded',
             'checkout_customermustbeconfirmed' => 'in:true,false',
             'checkout_toslink' => 'nullable|string|url',
-            'store_checkout_webhook_url' => 'nullable|string|url',
+            'store_checkout_webhook_url' => ['nullable', 'string', 'url', new \App\Rules\PublicHttpUrl],
             'store_vat_enabled' => 'in:true,false',
             'store_currency' => ['required'],
             'invoice_terms' => 'string|max:1000',

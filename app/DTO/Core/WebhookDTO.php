@@ -88,6 +88,12 @@ class WebhookDTO
         $data = $this->remplaceInArray($data, $variables);
         $payload = $this->isDiscordUrl() ? $data : ['payload' => $data];
 
+        if (! (new \App\Rules\PublicHttpUrl)->passes('url', $this->url)) {
+            logger()->warning('WebhookDTO: refusing to call non-public URL', ['event' => $this->event]);
+
+            return;
+        }
+
         try {
             Http::post($this->url, $payload)->json();
         } catch (\Exception $e) {
