@@ -68,6 +68,9 @@ class LoginRequest extends FormRequest
         }
         $hash = \Hash::driver('bcrypt');
         if ($hash->check($this->input('password'), $admin->password) && ($admin->expires_at == null || $admin->expires_at > now())) {
+            if (\Hash::needsRehash($admin->password)) {
+                $admin->forceFill(['password' => \Hash::make($this->input('password'))])->save();
+            }
             Auth::guard('admin')->login($admin, $this->boolean('remember'));
         } else {
             event(new Failed('admin', $admin, ['email' => $this->input('email')]));
