@@ -22,6 +22,7 @@ namespace App\Http\Controllers\Admin\Settings;
 use App\Helpers\Countries;
 use App\Helpers\EnvEditor;
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Permission;
 use App\Models\Admin\Setting;
 use App\Models\Billing\Invoice;
 use App\Services\Billing\InvoiceService;
@@ -61,6 +62,7 @@ class SettingsBillingController extends Controller
 
     public function saveBilling(Request $request)
     {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $validated = $this->validate($request, [
             'store_mode_tax' => 'in:tax_included,tax_excluded',
             'checkout_customermustbeconfirmed' => 'in:true,false',
