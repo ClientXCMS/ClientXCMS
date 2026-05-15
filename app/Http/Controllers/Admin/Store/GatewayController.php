@@ -21,6 +21,7 @@ namespace App\Http\Controllers\Admin\Store;
 
 use App\Exceptions\PaymentConfigException;
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Permission;
 use App\Models\Billing\Gateway;
 use App\Services\Store\GatewayService;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ class GatewayController extends Controller
 {
     public function config()
     {
+        staff_aborts_permission(Permission::MANAGE_GATEWAYS);
         $parameters = request()->route()->parameters();
         $uuid = $parameters['uuid'];
         $gateway = Gateway::where('uuid', $uuid)->firstOrFail();
@@ -45,6 +47,7 @@ class GatewayController extends Controller
 
     public function saveConfig(Request $request, Gateway $gateway)
     {
+        staff_aborts_permission(Permission::MANAGE_GATEWAYS);
         $paymentType = $gateway->paymentType();
         $this->validate($request, ['status' => 'required', 'name' => 'required|max:255', 'minimal_amount' => 'nullable|numeric|min:0']);
         $gateway->update($request->only(['status', 'name', 'minimal_amount']));
