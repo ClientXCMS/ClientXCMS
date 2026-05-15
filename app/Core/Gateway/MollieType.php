@@ -184,8 +184,8 @@ class MollieType extends AbstractGatewayType
                 'customerId' => $mollieCustomerId,
                 'sequenceType' => 'first',
                 'description' => 'Setup payment method',
-                'redirectUrl' => 'https://a25ab4d977b1.ngrok-free.app'.route('gateways.source.return', ['gateway' => self::UUID], false),
-                'webhookUrl' => 'https://a25ab4d977b1.ngrok-free.app'.route('gateways.notification', ['gateway' => self::UUID], false),
+                'redirectUrl' => route('gateways.source.return', ['gateway' => self::UUID]),
+                'webhookUrl' => route('gateways.notification', ['gateway' => self::UUID]),
             ]);
 
             return redirect($payment->getCheckoutUrl(), 303);
@@ -280,7 +280,7 @@ class MollieType extends AbstractGatewayType
                 'sequenceType' => 'recurring',
                 'mandateId' => $sourceDTO->id,
                 'description' => __('global.invoice').' #'.$invoice->id,
-                'webhookUrl' => 'https://a25ab4d977b1.ngrok-free.app'.route('gateways.notification', ['gateway' => self::UUID]),
+                'webhookUrl' => route('gateways.notification', ['gateway' => self::UUID]),
                 'metadata' => [
                     'invoice_id' => $invoice->id,
                     'customer_id' => $invoice->customer->id,
