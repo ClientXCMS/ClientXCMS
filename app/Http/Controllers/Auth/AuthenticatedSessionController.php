@@ -47,7 +47,7 @@ class AuthenticatedSessionController extends Controller
         }
         $request->session()->regenerate();
         if ($request->has('redirect')) {
-            return redirect()->away($request->get('redirect'));
+            return secure_redirect($request->get('redirect'));
         }
 
         return redirect()->intended(route('front.client.index'));
