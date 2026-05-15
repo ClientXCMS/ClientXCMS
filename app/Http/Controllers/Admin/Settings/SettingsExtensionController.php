@@ -27,6 +27,7 @@ class SettingsExtensionController
 {
     public function showExtensions()
     {
+        staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
         $groups = app('extension')->getGroupsWithExtensions();
 
         $card = app('settings')->getCards()->firstWhere('uuid', 'extensions');
