@@ -110,11 +110,12 @@
                                             href="{{ route($routePath . '.resend_confirmation', ['customer' => $item]) }}">
                                             <i class="bi bi-send"></i>{{ __($translatePrefix . '.show.resend_confirm') }}
                                         </a>
-                                        <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700"
-                                            href="{{ route($routePath . '.confirm', ['customer' => $item]) }}">
-                                            <i
-                                                class="bi bi-person-check-fill"></i>{{ __($translatePrefix . '.show.confirm') }}
-                                        </a>
+                                        <form method="POST" action="{{ route($routePath . '.confirm', ['customer' => $item]) }}" class="contents">
+                                            @csrf
+                                            <button type="submit" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 text-left">
+                                                <i class="bi bi-person-check-fill"></i>{{ __($translatePrefix . '.show.confirm') }}
+                                            </button>
+                                        </form>
                                     @endif
                                     <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700"
                                         href="{{ route($routePath . '.send_password', ['customer' => $item]) }}">
