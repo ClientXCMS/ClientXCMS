@@ -246,6 +246,7 @@ class CustomerController extends AbstractCrudController
                 }
             }
             if ($request->get('field') == 'service_id') {
+                staff_aborts_permission(\App\Models\Admin\Permission::SHOW_SERVICES);
                 $service = \App\Models\Provisioning\Service::where('id', (int) $request->get('q'))->first();
                 if ($service) {
                     $this->routePath = 'admin.services';
@@ -254,6 +255,7 @@ class CustomerController extends AbstractCrudController
                 }
             }
             if ($request->get('field') == 'invoice_id') {
+                staff_aborts_permission(\App\Models\Admin\Permission::SHOW_INVOICES);
                 $invoice = \App\Models\Billing\Invoice::where('id', (int) $request->get('q'))->first();
                 if ($invoice) {
                     $this->routePath = 'admin.invoices';
