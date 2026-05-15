@@ -26,5 +26,5 @@ Route::resource('/customers', CustomerController::class)->names('customers')->ex
 Route::post('/customers/{customer}/autologin', [CustomerController::class, 'autologin'])->name('customers.autologin');
 Route::post('/customers/{customer}/action/{action}', [CustomerController::class, 'action'])->name('customers.action');
 Route::post('/customers/{customer}/notes', [CustomerController::class, 'addNote'])->name('customers.notes.store');
-Route::get('/auth/customers/logout', [CustomerController::class, 'logout'])->name('customers.logout');
+Route::post('/auth/customers/logout', [CustomerController::class, 'logout'])->name('customers.logout');
 Route::get('/search/customers', [CustomerController::class, 'customSearch'])->name('customers.search');
