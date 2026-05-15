@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin\Personalization;
 use App\Models\Admin\EmailTemplate;
 use Database\Seeders\EmailTemplateSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class EmailTemplateControllerTest extends TestCase
@@ -112,6 +113,53 @@ class EmailTemplateControllerTest extends TestCase
         $this->assertDatabaseMissing('email_templates', ['id' => $emailTemplate->id, 'content' => "{{ file_get_contents('.env') }}"]);
     }
 
+    public static function indirectInvocationPayloads(): array
+    {
+        return [
+            'call_user_func' => ["{{ call_user_func('system', 'id') }}"],
+            'array_map' => ["{{ array_map('system', ['id'])[0] }}"],
+            'string_concat' => ["{{ ('sys' . 'tem')('id') }}"],
+            'closure_callable' => ["{{ \\Closure::fromCallable('system')('id') }}"],
+            'reflection' => ["{{ (new ReflectionFunction('system'))->invoke('id') }}"],
+            'variable_function' => ["{{ (\$x = 'system')('id') }}"],
+        ];
+    }
+
+    #[DataProvider('indirectInvocationPayloads')]
+    public function test_email_template_store_rejects_indirect_function_calls(string $payload)
+    {
+        $data = [
+            'name' => 'Test Indirect '.uniqid(),
+            'subject' => 'Test Subject',
+            'content' => $payload,
+            'button_text' => 'Test Button',
+            'hidden' => false,
+            'locale' => 'fr_FR',
+        ];
+        $response = $this->performAdminAction('POST', route('admin.personalization.email_templates.store'), $data);
+        $response->assertStatus(302);
+        $response->assertSessionHas('error');
+        $this->assertDatabaseMissing('email_templates', ['content' => $payload]);
+    }
+
+    #[DataProvider('indirectInvocationPayloads')]
+    public function test_email_template_update_rejects_indirect_function_calls(string $payload)
+    {
+        $this->seed(EmailTemplateSeeder::class);
+        $emailTemplate = EmailTemplate::first();
+        $data = [
+            'name' => 'Updated Indirect',
+            'subject' => 'Updated Subject',
+            'content' => $payload,
+            'button_text' => 'Updated Button',
+            'hidden' => true,
+            'locale' => 'fr_FR',
+        ];
+        $response = $this->performAdminAction('PUT', route('admin.personalization.email_templates.update', $emailTemplate), $data);
+        $response->assertStatus(302);
+        $response->assertSessionHas('error');
+        $this->assertDatabaseMissing('email_templates', ['id' => $emailTemplate->id, 'content' => $payload]);
+    }
 
     public function test_email_template_delete()
     {
