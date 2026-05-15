@@ -203,6 +203,50 @@ class SupportControllerTest extends TestCase
         $this->actingAs($user)->get(route('front.support.download', [$ticket->id, $ticket->attachments()->first()->id]))->assertNotFound();
     }
 
+    public function test_client_support_destroy_message_own_ticket_works(): void
+    {
+        $user = $this->createCustomerModel();
+        $ticket = $this->createTicketModel($user->id);
+        $ticket->addMessage('Hello', $user->id);
+        $message = $ticket->messages()->latest()->first();
+
+        $this->actingAs($user)
+            ->delete(route('front.support.messages.destroy', [$ticket, $message]))
+            ->assertRedirect();
+
+        $this->assertSoftDeleted('support_messages', ['id' => $message->id]);
+    }
+
+    public function test_client_support_destroy_message_rejects_cross_ticket(): void
+    {
+        $user = $this->createCustomerModel();
+        $ticketA = $this->createTicketModel($user->id);
+        $ticketB = $this->createTicketModel($user->id);
+        $ticketB->addMessage('Hello B', $user->id);
+        $messageInB = $ticketB->messages()->latest()->first();
+
+        $this->actingAs($user)
+            ->delete(route('front.support.messages.destroy', [$ticketA, $messageInB]))
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('support_messages', ['id' => $messageInB->id, 'deleted_at' => null]);
+    }
+
+    public function test_client_support_update_message_rejects_cross_ticket(): void
+    {
+        $user = $this->createCustomerModel();
+        $ticketA = $this->createTicketModel($user->id);
+        $ticketB = $this->createTicketModel($user->id);
+        $ticketB->addMessage('Original B', $user->id);
+        $messageInB = $ticketB->messages()->latest()->first();
+
+        $this->actingAs($user)
+            ->post(route('front.support.messages.update', [$ticketA, $messageInB]), ['content' => 'tampered'])
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('support_messages', ['id' => $messageInB->id, 'message' => 'Original B']);
+    }
+
     private function createTicketModel(?int $customer = null)
     {
         $this->seed(SupportDepartmentSeeder::class);
