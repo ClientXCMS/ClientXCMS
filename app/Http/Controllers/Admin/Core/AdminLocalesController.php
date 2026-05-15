@@ -20,12 +20,14 @@
 namespace App\Http\Controllers\Admin\Core;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Permission;
 use App\Services\Core\LocaleService;
 
 class AdminLocalesController extends Controller
 {
     public function index()
     {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $locales = LocaleService::getLocales(false);
         $card = app('settings')->getCards()->firstWhere('uuid', 'core');
         if (! $card) {
@@ -40,6 +42,7 @@ class AdminLocalesController extends Controller
 
     public function download(string $locale)
     {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $existing = LocaleService::getLocales(false)[$locale] ?? null;
         if (! $existing) {
             abort(404);
@@ -55,6 +58,7 @@ class AdminLocalesController extends Controller
 
     public function toggle(string $locale)
     {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $existing = LocaleService::getLocales(false)[$locale] ?? null;
         if (! $existing) {
             abort(404);
