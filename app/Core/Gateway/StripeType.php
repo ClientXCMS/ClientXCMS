@@ -112,6 +112,13 @@ class StripeType extends AbstractGatewayType
                 if ($invoice == null) {
                     return response()->json(['error' => 'Invoice not found'], 400);
                 }
+                // Webhook idempotency: Stripe retries delivery on 5xx and on
+                // network drops. Combined with the atomic state transition in
+                // Invoice::complete(), an early return here also avoids the
+                // wasteful PaymentIntent API call on every replay.
+                if ($invoice->status === Invoice::STATUS_PAID) {
+                    return response()->json(['success' => 'Invoice already paid']);
+                }
                 $intent = \Stripe\PaymentIntent::retrieve($object->payment_intent);
 
                 $invoice->update(['external_id' => $intent->id, 'fees' => $intent->application_fee_amount / 100]);
