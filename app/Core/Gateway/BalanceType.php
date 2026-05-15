@@ -48,10 +48,15 @@ class BalanceType extends AbstractGatewayType
 
     public function processPayment(Invoice $invoice, Gateway $gateway, Request $request, GatewayUriDTO $dto)
     {
-        if ($invoice->total > $invoice->customer->balance) {
+        // Atomic balance debit: the UPDATE ... WHERE balance >= total runs as a
+        // single SQL statement, so two parallel invoice payments cannot both
+        // succeed with a stale balance read. If the debit fails (insufficient
+        // funds or another concurrent payment drained the customer), we fail
+        // the invoice instead of silently letting it slip into a paid state.
+        $debited = $invoice->customer->tryDeductBalance($invoice->total, 'Payment for invoice #'.$invoice->id);
+        if (! $debited) {
             $invoice->fail();
         } else {
-            $invoice->customer->addFund(-$invoice->total, 'Payment for invoice #'.$invoice->id);
             $invoice->complete();
         }
 

@@ -442,8 +442,14 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public function addFund(float $amount, ?string $reason = null)
     {
         $old = $this->balance;
-        $this->balance += $amount;
-        $this->save();
+        // Atomic balance update: a single SQL UPDATE prevents lost-update races
+        // where two parallel requests both read the same starting balance and
+        // overwrite each other. We still wrap in a transaction so the audit log
+        // is consistent with the actual write.
+        \DB::transaction(function () use ($amount) {
+            static::where('id', $this->id)->update(['balance' => \DB::raw('balance + '.(float) $amount)]);
+            $this->refresh();
+        });
         if ($reason !== null) {
             $reason = ' '.strtolower(__('global.for')).' '.$reason;
             if (auth('admin')->check()) {
@@ -453,6 +459,35 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
             }
             ActionLog::log(ActionLog::BALANCE_CHANGED, self::class, $this->id, $adminId, $this->id, ['old' => formatted_price($old), 'new' => formatted_price($this->balance), 'reason' => $reason], ['balance' => $old], ['balance' => $this->balance]);
         }
+    }
+
+    /**
+     * Atomically debit the customer's balance. Returns true if the debit
+     * succeeded, false if there are not enough funds (or another concurrent
+     * request drained the balance first). Used by the Balance gateway and
+     * the addBalance() flow to defeat lost-update races between two parallel
+     * invoice payments.
+     */
+    public function tryDeductBalance(float $amount, ?string $reason = null): bool
+    {
+        if ($amount <= 0) {
+            return false;
+        }
+        $affected = static::where('id', $this->id)
+            ->where('balance', '>=', $amount)
+            ->update(['balance' => \DB::raw('balance - '.(float) $amount)]);
+        if ($affected === 0) {
+            return false;
+        }
+        $old = $this->balance;
+        $this->refresh();
+        if ($reason !== null) {
+            $reason = ' '.strtolower(__('global.for')).' '.$reason;
+            $adminId = auth('admin')->check() ? auth('admin')->id() : null;
+            ActionLog::log(ActionLog::BALANCE_CHANGED, self::class, $this->id, $adminId, $this->id, ['old' => formatted_price($old), 'new' => formatted_price($this->balance), 'reason' => $reason], ['balance' => $old], ['balance' => $this->balance]);
+        }
+
+        return true;
     }
 
     public function getBadgeColor()
