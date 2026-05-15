@@ -102,7 +102,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('admin.login');
         }
         $admin = Admin::findOrFail($id);
-        if (! hash_equals($admin->getMetadata('autologin_key'), $token)) {
+        if (! hash_equals($admin->getMetadata('autologin_key'), hash('sha256', $token))) {
             return redirect()->route('admin.login');
         }
         if ($admin->getMetadata('autologin_expires_at') < now()) {
