@@ -72,7 +72,7 @@ class UpdateProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return staff_has_permission(\App\Models\Admin\Permission::MANAGE_PRODUCTS);
     }
 
     /**
