@@ -7,7 +7,7 @@
         <span class="mt-1 block text-gray-500">{{ $invoice->identifier() }}</span>
 
         <address class="mt-4 not-italic text-gray-800 dark:text-gray-200">
-            {!! nl2br(setting('app_address')) !!}
+            {!! nl2br(e(setting('app_address'))) !!}
         </address>
     </div>
 </div>
