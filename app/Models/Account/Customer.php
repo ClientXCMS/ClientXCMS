@@ -286,6 +286,13 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'security_answer',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $customer) {
+            $customer->tokens()->delete();
+        });
+    }
+
     protected $attributes = [
         'dark_mode' => false,
         'balance' => 0,
