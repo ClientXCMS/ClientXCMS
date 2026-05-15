@@ -218,7 +218,13 @@ class AdminController extends AbstractCrudController
 
         $admin->update([
             'password' => bcrypt($request->password),
+            'remember_token' => \Str::random(60),
         ]);
+        try {
+            \Auth::guard('admin')->logoutOtherDevices($request->password);
+        } catch (\Illuminate\Auth\AuthenticationException $e) {
+        }
+        $admin->tokens()->delete();
 
         return back()->with('success', __('client.profile.password_updated'));
     }
