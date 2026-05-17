@@ -33,17 +33,19 @@
         <div class="md:w-1/4">
             <div class="grid grid-col-1">
 
-                @if ($service->canRenew())
+                @if ($service->canRenew() && auth('web')->user()->hasServicePermission($service, 'service.renew'))
                     @if ($service->isFree())
                         <a class="btn-action-with-icon mb-2 p-3" href="{{ route('front.services.renew', ['service' => $service, 'gateway' => 'balance']) }}">
                             <i class="bi bi-credit-card-2-front-fill"></i>
                             {{ __('client.services.renewbtn') }}
                         </a>
                     @else
+                    @if (auth('web')->user()->hasServicePermission($service, 'service.billing') && $gateways->isNotEmpty())
                     <a class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3" href="{{ route('front.services.renewal', ['service' => $service]) }}">
                         <i class="bi bi-credit-card-2-front-fill"></i>
                         {{ __('client.services.managerenew') }}
                     </a>
+                    @endif
 
 
                         <div class="hs-dropdown">
@@ -65,17 +67,24 @@
                         @endif
                 @endif
 
-                    @if ($service->canUpgrade())
+                    @if ($service->canUpgrade() && auth('web')->user()->hasServicePermission($service, 'service.upgrade'))
                         <a href="{{ route('front.services.upgrade', ['service' => $service]) }}" class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3">
                             <i class="bi bi-arrows-angle-expand"></i>
                             {{ __('client.services.upgradeservice') }}
                         </a>
                     @endif
 
-                    @if ($service->configoptions->isNotEmpty())
+                    @if ($service->configoptions->isNotEmpty() && auth('web')->user()->hasServicePermission($service, 'service.options'))
                         <a class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3" href="{{ route('front.services.options', ['service' => $service]) }}">
                             <i class="bi bi-boxes"></i>
                             {{ __('client.services.manageoptions') }}
+                        </a>
+                    @endif
+
+                    @if ($service->customer_id === auth()->id())
+                        <a href="{{ route('front.services.subusers', ['service' => $service]) }}" class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3">
+                            <i class="bi bi-people"></i>
+                            {{ __('client.services.subusers.manage') }}
                         </a>
                     @endif
 
@@ -239,7 +248,7 @@
 
                                 <p class="text-xs uppercase tracking-wide text-gray-500">
                                     {{ $service->name }}
-
+@if (auth('web')->user()->hasServicePermission($service, 'service.name'))
                                 <div class="hs-tooltip inline-block">
                                     <a  data-hs-overlay="#changename-modal" href="#" class="hs-tooltip-toggle w-8 h-8 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
                                         <i class="bi bi-pen"></i>
@@ -248,6 +257,7 @@
           </span>
                                     </a>
                                 </div>
+                                @endif
                                 </p>
                                 <x-badge-state state="{{ $service->status }}" class="mt-1"></x-badge-state>
                             </div>
@@ -343,7 +353,7 @@
             </div>
         </div>
     </div>
-
+    @if (auth('web')->user()->hasServicePermission($service, 'service.name'))
         <div id="changename-modal" class="hs-overlay hs-overlay-open:translate-x-0 hidden translate-x-full fixed top-0 end-0 transition-all duration-300 transform h-full max-w-xs w-full z-[80] bg-white border-s dark:bg-neutral-800 dark:border-neutral-700" tabindex="-1">
             <div class="flex justify-between items-center py-3 px-4 border-b dark:border-neutral-700">
                 <h3 class="font-bold text-gray-800 dark:text-white">
@@ -365,4 +375,5 @@
                 </form>
             </div>
         </div>
+    @endif
 @endsection

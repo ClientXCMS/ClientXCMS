@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Http\Requests\Customer\StoreCustomerRequest;
 use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Models\Account\Customer;
+use App\Models\Account\CustomerAccountAccess;
 use App\Models\Billing\Invoice;
 use App\Models\Helpdesk\SupportTicket;
 use App\Models\Provisioning\Service;
@@ -116,6 +117,12 @@ class CustomerController extends AbstractCrudController
         $params['checkedFilters'] = $this->getCheckedFilters();
         $params['paymentmethods'] = new LengthAwarePaginator($customer->paymentMethods(), $customer->paymentMethods()->count(), 20, $currentPage, ['path' => '', 'pageName' => 'paymentmethods']);
         $params['customerNotes'] = $customer->customerNotes()->orderBy('created_at', 'desc')->get();
+        $params['accountAccesses'] = $customer->ownedAccountAccesses()->with(['subCustomer', 'services'])->orderBy('created_at', 'desc')->get();
+        $params['accountInvitations'] = $customer->pendingAccountInvitations()->with('services')->orderBy('created_at', 'desc')->get();
+        $params['accountAccessPermissions'] = [
+            'services' => CustomerAccountAccess::SERVICE_PERMISSIONS,
+            'invoices' => CustomerAccountAccess::INVOICE_PERMISSIONS,
+        ];
 
         return $this->showView($params);
     }

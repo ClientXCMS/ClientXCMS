@@ -20,10 +20,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 
 class LoginController extends Controller
 {
-    public function showForm()
+    public function showForm(Request $request)
     {
         if (app('extension')->extensionIsEnabled('socialauth')) {
             $providers = \App\Addons\SocialAuth\Models\ProviderEntity::where('enabled', true)->get();
@@ -31,6 +32,10 @@ class LoginController extends Controller
             $providers = collect([]);
         }
 
-        return view('front.auth.login', ['providers' => $providers]);
+        return view('front.auth.login', [
+            'providers' => $providers,
+            'redirect' => $request->query('redirect'),
+            'email' => $request->query('email'),
+        ]);
     }
 }

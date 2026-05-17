@@ -378,6 +378,26 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         return $this->hasMany(CustomerNote::class, 'customer_id');
     }
 
+    public function ownedAccountAccesses()
+    {
+        return $this->hasMany(CustomerAccountAccess::class, 'owner_customer_id');
+    }
+
+    public function receivedAccountAccesses()
+    {
+        return $this->hasMany(CustomerAccountAccess::class, 'sub_customer_id');
+    }
+
+    public function pendingAccountInvitations()
+    {
+        return $this->hasMany(CustomerAccountInvitation::class, 'owner_customer_id')
+            ->whereNull('accepted_at')
+            ->whereNull('revoked_at')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            });
+    }
+
     protected static function newFactory()
     {
         return \Database\Factories\Core\CustomerFactory::new();
@@ -395,7 +415,32 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
 
     public function hasServicePermission(Service $service, string $permission)
     {
-        return $service->customer_id == $this->id;
+        if ($service->customer_id == $this->id) {
+            return true;
+        }
+
+        return $this->receivedAccountAccesses()
+            ->where('owner_customer_id', $service->customer_id)
+            ->whereJsonContains('permissions', $permission)
+            ->where(function ($query) use ($service) {
+                $query->where('all_services', true)
+                    ->orWhereHas('services', function ($services) use ($service) {
+                        $services->whereKey($service->id);
+                    });
+            })
+            ->exists();
+    }
+
+    public function hasInvoicePermission(Invoice $invoice, string $permission)
+    {
+        if ($invoice->customer_id == $this->id) {
+            return true;
+        }
+
+        return $this->receivedAccountAccesses()
+            ->where('owner_customer_id', $invoice->customer_id)
+            ->whereJsonContains('permissions', $permission)
+            ->exists();
     }
 
     public function getConfirmationUrl()

@@ -450,6 +450,29 @@ class Service extends Model implements HasNotifiableVariablesInterface
             })->get();
     }
 
+    public function scopeAccessibleBy($query, Customer $customer, string $permission = 'service.show')
+    {
+        return $query->where(function ($query) use ($customer, $permission) {
+            $query->where('customer_id', $customer->id)
+                ->orWhereExists(function ($subQuery) use ($customer, $permission) {
+                    $subQuery->selectRaw('1')
+                        ->from('customer_account_accesses')
+                        ->whereColumn('customer_account_accesses.owner_customer_id', 'services.customer_id')
+                        ->where('customer_account_accesses.sub_customer_id', $customer->id)
+                        ->whereJsonContains('customer_account_accesses.permissions', $permission)
+                        ->where(function ($accessQuery) {
+                            $accessQuery->where('customer_account_accesses.all_services', true)
+                                ->orWhereExists(function ($serviceQuery) {
+                                    $serviceQuery->selectRaw('1')
+                                        ->from('customer_account_access_service')
+                                        ->whereColumn('customer_account_access_service.customer_account_access_id', 'customer_account_accesses.id')
+                                        ->whereColumn('customer_account_access_service.service_id', 'services.id');
+                                });
+                        });
+                });
+        });
+    }
+
     public function getBillingPrice(?string $billing = null): ProductPriceDTO
     {
         if ($billing == null) {

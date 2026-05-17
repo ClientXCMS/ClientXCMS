@@ -32,17 +32,28 @@
                     </div>
 
                     <div class="sm:col-span-3">
-                        @include("shared.input", ["name" => "email", "label" => __('global.email'), "type" => "email"])
+                        @include("shared.input", ["name" => "email", "label" => __('global.email'), "type" => "email", "value" => old('email', $email ?? null)])
                     </div>
-
                     <div class="sm:col-span-3">
-                        @include("shared.input", ["name" => "phone", "label" => __('global.phone'), "optional" => true])
-                    </div>
-
-                    <div class="sm:col-span-3">
-                        <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800">
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Indicatif / pays sélectionné</div>
-                            <div id="phone-country-meta" class="mt-1 text-sm font-medium text-gray-800 dark:text-gray-200">-</div>
+                        <div class="flex gap-3 items-end">
+                            <div class="w-52">
+                                <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 h-[58px]">
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ __('global.country') }}
+                                    </div>
+                                    <div id="phone-country-meta"
+                                        class="mt-1 text-sm font-medium text-gray-800 dark:text-gray-200">
+                                        -
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                @include("shared.input", [
+                                    "name" => "phone",
+                                    "label" => __('global.phone'),
+                                    "optional" => true
+                                ])
+                            </div>
                         </div>
                     </div>
 

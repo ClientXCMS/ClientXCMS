@@ -40,7 +40,7 @@ class ServiceController extends Controller
 
     public function index(Request $request)
     {
-        $userId = auth('web')->id();
+        $user = auth('web')->user();
         $filter = $request->get('filter');
 
         if ($filter) {
@@ -48,8 +48,10 @@ class ServiceController extends Controller
                 return redirect()->route('front.services.index');
             }
             if (in_array($filter, Service::FILTERS)) {
-                $services = Service::where('customer_id', $userId)
-                    ->where('status', $filter)
+                $services = Service::accessibleBy($user)
+                    ->when($filter !== 'all', function ($query) use ($filter) {
+                        $query->where('status', $filter);
+                    })
                     ->orderBy('created_at', 'desc')
                     ->paginate(10);
             } else {
@@ -63,7 +65,7 @@ class ServiceController extends Controller
                         $products = $products->merge($subgroup->products->pluck('id'));
                     }
                 }
-                $services = Service::where('customer_id', $userId)
+                $services = Service::accessibleBy($user)
                     ->whereIn('product_id', $products)
                     ->where('status', '!=', 'hidden')
                     ->orderBy('created_at', 'desc')
@@ -71,7 +73,7 @@ class ServiceController extends Controller
             }
         } else {
             $filter = null;
-            $services = Service::where('customer_id', $userId)
+            $services = Service::accessibleBy($user)
                 ->where('status', '!=', 'hidden')
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
@@ -156,8 +158,14 @@ class ServiceController extends Controller
         if ($service->trial_ends_at != null && $service->trial_ends_at->isFuture()) {
             \Session::flash('info', __('client.alerts.service_trial_ends_at', ['date' => $service->trial_ends_at->format('d/m')]));
         }
+        $subUserAccesses = collect();
+        $serviceSubUserPermissions = [];
+        if ($service->customer_id === auth('web')->id()) {
+            $subUserAccesses = auth('web')->user()->ownedAccountAccesses()->with(['subCustomer', 'services'])->orderBy('created_at', 'desc')->get();
+            $serviceSubUserPermissions = \App\Models\Account\CustomerAccountAccess::SERVICE_PERMISSIONS;
+        }
 
-        return view('front.provisioning.services.show', compact('service', 'customer', 'gateways', 'panel_html'));
+        return view('front.provisioning.services.show', compact('service', 'customer', 'gateways', 'panel_html', 'subUserAccesses', 'serviceSubUserPermissions'));
     }
 
     public function renew(Request $request, Service $service, string $gateway)

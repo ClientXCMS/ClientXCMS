@@ -267,6 +267,19 @@
                                     class="inline-flex items-center py-0.5 px-2 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">{{ $customerNotes->count() }}</span>
                             @endif
                         </button>
+                        <button type="button"
+                            class="hs-tab-active:bg-indigo-600/10 hs-tab-active:text-indigo-600 hs-tab-active:border-l-indigo-600 py-3 px-4 inline-flex items-center justify-between gap-x-3 border-l-2 border-transparent text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700/50 focus:outline-none rounded-r-lg"
+                            id="tabs-subusers-item" aria-selected="false" data-hs-tab="#tabs-subusers"
+                            aria-controls="tabs-subusers" role="tab">
+                            <span class="inline-flex items-center gap-x-3">
+                                <i class="bi bi-people text-lg"></i>
+                                {{ __('client.subusers.index') }}
+                            </span>
+                            @if ($accountAccesses->count() + $accountInvitations->count() > 0)
+                                <span
+                                    class="inline-flex items-center py-0.5 px-2 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">{{ $accountAccesses->count() + $accountInvitations->count() }}</span>
+                            @endif
+                        </button>
                         @if (staff_has_permission('admin.show_emails'))
                             <button type="button"
                                 class="hs-tab-active:bg-indigo-600/10 hs-tab-active:text-indigo-600 hs-tab-active:border-l-indigo-600 py-3 px-4 inline-flex items-center justify-between gap-x-3 border-l-2 border-transparent text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700/50 focus:outline-none rounded-r-lg"
@@ -565,6 +578,10 @@
                             @endforelse
                         </div>
                     </div>
+                </div>
+
+                <div id="tabs-subusers" class="hidden" role="tabpanel" aria-labelledby="tabs-subusers-item">
+                    @include('admin/core/customers/cards/subusers')
                 </div>
 
                 @if (staff_has_permission('admin.show_emails'))

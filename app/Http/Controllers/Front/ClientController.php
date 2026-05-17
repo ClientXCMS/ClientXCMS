@@ -29,13 +29,14 @@ class ClientController extends Controller
 {
     public function index()
     {
-        $servicesCount = auth()->user()->services()->count();
-        $invoicesCount = auth()->user()->invoices()->where('status', '!=', 'draft')->count();
-        $pending = auth()->user()->invoices()->where('status', Invoice::STATUS_PENDING)->count();
+        $user = auth()->user();
+        $servicesCount = Service::accessibleBy($user)->where('status', '!=', Service::STATUS_HIDDEN)->count();
+        $invoicesCount = Invoice::accessibleBy($user)->where('status', '!=', 'draft')->count();
+        $pending = Invoice::accessibleBy($user)->where('status', Invoice::STATUS_PENDING)->count();
         $ticketsCount = auth()->user()->tickets()->count();
-        $services = auth()->user()->services()->orderBy('created_at', 'desc')->whereNot('status', Service::STATUS_HIDDEN)->limit(5)->get();
+        $services = Service::accessibleBy($user)->orderBy('created_at', 'desc')->whereNot('status', Service::STATUS_HIDDEN)->limit(5)->get();
         $tickets = auth()->user()->tickets()->orderBy('created_at', 'desc')->limit(5)->get();
-        $invoices = auth()->user()->invoices()->where('status', '!=', Invoice::STATUS_DRAFT)->orderBy('created_at', 'desc')->limit(5)->paginate();
+        $invoices = Invoice::accessibleBy($user)->where('status', '!=', Invoice::STATUS_DRAFT)->orderBy('created_at', 'desc')->limit(5)->paginate();
         $serviceFilters = Service::FILTERS;
         $invoiceFilters = Invoice::FILTERS;
         $gateways = GatewayService::getAvailable();

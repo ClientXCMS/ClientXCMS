@@ -51,6 +51,40 @@
             "body": "Su cuenta ha sido reactivada. Puede iniciar sesión en su cuenta haciendo clic en el botón de abajo."
         }
     },
+    "customer_account_invitation": {
+        "fr_FR": {
+            "subject": "Invitation à accéder à un compte client",
+            "button": "Accepter l'invitation",
+            "body": "Vous avez été invité à accéder au compte de {{ $owner->fullName }}. Si vous avez déjà un compte, cliquez sur le bouton ci-dessous pour vous connecter et accepter l'invitation. Sinon, créez votre compte ici : {{ $register_url }}"
+        },
+        "en_GB": {
+            "subject": "Customer account access invitation",
+            "button": "Accept invitation",
+            "body": "You have been invited to access {{ $owner->fullName }}'s account. If you already have an account, click the button below to sign in and accept the invitation. Otherwise, create your account here: {{ $register_url }}"
+        },
+        "es_ES": {
+            "subject": "Invitación de acceso a una cuenta de cliente",
+            "button": "Aceptar invitación",
+            "body": "Ha sido invitado a acceder a la cuenta de {{ $owner->fullName }}. Si ya tiene una cuenta, haga clic en el botón de abajo para iniciar sesión y aceptar la invitación. Si no, cree su cuenta aquí: {{ $register_url }}"
+        }
+    },
+    "customer_account_access_granted": {
+        "fr_FR": {
+            "subject": "Accès à un compte client accordé",
+            "button": "Accéder à l'espace client",
+            "body": "Vous avez maintenant accès au compte de {{ $owner->fullName }}. Cliquez sur le bouton ci-dessous pour accéder à l'espace client."
+        },
+        "en_GB": {
+            "subject": "Customer account access granted",
+            "button": "Open client area",
+            "body": "You now have access to {{ $owner->fullName }}'s account. Click the button below to open the client area."
+        },
+        "es_ES": {
+            "subject": "Acceso a una cuenta de cliente concedido",
+            "button": "Abrir área de cliente",
+            "body": "Ahora tiene acceso a la cuenta de {{ $owner->fullName }}. Haga clic en el botón de abajo para abrir el área de cliente."
+        }
+    },
     "invoice_paid": {
         "fr_FR": {
             "subject": "Votre facture a été payée",

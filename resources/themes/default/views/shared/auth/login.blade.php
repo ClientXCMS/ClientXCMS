@@ -22,7 +22,7 @@
     <div class="grid gap-y-4">
         <div>
             <label for="email" class="block block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">{{ trans("global.email") }}</label>
-            @include("shared.input", ["name" => "email", "type" => "email"])
+            @include("shared.input", ["name" => "email", "type" => "email", "value" => old('email', $email ?? null)])
         </div>
         <div>
             <div class="flex justify-between items-center">

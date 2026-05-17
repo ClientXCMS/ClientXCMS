@@ -122,6 +122,9 @@ class RegisteredUserController extends Controller
         }
 
         Auth::login($user);
+        if ($request->has('redirect') && $request->get('redirect') != null) {
+            return secure_redirect($request->get('redirect'));
+        }
         if (setting('auto_confirm_registration', false) === true) {
             return redirect()->route('front.client.index')->with('success', __('auth.register.success'));
         } else {

@@ -17,6 +17,7 @@
  * Year: 2025
  */
 use App\Http\Controllers\Admin\Core\CustomerController;
+use App\Http\Controllers\Admin\Core\CustomerSubUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/customers/{customer}/send_password', [CustomerController::class, 'sendForgotPassword'])->name('customers.send_password');
@@ -26,5 +27,8 @@ Route::resource('/customers', CustomerController::class)->names('customers')->ex
 Route::get('/customers/{customer}/autologin', [CustomerController::class, 'autologin'])->name('customers.autologin');
 Route::post('/customers/{customer}/action/{action}', [CustomerController::class, 'action'])->name('customers.action');
 Route::post('/customers/{customer}/notes', [CustomerController::class, 'addNote'])->name('customers.notes.store');
+Route::put('/customers/{customer}/subusers/{access}', [CustomerSubUserController::class, 'update'])->name('customers.subusers.update');
+Route::delete('/customers/{customer}/subusers/{access}', [CustomerSubUserController::class, 'destroy'])->name('customers.subusers.destroy');
+Route::delete('/customers/{customer}/subusers/invitations/{invitation}', [CustomerSubUserController::class, 'revokeInvitation'])->name('customers.subusers.invitations.revoke');
 Route::get('/auth/customers/logout', [CustomerController::class, 'logout'])->name('customers.logout');
 Route::get('/search/customers', [CustomerController::class, 'customSearch'])->name('customers.search');

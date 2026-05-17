@@ -215,17 +215,23 @@
                     <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
                     {{ __('client.services.managebtn') }}
                 </a>
-                @if ($service->canUpgrade())
+                @if ($service->canUpgrade() && auth('web')->user()->hasServicePermission($service, 'service.upgrade'))
                 <a href="{{ route('front.services.upgrade', ['service' => $service]) }}" class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3">
                     <i class="bi bi-arrows-angle-expand"></i>
                     {{ __('client.services.upgradeservice') }}
                 </a>
                 @endif
-                @if ($service->configoptions->isNotEmpty())
+                @if ($service->configoptions->isNotEmpty() && auth('web')->user()->hasServicePermission($service, 'service.options'))
                 <a class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3" href="{{ route('front.services.options', ['service' => $service]) }}">
                     <i class="bi bi-boxes"></i>
                     {{ __('client.services.manageoptions') }}
                 </a>
+                @endif
+                @if ($service->customer_id === auth()->id())
+                    <a href="{{ route('front.services.subusers', ['service' => $service]) }}" class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3">
+                        <i class="bi bi-people"></i>
+                        {{ __('client.services.subusers.manage') }}
+                    </a>
                 @endif
                 @if (auth('admin')->check())
 

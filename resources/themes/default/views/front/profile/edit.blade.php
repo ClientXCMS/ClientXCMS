@@ -285,6 +285,80 @@
                 </div>
 
 
+                <div class="card mt-4">
+                    <div class="card-heading">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                                {{ __('client.subusers.account_access') }}
+                            </h2>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ __('client.subusers.account_access_description') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 space-y-3">
+                        <div class="flex items-center justify-between gap-3 rounded-lg border border-indigo-100 bg-indigo-50 p-3 dark:border-indigo-900/50 dark:bg-indigo-900/20">
+                            <div class="flex min-w-0 items-center gap-3">
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm dark:bg-gray-800 dark:text-indigo-300">
+                                    <i class="bi bi-person-check"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="truncate font-medium text-gray-900 dark:text-gray-100">{{ $user->fullName }}</p>
+                                    <p class="truncate text-sm text-gray-500">{{ $user->email }}</p>
+                                </div>
+                            </div>
+                            <span class="shrink-0 rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-200">
+                                {{ __('client.subusers.master_account_current') }}
+                            </span>
+                        </div>
+
+                        @foreach ($ownedAccountAccesses as $access)
+                            <div class="flex items-center justify-between gap-3 rounded-lg border p-3 dark:border-gray-700">
+                                <div class="min-w-0">
+                                    <p class="truncate font-medium text-gray-900 dark:text-gray-100">{{ $access->subCustomer->fullName }}</p>
+                                    <p class="truncate text-sm text-gray-500">{{ $access->subCustomer->email }}</p>
+                                </div>
+                                <span class="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                                    {{ $access->all_services ? __('client.subusers.all_services') : trans_choice('client.subusers.services_count', $access->services->count(), ['count' => $access->services->count()]) }}
+                                </span>
+                            </div>
+                        @endforeach
+
+                        @if ($ownedAccountAccesses->isEmpty())
+                            <div class="rounded-lg border border-dashed p-4 text-center dark:border-gray-700">
+                                <p class="text-sm text-gray-500">{{ __('client.subusers.no_active_accesses') }}</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    @if ($receivedAccountAccesses->isNotEmpty())
+                        <div class="mt-5 border-t pt-4 dark:border-gray-700">
+                            <p class="mb-3 text-sm font-semibold text-gray-800 dark:text-gray-200">{{ __('client.subusers.my_external_accesses') }}</p>
+                            <div class="space-y-3">
+                                @foreach ($receivedAccountAccesses as $access)
+                                    <div class="flex flex-col gap-3 rounded-lg border p-3 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
+                                        <div class="min-w-0">
+                                            <p class="truncate font-medium text-gray-900 dark:text-gray-100">{{ $access->owner->fullName }}</p>
+                                            <p class="truncate text-sm text-gray-500">{{ __('client.subusers.subuser_role') }}</p>
+                                        </div>
+                                        <form method="POST" action="{{ route('front.subusers.accesses.destroy', $access) }}" onsubmit="return confirm('{{ __('client.subusers.confirm_leave') }}')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-danger btn-sm">{{ __('client.subusers.leave_access') }}</button>
+                                        </form>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                        <a href="{{ route('front.subusers.index') }}" class="btn btn-primary btn-sm mt-2">
+                            <i class="bi bi-person-plus"></i>
+                            {{ __('client.subusers.manage') }}
+                        </a>
+                </div>
+
                 @foreach ($providers ?? [] as $provider)
                     @if ($provider->isSynced())
                         <a href="{{ route('socialauth.unlink', $provider->name) }}"

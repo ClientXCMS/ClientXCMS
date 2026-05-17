@@ -67,6 +67,8 @@ class ProfileController extends \App\Http\Controllers\Controller
             'providers' => $providers,
             'qrcode' => $qrcode,
             'code' => $request->session()->get('2fa_secret'),
+            'ownedAccountAccesses' => $request->user('web')->ownedAccountAccesses()->with(['subCustomer', 'services'])->orderBy('created_at', 'desc')->get(),
+            'receivedAccountAccesses' => $request->user('web')->receivedAccountAccesses()->with(['owner', 'services'])->orderBy('created_at', 'desc')->get(),
         ]);
     }
 
