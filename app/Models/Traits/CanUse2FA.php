@@ -19,12 +19,19 @@
 
 namespace App\Models\Traits;
 
+use App\Mail\Auth\TwoFactorCodeEmail;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use PragmaRX\Google2FAQRCode\Google2FA;
 
 trait CanUse2FA
 {
+    public function shouldForceTwoFactor(string $guard): bool
+    {
+        return in_array(setting($guard === 'admin' ? 'force_2fa_admin' : 'force_2fa_client', 'false'), ['true', true, 1, '1'], true);
+    }
+
     public function twoFactorEnabled(): bool
     {
         return $this->hasMetadata('2fa_secret');
@@ -43,6 +50,85 @@ trait CanUse2FA
         $codes = $this->generateRecoveryCodes();
         $this->attachMetadata('2fa_recovery_codes', implode(',', $codes));
         $this->attachMetadata('2fa_secret', $secret);
+    }
+
+    public function twoFactorEmailOnNewIpEnabled(): bool
+    {
+        return $this->getMetadata('2fa_email_new_ip') === 'true';
+    }
+
+    public function setTwoFactorEmailOnNewIp(bool $enabled): void
+    {
+        $this->attachMetadata('2fa_email_new_ip', $enabled ? 'true' : 'false');
+    }
+
+    public function shouldUseEmailTwoFactor(string $guard, ?string $ip = null): bool
+    {
+        return ($this->shouldForceTwoFactor($guard) && ! $this->twoFactorEnabled())
+            || $this->requiresEmailTwoFactorForIp($ip);
+    }
+
+    public function requiresEmailTwoFactorForIp(?string $ip): bool
+    {
+        if (! $this->twoFactorEmailOnNewIpEnabled() || $ip === null) {
+            return false;
+        }
+
+        return ! in_array($ip, $this->twoFactorTrustedIps(), true);
+    }
+
+    public function twoFactorTrustedIps(): array
+    {
+        $ips = json_decode($this->getMetadata('2fa_trusted_ips') ?: '[]', true);
+
+        return is_array($ips) ? $ips : [];
+    }
+
+    public function trustTwoFactorIp(?string $ip): void
+    {
+        if ($ip === null) {
+            return;
+        }
+        $ips = collect($this->twoFactorTrustedIps())
+            ->push($ip)
+            ->unique()
+            ->take(-20)
+            ->values()
+            ->all();
+        $this->attachMetadata('2fa_trusted_ips', json_encode($ips));
+    }
+
+    public function sendTwoFactorEmailCode(string $guard, ?string $ip = null): void
+    {
+        $expiresAt = now()->addMinutes(5);
+        $metadataKey = '2fa_email_code_expires_at';
+
+        if ($this->getMetadata($metadataKey) && now()->lt(\Carbon\Carbon::parse($this->getMetadata($metadataKey)))) {
+            return;
+        }
+
+        $code = (string) random_int(100000, 999999);
+        $this->attachMetadata('2fa_email_code', Hash::make($code));
+        $this->attachMetadata($metadataKey, $expiresAt->toDateTimeString());
+        $this->notify(new TwoFactorCodeEmail($code, $guard, $ip));
+    }
+
+    public function isValidEmailTwoFactorCode(string $code): bool
+    {
+        $hash = $this->getMetadata('2fa_email_code');
+        $expiresAt = $this->getMetadata('2fa_email_code_expires_at');
+        if (! $hash || ! $expiresAt || now()->gt(\Carbon\Carbon::parse($expiresAt))) {
+            return false;
+        }
+
+        if (! Hash::check($code, $hash)) {
+            return false;
+        }
+
+        $this->detachMetadata('2fa_email_code');
+        $this->detachMetadata('2fa_email_code_expires_at');
+
+        return true;
     }
 
     public function twoFactorRecoveryCodes(): array
@@ -81,6 +167,9 @@ trait CanUse2FA
     public function isValidate2FA(string $code): bool
     {
         $code = str_replace(' ', '', $code);
+        if ($this->isValidEmailTwoFactorCode($code)) {
+            return true;
+        }
         $secret = $this->getMetadata('2fa_secret');
         if (! $secret) {
             return false;

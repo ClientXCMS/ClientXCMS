@@ -166,8 +166,17 @@ class AdminController extends AbstractCrudController
             return back()->with('success', __('client.profile.2fa.disabled'));
         }
         $request->user('admin')->twoFactorEnable($request->session()->get('2fa_secret_admin'));
+        $request->user('admin')->trustTwoFactorIp($request->ip());
 
         return back()->with('success', __('client.profile.2fa.enabled'));
+    }
+
+    public function save2faOptions(Request $request)
+    {
+        $request->user('admin')->setTwoFactorEmailOnNewIp($request->has('2fa_email_new_ip'));
+        $request->user('admin')->trustTwoFactorIp($request->ip());
+
+        return back()->with('success', __('client.profile.2fa.options_saved'));
     }
 
     public function downloadCodes()

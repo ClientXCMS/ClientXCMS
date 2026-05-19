@@ -37,14 +37,16 @@ class Validate2FAMiddleware
             return $next($request);
         }
         if (auth('web')->user() && ! Session::has('autologin')) {
-            if (auth('web')->user()->twoFactorEnabled() && ! auth('web')->user()->twoFactorVerified() && ($request->is('client/*') || $request->is('client'))) {
+            $user = auth('web')->user();
+            if (($user->twoFactorEnabled() || $user->shouldForceTwoFactor('web') || $user->requiresEmailTwoFactorForIp($request->ip())) && ! $user->twoFactorVerified() && ($request->is('client/*') || $request->is('client'))) {
                 if ($request->route()->uri() !== '2fa') {
                     return redirect()->route('auth.2fa');
                 }
             }
         }
         if (auth('admin')->user() && ! Session::has('autologin')) {
-            if (auth('admin')->user()->twoFactorEnabled() && ! auth('admin')->user()->twoFactorVerified() && $request->is(admin_prefix('/*'))) {
+            $user = auth('admin')->user();
+            if (($user->twoFactorEnabled() || $user->shouldForceTwoFactor('admin') || $user->requiresEmailTwoFactorForIp($request->ip())) && ! $user->twoFactorVerified() && $request->is(admin_prefix('/*'))) {
                 if ($request->route()->uri() !== admin_prefix('2fa')) {
                     return redirect()->route('admin.auth.2fa');
                 }

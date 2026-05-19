@@ -282,6 +282,16 @@
                         <button
                             class="btn {{ auth('web')->user()->twoFactorEnabled() ? 'bg-red-600 text-white' : 'btn-primary' }} mt-4">{{ __(auth('web')->user()->twoFactorEnabled() ? 'global.delete' : 'global.save') }}</button>
                     </form>
+
+                    <form method="POST" action="{{ route('front.profile.2fa_options') }}" class="mt-4">
+                        @csrf
+                        @include('shared/checkbox', [
+                            'name' => '2fa_email_new_ip',
+                            'label' => __('client.profile.2fa.email_new_ip'),
+                            'checked' => auth('web')->user()->twoFactorEmailOnNewIpEnabled(),
+                        ])
+                        <button class="btn btn-secondary mt-3">{{ __('global.save') }}</button>
+                    </form>
                 </div>
 
 

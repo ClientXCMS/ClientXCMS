@@ -19,23 +19,47 @@
 
 namespace App\Http\Controllers\Admin\Auth;
 
-use App\Rules\Valid2FACodeRule;
 use Illuminate\Http\Request;
 
 class TwoFactorAuthenticationController
 {
-    public function show()
+    public function show(Request $request)
     {
+        $user = $request->user('admin');
+        if (! $user) {
+            return redirect()->route('admin.login');
+        }
+
         return view('admin.auth.2fa');
+    }
+
+    public function sendEmailCode(Request $request)
+    {
+        $user = $request->user('admin');
+        if (! $user) {
+            return redirect()->route('admin.login');
+        }
+        if (! $user->shouldUseEmailTwoFactor('admin', $request->ip())) {
+            return redirect()->route('admin.auth.2fa');
+        }
+
+        $user->sendTwoFactorEmailCode('admin', $request->ip());
+
+        return redirect()->route('admin.auth.2fa')->with('success', __('client.profile.2fa.email_sent'));
     }
 
     public function verify(Request $request)
     {
-        $data = $request->validate([
-            '2fa' => ['required', 'string', new Valid2FACodeRule],
+        $request->validate([
+            '2fa' => ['required', 'string'],
         ]);
-        if (auth('admin')->user()->isValidate2FA($request->input('2fa'))) {
+        $user = auth('admin')->user();
+        if (! $user) {
+            return redirect()->route('admin.login');
+        }
+        if ($user->isValidate2FA($request->input('2fa'))) {
             \Session::put('2fa_verified', true);
+            $user->trustTwoFactorIp($request->ip());
 
             return redirect()->intended(admin_prefix('dashboard'));
         }

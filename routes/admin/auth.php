@@ -30,6 +30,10 @@ Route::get('/autologin/{id}/{token}', [AuthenticatedSessionController::class, 'a
 Route::get('/2fa', [TwoFactorAuthenticationController::class, 'show'])
     ->withoutMiddleware('auth')
     ->name('auth.2fa');
+Route::post('/2fa/email', [TwoFactorAuthenticationController::class, 'sendEmailCode'])
+    ->middleware('throttle:3,1')
+    ->withoutMiddleware('auth')
+    ->name('auth.2fa.email');
 Route::post('/2fa', [TwoFactorAuthenticationController::class, 'verify'])
     ->middleware('throttle:6,1')
     ->withoutMiddleware('auth');

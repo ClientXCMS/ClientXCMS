@@ -43,6 +43,7 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::post('/password', [\App\Http\Controllers\Front\ProfileController::class, 'password'])->name('.password');
         Route::post('/export', [\App\Http\Controllers\Front\ProfileController::class, 'export'])->name('.export');
         Route::post('/2fa', [\App\Http\Controllers\Front\ProfileController::class, 'save2fa'])->name('.2fa');
+        Route::post('/2fa/options', [\App\Http\Controllers\Front\ProfileController::class, 'save2faOptions'])->name('.2fa_options');
         Route::get('/download_codes', [\App\Http\Controllers\Front\ProfileController::class, 'downloadCodes'])->name('.2fa_codes');
         Route::delete('/delete', [\App\Http\Controllers\Front\ProfileController::class, 'deleteAccount'])->name('.delete.confirm');
         Route::post('/security-question', [\App\Http\Controllers\Front\ProfileController::class, 'saveSecurityQuestion'])->name('.security_question');

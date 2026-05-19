@@ -30,6 +30,14 @@
         @include('shared.alerts')
 
         <div class="mt-5">
+            @if (auth('web')->user()?->shouldUseEmailTwoFactor('web', request()->ip()))
+                <form method="POST" action="{{ route('auth.2fa.email') }}" class="mb-4">
+                    @csrf
+                    <button type="submit" class="btn btn-secondary block w-full">
+                        {{ __('client.profile.2fa.send_email_code') }}
+                    </button>
+                </form>
+            @endif
 
             <form method="POST" action="{{ route('auth.2fa') }}" id="captcha-form">
 
