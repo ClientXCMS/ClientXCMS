@@ -19,20 +19,47 @@
 
 namespace App\Helpers;
 
+use Illuminate\Support\Facades\Storage;
+
 class Countries
 {
+    private const ENABLED_COUNTRIES_PATH = 'enabled_countries.json';
+
+    private const DEFAULT_ENABLED_COUNTRIES = [
+        'FR',
+        'BE',
+        'CH',
+        'LU',
+        'CA',
+        'US',
+        'GB',
+        'DE',
+        'ES',
+        'IT',
+        'PT',
+        'NL',
+        'IE',
+        'AT',
+        'MA',
+        'DZ',
+        'TN',
+        'SN',
+        'CI',
+        'CM',
+    ];
+
     public static array $countries = [];
 
     public static function all()
     {
         if (empty(self::$countries)) {
-            self::$countries = json_decode(file_get_contents(resource_path('countries.json'), true));
+            self::$countries = json_decode(file_get_contents(resource_path('countries.json')));
         }
 
         return self::$countries;
     }
 
-    public static function names(): array
+    public static function allNames(): array
     {
         $names = [];
         foreach (self::all() as $country) {
@@ -40,6 +67,37 @@ class Countries
         }
 
         return $names;
+    }
+
+    public static function names(): array
+    {
+        return array_intersect_key(self::allNames(), array_flip(self::enabledCodes()));
+    }
+
+    public static function enabledCodes(): array
+    {
+        if (! Storage::exists(self::ENABLED_COUNTRIES_PATH)) {
+            return self::defaultEnabledCodes();
+        }
+
+        $codes = json_decode(Storage::get(self::ENABLED_COUNTRIES_PATH), true);
+        if (! is_array($codes)) {
+            return self::defaultEnabledCodes();
+        }
+
+        return array_values(array_intersect($codes, array_keys(self::allNames())));
+    }
+
+    public static function setEnabledCodes(array $codes): void
+    {
+        $codes = array_values(array_intersect($codes, array_keys(self::allNames())));
+
+        Storage::put(self::ENABLED_COUNTRIES_PATH, json_encode($codes));
+    }
+
+    private static function defaultEnabledCodes(): array
+    {
+        return array_values(array_intersect(self::DEFAULT_ENABLED_COUNTRIES, array_keys(self::allNames())));
     }
 
     public static function rule()

@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Admin\Personalization;
 
+use App\Helpers\Countries;
 use App\Models\Admin\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class AdminLocaleControllerTest extends \Tests\TestCase
 {
@@ -56,6 +58,32 @@ class AdminLocaleControllerTest extends \Tests\TestCase
         $admin = \App\Models\Admin\Admin::first();
         $response = $this->actingAs($admin, 'admin')->post(route('admin.locales.toggle', ['locale' => 'en_GB']));
         $response->assertRedirect();
+    }
+
+    public function test_admin_can_update_enabled_countries(): void
+    {
+        Storage::fake('local');
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $admin = \App\Models\Admin\Admin::first();
+
+        $response = $this->actingAs($admin, 'admin')->post(route('admin.locales.countries'), [
+            'countries' => ['FR', 'BE'],
+        ]);
+
+        $response->assertRedirect();
+        Storage::assertExists('enabled_countries.json');
+        $this->assertSame(['FR', 'BE'], json_decode(Storage::get('enabled_countries.json'), true));
+        $this->assertSame(['BE' => 'Belgium', 'FR' => 'France'], Countries::names());
+    }
+
+    public function test_countries_use_limited_default_enabled_list(): void
+    {
+        Storage::fake('local');
+
+        $this->assertArrayHasKey('FR', Countries::names());
+        $this->assertArrayHasKey('BE', Countries::names());
+        $this->assertArrayNotHasKey('AF', Countries::names());
+        $this->assertCount(20, Countries::enabledCodes());
     }
 
     protected function setUp(): void

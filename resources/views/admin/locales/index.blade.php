@@ -129,4 +129,28 @@
             </div>
         </div>
     </div>
+    <div class="card mt-4">
+        <div class="flex justify-between">
+            <div>
+                <h4 class="font-semibold uppercase text-gray-600 dark:text-gray-400">
+                    {{ __('admin.locales.countries.title') }}
+                </h4>
+                <p class="mb-2 font-semibold text-gray-600 dark:text-gray-400">
+                    {{ __('admin.locales.countries.description') }}
+                </p>
+            </div>
+        </div>
+        <form method="POST" action="{{ route('admin.locales.countries') }}">
+            @csrf
+            @include('admin/shared/search-select-multiple', [
+                'name' => 'countries[]',
+                'label' => __('admin.locales.countries.field'),
+                'value' => old('countries', $enabledCountries),
+                'options' => $countries,
+            ])
+            <button class="mt-4 py-2 px-3 inline-flex justify-center items-center gap-2 rounded-lg border border-transparent font-semibold bg-indigo-500 text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all text-sm dark:focus:ring-offset-gray-800">
+                {{ __('global.save') }}
+            </button>
+        </form>
+    </div>
 @endsection
