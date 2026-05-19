@@ -87,6 +87,13 @@
                                         </div>
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-start">
+                                        <div class="flex items-center gap-x-2">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
+                      {{ __($translatePrefix . '.restrictions') }}
+                    </span>
+                                        </div>
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-start">
                                                             <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
 
                                         {{ __('global.actions') }}
@@ -98,7 +105,7 @@
                                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                 @if (count($items) == 0)
                                     <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
-                                        <td colspan="3" class="px-6 py-4 whitespace-nowrap text-center">
+                                        <td colspan="4" class="px-6 py-4 whitespace-nowrap text-center">
                                             <div class="flex flex-auto flex-col justify-center items-center p-2 md:p-3">
                                                 <p class="text-sm text-gray-800 dark:text-gray-400">
                                                     {{ __('global.no_results') }}
@@ -120,6 +127,19 @@
 
                     <span class="block px-6 py-2">
                       <span class="text-sm text-gray-600 dark:text-gray-400">{{ $item->domain }}</span>
+                    </span>
+                                        </td>
+                                        <td class="h-px w-px whitespace-nowrap">
+                    <span class="block px-6 py-2">
+                      <span class="text-sm text-gray-600 dark:text-gray-400">
+                        @if (empty($item->products) && empty($item->groups))
+                              {{ __($translatePrefix . '.all_products') }}
+                          @else
+                              {{ trans_choice($translatePrefix . '.products_count', count($item->products ?? []), ['count' => count($item->products ?? [])]) }}
+                              /
+                              {{ trans_choice($translatePrefix . '.groups_count', count($item->groups ?? []), ['count' => count($item->groups ?? [])]) }}
+                          @endif
+                      </span>
                     </span>
                                         </td>
                                         <td class="h-px w-px whitespace-nowrap">
