@@ -61,7 +61,7 @@
                                     </tr>
                                     @endif
                                 @foreach($basket->items()->get() as $row)
-                                    @php($pricing = $row->product->getPriceByCurrency($row->currency, $row->billing))
+                                    @php($pricing = $row->getUnitPrice())
                                     <tr class="dark:text-gray-500">
                                     <td class="py-4 ">
                                         <div class="flex items-center">
@@ -149,7 +149,7 @@
                                     </button>
                                 </div>
                                 @foreach($basket->items as $row)
-                                    @php($pricing = $row->product->getPriceByCurrency($row->currency, $row->billing))
+                                    @php($pricing = $row->getUnitPrice())
 
                                     <div class="flex justify-between mb-2">
                                         <span>{{ $row->product->trans('name') }}</span>

@@ -95,6 +95,13 @@
                 {{ __('provisioning.admin.settings.services.subscription') }}</h3>
             <div class="grid md:grid-cols-1 gap-4">
                 <div>
+                    @include('admin/shared/checkbox', [
+                        'label' => __('provisioning.admin.settings.services.fields.domain_search_enabled'),
+                        'name' => 'domain_search_enabled',
+                        'checked' => setting('domain_search_enabled', true),
+                    ])
+                </div>
+                <div>
                     @include('admin/shared/input', [
                         'label' => __('provisioning.admin.settings.services.fields.max_subscription_tries'),
                         'name' => 'max_subscription_tries',

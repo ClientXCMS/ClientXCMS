@@ -37,6 +37,7 @@ use App\Models\Provisioning\ServiceRenewals;
 use App\Models\Store\Basket\Basket;
 use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Product;
+use App\Contracts\Store\ProductTypeInterface;
 use App\Services\Store\PricingService;
 use App\Services\Store\RecurringService;
 use App\Services\Store\TaxesService;
@@ -102,7 +103,7 @@ class InvoiceService
 
     public static function createServicesFromInvoiceItem(Invoice $invoice, InvoiceItem $item): array
     {
-        if (! in_array($item->type, ['service', 'free_trial'])) {
+        if (! in_array($item->type, ['service', 'free_trial', ProductTypeInterface::DOMAIN])) {
             return [];
         }
         $product = $item->relatedType();
@@ -140,6 +141,12 @@ class InvoiceService
         }
         if ($product->productType()->server() != null) {
             $server = $product->productType()->server()->findServer($product);
+            if ($item->type === ProductTypeInterface::DOMAIN && ! empty($item->data['tld'])) {
+                $tldServer = \App\Models\Store\DomainTld::where('extension', $item->data['tld'])->first()?->server;
+                if ($tldServer !== null) {
+                    $server = $tldServer;
+                }
+            }
             if ($item->configoptions()->where('key', 'server_id')->first() != null) {
                 $server = Server::find($item->configoptions()->where('key', 'server_id')->first()->value);
             }
@@ -158,7 +165,7 @@ class InvoiceService
                 'customer_id' => $invoice->customer_id,
                 'type' => $product->productType()->uuid(),
                 'status' => 'pending',
-                'name' => $product->trans('name'),
+                'name' => $item->data['domain'] ?? $product->trans('name'),
                 'billing' => $item->billing(),
                 'product_id' => $product->id,
                 'server_id' => $server,

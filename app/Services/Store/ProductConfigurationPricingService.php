@@ -3,14 +3,20 @@
 namespace App\Services\Store;
 
 use App\DTO\Store\ConfigOptionDTO;
+use App\Contracts\Store\ProductTypeInterface;
 use App\Models\Billing\ConfigOption;
 use App\Models\Store\Product;
+use App\Services\Domain\DomainPricingService;
 
 class ProductConfigurationPricingService
 {
-    public function preview(Product $product, string $billing, string $currency, array $optionsInput = []): array
+    public function preview(Product $product, string $billing, string $currency, array $optionsInput = [], array $data = []): array
     {
-        $price = $product->getPriceByCurrency($currency, $billing);
+        if ($product->type === ProductTypeInterface::DOMAIN && ! empty($data['tld'])) {
+            $price = app(DomainPricingService::class)->priceFor($data['tld'], $currency, $billing) ?? $product->getPriceByCurrency($currency, $billing);
+        } else {
+            $price = $product->getPriceByCurrency($currency, $billing);
+        }
         $options = $this->mapOptions($product, $billing, $optionsInput);
 
         $optionTotals = $this->computeOptionTotals($options, $currency, $billing);

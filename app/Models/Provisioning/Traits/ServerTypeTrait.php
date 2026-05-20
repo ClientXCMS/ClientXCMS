@@ -55,7 +55,7 @@ trait ServerTypeTrait
                     $this->delivery_errors = null;
                     event(new ServiceDelivered($this, $result));
                     $success = true;
-                    $message = $message->message ?? 'Service delivered';
+                    $message = $result->message ?? 'Service delivered';
                     ActionLog::log(ActionLog::SERVICE_DELIVERED, get_class($this), $this->id, auth('admin')->id(), null, ['message' => $message]);
                     if ($this->product_id != null) {
                         Product::removeStock($this->product_id);

@@ -39,15 +39,15 @@ class Validate2FAMiddleware
         if (auth('web')->user() && ! Session::has('autologin')) {
             $user = auth('web')->user();
             if (($user->twoFactorEnabled() || $user->shouldForceTwoFactor('web') || $user->requiresEmailTwoFactorForIp($request->ip())) && ! $user->twoFactorVerified() && ($request->is('client/*') || $request->is('client'))) {
-                if ($request->route()->uri() !== '2fa') {
+                if ($request->route()->uri() !== '2fa' && $request->route()->uri() !== '2fa/verify' && $request->route()->uri() !== '2fa/email') {
                     return redirect()->route('auth.2fa');
                 }
             }
         }
         if (auth('admin')->user() && ! Session::has('autologin')) {
             $user = auth('admin')->user();
-            if (($user->twoFactorEnabled() || $user->shouldForceTwoFactor('admin') || $user->requiresEmailTwoFactorForIp($request->ip())) && ! $user->twoFactorVerified() && $request->is(admin_prefix('/*'))) {
-                if ($request->route()->uri() !== admin_prefix('2fa')) {
+            if (($user->twoFactorEnabled() || $user->shouldForceTwoFactor('admin') || $user->requiresEmailTwoFactorForIp($request->ip())) && ! $user->twoFactorVerified() && $request->is(admin_prefix('*'))) {
+                if ($request->route()->uri() !== admin_prefix('2fa') && $request->route()->uri() !== admin_prefix('2fa/verify') && $request->route()->uri() !== admin_prefix('2fa/email')) {
                     return redirect()->route('admin.auth.2fa');
                 }
             }

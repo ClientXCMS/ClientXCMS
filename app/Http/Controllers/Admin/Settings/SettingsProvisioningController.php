@@ -40,10 +40,12 @@ class SettingsProvisioningController extends \App\Http\Controllers\Controller
             'days_before_expiration' => 'required|integer|min:1',
             'services_suspend_after_unpaid_days' => 'required|integer|min:0|max:365',
             'services_renewal_grace_days' => 'required|integer|min:0|max:365',
+            'domain_search_enabled' => 'nullable',
             'webhook_renewal_url' => 'nullable|url',
             'notifications_expiration_days' => 'nullable|string',
             'max_subscription_tries' => 'required|integer|min:0',
         ]);
+        $data['domain_search_enabled'] = $request->boolean('domain_search_enabled');
         Setting::updateSettings($data);
 
         return redirect()->back()->with('success', __('provisioning.admin.settings.services.success'));

@@ -20,6 +20,7 @@
 namespace App\Http\Requests\Store\Basket;
 
 use App\Contracts\Store\ProductTypeInterface;
+use App\Services\Domain\DomainPricingService;
 use App\Services\Store\CurrencyService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
@@ -39,9 +40,13 @@ class BasketConfigRequest extends FormRequest
      */
     public function rules(): array
     {
-        $authorizedBilling = collect($this->product->pricingAvailable())->map(function ($price) {
+        if ($this->product->type === ProductTypeInterface::DOMAIN && $this->input('tld')) {
+            $authorizedBilling = app(DomainPricingService::class)->billingsFor($this->input('tld'))->toArray();
+        } else {
+            $authorizedBilling = collect($this->product->pricingAvailable())->map(function ($price) {
             return $price->recurring;
-        })->unique()->toArray();
+            })->unique()->toArray();
+        }
         /** @var ProductTypeInterface $productType */
         $productType = $this->product->productType();
         $rules = [

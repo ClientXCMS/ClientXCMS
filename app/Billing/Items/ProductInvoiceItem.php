@@ -29,7 +29,7 @@ class ProductInvoiceItem implements InvoiceItemInterface
     public function tryDeliver(InvoiceItem $item): bool
     {
         // free_trial and service are handled similarly for delivery
-        if ($item->type == 'service' || $item->type == 'free_trial') {
+        if ($item->type == 'service' || $item->type == 'free_trial' || $item->type == ProductTypeInterface::DOMAIN) {
             $services = $item->getMetadata('services');
             if ($services == null) {
                 try {
