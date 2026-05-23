@@ -18,7 +18,12 @@
  * exposes this contract.
  */
 
-import intlTelInput from 'intl-tel-input';
+// v2.16 — switched to the "with utils" entry which inlines utils.js
+// at build time. Eliminates the dynamic import + loadUtils config that
+// was incompatible with intl-tel-input v25 and triggered the
+// "Cannot read properties of undefined (reading 'length')" runtime
+// error on the live registration form.
+import intlTelInput from 'intl-tel-input/intlTelInputWithUtils';
 import 'intl-tel-input/build/css/intlTelInput.css';
 
 const SELECTOR = 'input[data-phone-intl]:not([data-phone-intl-attached])';
@@ -29,20 +34,32 @@ function attach(input) {
         ? input.dataset.onlyCountries.split(',').map((c) => c.trim().toLowerCase())
         : undefined;
 
-    const iti = intlTelInput(input, {
+    // v2.16 — minimal viable init for intl-tel-input v25. Several
+    // options used in our v23 prototype were silently dropped or
+    // renamed in v25 and caused `TypeError: Cannot read properties
+    // of undefined (reading 'length')` during construction:
+    //   - `nationalMode`     → removed
+    //   - `formatAsYouType`  → renamed `formatOnDisplay`
+    //   - `loadUtils`        → renamed `loadUtilsOnInit`, different shape
+    //
+    // We sidestep all of this by relying on the "intlTelInputWithUtils"
+    // import above (utils bundled at build time) and only passing the
+    // options that survived intact.
+    const options = {
         initialCountry,
         separateDialCode: true,
-        nationalMode: false,
-        formatAsYouType: true,
         autoPlaceholder: 'polite',
-        onlyCountries: allowedCountries,
-        // Lazy-load the country data Web Service from a CDN only when the
-        // user changes country. Avoids bloating the initial bundle.
-        loadUtils: () => import('intl-tel-input/build/js/utils.js?url').then(
-            (mod) => mod.default
-        ),
-    });
+        formatOnDisplay: true,
+    };
+    if (Array.isArray(allowedCountries) && allowedCountries.length > 0) {
+        options.onlyCountries = allowedCountries;
+    }
+    const iti = intlTelInput(input, options);
 
+    // v2.16 — keep a reference on the DOM node so the form-submit
+    // serializer can grab it without depending on the v23
+    // `intlTelInputGlobals` API that v25 removed.
+    input.__itiInstance = iti;
     input.dataset.phoneIntlAttached = '1';
 
     // Pair the input with the existing country <select name="country"> on the
@@ -77,11 +94,11 @@ function attach(input) {
     if (form && !form.dataset.phoneIntlHooked) {
         form.dataset.phoneIntlHooked = '1';
         form.addEventListener('submit', () => {
-            form.querySelectorAll(SELECTOR.replace(':not([data-phone-intl-attached])', '')).forEach((el) => {
-                // .replaceWith would lose the listener; mutate value in place.
+            form.querySelectorAll('input[data-phone-intl]').forEach((el) => {
                 try {
-                    const itiInstance = window.intlTelInputGlobals?.getInstance?.(el);
-                    if (itiInstance) {
+                    // v2.16 — instance is stashed on the input itself by attach().
+                    const itiInstance = el.__itiInstance;
+                    if (itiInstance && typeof itiInstance.getNumber === 'function') {
                         const e164 = itiInstance.getNumber();
                         if (e164) {
                             el.value = e164;
