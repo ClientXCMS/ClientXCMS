@@ -35,6 +35,11 @@ Route::post('/profile/2fa/options', [AdminController::class, 'save2faOptions'])-
 Route::get('/profile/download_codes', [AdminController::class, 'downloadCodes'])->name('profile.2fa_codes');
 Route::put('/profile/password', [AdminController::class, 'updatePassword'])->name('profile.password');
 Route::post('/profile/security_question', [AdminController::class, 'saveSecurityQuestion'])->name('profile.security_question');
+// v2.16 — avatar lifecycle for the current admin's own profile + for any staff entity
+Route::post('/profile/avatar', [AdminController::class, 'uploadOwnAvatar'])->name('profile.avatar.upload');
+Route::delete('/profile/avatar', [AdminController::class, 'deleteOwnAvatar'])->name('profile.avatar.delete');
+Route::post('/staffs/{staff}/avatar', [AdminController::class, 'uploadStaffAvatar'])->name('staffs.avatar.upload');
+Route::delete('/staffs/{staff}/avatar', [AdminController::class, 'deleteStaffAvatar'])->name('staffs.avatar.delete');
 Route::resource('/roles', RoleController::class)->names('roles')->except('edit');
 
 Route::resource('/emails', EmailController::class)->names('emails')->except('edit');

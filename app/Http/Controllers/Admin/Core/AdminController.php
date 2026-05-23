@@ -27,6 +27,8 @@ use App\Models\ActionLog;
 use App\Models\Admin\Admin;
 use App\Models\Admin\Role;
 use App\Models\Admin\SecurityQuestion;
+use App\Services\Account\AvatarService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
@@ -261,5 +263,81 @@ class AdminController extends AbstractCrudController
         );
 
         return back()->with('success', __('client.profile.security_question_saved'));
+    }
+
+    /**
+     * v2.16 — Upload or replace the *current admin's* own avatar.
+     * Mirrors Front\ProfileController::uploadAvatar for parity between
+     * staff and customer experiences.
+     */
+    public function uploadOwnAvatar(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'avatar' => [
+                'required',
+                'file',
+                'image',
+                'mimes:jpg,jpeg,png,webp,gif',
+                'max:'.(int) (AvatarService::MAX_BYTES / 1024),
+            ],
+        ]);
+
+        try {
+            AvatarService::upload($request->user('admin'), $request->file('avatar'));
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('admin.staffs.profile')
+            ->with('success', __('v216::profile.avatar.updated'));
+    }
+
+    /**
+     * v2.16 — Remove the current admin's avatar (falls back to initials).
+     */
+    public function deleteOwnAvatar(Request $request): RedirectResponse
+    {
+        AvatarService::delete($request->user('admin'));
+
+        return redirect()->route('admin.staffs.profile')
+            ->with('success', __('v216::profile.avatar.removed'));
+    }
+
+    /**
+     * v2.16 — Upload an avatar for an arbitrary staff member. Used from
+     * the staff edit page, gated by the same `admin.manage_staff`
+     * permission as the rest of this controller.
+     */
+    public function uploadStaffAvatar(Request $request, Admin $staff): RedirectResponse
+    {
+        $this->checkPermission('update', $staff);
+
+        $request->validate([
+            'avatar' => [
+                'required',
+                'file',
+                'image',
+                'mimes:jpg,jpeg,png,webp,gif',
+                'max:'.(int) (AvatarService::MAX_BYTES / 1024),
+            ],
+        ]);
+
+        try {
+            AvatarService::upload($staff, $request->file('avatar'));
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('admin.staffs.show', $staff)
+            ->with('success', __('v216::profile.avatar.updated'));
+    }
+
+    public function deleteStaffAvatar(Request $request, Admin $staff): RedirectResponse
+    {
+        $this->checkPermission('update', $staff);
+        AvatarService::delete($staff);
+
+        return redirect()->route('admin.staffs.show', $staff)
+            ->with('success', __('v216::profile.avatar.removed'));
     }
 }

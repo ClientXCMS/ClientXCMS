@@ -25,6 +25,41 @@
 @endsection
 @section('content')
     @include('admin/shared/alerts')
+    {{-- v2.16 — admin avatar card. Sits on top of the textual profile form
+         so the staff member can see the photo that customers / other staff
+         see in headers and ticket threads. --}}
+    <div class="card mb-3 flex flex-col md:flex-row items-center gap-4 p-4">
+        <x-avatar :user="$item" size="xl" />
+        <div class="flex-1 text-center md:text-left">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                {{ __('v216::profile.avatar.title') }}
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                {{ __('v216::profile.avatar.description') }}
+            </p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+            <form method="POST" action="{{ route('admin.profile.avatar.upload') }}" enctype="multipart/form-data" class="contents">
+                @csrf
+                <label for="admin-avatar" class="btn btn-primary cursor-pointer">
+                    {{ $item->avatar_path ? __('v216::profile.avatar.replace') : __('v216::profile.avatar.upload') }}
+                    <input type="file" id="admin-avatar" name="avatar"
+                           accept="image/jpeg,image/png,image/webp,image/gif"
+                           class="hidden" onchange="this.form.submit()">
+                </label>
+            </form>
+            @if($item->avatar_path)
+                <form method="POST" action="{{ route('admin.profile.avatar.delete') }}" class="contents"
+                      onsubmit="return confirm('{{ __('v216::profile.avatar.remove') }}?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-secondary">
+                        {{ __('v216::profile.avatar.remove') }}
+                    </button>
+                </form>
+            @endif
+        </div>
+    </div>
     <div class="flex flex-col md:flex-row gap-4">
         <div class="md:w-2/3">
             <div class="flex flex-col">
