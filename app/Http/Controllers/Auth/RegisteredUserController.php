@@ -122,8 +122,17 @@ class RegisteredUserController extends Controller
         }
 
         Auth::login($user);
-        if ($request->has('redirect') && $request->get('redirect') != null) {
-            return secure_redirect($request->get('redirect'));
+        // v2.16 — only follow the ?redirect= param when it points back to the
+        // same domain. External or absent redirects fall through to the
+        // onboarding flow (the origin_url is still saved as metadata above
+        // for downstream use). Matches the
+        // RegistrationTest::test_register_save_origin_url_metadata expectation.
+        if ($request->filled('redirect')) {
+            $target = (string) $request->get('redirect');
+            $sameDomain = parse_url($target, PHP_URL_HOST) === parse_url(url('/'), PHP_URL_HOST);
+            if ($sameDomain) {
+                return redirect($target);
+            }
         }
         if (setting('auto_confirm_registration', false) === true) {
             return redirect()->route('front.client.index')->with('success', __('auth.register.success'));
