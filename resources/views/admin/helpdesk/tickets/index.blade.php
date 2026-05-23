@@ -175,9 +175,11 @@
                                                 <span class="block px-6 py-2">
                                                     <span class="text-sm text-gray-600 dark:text-gray-400">
                                                         @if ($item->customer)
-                                                            <a
+                                                            {{-- v2.16 — avatar inline next to ticket opener name --}}
+                                                            <a class="inline-flex items-center gap-2"
                                                                 href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
-                                                                {{ $item->customer->excerptFullName() }}
+                                                                <x-avatar :user="$item->customer" size="sm" class="!ring-0" />
+                                                                <span>{{ $item->customer->excerptFullName() }}</span>
                                                             </a>
                                                         @else
                                                             {{ __('global.deleted') }}
@@ -585,9 +587,11 @@
                                                 <span class="block px-6 py-2">
                                                     <span class="text-sm text-gray-600 dark:text-gray-400">
                                                         @if ($item->customer)
-                                                            <a
+                                                            {{-- v2.16 — avatar inline next to ticket opener name --}}
+                                                            <a class="inline-flex items-center gap-2"
                                                                 href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
-                                                                {{ $item->customer->excerptFullName() }}
+                                                                <x-avatar :user="$item->customer" size="sm" class="!ring-0" />
+                                                                <span>{{ $item->customer->excerptFullName() }}</span>
                                                             </a>
                                                         @else
                                                             {{ __('global.deleted') }}

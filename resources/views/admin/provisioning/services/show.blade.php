@@ -36,16 +36,22 @@
                 @if (!isset($intab) || !$intab)
                     <form method="POST" class="card" action="{{ route($routePath . '.update', ['service' => $item]) }}">
                         <div class="card-heading">
-                            <div>
+                            <div class="flex items-center gap-3">
+                                {{-- v2.16 — owner avatar above the service heading --}}
+                                @if ($item->customer)
+                                    <x-avatar :user="$item->customer" size="lg" />
+                                @endif
+                                <div>
 
-                                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                                    {{ __($translatePrefix . '.show.title', ['name' => $item->name]) }}
-                                    <x-badge-state state="{{ $item->status }}"></x-badge-state>
+                                    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                                        {{ __($translatePrefix . '.show.title', ['name' => $item->name]) }}
+                                        <x-badge-state state="{{ $item->status }}"></x-badge-state>
 
-                                </h2>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    {{ __($translatePrefix. '.show.subheading', ['date' => $item->created_at->format('d/m/y'), 'owner' => $item->customer ? $item->customer->fullName : __('global.deleted')]) }}
-                                </p>
+                                    </h2>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        {{ __($translatePrefix. '.show.subheading', ['date' => $item->created_at->format('d/m/y'), 'owner' => $item->customer ? $item->customer->fullName : __('global.deleted')]) }}
+                                    </p>
+                                </div>
                             </div>
                             @if (staff_has_permission('admin.manage_services'))
 

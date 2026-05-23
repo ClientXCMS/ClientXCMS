@@ -16,6 +16,14 @@
     @if ($customer)
     <a href="{{ route('admin.customers.show', ['customer' => $customer]) }}" target="_blank">
     @endif
+        {{-- v2.16 — small avatar above the bill-to block so the staff opening
+             the invoice recognises the customer instantly. Skipped for invoices
+             whose customer has been deleted. --}}
+        @if ($customer)
+            <div class="mb-1">
+                <x-avatar :user="$customer" size="md" class="!ring-0" />
+            </div>
+        @endif
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ __('client.invoices.billto', ['name' => $address[0]]) }}</h3>
         <address class="mt-2 not-italic text-gray-500">
             @foreach ($address as $i => $line)

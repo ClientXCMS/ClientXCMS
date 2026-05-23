@@ -116,8 +116,9 @@
                                                                 {{ $message->staffUsername() }}
                                                             </span>
                                                         @elseif($message->isCustomer())
-                                                            <span class="inline-flex items-center gap-x-1">
-                                                                <i class="bi bi-person"></i>
+                                                            {{-- v2.16 — avatar inline next to the customer name in the message header --}}
+                                                            <span class="inline-flex items-center gap-x-1.5">
+                                                                <x-avatar :user="$message->customer" size="sm" class="!ring-0" />
                                                                 {{ $message->customer->excerptFullName() }}
                                                             </span>
                                                         @endif
@@ -243,7 +244,8 @@
                                     @endif
                                     <a href="{{ route('admin.customers.show', $ticket->customer) }}"
                                         class="inline-flex items-center gap-x-3.5 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg dark:bg-neutral-900 dark:border-neutral-700 dark:text-white">
-                                        <i class="bi bi-person"></i>
+                                        {{-- v2.16 — avatar replaces the generic person icon for instant recognition --}}
+                                        <x-avatar :user="$ticket->customer" size="sm" class="!ring-0" />
                                         {{ $ticket->customer->excerptFullName() }}
                                         <i class="bi bi-box-arrow-up-right"></i>
 

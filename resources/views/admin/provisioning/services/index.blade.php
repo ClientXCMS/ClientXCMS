@@ -161,9 +161,12 @@
                           @if (!$item->customer)
                               <span class="italic text-gray-400 dark:text-gray-600">({{ __('global.deleted') }})</span>
                             @else
-                          <a href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
-                          {{ $item->customer->excerptFullName() }}</span>
+                          {{-- v2.16 — avatar inline so staff can scan the list quickly --}}
+                          <a class="inline-flex items-center gap-2" href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
+                              <x-avatar :user="$item->customer" size="sm" class="!ring-0" />
+                              <span>{{ $item->customer->excerptFullName() }}</span>
                         </a>
+                        </span>
                             @endif
                     </span>
                                         </td>
