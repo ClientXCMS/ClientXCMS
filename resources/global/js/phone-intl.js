@@ -26,6 +26,39 @@
 import intlTelInput from 'intl-tel-input/intlTelInputWithUtils';
 import 'intl-tel-input/build/css/intlTelInput.css';
 
+// v2.16 — eagerly pull the intl-tel-input translation bundles for the
+// locales ClientXCMS ships out of the box. Importing them statically
+// keeps Vite's tree-shaking happy AND avoids a runtime fetch / extra
+// HTTP roundtrip for the dropdown's "Search" placeholder etc.
+import * as itiEn from 'intl-tel-input/i18n/en';
+import * as itiFr from 'intl-tel-input/i18n/fr';
+import * as itiEs from 'intl-tel-input/i18n/es';
+
+const I18N_BUNDLES = {
+    en: pickBundle(itiEn),
+    fr: pickBundle(itiFr),
+    es: pickBundle(itiEs),
+};
+
+function pickBundle(mod) {
+    // intl-tel-input exports each locale as an ES module whose default
+    // export carries the strings. Some sub-paths expose interface +
+    // countries as a single combined object — read either shape.
+    return (mod && (mod.default ?? mod)) || {};
+}
+
+/**
+ * Pick the intl-tel-input translation bundle that best matches the
+ * application's runtime locale. Falls back to English when the locale
+ * is not supported by the lib.
+ */
+function getLocaleBundle() {
+    const htmlLang = (document.documentElement?.lang || 'en').toLowerCase();
+    // Accept both `fr` and `fr-FR`
+    const short = htmlLang.split('-')[0];
+    return I18N_BUNDLES[short] ?? I18N_BUNDLES.en;
+}
+
 const SELECTOR = 'input[data-phone-intl]:not([data-phone-intl-attached])';
 
 function attach(input) {
@@ -50,6 +83,10 @@ function attach(input) {
         separateDialCode: true,
         autoPlaceholder: 'polite',
         formatOnDisplay: true,
+        // v2.16 — surface the Search placeholder + country list + ARIA
+        // labels in the user's language. The bundle is imported above
+        // and falls back to English when an unsupported locale is set.
+        i18n: getLocaleBundle(),
     };
     if (Array.isArray(allowedCountries) && allowedCountries.length > 0) {
         options.onlyCountries = allowedCountries;

@@ -60,6 +60,9 @@
          <link rel="stylesheet"> for the CSS imported inside phone-intl.js
          (intl-tel-input's flag/dial-code styling). Without this the JS
          loads but the flag dropdown stays invisible — that's the regression
-         spotted on the live registration form. --}}
-    @vite('resources/global/js/phone-intl.js')
+         spotted on the live registration form.
+         Also pulls phone-intl.css which polishes the widget to match the
+         rest of the form: same height/radius as .input-text, dark-mode
+         parity, WCAG-friendly touch targets, search-input style. --}}
+    @vite(['resources/global/js/phone-intl.js', 'resources/global/css/phone-intl.css'])
 @endonce
