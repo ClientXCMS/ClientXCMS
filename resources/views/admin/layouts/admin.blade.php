@@ -18,20 +18,26 @@
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+{{-- v2.16 — lang attribute now reflects the runtime locale so screen
+     readers announce the page in the right language. --}}
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <title>@yield('title') - CLIENTXCMS</title>
 
     @vite('resources/themes/default/js/app.js')
     @vite('resources/themes/default/css/app.scss')
+    @vite('resources/global/css/a11y.css')
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    {{-- v2.16 — added initial-scale=1 to prevent iOS auto-zoom on inputs. --}}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/png" href="{{ Vite::asset("resources/global/favicon.png") }}">
     @yield('styles')
 </head>
 
 <body class="bg-gray-50 dark:bg-slate-900 {{ is_darkmode(true) ? 'dark' : '' }} h-full">
+{{-- v2.16 — keyboard-only "skip to content" link, hidden until focused. --}}
+<a href="#content" class="a11y-skip-link">{{ __('v216::a11y.skip_to_content') }}</a>
 <header class="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full bg-white border-b text-sm py-2.5 sm:py-4 dark:bg-slate-900 dark:border-gray-700">
     <nav class="max-w-7xl flex basis-full items-center w-full mx-auto px-4 sm:px-6 lg:px-8" aria-label="Global">
 

@@ -185,6 +185,7 @@ return [
         \App\Providers\ExtensionServiceProvider::class,
         L5SwaggerServiceProvider::class,
         \App\Providers\ClientareaServiceProvider::class,
+        \App\Providers\V216TranslationServiceProvider::class,
     ])->toArray(),
 
     'proxies' => [

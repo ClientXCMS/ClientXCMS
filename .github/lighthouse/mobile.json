@@ -1,0 +1,19 @@
+{
+    "ci": {
+        "collect": {
+            "settings": {
+                "preset": "mobile",
+                "throttlingMethod": "simulate",
+                "onlyCategories": ["accessibility", "best-practices", "seo"]
+            }
+        },
+        "assert": {
+            "preset": "lighthouse:no-pwa",
+            "assertions": {
+                "categories:accessibility": ["warn", {"minScore": 0.85}],
+                "categories:best-practices": ["warn", {"minScore": 0.85}],
+                "categories:seo": ["warn", {"minScore": 0.8}]
+            }
+        }
+    }
+}

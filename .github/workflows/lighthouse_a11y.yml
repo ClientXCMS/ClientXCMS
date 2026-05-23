@@ -1,0 +1,87 @@
+name: Lighthouse accessibility (mobile)
+
+# Runs Lighthouse in mobile emulation against a few public routes after
+# the app boots in CI. Reports are uploaded as artefacts so reviewers can
+# eyeball the score evolution PR-over-PR. Failure of the workflow does
+# not block the PR yet — we'll tighten the score floor in a later pass
+# once a baseline is documented.
+
+on:
+  pull_request:
+    branches: [master, develop, "v2*"]
+    paths:
+      - "resources/views/**"
+      - "resources/themes/**"
+      - "resources/global/css/**"
+      - "app/Exceptions/**"
+      - ".github/workflows/lighthouse_a11y.yml"
+
+jobs:
+  lighthouse:
+    name: Lighthouse mobile audit
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: user
+          MYSQL_PASSWORD: password
+          MYSQL_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: json, zip, sodium, pcntl, bcmath, pdo_mysql, gd, intl
+
+      - name: Composer install
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Mark installed
+        run: mkdir -p storage && touch storage/installed
+
+      - name: Env + key
+        run: cp .env.testing .env && php artisan key:generate
+
+      - name: Build assets
+        run: npm ci --silent && npm run build --silent
+
+      - name: Migrate + seed
+        env:
+          DB_HOST: 127.0.0.1
+          DB_USERNAME: user
+          DB_PASSWORD: password
+          DB_DATABASE: testdb
+        run: php artisan migrate --force --seed --no-interaction
+
+      - name: Serve app
+        env:
+          DB_HOST: 127.0.0.1
+          DB_USERNAME: user
+          DB_PASSWORD: password
+          DB_DATABASE: testdb
+        run: |
+          php -S 127.0.0.1:8000 -t public &
+          for i in {1..30}; do
+            if curl -sf http://127.0.0.1:8000/ >/dev/null; then echo "up"; break; fi
+            sleep 1
+          done
+
+      - name: Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            http://127.0.0.1:8000/
+            http://127.0.0.1:8000/non-existent-page-for-404-test
+          configPath: .github/lighthouse/mobile.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+        continue-on-error: true # baseline run — does not fail the workflow yet
