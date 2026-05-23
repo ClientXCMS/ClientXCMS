@@ -110,20 +110,24 @@ class ServiceService
         }
 
         return DB::transaction(function () use ($service, $billing, $mode, $invoice_id) {
-            // Reload the service inside the transaction with FOR UPDATE so two
-            // concurrent renew requests serialize through this critical section.
-            /** @var Service $locked */
-            $locked = Service::query()->whereKey($service->id)->lockForUpdate()->first();
-            if ($locked === null) {
+            // Acquire a row-level lock on the service so two concurrent
+            // renew requests serialize through this critical section, then
+            // refresh the caller's model instance so any mutation we make
+            // (e.g. $service->update(['invoice_id' => …])) is visible to
+            // the caller after the transaction commits — preserving the
+            // v2.15 semantics that the test suite relies on.
+            $exists = Service::query()->whereKey($service->id)->lockForUpdate()->exists();
+            if (! $exists) {
                 throw new WrongPaymentException('Service not found while locking for renewal');
             }
+            $service->refresh();
 
-            $existingInvoice = self::findReusablePendingInvoice($locked, $billing);
+            $existingInvoice = self::findReusablePendingInvoice($service, $billing);
             if ($existingInvoice !== null) {
                 // Idempotent path: keep the existing pending invoice + its
                 // pending ServiceRenewals row.
-                if ($locked->invoice_id !== $existingInvoice->id) {
-                    $locked->update(['invoice_id' => $existingInvoice->id]);
+                if ($service->invoice_id !== $existingInvoice->id) {
+                    $service->update(['invoice_id' => $existingInvoice->id]);
                 }
 
                 return $existingInvoice;
@@ -132,11 +136,11 @@ class ServiceService
             // Either nothing pending, or pending but with a different billing
             // cycle. In the latter case findReusablePendingInvoice returned
             // null and we still must clean up.
-            self::cancelStalePendingRenewals($locked, $billing);
+            self::cancelStalePendingRenewals($service, $billing);
 
             if ($mode === InvoiceService::CREATE_INVOICE) {
-                $invoice = InvoiceService::createInvoiceFromService($locked, $billing);
-                $locked->update(['invoice_id' => $invoice->id]);
+                $invoice = InvoiceService::createInvoiceFromService($service, $billing);
+                $service->update(['invoice_id' => $invoice->id]);
 
                 return $invoice;
             }
@@ -146,7 +150,7 @@ class ServiceService
             if ($invoice === null) {
                 throw new WrongPaymentException('Invoice not found');
             }
-            InvoiceService::appendServiceOnExistingInvoice($locked, $invoice, $billing);
+            InvoiceService::appendServiceOnExistingInvoice($service, $invoice, $billing);
 
             return $invoice;
         });
