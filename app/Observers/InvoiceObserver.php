@@ -22,6 +22,7 @@ namespace App\Observers;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceLog;
 use App\Models\Provisioning\Service;
+use App\Models\Provisioning\ServiceRenewals;
 
 class InvoiceObserver
 {
@@ -46,6 +47,13 @@ class InvoiceObserver
             }
             if ($status == Invoice::STATUS_PENDING) {
                 InvoiceLog::log($invoice, InvoiceLog::PENDING_INVOICE);
+            }
+
+            // v2.16 — release the pending renewal lock as soon as the invoice
+            // moves out of "payable" so a customer can issue a fresh renewal
+            // without hitting the partial unique index.
+            if (in_array($status, [Invoice::STATUS_CANCELLED, Invoice::STATUS_REFUNDED, Invoice::STATUS_FAILED], true)) {
+                ServiceRenewals::cancelPendingForInvoice($invoice->id);
             }
         }
     }
