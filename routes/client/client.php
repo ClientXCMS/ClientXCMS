@@ -42,6 +42,11 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::post('/', [\App\Http\Controllers\Front\ProfileController::class, 'update'])->name('.update');
         Route::post('/password', [\App\Http\Controllers\Front\ProfileController::class, 'password'])->name('.password');
         Route::post('/export', [\App\Http\Controllers\Front\ProfileController::class, 'export'])->name('.export');
+        // v2.16 — signed download endpoint used by the link returned by export()
+        Route::get('/export/download/{path}', [\App\Http\Controllers\Front\ProfileController::class, 'downloadExport'])
+            ->where('path', '.*')
+            ->name('.export.download')
+            ->middleware('signed');
         Route::post('/2fa', [\App\Http\Controllers\Front\ProfileController::class, 'save2fa'])->name('.2fa');
         Route::post('/2fa/options', [\App\Http\Controllers\Front\ProfileController::class, 'save2faOptions'])->name('.2fa_options');
         Route::get('/download_codes', [\App\Http\Controllers\Front\ProfileController::class, 'downloadCodes'])->name('.2fa_codes');
