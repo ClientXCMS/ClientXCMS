@@ -56,9 +56,10 @@
 </div>
 
 @once
-    {{-- The layouts in this project use @yield('scripts'), not @stack, so a
-         push won't be flushed. Inline a single module script instead; the
-         browser is fine with a <script type="module"> mid-body and Vite
-         deduplicates the request anyway. --}}
-    <script type="module" src="{{ Vite::asset('resources/global/js/phone-intl.js') }}"></script>
+    {{-- v2.16 — use @vite() (not Vite::asset()) so Vite also emits the
+         <link rel="stylesheet"> for the CSS imported inside phone-intl.js
+         (intl-tel-input's flag/dial-code styling). Without this the JS
+         loads but the flag dropdown stays invisible — that's the regression
+         spotted on the live registration form. --}}
+    @vite('resources/global/js/phone-intl.js')
 @endonce
