@@ -65,6 +65,14 @@ Route::get('/gateways/{invoice:uuid}/{gateway}/return', [PaymentGatewayControlle
 Route::get('/gateways/{invoice:uuid}/{gateway}/cancel', [PaymentGatewayController::class, 'cancel'])->middleware(['auth'])->name('gateways.cancel');
 Route::get('/source/gateway/{gateway}/return', [PaymentGatewayController::class, 'sourceReturn'])->middleware(['auth'])->name('gateways.source.return');
 Route::post('/gateways/{gateway}/notification', [PaymentGatewayController::class, 'notification'])->withoutMiddleware('csrf')->name('gateways.notification');
+
+// v2.16 — inbound helpdesk email webhook. CSRF-exempt because it's
+// called from external email providers (Postmark, Mailgun, n8n…).
+// The {token} URL slug acts as the shared secret.
+Route::post('/webhooks/helpdesk/inbound/{token}', \App\Http\Controllers\Webhooks\HelpdeskInboundController::class)
+    ->withoutMiddleware(['csrf', \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+    ->middleware('throttle:120,1')
+    ->name('webhooks.helpdesk.inbound');
 Route::get('/docs/api-docs.json', [\App\Http\Controllers\ApiController::class, 'apiDocs'])->name('l5-swagger.application.docs');
 Route::get('/docs/asset/{asset}', [\App\Http\Controllers\ApiController::class, 'apiAsset'])->name('l5-swagger.application.asset');
 require __DIR__.'/client/invoices.php';

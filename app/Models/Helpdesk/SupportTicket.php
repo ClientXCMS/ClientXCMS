@@ -190,7 +190,44 @@ class SupportTicket extends Model
         'closed_by_id',
         'assigned_to',
         'uuid',
+        // v2.16 — guest + inbound-email support
+        'guest_email',
+        'guest_name',
+        'guest_token',
+        'inbound_message_id',
     ];
+
+    /**
+     * v2.16 — Returns the email address we should respond to. For
+     * registered customers it's the account email; for guests it's the
+     * guest_email captured at submission / from the inbound envelope.
+     */
+    public function recipientEmail(): ?string
+    {
+        if ($this->customer) {
+            return $this->customer->email;
+        }
+
+        return $this->guest_email;
+    }
+
+    /**
+     * v2.16 — Returns the human-readable name to address the response
+     * to. Customer fullName when registered; guest_name otherwise.
+     */
+    public function recipientName(): ?string
+    {
+        if ($this->customer) {
+            return $this->customer->fullName ?? $this->customer->email;
+        }
+
+        return $this->guest_name ?: $this->guest_email;
+    }
+
+    public function isGuest(): bool
+    {
+        return $this->customer_id === null;
+    }
 
     protected $casts = [
         'staff_subscribers' => 'array',
@@ -208,6 +245,11 @@ class SupportTicket extends Model
 
         static::creating(function ($ticket) {
             $ticket->uuid = generate_uuid(SupportTicket::class);
+            // v2.16 — auto-generate the guest token when none was provided
+            // so the anonymous sender always has a stable URL to land on.
+            if ($ticket->customer_id === null && empty($ticket->guest_token)) {
+                $ticket->guest_token = \Illuminate\Support\Str::random(48);
+            }
         });
     }
 

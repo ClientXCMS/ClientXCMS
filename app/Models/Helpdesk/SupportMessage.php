@@ -96,6 +96,8 @@ class SupportMessage extends Model
         'message',
         'read_at',
         'edited_at',
+        // v2.16 — inbound email support
+        'inbound_message_id',
     ];
 
     protected $casts = [
