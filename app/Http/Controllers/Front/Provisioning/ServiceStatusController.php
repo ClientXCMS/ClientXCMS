@@ -13,6 +13,7 @@ use App\Models\Provisioning\ServiceUsageMetric;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Blade;
 
 /**
  * v2.16 — Live status endpoint polled by the customer-facing service
@@ -51,11 +52,32 @@ class ServiceStatusController extends Controller
             ->latest('captured_at')
             ->value('captured_at');
 
+        // v2.16 — server-rendered HTML fragments for the index row + show header.
+        // We re-render the same Blade components the index page already uses so
+        // the live updates have identical markup (no risk of CSS divergence and
+        // future tweaks to <x-badge-state> flow into the live updates too).
+        $statusBadgeHtml = Blade::render(
+            '<x-badge-state state="{{ $state }}"></x-badge-state>',
+            ['state' => $service->status]
+        );
+
+        $daysRemainingHtml = Blade::render(
+            '<x-service-days-remaining expires_at="{{ $expiresAt }}" state="{{ $state }}"></x-service-days-remaining>',
+            [
+                'expiresAt' => $expiresAt?->toDateTimeString(),
+                'state' => $service->status,
+            ]
+        );
+
         return response()->json([
             'uuid' => $service->uuid,
             'status' => $service->status,
             'state' => method_exists($service, 'state') ? $service->state : $service->status,
+            'state_label' => __('global.states.' . $service->status),
+            'status_badge_html' => $statusBadgeHtml,
+            'days_remaining_html' => $daysRemainingHtml,
             'expires_at' => $expiresAt?->toIso8601String(),
+            'expires_at_label' => $expiresAt?->isoFormat('LLL'),
             'days_to_renewal' => $daysToRenewal,
             'last_check' => $lastSample?->toIso8601String(),
             'usage_estimate' => $this->usageEstimate($service, $now),

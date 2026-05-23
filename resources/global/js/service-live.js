@@ -30,6 +30,12 @@ function applySnapshot(root, snapshot) {
         const value = formatters[key] ? formatters[key](raw) : raw
         if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
             node.value = value ?? ''
+        } else if (key.endsWith('_html')) {
+            // v2.16 — keys whose name ends with `_html` are server-rendered
+            // Blade fragments. We treat them as trusted HTML because they
+            // come from the same origin authenticated endpoint that the
+            // browser already trusts for the rest of the page.
+            node.innerHTML = value ?? ''
         } else {
             node.textContent = value ?? ''
         }

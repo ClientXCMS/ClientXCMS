@@ -29,9 +29,18 @@ class ServiceLiveStatusTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonStructure([
-            'uuid', 'status', 'state', 'expires_at', 'days_to_renewal', 'last_check', 'usage_estimate',
+            'uuid', 'status', 'state', 'state_label',
+            'status_badge_html', 'days_remaining_html',
+            'expires_at', 'expires_at_label',
+            'days_to_renewal', 'last_check', 'usage_estimate',
         ]);
         $this->assertSame($service->uuid, $response->json('uuid'));
+
+        // v2.16 — html fragments must be non-empty so the JS poller can
+        // swap them into the DOM. We don't assert specific tags (those
+        // belong to the badge-state component tests) but require markup.
+        $this->assertNotEmpty($response->json('status_badge_html'));
+        $this->assertNotEmpty($response->json('days_remaining_html'));
     }
 
     public function test_other_customer_cannot_poll_my_service(): void

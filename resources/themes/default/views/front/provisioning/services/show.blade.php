@@ -19,11 +19,32 @@
 
 @extends('layouts/client')
 @section('title', __('client.services.show'))
+@section('scripts')
+    {{-- v2.16 — live status poller for the detail page. The wrapper div
+         below carries the data-service-live + data-status-url, so the
+         status pill, expiration countdown and metered usage estimate
+         refresh in place. --}}
+    @include('shared.service-live-assets')
+@endsection
 @section('content')
-    <div class="max-w-[85rem] py-5 lg:py-7 mx-auto">
+    <div class="max-w-[85rem] py-5 lg:py-7 mx-auto"
+         data-service-live
+         data-status-url="{{ route('front.services.status', ['service' => $service]) }}">
         <div class="flex flex-col md:flex-row gap-4">
         <div class="md:w-3/4">
             @include('shared/alerts')
+            {{-- v2.16 — live pill, sits above the provisioning panel. --}}
+            <div class="mb-3 flex flex-wrap items-center gap-2">
+                <span data-service-live-pill data-state="{{ $service->status }}">
+                    <span data-service-field="state_label">{{ __('global.states.' . $service->status) }}</span>
+                </span>
+                @if ($service->expires_at)
+                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ __('client.services.expire_date') }} :
+                        <time data-service-field="expires_at_label">{{ $service->expires_at->isoFormat('LLL') }}</time>
+                    </span>
+                @endif
+            </div>
             {!! $panel_html !!}
 
             @if (app('extension')->extensionIsEnabled('free_trial'))

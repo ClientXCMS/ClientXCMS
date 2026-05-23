@@ -21,6 +21,8 @@
 @section('title', __('client.services.index'))
 @section('scripts')
     <script src="{{ Vite::asset('resources/themes/default/js/filter.js') }}"></script>
+    {{-- v2.16 — live status poller; mounts on every <tr data-service-live> below. --}}
+    @include('shared.service-live-assets')
 @endsection
 @section('content')
     <div class="{{ theme_metadata('layout_classes', 'max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto') }}">
