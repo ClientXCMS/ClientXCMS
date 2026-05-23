@@ -9,11 +9,11 @@ namespace App\Http\Controllers\Front\Provisioning;
 
 use App\Http\Controllers\Controller;
 use App\Models\Provisioning\Service;
-use App\Models\Provisioning\ServiceUsageMetric;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * v2.16 — Live status endpoint polled by the customer-facing service
@@ -48,9 +48,19 @@ class ServiceStatusController extends Controller
         $expiresAt = $service->expires_at;
         $daysToRenewal = $expiresAt ? (int) ceil($expiresAt->floatDiffInDays($now, false)) : null;
 
-        $lastSample = ServiceUsageMetric::where('service_id', $service->id)
-            ->latest('captured_at')
-            ->value('captured_at');
+        // v2.16 — service_usage_metrics is provisioned by the usage-billing
+        // PR (#14). When live status is deployed standalone (without #14
+        // merged) the table doesn't exist, so we skip the lookup instead
+        // of crashing the polling endpoint.
+        $lastSample = null;
+        if (
+            class_exists(\App\Models\Provisioning\ServiceUsageMetric::class)
+            && Schema::hasTable('service_usage_metrics')
+        ) {
+            $lastSample = \App\Models\Provisioning\ServiceUsageMetric::where('service_id', $service->id)
+                ->latest('captured_at')
+                ->value('captured_at');
+        }
 
         // v2.16 — server-rendered HTML fragments for the index row + show header.
         // We re-render the same Blade components the index page already uses so
@@ -92,7 +102,12 @@ class ServiceStatusController extends Controller
      */
     private function usageEstimate(Service $service, Carbon $now): array
     {
+        // v2.16 — usage-billing tables come from PR #14; guard against
+        // their absence so this PR ships independently if needed.
         if (! class_exists(\App\Models\Store\ProductMeteredRate::class)) {
+            return [];
+        }
+        if (! Schema::hasTable('product_metered_rates') || ! Schema::hasTable('service_usage_metrics')) {
             return [];
         }
         if ($service->product_id === null) {
@@ -108,7 +123,7 @@ class ServiceStatusController extends Controller
         $end = $now->copy()->endOfMonth();
 
         return $rates->map(function ($rate) use ($service, $start, $end) {
-            $peak = (float) ServiceUsageMetric::where('service_id', $service->id)
+            $peak = (float) \App\Models\Provisioning\ServiceUsageMetric::where('service_id', $service->id)
                 ->where('metric_key', $rate->metric_key)
                 ->whereBetween('captured_at', [$start, $end])
                 ->max('value');
