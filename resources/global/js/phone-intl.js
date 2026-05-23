@@ -99,16 +99,32 @@ function attachAll(root = document) {
     root.querySelectorAll(SELECTOR).forEach(attach);
 }
 
-document.addEventListener('DOMContentLoaded', () => attachAll());
-
-// Re-scan when the DOM mutates (modals, livewire, …).
-const observer = new MutationObserver((records) => {
-    for (const r of records) {
-        r.addedNodes.forEach((n) => {
-            if (n.nodeType !== Node.ELEMENT_NODE) return;
-            if (n.matches?.(SELECTOR)) attach(n);
-            else if (n.querySelectorAll) attachAll(n);
-        });
+// v2.16 — <script type="module"> is deferred by the browser, so by the
+// time this module's body executes the DOMContentLoaded event has often
+// already fired. addEventListener() then never triggers because the
+// event lives in the past — that was the regression hitting the live
+// registration form. Detect the state and run the scan immediately.
+function bootstrap() {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => attachAll(), { once: true });
+    } else {
+        attachAll();
     }
-});
-observer.observe(document.body, { childList: true, subtree: true });
+
+    // Re-scan when the DOM mutates (modals, livewire, …).
+    const target = document.body || document.documentElement;
+    if (target) {
+        const observer = new MutationObserver((records) => {
+            for (const r of records) {
+                r.addedNodes.forEach((n) => {
+                    if (n.nodeType !== Node.ELEMENT_NODE) return;
+                    if (n.matches?.(SELECTOR)) attach(n);
+                    else if (n.querySelectorAll) attachAll(n);
+                });
+            }
+        });
+        observer.observe(target, { childList: true, subtree: true });
+    }
+}
+
+bootstrap();
