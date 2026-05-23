@@ -95,6 +95,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('services')->name('services.')->group(function () {
             Route::get('/', [ServiceController::class, 'index'])->name('index');
             Route::get('/{service}', [ServiceController::class, 'show'])->name('show');
+            // v2.16 — usage metric ingestion for pay-as-you-go services.
+            // The Sanctum middleware higher up gates this; the controller
+            // double-checks the token belongs to the service's customer.
+            Route::post('/{service}/metrics',
+                [\App\Http\Controllers\Api\Provisioning\UsageMetricsController::class, 'store']
+            )->name('metrics.store')->middleware('throttle:120,1');
         });
 
         // Payment Methods
