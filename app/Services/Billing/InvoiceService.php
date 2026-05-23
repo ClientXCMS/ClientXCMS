@@ -233,6 +233,7 @@ class InvoiceService
                 'next_billing_on' => $next,
                 'created_at' => Carbon::now(),
                 'period' => 1,
+                'status' => ServiceRenewals::STATUS_PENDING,
             ]);
         }
 
@@ -391,6 +392,7 @@ class InvoiceService
             'period' => $service->getAttribute('renewals') + 1,
             'next_billing_on' => $nextBilling,
             'created_at' => Carbon::now(),
+            'status' => ServiceRenewals::STATUS_PENDING,
         ]);
         $invoice->recalculate();
         $invoice->refresh();

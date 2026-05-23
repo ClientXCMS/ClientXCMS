@@ -25,9 +25,11 @@ use App\Exceptions\WrongPaymentException;
 use App\Models\Billing\Invoice;
 use App\Models\Provisioning\CancellationReason;
 use App\Models\Provisioning\Service;
+use App\Models\Provisioning\ServiceRenewals;
 use App\Models\Store\Product;
 use App\Services\Billing\InvoiceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ServiceService
 {
@@ -73,41 +75,153 @@ class ServiceService
      *
      * @throws \WrongPaymentException
      */
+    /**
+     * Idempotent renewal invoice creation.
+     *
+     * Hardened in v2.16 to fix the duplicate-pending-invoice bug:
+     *   - A row-level lock on the service is taken inside a DB transaction.
+     *   - We look up the latest non-renewed (=pending) ServiceRenewals row
+     *     instead of trusting only $service->invoice_id, which is stale when
+     *     a previous renewal was appended to a basket invoice rather than
+     *     created standalone.
+     *   - Same billing cycle requested → existing pending invoice is reused.
+     *   - Different billing cycle → old pending invoice is cancelled, its
+     *     ServiceRenewals row is soft-cancelled (releasing the partial unique
+     *     index `service_renewals_pending_lock_unique`), then a fresh invoice
+     *     is created.
+     *   - The partial unique index guarantees no race condition can produce
+     *     two pending renewals for the same service.
+     *
+     * @param  Service  $service  service to create invoice for
+     * @param  string   $billing  billing cycle code (e.g. monthly, quarterly)
+     * @param  string   $mode     InvoiceService::CREATE_INVOICE or APPEND_SERVICE
+     * @param  int|null $invoice_id  append to existing invoice
+     *
+     * @throws WrongPaymentException
+     */
     public static function createRenewalInvoice(Service $service, string $billing, string $mode = InvoiceService::CREATE_INVOICE, ?int $invoice_id = null): Invoice
     {
-        if ($service->invoice_id != null) {
-            $invoice = $service->invoice;
-            $existing = $invoice->items()->where('type', 'renewal')->where('related_id', $service->id)->first();
-            if ($existing != null && (($existing->data['billing'] ?? '') != $billing)) {
-                $invoice->cancel();
-                $service->update(['invoice_id' => null]);
-
-                return self::createRenewalInvoice($service, $billing, $mode);
-            }
-            if ($existing != null) {
-                return $invoice;
-            }
-        }
         if ($service->billing == 'onetime') {
             throw new WrongPaymentException('Cannot create invoice for onetime billing');
         }
-        if ($mode == InvoiceService::CREATE_INVOICE) {
-            $invoice = InvoiceService::createInvoiceFromService($service, $billing);
-            $service->update(['invoice_id' => $invoice->id]);
 
-            return $invoice;
-        } elseif ($mode == InvoiceService::APPEND_SERVICE) {
-            $invoice = Invoice::find($invoice_id);
-            if ($invoice == null) {
-                throw new WrongPaymentException('Invoice not found');
-            }
-            InvoiceService::appendServiceOnExistingInvoice($service, $invoice, $billing);
-
-            return $invoice;
-        } else {
+        if (! in_array($mode, [InvoiceService::CREATE_INVOICE, InvoiceService::APPEND_SERVICE], true)) {
             throw new WrongPaymentException('Invalid mode for invoice creation');
         }
 
+        return DB::transaction(function () use ($service, $billing, $mode, $invoice_id) {
+            // Reload the service inside the transaction with FOR UPDATE so two
+            // concurrent renew requests serialize through this critical section.
+            /** @var Service $locked */
+            $locked = Service::query()->whereKey($service->id)->lockForUpdate()->first();
+            if ($locked === null) {
+                throw new WrongPaymentException('Service not found while locking for renewal');
+            }
+
+            $existingInvoice = self::findReusablePendingInvoice($locked, $billing);
+            if ($existingInvoice !== null) {
+                // Idempotent path: keep the existing pending invoice + its
+                // pending ServiceRenewals row.
+                if ($locked->invoice_id !== $existingInvoice->id) {
+                    $locked->update(['invoice_id' => $existingInvoice->id]);
+                }
+
+                return $existingInvoice;
+            }
+
+            // Either nothing pending, or pending but with a different billing
+            // cycle. In the latter case findReusablePendingInvoice returned
+            // null and we still must clean up.
+            self::cancelStalePendingRenewals($locked, $billing);
+
+            if ($mode === InvoiceService::CREATE_INVOICE) {
+                $invoice = InvoiceService::createInvoiceFromService($locked, $billing);
+                $locked->update(['invoice_id' => $invoice->id]);
+
+                return $invoice;
+            }
+
+            // APPEND_SERVICE
+            $invoice = Invoice::find($invoice_id);
+            if ($invoice === null) {
+                throw new WrongPaymentException('Invoice not found');
+            }
+            InvoiceService::appendServiceOnExistingInvoice($locked, $invoice, $billing);
+
+            return $invoice;
+        });
+    }
+
+    /**
+     * Locate an open pending invoice we can safely reuse for the requested
+     * billing cycle. Returns null if there is nothing pending, or if the
+     * pending invoice targets a different billing cycle (caller is expected
+     * to cancel it before issuing a new one).
+     */
+    private static function findReusablePendingInvoice(Service $service, string $requestedBilling): ?Invoice
+    {
+        $renewal = ServiceRenewals::query()
+            ->where('service_id', $service->id)
+            ->where('status', ServiceRenewals::STATUS_PENDING)
+            ->whereNull('renewed_at')
+            ->lockForUpdate()
+            ->orderByDesc('id')
+            ->first();
+
+        if ($renewal === null) {
+            return null;
+        }
+
+        /** @var Invoice|null $invoice */
+        $invoice = Invoice::query()->whereKey($renewal->invoice_id)->lockForUpdate()->first();
+        if ($invoice === null || ! $invoice->canPay()) {
+            return null;
+        }
+
+        $existingItem = $invoice->items()
+            ->where('type', 'renewal')
+            ->where('related_id', $service->id)
+            ->first();
+
+        if ($existingItem === null) {
+            return null;
+        }
+
+        $existingBilling = $existingItem->data['billing'] ?? null;
+
+        return $existingBilling === $requestedBilling ? $invoice : null;
+    }
+
+    /**
+     * Cancel any pending renewal row + its invoice for this service so a
+     * fresh renewal can be created without tripping the partial unique
+     * `pending_lock_key`. Safe to call when there is nothing pending.
+     */
+    private static function cancelStalePendingRenewals(Service $service, string $requestedBilling): void
+    {
+        $renewals = ServiceRenewals::query()
+            ->where('service_id', $service->id)
+            ->where('status', ServiceRenewals::STATUS_PENDING)
+            ->whereNull('renewed_at')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($renewals as $renewal) {
+            $invoice = Invoice::find($renewal->invoice_id);
+            if ($invoice !== null && $invoice->canPay()) {
+                $invoice->cancel();
+            }
+            $renewal->status = ServiceRenewals::STATUS_CANCELLED;
+            $renewal->save();
+            $renewal->delete(); // soft delete → frees pending_lock_key
+        }
+
+        if ($service->invoice_id !== null) {
+            $linked = Invoice::find($service->invoice_id);
+            if ($linked === null || ! $linked->canPay()) {
+                $service->update(['invoice_id' => null]);
+            }
+        }
     }
 
     /**
