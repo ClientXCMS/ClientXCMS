@@ -162,7 +162,7 @@
                             <i class="bi bi-people"></i>
                             {{ __('client.services.subusers.manage') }}
                         </a>
-                    @endifs
+                    @endif
                     @if (auth('admin')->check())
 
                         <a href="{{ route('admin.services.show', ['service' => $service]) }}" class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3 text-primary">
@@ -196,9 +196,6 @@
 
                             </div>
                         </div>
-                        @if ($service->canRenew())
-
-                        @endif
                     </div>
                     @if ($service->server_id != null)
                         <div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-800 mt-2">

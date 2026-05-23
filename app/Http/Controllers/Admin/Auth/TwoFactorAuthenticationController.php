@@ -58,6 +58,7 @@ class TwoFactorAuthenticationController
             return redirect()->route('admin.login');
         }
         if ($user->isValidate2FA($request->input('2fa'))) {
+            session()->regenerate();
             \Session::put('2fa_verified', true);
             $user->trustTwoFactorIp($request->ip());
 
