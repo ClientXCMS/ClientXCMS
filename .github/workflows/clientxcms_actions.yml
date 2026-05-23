@@ -1,6 +1,9 @@
 name: ClientX CMS Actions
 
 on:
+  release:
+    types:
+      - published
   push:
     branches:
       - master
@@ -11,10 +14,85 @@ on:
       - master
       - develop
       - "v2*"
+
+permissions:
+  contents: read
 jobs:
+  release-build:
+    name: Build release asset
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: json, zip, sodium, pcntl, bcmath, pdo_mysql, dom, gd, intl, libxml, simplexml
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: /tmp/composer-cache
+          key: ${{ runner.os }}-composer-release-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-release-
+            ${{ runner.os }}-
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Import translations
+        run: |
+          php artisan translations:import 2>&1 | tee /tmp/translations-import.log
+          if grep -q "Error importing translations:" /tmp/translations-import.log; then
+            exit 1
+          fi
+
+      - name: Prepare release archive
+        run: |
+          RELEASE_TAG="${{ github.event.release.tag_name }}"
+          ARTIFACT_NAME="clientxcms-${RELEASE_TAG//\//-}.zip"
+          echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> "${GITHUB_ENV}"
+          mkdir -p release/clientxcms
+          rsync -a ./ release/clientxcms/ \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.env' \
+            --exclude='node_modules' \
+            --exclude='release' \
+            --exclude='storage/logs/*' \
+            --exclude='storage/framework/cache/data/*' \
+            --exclude='storage/framework/sessions/*' \
+            --exclude='storage/framework/views/*'
+          cd release
+          zip -r "../${ARTIFACT_NAME}" clientxcms
+
+      - name: Upload compiled release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARTIFACT_NAME }}
+
   unit-test:
     name: Unit testing
     runs-on: ubuntu-latest
+    if: github.event_name != 'release'
     services:
       mysql:
         image: mysql:8.0
@@ -61,39 +139,6 @@ jobs:
             echo "Waiting for MySQL..."
             sleep 2
           done
-      # - name: Export translations
-      #   if: github.ref == 'refs/heads/master'
-      #   run: php artisan translations:export
-      # - name: Checkout ctx-translations repository
-      #   if: github.ref == 'refs/heads/master'
-      #   uses: actions/checkout@v3
-      #   with:
-      #     repository: ${{ vars.CTX_TRANSLATIONS_REPO }}
-      #     ssh-key: ${{ secrets.CTX_TRANSLATIONS_DEPLOY_KEY }}
-      #     ssh-known-hosts: ${{ secrets.CTX_KNOWN_HOSTS }}
-      #     path: translations
-      #     ref: main
-      #     fetch-depth: 0
-
-      # - name: Copy translations to translations
-      #   if: github.ref == 'refs/heads/master'
-      #   run: |
-      #     mkdir -p translations/translations
-      #     cp storage/fr.json translations/translations/fr.json
-
-      # - name: Commit and push translations
-      #   if: github.ref == 'refs/heads/master'
-      #   run: |
-      #     cd translations
-      #     git config user.name "github-actions[bot]"
-      #     git config user.email "github-actions[bot]@users.noreply.github.com"
-      #     if git diff --quiet; then
-      #       echo "No changes in translations, skipping commit."
-      #     else
-      #       git add translations/fr.json
-      #       git commit -m "Update translations from source repository"
-      #       git push origin main
-      #     fi
       - name: Create installed flag
         run: mkdir -p storage && touch storage/installed
       - name: Set up environment
