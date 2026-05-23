@@ -21,6 +21,8 @@ namespace App\Http\Requests\Helpdesk;
 
 use App\Rules\CustomerIsRelatedWith;
 use App\Rules\NoScriptOrPhpTags;
+use App\Services\Helpdesk\TicketAccessPolicy;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SubmitTicketRequest extends FormRequest
@@ -59,6 +61,38 @@ class SubmitTicketRequest extends FormRequest
                 new NoScriptOrPhpTags,
             ],
         ];
+    }
+
+    /**
+     * v2.16 — Apply the configurable SupportAccessRule predicates AFTER
+     * basic validation has resolved the typed inputs. Surfacing the
+     * violation through Validator::after() guarantees old() input is
+     * preserved on the redirect-back, the same UX as any other rule.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $v) {
+            if ($v->errors()->isNotEmpty()) {
+                return; // skip if base validation already failed
+            }
+
+            $customer = $this->user('web');
+            if ($customer === null) {
+                return; // not authenticated yet — caught by middleware
+            }
+
+            $violations = app(TicketAccessPolicy::class)->violations(
+                $customer,
+                (int) $this->input('department_id'),
+                (string) $this->input('priority'),
+                $this->input('related_type'),
+                $this->input('related_id') !== null ? (int) $this->input('related_id') : null
+            );
+
+            foreach ($violations as $message) {
+                $v->errors()->add('department_id', $message);
+            }
+        });
     }
 
     public function prepareForValidation()
