@@ -39,6 +39,13 @@ class PermissionRole extends Model
     protected $fillable = [
         'role_id',
         'permission_id',
+        // v2.16 — optional scope (e.g. scope_type=department, scope_id=3)
+        'scope_type',
+        'scope_id',
+    ];
+
+    protected $casts = [
+        'scope_id' => 'integer',
     ];
 
     public function role()

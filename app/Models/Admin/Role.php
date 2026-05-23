@@ -88,6 +88,8 @@ class Role extends Model
         'level',
         'is_admin',
         'is_default',
+        // v2.16 — optional parent for inheritance
+        'parent_role_id',
     ];
 
     protected $casts = [
@@ -97,12 +99,57 @@ class Role extends Model
 
     public function permissions()
     {
-        return $this->belongsToMany(Permission::class);
+        return $this->belongsToMany(Permission::class)
+            ->withPivot('scope_type', 'scope_id');
     }
 
     public function staffs()
     {
         return $this->hasMany(Admin::class);
+    }
+
+    /**
+     * v2.16 — optional parent role; permissions inherit transitively.
+     */
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_role_id');
+    }
+
+    /**
+     * Walk the parent chain (cycle-safe, capped at 16 hops).
+     *
+     * @return \Illuminate\Support\Collection<int, self>
+     */
+    public function ancestorChain(int $maxDepth = 16): \Illuminate\Support\Collection
+    {
+        $chain = collect();
+        $seen = [];
+        $current = $this->parent;
+        while ($current !== null && $maxDepth-- > 0) {
+            if (isset($seen[$current->id])) {
+                break;
+            }
+            $seen[$current->id] = true;
+            $chain->push($current);
+            $current = $current->parent;
+        }
+
+        return $chain;
+    }
+
+    /**
+     * v2.16 — returns every permission name this role can wield,
+     * including the ones inherited from its ancestors.
+     */
+    public function effectivePermissionNames(): array
+    {
+        $names = $this->permissions->pluck('name')->all();
+        foreach ($this->ancestorChain() as $ancestor) {
+            $names = array_merge($names, $ancestor->permissions->pluck('name')->all());
+        }
+
+        return array_values(array_unique($names));
     }
 
     public function hasPermission($permission)
@@ -114,7 +161,63 @@ class Role extends Model
             return true;
         }
 
-        return $this->permissions->contains('name', $permission);
+        if ($this->permissions->contains('name', $permission)) {
+            return true;
+        }
+
+        // v2.16 — fall back to the parent chain.
+        foreach ($this->ancestorChain() as $ancestor) {
+            if ($ancestor->permissions->contains('name', $permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * v2.16 — Scope-aware lookup. A scoped grant on the permission
+     * (e.g. `admin.manage_tickets` with scope_type=department,
+     * scope_id=3) matches only when the caller requests the same
+     * scope. A NULL/NULL row always wins (global grant).
+     */
+    public function hasScopedPermission(string $permission, ?string $scopeType, ?int $scopeId): bool
+    {
+        if ($this->is_admin) {
+            return true;
+        }
+        if ($permission === Permission::ALLOWED) {
+            return true;
+        }
+
+        $matches = function ($permissions) use ($permission, $scopeType, $scopeId): bool {
+            foreach ($permissions as $p) {
+                if ($p->name !== $permission) {
+                    continue;
+                }
+                $rowScopeType = $p->pivot->scope_type ?? null;
+                $rowScopeId = $p->pivot->scope_id ?? null;
+                if ($rowScopeType === null && $rowScopeId === null) {
+                    return true; // global grant
+                }
+                if ($rowScopeType === $scopeType && (int) $rowScopeId === (int) $scopeId) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        if ($matches($this->permissions)) {
+            return true;
+        }
+        foreach ($this->ancestorChain() as $ancestor) {
+            if ($matches($ancestor->permissions)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function hasAnyPermission($permissions)
@@ -123,7 +226,13 @@ class Role extends Model
             return true;
         }
 
-        return $this->permissions->whereIn('name', $permissions)->isNotEmpty();
+        foreach ((array) $permissions as $name) {
+            if ($this->hasPermission($name)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function hasAllPermissions($permissions)
@@ -132,7 +241,14 @@ class Role extends Model
             return true;
         }
 
-        return $this->permissions->whereIn('name', $permissions)->count() == count($permissions);
+        $permissions = (array) $permissions;
+        foreach ($permissions as $name) {
+            if (! $this->hasPermission($name)) {
+                return false;
+            }
+        }
+
+        return count($permissions) > 0;
     }
 
     public function isAdmin()
