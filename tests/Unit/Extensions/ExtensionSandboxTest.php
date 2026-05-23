@@ -27,6 +27,7 @@ class ExtensionSandboxTest extends TestCase
             'type' => 'module',
             'enabled' => true,
             'installed' => true,
+            'version' => '1.0.0',
         ]);
 
         $ok = ExtensionSandbox::autoload(
@@ -64,6 +65,7 @@ class ExtensionSandboxTest extends TestCase
             'type' => 'module',
             'enabled' => true,
             'installed' => true,
+            'version' => '1.0.0',
         ]);
 
         $ok = ExtensionSandbox::autoload(
@@ -92,7 +94,7 @@ class ExtensionSandboxTest extends TestCase
             }
             public function getExtensions(bool $enabledOnly = false): array { return []; }
         };
-        $dto = ExtensionDTO::fromArray(['uuid' => 'x', 'type' => 'module', 'enabled' => true, 'installed' => true]);
+        $dto = ExtensionDTO::fromArray(['uuid' => 'x', 'type' => 'module', 'enabled' => true, 'installed' => true, 'version' => '1.0.0']);
 
         $originalSafeBoot = $_ENV['APP_SAFE_BOOT'] ?? null;
         putenv('APP_SAFE_BOOT=true');
