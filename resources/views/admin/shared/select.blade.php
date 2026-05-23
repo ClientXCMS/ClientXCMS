@@ -32,9 +32,14 @@
         @endif</label>
 @endif
 <div class="mt-2">
+    {{-- v2.16 — single-source-of-truth for the selected option: old() if
+         the user is being shown a validation error, otherwise the model's
+         current value. Previous code OR'd both conditions which could
+         silently select two options when they did not match. --}}
+    @php $__selected = old($name, $value ?? null); @endphp
     <select name="{{ $name }}" id="{{ $name }}" class="input-text" @foreach($attributes ?? [] as $k => $v) {{ $k }}="{{ $v }}"@endforeach >
         @foreach($options as $_value => $option)
-            <option value="{{ $_value }}"{{ $value == $_value || old($name) == $_value ? ' selected' : '' }} @foreach($options_attributes[$_value] ?? [] as $k => $v) {{ $k }}="{{ $v }}"@endforeach >{{ $option }}</option>
+            <option value="{{ $_value }}"{{ (string) $__selected === (string) $_value ? ' selected' : '' }} @foreach($options_attributes[$_value] ?? [] as $k => $v) {{ $k }}="{{ $v }}"@endforeach >{{ $option }}</option>
         @endforeach
     </select>
     @error($name)
