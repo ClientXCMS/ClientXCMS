@@ -19,10 +19,12 @@
 @extends('admin/layouts/admin')
 @section('title', __($ticket->subject, ['name' => $item->username]))
 @section('styles')
-    <link rel="stylesheet" href="{{ Vite::asset('resources/global/css/simplemde.min.css') }}">
+    {{-- v2.16 — Vite bundles the editor + CSS together via @vite() --}}
+    @vite('resources/global/css/helpdesk.css')
+    <meta name="helpdesk-preview-url" content="{{ url('/helpdesk/preview') }}">
 @endsection
 @section('scripts')
-    <script src="{{ Vite::asset('resources/global/js/mdeditor.js') }}" type="module"></script>
+    @vite('resources/global/js/helpdesk-editor.js')
 @endsection
 @section('content')
     <div class="container mx-auto">
@@ -90,10 +92,13 @@
                                                         @endif
                                                     </div>
 
-                                                    <div class="break-words max-w-2xl">
-                                                        <p class="mt-1 text-sm text-gray-600 dark:text-neutral-400">
-                                                            {!! $message->formattedMessage() !!}
-                                                        </p>
+                                                    {{-- v2.16 — wrap in a max-height scrollable container so
+                                                         long log dumps from customers don't push the reply form
+                                                         off-screen. The .helpdesk-message-body class also
+                                                         restores proper markdown rendering for h1/h2/h3, lists
+                                                         and horizontal rules (which nl2br previously broke). --}}
+                                                    <div class="break-words max-w-2xl helpdesk-message-body mt-1 text-sm text-gray-600 dark:text-neutral-400">
+                                                        {!! $message->formattedMessage() !!}
                                                     </div>
 
                                                     @if ($message->hasAttachments($ticket->attachments))

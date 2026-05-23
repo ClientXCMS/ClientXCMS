@@ -1,0 +1,130 @@
+/*
+ * v2.16 — Helpdesk-specific tweaks.
+ *
+ * - Long ticket message bubbles get a max-height + inner scroll so the
+ *   reply form stays reachable when the customer pastes a wall of logs.
+ * - Drop-zone visual feedback when a file is hovered over the editor.
+ * - Server-preview panel + chip styling for files attached via drag-drop.
+ */
+
+.helpdesk-message-body {
+    max-height: 60vh;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+}
+
+/* Restore expected markdown rendering for messages — without nl2br
+ * destroying the look of headings and lists. */
+.helpdesk-message-body h1,
+.helpdesk-message-body h2,
+.helpdesk-message-body h3 {
+    font-weight: 600;
+    margin: 0.75rem 0 0.4rem;
+    line-height: 1.25;
+}
+.helpdesk-message-body h1 { font-size: 1.4rem; }
+.helpdesk-message-body h2 { font-size: 1.2rem; }
+.helpdesk-message-body h3 { font-size: 1.05rem; }
+.helpdesk-message-body ul,
+.helpdesk-message-body ol {
+    padding-left: 1.25rem;
+    margin: 0.4rem 0;
+}
+.helpdesk-message-body li { list-style: revert; }
+.helpdesk-message-body hr {
+    border: 0;
+    border-top: 1px solid rgba(15, 23, 42, 0.15);
+    margin: 1rem 0;
+}
+.dark .helpdesk-message-body hr { border-top-color: rgba(148, 163, 184, 0.25); }
+.helpdesk-message-body pre,
+.helpdesk-message-body code {
+    background: rgba(15, 23, 42, 0.06);
+    border-radius: 0.35rem;
+    padding: 0.1rem 0.35rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85em;
+}
+.dark .helpdesk-message-body pre,
+.dark .helpdesk-message-body code {
+    background: rgba(148, 163, 184, 0.18);
+}
+.helpdesk-message-body pre { padding: 0.6rem 0.75rem; }
+
+/* Drop zone visual feedback */
+.EasyMDEContainer {
+    position: relative;
+    transition: outline 0.12s ease;
+}
+.EasyMDEContainer.helpdesk-editor-dropping {
+    outline: 2px dashed #2563eb;
+    outline-offset: -2px;
+    background: rgba(37, 99, 235, 0.05);
+}
+.EasyMDEContainer.helpdesk-editor-dropping::before {
+    content: attr(data-drop-label) ' ⬇';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1d4ed8;
+    font-weight: 600;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Attached files chip list */
+.helpdesk-editor-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+}
+.helpdesk-editor-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.55rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    background: rgba(37, 99, 235, 0.12);
+    color: #1e3a8a;
+}
+.dark .helpdesk-editor-chip {
+    background: rgba(96, 165, 250, 0.2);
+    color: #dbeafe;
+}
+
+/* Server-rendered preview button + panel */
+.helpdesk-editor-server-preview {
+    margin-left: auto;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.8rem;
+    border-radius: 0.35rem;
+    background: rgba(37, 99, 235, 0.1);
+    color: #1e3a8a;
+    border: 0;
+    cursor: pointer;
+}
+.helpdesk-editor-server-preview[aria-pressed='true'] {
+    background: #2563eb;
+    color: #fff;
+}
+.helpdesk-editor-server-preview[aria-busy='true']::after {
+    content: ' …';
+}
+.helpdesk-editor-preview {
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 0.5rem;
+    padding: 0.85rem 1rem;
+    margin-top: 0.75rem;
+    background: #fff;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+.dark .helpdesk-editor-preview {
+    background: rgba(15, 23, 42, 0.5);
+    border-color: rgba(148, 163, 184, 0.2);
+    color: #e2e8f0;
+}
+.helpdesk-editor-preview-error { color: #b91c1c; }

@@ -20,10 +20,12 @@
 @extends('layouts/client')
 @section('title', $ticket->subject)
 @section('styles')
-    <link rel="stylesheet" href="{{ Vite::asset('resources/global/css/simplemde.min.css') }}">
+    {{-- v2.16 — bundled helpdesk editor (drag&drop, server preview, double-submit guard) --}}
+    @vite('resources/global/css/helpdesk.css')
+    <meta name="helpdesk-preview-url" content="{{ url('/helpdesk/preview') }}">
 @endsection
 @section('scripts')
-    <script src="{{ Vite::asset('resources/global/js/mdeditor.js') }}" type="module"></script>
+    @vite('resources/global/js/helpdesk-editor.js')
 @endsection
 @section('content')
     <div class="{{ theme_metadata('layout_classes', 'max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto') }}">
@@ -88,10 +90,9 @@
                                                     </button>
                                                 @endif
                                             </div>
-                                            <div class="break-words max-w-2xl">
-                                                <p class="mt-1 text-sm text-gray-600 dark:text-neutral-400">
-                                                    {!! $message->formattedMessage() !!}
-                                                </p>
+                                            {{-- v2.16 — scrollable + properly styled markdown body --}}
+                                            <div class="break-words max-w-2xl helpdesk-message-body mt-1 text-sm text-gray-600 dark:text-neutral-400">
+                                                {!! $message->formattedMessage() !!}
                                             </div>
 
                                             @if ($message->hasAttachments($ticket->attachments))

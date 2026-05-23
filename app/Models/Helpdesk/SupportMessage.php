@@ -105,12 +105,22 @@ class SupportMessage extends Model
 
     protected $with = ['customer', 'admin'];
 
-    public function formattedMessage()
+    /**
+     * Render the markdown body for HTML display.
+     *
+     * v2.16 — dropped the nl2br() wrapping that used to follow the
+     * Parsedown output. The injected `<br>` tags broke list / heading
+     * / horizontal-rule rendering (e.g. `# Title\n` produced
+     * `<h1>Title</h1><br>` which mis-styled the next sibling). With
+     * Parsedown's default block-aware output and the new
+     * `.helpdesk-message-body` CSS the result is now coherent.
+     */
+    public function formattedMessage(): string
     {
         $parser = new \Parsedown;
         $parser->setSafeMode(true);
 
-        return nl2br($parser->parse($this->message));
+        return $parser->parse((string) $this->message);
     }
 
     public function containerClasses(string $view = 'customer')

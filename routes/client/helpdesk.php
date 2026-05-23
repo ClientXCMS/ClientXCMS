@@ -17,6 +17,7 @@
  * Year: 2025
  */
 use App\Http\Controllers\Front\Helpdesk\SupportController;
+use App\Http\Controllers\Helpdesk\HelpdeskPreviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('/client')->name('front.')->group(function () {
@@ -33,3 +34,10 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::get('/{ticket}/download/{attachment}', [SupportController::class, 'download'])->name('.download');
     });
 });
+
+// v2.16 — Shared markdown preview endpoint (auth required, throttled).
+// Front + admin editors POST raw markdown and get back the Parsedown
+// HTML the recipient will actually see.
+Route::post('/helpdesk/preview', HelpdeskPreviewController::class)
+    ->middleware(['auth:web,admin', 'throttle:30,1'])
+    ->name('helpdesk.preview');
