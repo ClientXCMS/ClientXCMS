@@ -134,7 +134,12 @@ class CustomerController extends AbstractCrudController
             $filters = [$this->filterField => $filters];
         }
         $checkedFilters = [];
-        $values = array_keys(trans('global.states'));
+        // v2.16 — trans('global.states') returns the key string when no
+        // translation file is loaded (e.g. fresh CI run before
+        // translations:import succeeds). Guard against that case so the
+        // controller doesn't 500 on the customer detail page.
+        $statesTranslations = trans('global.states');
+        $values = is_array($statesTranslations) ? array_keys($statesTranslations) : [];
         foreach ($filters as $field => $value) {
             $_values = explode(',', $value);
             foreach ($_values as $_value) {
