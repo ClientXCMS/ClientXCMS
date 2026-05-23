@@ -97,6 +97,59 @@ function attachDragDrop(wrapper, fileInput) {
     }
 }
 
+/**
+ * v2.16 — Clipboard paste support.
+ *
+ * Listens to the `paste` event on the EasyMDE textarea (CodeMirror
+ * proxies the event to the wrapper). Any DataTransferItem that is a
+ * file — typically a screenshot the user just took with the snipping
+ * tool or copied from another app — is pushed into the attachments
+ * input. Plain-text paste is left untouched so the editor still works
+ * for normal markdown content.
+ *
+ * Synthesises a meaningful filename when the OS only gives us "image.png"
+ * (most browsers do that for clipboard images) by including the date.
+ */
+function attachClipboardPaste(wrapper, fileInput) {
+    if (!fileInput) return
+    const chips = ensureChipContainer(wrapper)
+
+    const handler = (e) => {
+        const items = e.clipboardData?.items
+        if (!items || !items.length) return
+
+        const pasted = []
+        for (const item of items) {
+            if (item.kind !== 'file') continue
+            const file = item.getAsFile()
+            if (!file) continue
+            // Give clipboard images a stable name + readable date.
+            const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+            const ext = (file.type.split('/')[1] || 'png').toLowerCase()
+            const name = file.name && file.name !== 'image.png'
+                ? file.name
+                : `pasted-${ts}.${ext}`
+            // Re-wrap to control the filename — File is read-only.
+            pasted.push(new File([file], name, { type: file.type, lastModified: Date.now() }))
+        }
+
+        if (pasted.length === 0) return
+
+        e.preventDefault()
+        pushFilesIntoInput(fileInput, pasted)
+        renderChips(chips, fileInput.files)
+        // Visual feedback consistent with drag-drop.
+        wrapper.classList.add('helpdesk-editor-pasting')
+        setTimeout(() => wrapper.classList.remove('helpdesk-editor-pasting'), 600)
+    }
+
+    // Attach on the wrapper so it catches paste happening inside the
+    // CodeMirror textarea (which is a contenteditable inside the
+    // wrapper). The {capture: true} flag wins over EasyMDE's own
+    // paste handler that otherwise would swallow the event.
+    wrapper.addEventListener('paste', handler, { capture: true })
+}
+
 async function fetchPreview(content, csrfToken) {
     const url = (document.querySelector('meta[name="helpdesk-preview-url"]') || {}).content
         || '/helpdesk/preview'
@@ -231,6 +284,7 @@ function init(textarea) {
         const fileInput = textarea.closest('form')?.querySelector('input[type="file"][name="attachments[]"]')
             || textarea.closest('form')?.querySelector('input[type="file"]')
         attachDragDrop(wrapper, fileInput)
+        attachClipboardPaste(wrapper, fileInput)
         attachServerPreviewButton(wrapper, mde)
     }
 
@@ -241,15 +295,30 @@ function scan(root = document) {
     root.querySelectorAll(EDITOR_SELECTOR).forEach(init)
 }
 
-document.addEventListener('DOMContentLoaded', () => scan())
-
-// React to dynamically inserted edit panels (the "edit message" collapse).
-const observer = new MutationObserver((records) => {
-    for (const r of records) {
-        r.addedNodes.forEach((n) => {
-            if (n.nodeType !== Node.ELEMENT_NODE) return
-            scan(n)
-        })
+// v2.16 — <script type="module"> runs after DOMContentLoaded fires, so
+// addEventListener on it would never trigger. Branch on readyState so
+// existing editors are picked up immediately when the module loads
+// late.
+function bootstrap() {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => scan(), { once: true })
+    } else {
+        scan()
     }
-})
-observer.observe(document.body, { childList: true, subtree: true })
+
+    // React to dynamically inserted edit panels (the "edit message" collapse).
+    const target = document.body || document.documentElement
+    if (target) {
+        const observer = new MutationObserver((records) => {
+            for (const r of records) {
+                r.addedNodes.forEach((n) => {
+                    if (n.nodeType !== Node.ELEMENT_NODE) return
+                    scan(n)
+                })
+            }
+        })
+        observer.observe(target, { childList: true, subtree: true })
+    }
+}
+
+bootstrap()
