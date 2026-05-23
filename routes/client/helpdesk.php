@@ -16,8 +16,20 @@
  *
  * Year: 2025
  */
+use App\Http\Controllers\Front\Helpdesk\GuestTicketController;
 use App\Http\Controllers\Front\Helpdesk\SupportController;
 use Illuminate\Support\Facades\Route;
+
+// v2.16 — Public, no-auth ticket creation. Reachable by anonymous
+// visitors at /support/new ; the result page lives at
+// /support/track/{token} where the guest_token URL acts as both the
+// "logged in" credential and the share link.
+Route::prefix('/support')->name('front.support.guest.')->group(function () {
+    Route::get('/new', [GuestTicketController::class, 'create'])->name('create');
+    Route::post('/new', [GuestTicketController::class, 'store'])->middleware('throttle:6,1')->name('store');
+    Route::get('/track/{token}', [GuestTicketController::class, 'track'])->name('track')->where('token', '[A-Za-z0-9]{16,}');
+    Route::post('/track/{token}/reply', [GuestTicketController::class, 'reply'])->middleware('throttle:12,1')->name('reply')->where('token', '[A-Za-z0-9]{16,}');
+});
 
 Route::prefix('/client')->name('front.')->group(function () {
     Route::prefix('/support')->name('support')->middleware('auth')->group(function () {
