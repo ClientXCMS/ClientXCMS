@@ -22,6 +22,7 @@ namespace App\Http\Controllers\Admin\Core;
 use App\Addons\SupportID\SupportIdHelper;
 use App\Helpers\Countries;
 use App\Http\Controllers\Admin\AbstractCrudController;
+use App\Http\Controllers\Admin\Concerns\HandlesBulkActions;
 use App\Http\Requests\Customer\StoreCustomerRequest;
 use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Models\Account\Customer;
@@ -38,6 +39,57 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class CustomerController extends AbstractCrudController
 {
+    use HandlesBulkActions;
+
+    /**
+     * v2.16 — Bulk actions exposed on /admin/customers/bulk. Each
+     * closure is invoked inside a DB transaction by the trait.
+     */
+    protected function bulkActions(): array
+    {
+        return [
+            'confirm' => function (array $ids): int {
+                $this->authorizeBulk();
+
+                return Customer::whereIn('id', $ids)->update(['is_confirmed' => true]);
+            },
+            'suspend' => function (array $ids): int {
+                $this->authorizeBulk();
+                $count = 0;
+                Customer::whereIn('id', $ids)->each(function (Customer $c) use (&$count) {
+                    if (! $c->isBlocked()) {
+                        $c->suspend('Bulk action', suspendServices: false, notify: false);
+                        $count++;
+                    }
+                });
+
+                return $count;
+            },
+            'unblock' => function (array $ids): int {
+                $this->authorizeBulk();
+                $count = 0;
+                Customer::whereIn('id', $ids)->each(function (Customer $c) use (&$count) {
+                    if ($c->isBlocked()) {
+                        // Strip the metadata flags inserted by ban()/suspend(); same
+                        // mechanism as the customer-detail un-block button.
+                        $c->detachMetadata('banned');
+                        $c->detachMetadata('suspended');
+                        $count++;
+                    }
+                });
+
+                return $count;
+            },
+        ];
+    }
+
+    private function authorizeBulk(): void
+    {
+        if (! staff_has_permission('admin.manage_customers')) {
+            abort(403);
+        }
+    }
+
     protected string $viewPath = 'admin.core.customers';
 
     protected string $routePath = 'admin.customers';

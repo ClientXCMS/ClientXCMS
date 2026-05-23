@@ -33,6 +33,8 @@ Route::name('helpdesk.')->prefix('/helpdesk')->group(function () {
     Route::delete('/tickets/{ticket}/comments/{comment}', [TicketController::class, 'deleteComment'])->name('tickets.comments.delete');
     Route::get('/tickets/statistics', [TicketController::class, 'statistics'])->name('tickets.statistics');
     Route::resource('/tickets', TicketController::class)->names('tickets')->except('edit');
+    // v2.16 — bulk endpoint
+    Route::post('/tickets/bulk', [TicketController::class, 'bulk'])->name('tickets.bulk');
     Route::resource('/departments', DepartmentController::class)->names('departments')->except('edit');
 });
 

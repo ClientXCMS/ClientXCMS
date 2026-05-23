@@ -68,7 +68,10 @@
                             @endif
                         </div>
                     </div>
-                    <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                    {{-- v2.16 — bulk actions root --}}
+                    <div class="border rounded-lg overflow-hidden dark:border-gray-700"
+                         data-bulk-root
+                         data-bulk-action-url="{{ route('admin.invoices.bulk') }}">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="mass_action_table">
                             <thead>
 
@@ -80,6 +83,7 @@
                                                 class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
                                                 <div class="flex items-center h-5">
                                                     <input id="checkbox-all" type="checkbox"
+                                                        data-bulk-master
                                                         class="border-gray-200 rounded text-blue-600 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800">
                                                     <label for="checkbox-all" class="sr-only">Checkbox</label>
                                                 </div>
@@ -171,6 +175,7 @@
                                                     <div class="flex items-center h-5">
                                                         <input id="table-checkbox-{{ $item->id }}"
                                                             data-id="{{ $item->id }}" data-name="{{ $item->name }}"
+                                                            data-bulk-id="{{ $item->id }}"
                                                             type="checkbox"
                                                             class="border-gray-200 rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800">
                                                         <label for="table-checkbox-{{ $item->id }}"
@@ -255,6 +260,13 @@
                                 @endforeach
                             </tbody>
                         </table>
+                        {{-- v2.16 — bulk actions bar inside the data-bulk-root --}}
+                        @include('admin.shared.bulk-actions-bar', [
+                            'actions' => [
+                                'mark_paid' => __('global.confirm') . ' (Payée)',
+                                'cancel'    => __('global.cancel'),
+                            ],
+                        ])
                     </div>
 
                     @include('admin/shared/mass_actions/select', [

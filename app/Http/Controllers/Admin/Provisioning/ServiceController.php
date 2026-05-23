@@ -26,6 +26,7 @@ use App\DTO\Store\ProductDataDTO;
 use App\DTO\Store\UpgradeDTO;
 use App\Exceptions\ExternalApiException;
 use App\Http\Controllers\Admin\AbstractCrudController;
+use App\Http\Controllers\Admin\Concerns\HandlesBulkActions;
 use App\Http\Requests\Provisioning\StoreServiceRequest;
 use App\Http\Requests\Provisioning\UpdateServiceRequest;
 use App\Http\Requests\Provisioning\UpgradeServiceRequest;
@@ -50,6 +51,44 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class ServiceController extends AbstractCrudController
 {
+    use HandlesBulkActions;
+
+    /**
+     * v2.16 — Bulk actions exposed on /admin/services/bulk. Suspend /
+     * unsuspend / cancel iterate per-service so the existing model
+     * methods (which dispatch provisioning hooks + events) fire just
+     * like a manual click would.
+     */
+    protected function bulkActions(): array
+    {
+        return [
+            'suspend' => function (array $ids): int {
+                if (! staff_has_permission('admin.manage_services')) {
+                    abort(403);
+                }
+                $count = 0;
+                Service::whereIn('id', $ids)->where('status', Service::STATUS_ACTIVE)->each(function (Service $s) use (&$count) {
+                    $s->suspend('Bulk action');
+                    $count++;
+                });
+
+                return $count;
+            },
+            'unsuspend' => function (array $ids): int {
+                if (! staff_has_permission('admin.manage_services')) {
+                    abort(403);
+                }
+                $count = 0;
+                Service::whereIn('id', $ids)->where('status', Service::STATUS_SUSPENDED)->each(function (Service $s) use (&$count) {
+                    $s->unsuspend();
+                    $count++;
+                });
+
+                return $count;
+            },
+        ];
+    }
+
     protected string $viewPath = 'admin.provisioning.services';
 
     protected string $routePath = 'admin.services';

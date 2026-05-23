@@ -24,6 +24,7 @@ use App\DTO\Store\ProductDataDTO;
 use App\Events\Core\Invoice\InvoiceCreated;
 use App\Helpers\Countries;
 use App\Http\Controllers\Admin\AbstractCrudController;
+use App\Http\Controllers\Admin\Concerns\HandlesBulkActions;
 use App\Http\Requests\Billing\ExportInvoiceRequest;
 use App\Http\Requests\Billing\InvoiceDraftRequest;
 use App\Http\Requests\Billing\StoreInvoiceRequest;
@@ -42,6 +43,48 @@ use Illuminate\Http\Request;
 
 class InvoiceController extends AbstractCrudController
 {
+    use HandlesBulkActions;
+
+    /**
+     * v2.16 — bulk endpoint for /admin/invoices/bulk.
+     *
+     * `mark_paid`: flips the invoice status without going through the
+     * gateway lifecycle. Only works on PENDING / FAILED invoices and is
+     * intended for offline payments the staff already received.
+     *
+     * `cancel`: mass-cancel pending invoices.
+     */
+    protected function bulkActions(): array
+    {
+        return [
+            'mark_paid' => function (array $ids): int {
+                if (! staff_has_permission('admin.manage_invoices')) {
+                    abort(403);
+                }
+                $count = 0;
+                Invoice::whereIn('id', $ids)
+                    ->whereIn('status', [Invoice::STATUS_PENDING, Invoice::STATUS_FAILED])
+                    ->each(function (Invoice $i) use (&$count) {
+                        $i->status = Invoice::STATUS_PAID;
+                        $i->paid_at = now();
+                        $i->save();
+                        $count++;
+                    });
+
+                return $count;
+            },
+            'cancel' => function (array $ids): int {
+                if (! staff_has_permission('admin.manage_invoices')) {
+                    abort(403);
+                }
+
+                return Invoice::whereIn('id', $ids)
+                    ->where('status', Invoice::STATUS_PENDING)
+                    ->update(['status' => Invoice::STATUS_CANCELLED]);
+            },
+        ];
+    }
+
     protected string $viewPath = 'admin.core.invoices';
 
     protected string $routePath = 'admin.invoices';

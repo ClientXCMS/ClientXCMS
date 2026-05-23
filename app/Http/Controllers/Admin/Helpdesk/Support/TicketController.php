@@ -20,6 +20,7 @@
 namespace App\Http\Controllers\Admin\Helpdesk\Support;
 
 use App\Core\Admin\Dashboard\AdminCountWidget;
+use App\Http\Controllers\Admin\Concerns\HandlesBulkActions;
 use App\Http\Requests\Helpdesk\ReplyTicketRequest;
 use App\Http\Requests\Helpdesk\SubmitTicketRequest;
 use App\Http\Requests\Helpdesk\UpdateTicketRequest;
@@ -36,6 +37,37 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class TicketController extends \App\Http\Controllers\Admin\AbstractCrudController
 {
+    use HandlesBulkActions;
+
+    /**
+     * v2.16 — bulk actions on /admin/helpdesk/tickets/bulk.
+     * "close" flips the status to CLOSED for a batch; "delete" wipes the
+     * ticket + its messages (kept behind the manage_tickets permission).
+     */
+    protected function bulkActions(): array
+    {
+        return [
+            'close' => function (array $ids): int {
+                if (! staff_has_permission('admin.manage_tickets')) {
+                    abort(403);
+                }
+
+                return SupportTicket::whereIn('id', $ids)
+                    ->whereIn('status', [SupportTicket::STATUS_OPEN, SupportTicket::STATUS_ANSWERED])
+                    ->update(['status' => SupportTicket::STATUS_CLOSED, 'closed_at' => now()]);
+            },
+            'reopen' => function (array $ids): int {
+                if (! staff_has_permission('admin.manage_tickets')) {
+                    abort(403);
+                }
+
+                return SupportTicket::whereIn('id', $ids)
+                    ->where('status', SupportTicket::STATUS_CLOSED)
+                    ->update(['status' => SupportTicket::STATUS_OPEN, 'closed_at' => null]);
+            },
+        ];
+    }
+
     protected string $viewPath = 'admin.helpdesk.tickets';
 
     protected string $routePath = 'admin.helpdesk.tickets';

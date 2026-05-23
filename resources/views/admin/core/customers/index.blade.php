@@ -48,12 +48,19 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                        {{-- v2.16 — wrap the table in a bulk-actions root so the JS
+                             driver picks up the per-row checkboxes and the floating bar. --}}
+                        <div class="border rounded-lg overflow-hidden dark:border-gray-700"
+                             data-bulk-root
+                             data-bulk-action-url="{{ route('admin.customers.bulk') }}">
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead>
 
                                 <tr>
 
+                                    <th scope="col" class="px-6 py-3 text-start">
+                                        <input type="checkbox" data-bulk-master aria-label="Select all" />
+                                    </th>
                                     <th scope="col" class="px-6 py-3 text-start">
                                         <div class="flex items-center gap-x-2">
                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
@@ -104,7 +111,7 @@
                                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                 @if (count($items) == 0)
                                     <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
-                                        <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center">
+                                        <td colspan="7" class="px-6 py-4 whitespace-nowrap text-center">
                                             <div class="flex flex-auto flex-col justify-center items-center p-2 md:p-3">
                                                 <p class="text-sm text-gray-800 dark:text-gray-400">
                                                     {{ __('global.no_results') }}
@@ -115,7 +122,9 @@
                                 @foreach($items as $item)
 
                                     <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
-
+                                        <td class="px-6 py-2">
+                                            <input type="checkbox" data-bulk-id="{{ $item->id }}" aria-label="Select customer #{{ $item->id }}" />
+                                        </td>
                                         <td class="h-px w-px whitespace-nowrap">
                     <span class="block px-6 py-2">
                       <span class="text-sm text-{{ $item->getBadgeColor() }}-600 dark:text-{{ $item->getBadgeColor() }}-400">{{ $item->id }}</span>
@@ -171,6 +180,14 @@
                                 @endforeach
                                 </tbody>
                             </table>
+                            {{-- v2.16 — bulk actions bar (closed inside the data-bulk-root) --}}
+                            @include('admin.shared.bulk-actions-bar', [
+                                'actions' => [
+                                    'confirm'  => __('global.confirm'),
+                                    'suspend'  => __('global.suspend'),
+                                    'unblock'  => __('global.unblock'),
+                                ],
+                            ])
                         </div>
 
                         <div class="py-1 px-4 mx-auto">

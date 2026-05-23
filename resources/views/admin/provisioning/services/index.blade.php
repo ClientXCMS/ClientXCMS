@@ -49,7 +49,10 @@
 
                             </div>
                         </div>
-                        <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                        {{-- v2.16 — bulk actions root --}}
+                        <div class="border rounded-lg overflow-hidden dark:border-gray-700"
+                             data-bulk-root
+                             data-bulk-action-url="{{ route('admin.services.bulk') }}">
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="mass_action_table">
                                 <thead>
 
@@ -59,7 +62,7 @@
                                         <div class="flex items-center gap-x-2">
                     <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
                       <div class="flex items-center h-5">
-                    <input id="checkbox-all" type="checkbox" class="border-gray-200 rounded text-blue-600 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800">
+                    <input id="checkbox-all" type="checkbox" data-bulk-master class="border-gray-200 rounded text-blue-600 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800">
                     <label for="checkbox-all" class="sr-only">Checkbox</label>
                   </div>
                     </span>
@@ -141,7 +144,7 @@
                     <span class="block px-6 py-2">
                       <span class="text-sm text-gray-600 dark:text-gray-400">
                           <div class="flex items-center h-5">
-                    <input id="table-checkbox-{{ $item->id }}" data-id="{{ $item->id }}" data-name="{{ $item->name }}" type="checkbox" class="border-gray-200 rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800">
+                    <input id="table-checkbox-{{ $item->id }}" data-id="{{ $item->id }}" data-name="{{ $item->name }}" data-bulk-id="{{ $item->id }}" type="checkbox" class="border-gray-200 rounded text-blue-600 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800">
                     <label for="table-checkbox-{{ $item->id }}" class="sr-only">Checkbox</label>
                               <span class="ml-3">{{ $item->id }}</span>
                   </div>
@@ -214,6 +217,13 @@
                                 @endforeach
                                 </tbody>
                             </table>
+                            {{-- v2.16 — bulk actions bar --}}
+                            @include('admin.shared.bulk-actions-bar', [
+                                'actions' => [
+                                    'suspend'   => __('global.suspend'),
+                                    'unsuspend' => __('global.unsuspend'),
+                                ],
+                            ])
                         </div>
                         @include('admin/shared/mass_actions/select')
                     </div>

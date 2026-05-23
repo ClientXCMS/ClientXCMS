@@ -69,13 +69,19 @@
                             </div>
                         </div>
 
-                        <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                        {{-- v2.16 — bulk actions root --}}
+                        <div class="border rounded-lg overflow-hidden dark:border-gray-700"
+                             data-bulk-root
+                             data-bulk-action-url="{{ route('admin.helpdesk.tickets.bulk') }}">
 
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead class="bg-gray-50 dark:bg-slate-800">
 
                                     <tr>
 
+                                        <th scope="col" class="px-6 py-3 text-start">
+                                            <input type="checkbox" data-bulk-master aria-label="Select all" />
+                                        </th>
                                         <th scope="col" class="px-6 py-3 text-start">
                                             <div class="flex items-center gap-x-2">
                                                 <span
@@ -142,7 +148,7 @@
 
                                     @if (count($active_tickets) == 0)
                                         <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
-                                            <td colspan="7" class="px-6 py-4 whitespace-nowrap text-center">
+                                            <td colspan="8" class="px-6 py-4 whitespace-nowrap text-center">
                                                 <div class="flex flex-auto flex-col justify-center items-center p-2 md:p-3">
                                                     <p class="text-sm text-gray-800 dark:text-gray-400">
                                                         {{ __('global.no_results') }}
@@ -152,6 +158,10 @@
                                     @endif
                                     @foreach ($active_tickets ?? [] as $item)
                                         <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
+                                            {{-- v2.16 — per-row bulk checkbox --}}
+                                            <td class="px-6 py-2">
+                                                <input type="checkbox" data-bulk-id="{{ $item->id }}" aria-label="Select ticket #{{ $item->id }}" />
+                                            </td>
 
                                             <td class="h-px w-px whitespace-nowrap">
                                                 <span class="block px-6 py-2">
@@ -261,6 +271,13 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                            {{-- v2.16 — bulk actions bar (close/reopen) --}}
+                            @include('admin.shared.bulk-actions-bar', [
+                                'actions' => [
+                                    'close'  => __('global.close'),
+                                    'reopen' => __('global.reopen'),
+                                ],
+                            ])
                         </div>
                         <div>
                             <div class="!border-b-0">

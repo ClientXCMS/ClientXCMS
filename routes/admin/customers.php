@@ -24,6 +24,9 @@ Route::get('/customers/{customer}/send_password', [CustomerController::class, 's
 Route::post('/customers/{customer}/resend_confirmation', [CustomerController::class, 'resendConfirmation'])->name('customers.resend_confirmation');
 Route::post('/customers/{customer}/confirm', [CustomerController::class, 'confirm'])->name('customers.confirm');
 Route::resource('/customers', CustomerController::class)->names('customers')->except('edit');
+// v2.16 — bulk endpoint declared before the {customer} routes so it isn't
+// interpreted as a resource id by Laravel's route compiler.
+Route::post('/customers/bulk', [CustomerController::class, 'bulk'])->name('customers.bulk');
 Route::post('/customers/{customer}/autologin', [CustomerController::class, 'autologin'])->name('customers.autologin');
 Route::post('/customers/{customer}/action/{action}', [CustomerController::class, 'action'])->name('customers.action');
 Route::post('/customers/{customer}/notes', [CustomerController::class, 'addNote'])->name('customers.notes.store');

@@ -25,6 +25,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/earn', [DashboardController::class, 'earn'])->name('earn')->middleware('password.confirm:admin.password.confirm');
 Route::resource('/invoices', InvoiceController::class)->names('invoices')->except('edit');
+// v2.16 — bulk endpoint
+Route::post('/invoices/bulk', [InvoiceController::class, 'bulk'])->name('invoices.bulk');
 Route::get('/invoices/{invoice}/notify', [InvoiceController::class, 'notify'])->name('invoices.notify');
 Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
 Route::post('/invoices/{invoice}/regenerate', [InvoiceController::class, 'regeneratePdf'])->name('invoices.regenerate_pdf')->middleware('throttle:30,1');

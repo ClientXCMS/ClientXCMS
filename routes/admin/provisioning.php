@@ -32,6 +32,8 @@ Route::resource('/servers', ServerController::class)->names('servers')->except('
 Route::get('/testservers', [ServerController::class, 'test'])->name('servers.test');
 Route::resource('/services', ServiceController::class)->names('services')->except('edit');
 Route::post('/services/mass_action', [ServiceController::class, 'massAction'])->name('services.mass_action');
+// v2.16 — bulk endpoint
+Route::post('/services/bulk', [ServiceController::class, 'bulk'])->name('services.bulk');
 Route::post('/services/{service}/renew', [ServiceController::class, 'renew'])->name('services.renew');
 Route::post('/services/{service}/delivery', [ServiceController::class, 'delivery'])->name('services.delivery');
 Route::post('/services/{service}/subscription', [ServiceController::class, 'subscription'])->name('services.subscription');
