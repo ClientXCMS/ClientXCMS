@@ -20,8 +20,12 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
+use App\Extensions\ExtensionManager;
 use App\Models\ActionLog;
 use App\Models\Admin\Permission;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
 
 class SettingsExtensionController
 {
@@ -63,6 +67,7 @@ class SettingsExtensionController
         }
         try {
             $extensiondto = app('extension')->getExtension($type, $extension);
+            $prerequisites = app('extension')->checkPrerequisitesForEnable($type, $extension);
         } catch (\Exception $e) {
             return $this->respondWithError($e->getMessage());
         }

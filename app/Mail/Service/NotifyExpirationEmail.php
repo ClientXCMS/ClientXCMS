@@ -22,12 +22,11 @@ namespace App\Mail\Service;
 use App\Models\Admin\EmailTemplate;
 use App\Models\Provisioning\Service;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
 
-class NotifyExpirationEmail extends Notification implements ShouldQueue
+class NotifyExpirationEmail extends Notification 
 {
     use Queueable, SerializesModels;
 

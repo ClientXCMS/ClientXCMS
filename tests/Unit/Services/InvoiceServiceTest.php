@@ -433,7 +433,7 @@ class InvoiceServiceTest extends TestCase
         InvoiceService::appendServiceOnExistingInvoice($service, $invoice);
         $this->assertDatabaseCount('invoices', 1);
         $this->assertDatabaseCount('invoice_items', 2);
-        $this->assertEquals($invoice->total, 30 * 1.20);
+        $this->assertEquals(36.0, (float) $invoice->total);
     }
 
     public function test_create_invoice_from_service()

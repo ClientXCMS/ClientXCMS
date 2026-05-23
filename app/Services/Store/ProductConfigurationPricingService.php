@@ -3,14 +3,20 @@
 namespace App\Services\Store;
 
 use App\DTO\Store\ConfigOptionDTO;
+use App\Contracts\Store\ProductTypeInterface;
 use App\Models\Billing\ConfigOption;
 use App\Models\Store\Product;
+use App\Services\Domain\DomainPricingService;
 
 class ProductConfigurationPricingService
 {
-    public function preview(Product $product, string $billing, string $currency, array $optionsInput = []): array
+    public function preview(Product $product, string $billing, string $currency, array $optionsInput = [], array $data = []): array
     {
-        $price = $product->getPriceByCurrency($currency, $billing);
+        if ($product->type === ProductTypeInterface::DOMAIN && ! empty($data['tld'])) {
+            $price = app(DomainPricingService::class)->priceFor($data['tld'], $currency, $billing) ?? $product->getPriceByCurrency($currency, $billing);
+        } else {
+            $price = $product->getPriceByCurrency($currency, $billing);
+        }
         $options = $this->mapOptions($product, $billing, $optionsInput);
 
         $optionTotals = $this->computeOptionTotals($options, $currency, $billing);
@@ -30,12 +36,12 @@ class ProductConfigurationPricingService
             'display_mode' => setting('display_product_price', TaxesService::PRICE_TTC),
             'tax_rate' => $price->taxRate(),
             'totals' => [
-                'recurring_ht' => $this->round($recurringHt),
-                'onetime_ht' => $this->round($onetimeHt),
-                'setup_ht' => $this->round($setupHt),
-                'first_payment_ht' => $this->round($firstPaymentHt),
-                'tax' => $this->round($taxAmount),
-                'total' => $this->round($totalTtc),
+                'recurring_ht' => $this->store_round($recurringHt),
+                'onetime_ht' => $this->store_round($onetimeHt),
+                'setup_ht' => $this->store_round($setupHt),
+                'first_payment_ht' => $this->store_round($firstPaymentHt),
+                'tax' => $this->store_round($taxAmount),
+                'total' => $this->store_round($totalTtc),
             ],
             'options' => array_values($this->formatOptions($options, $currency, $billing)),
             'formatted' => [
@@ -54,9 +60,9 @@ class ProductConfigurationPricingService
         return formatted_price($amountHt, $currency);
     }
 
-    private function round(float $amount): float
+    private function store_round(float $amount): float
     {
-        return round($amount, 2);
+        return store_round($amount, 2);
     }
 
     private function mapOptions(Product $product, string $billing, array $optionsInput): array
@@ -142,10 +148,10 @@ class ProductConfigurationPricingService
             return [
                 'key' => $option['config']->key,
                 'label' => $dto->formattedName(false),
-                'amount_ht' => $this->round($amountHt),
-                'recurring_ht' => $this->round($recurring),
-                'setup_ht' => $this->round($setup),
-                'onetime_ht' => $this->round($onetime),
+                'amount_ht' => $this->store_round($amountHt),
+                'recurring_ht' => $this->store_round($recurring),
+                'setup_ht' => $this->store_round($setup),
+                'onetime_ht' => $this->store_round($onetime),
                 'formatted' => formatted_price($amountHt, $currency),
             ];
         })->toArray();

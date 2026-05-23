@@ -28,6 +28,8 @@ use App\Models\Billing\Gateway;
 use App\Models\Store\Basket\Basket;
 use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Product;
+use App\Contracts\Store\ProductTypeInterface;
+use App\Services\Domain\DomainPricingService;
 use App\Services\Account\AccountEditService;
 use App\Services\Billing\InvoiceService;
 use App\Services\Store\ProductConfigurationPricingService;
@@ -77,7 +79,9 @@ class BasketController extends \App\Http\Controllers\Controller
             return back()->with('error', __('store.basket.not_valid'));
         }
         $row = BasketRow::findByProductOnSession($product, false);
-        $available = $product->pricingAvailable(currency());
+        $available = $product->type === ProductTypeInterface::DOMAIN && $request->query('tld')
+            ? app(DomainPricingService::class)->availableForTld($request->query('tld'), currency())
+            : $product->pricingAvailable(currency());
         $validated = $request->validate([
             'billing' => 'nullable|string|in:' . implode(',', collect($available)->pluck('recurring')->toArray()),
         ]);
@@ -112,6 +116,7 @@ class BasketController extends \App\Http\Controllers\Controller
         if (! $request->passes()) {
             return back()->with('error', collect($request->errors())->flatten()->values()->implode('<br>'));
         }
+        $row = BasketRow::findByProductOnSession($product);
         if ($product->productType()->data($product) != null) {
             $data = $product->productType()->data($product)->parameters(new ProductDataDTO($product, $row->data ?? [], $request->validated())) + $request->validated();
         } else {
@@ -121,7 +126,6 @@ class BasketController extends \App\Http\Controllers\Controller
         if (array_key_exists('error', $data)) {
             return back()->with('error', $data['error']);
         }
-        $row = BasketRow::findByProductOnSession($product);
         $row->billing = $request->billing;
         $row->currency = $request->currency;
         if ($product->isNotValid(true)) {
@@ -164,6 +168,7 @@ class BasketController extends \App\Http\Controllers\Controller
             $validated['billing'],
             $validated['currency'],
             $validated['options'] ?? [],
+            $validated,
         );
 
         return response()->json($preview + ['errors' => $errors]);

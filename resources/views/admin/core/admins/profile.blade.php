@@ -137,7 +137,7 @@
                                         <div class="md:col-span-2">
                                             @include('admin/shared/input', [
                                                 'name' => 'security_answer',
-                                                'label' => $item->securityQuestion->question,
+                                                'label' => $item->securityQuestion->getTranslatedQuestion(),
                                                 'help' => __('client.profile.security_question.answer_help'),
                                                 'required' => true,
                                             ])
@@ -215,6 +215,16 @@
                         class="btn {{ auth('admin')->user()->twoFactorEnabled() ? 'bg-red-600 text-white' : 'bg-primary text-gray-200' }} mt-4">{{ __(auth('admin')->user()->twoFactorEnabled() ? 'global.delete' : 'global.save') }}</button>
                 </form>
 
+                <form method="POST" action="{{ route('admin.profile.2fa_options') }}" class="mt-4">
+                    @csrf
+                    @include('shared/checkbox', [
+                        'name' => '2fa_email_new_ip',
+                        'label' => __('client.profile.2fa.email_new_ip'),
+                        'checked' => auth('admin')->user()->twoFactorEmailOnNewIpEnabled(),
+                    ])
+                    <button class="btn btn-secondary mt-3">{{ __('global.save') }}</button>
+                </form>
+
                 @if ($securityQuestionsEnabled)
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-4">
                         {{ __('client.profile.security_question.title') }}
@@ -222,7 +232,7 @@
                     @if ($item->hasSecurityQuestion())
                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {{ __('client.profile.security_question.current') }}:
-                            <strong>{{ $item->securityQuestion?->question }}</strong>
+                            <strong>{{ $item->securityQuestion?->getTranslatedQuestion() }}</strong>
                         </p>
                     @else
                         <form method="POST" action="{{ route('admin.profile.security_question') }}" class="mt-2">

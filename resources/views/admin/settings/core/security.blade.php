@@ -144,6 +144,16 @@
                 'checked' => setting('force_login_client'),
             ])
             @include('admin/shared/checkbox', [
+                'label' => __('admin.settings.core.security.fields.force_2fa_client'),
+                'name' => 'force_2fa_client',
+                'checked' => setting('force_2fa_client'),
+            ])
+            @include('admin/shared/checkbox', [
+                'label' => __('admin.settings.core.security.fields.force_2fa_admin'),
+                'name' => 'force_2fa_admin',
+                'checked' => setting('force_2fa_admin'),
+            ])
+            @include('admin/shared/checkbox', [
                 'label' => __('admin.settings.core.security.fields.allow_reset_password'),
                 'name' => 'allow_reset_password',
                 'checked' => setting('allow_reset_password'),

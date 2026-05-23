@@ -266,6 +266,20 @@ class Invoice extends Model implements SupportRelateItemInterface
         return $this->belongsTo(Customer::class)->withTrashed();
     }
 
+    public function scopeAccessibleBy($query, Customer $customer, string $permission = 'invoice.show')
+    {
+        return $query->where(function ($query) use ($customer, $permission) {
+            $query->where('customer_id', $customer->id)
+                ->orWhereExists(function ($subQuery) use ($customer, $permission) {
+                    $subQuery->selectRaw('1')
+                        ->from('customer_account_accesses')
+                        ->whereColumn('customer_account_accesses.owner_customer_id', 'invoices.customer_id')
+                        ->where('customer_account_accesses.sub_customer_id', $customer->id)
+                        ->whereJsonContains('customer_account_accesses.permissions', $permission);
+                });
+        });
+    }
+
     /**
      * Get the customer name or placeholder for deleted users.
      */

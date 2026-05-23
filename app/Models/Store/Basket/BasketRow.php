@@ -21,8 +21,11 @@ namespace App\Models\Store\Basket;
 
 use App\Casts\OptionCast;
 use App\DTO\Store\ProductDataDTO;
+use App\DTO\Store\ProductPriceDTO;
+use App\Contracts\Store\ProductTypeInterface;
 use App\Models\Store\Coupon;
 use App\Models\Store\Product;
+use App\Services\Domain\DomainPricingService;
 use App\Services\Store\TaxesService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -95,6 +98,19 @@ class BasketRow extends Model
         'currency' => 'eur',
     ];
 
+    public function getUnitPrice(?string $billing = null): ProductPriceDTO
+    {
+        $billing = $billing ?? $this->billing;
+        if ($this->product && $this->product->type === ProductTypeInterface::DOMAIN && ! empty($this->data['tld'])) {
+            $price = app(DomainPricingService::class)->priceFor($this->data['tld'], $this->currency, $billing);
+            if ($price !== null) {
+                return $price;
+            }
+        }
+
+        return $this->product->getPriceByCurrency($this->currency, $billing);
+    }
+
     public function applyCoupon(float $price, string $type)
     {
         if ($this->basket == null) {
@@ -118,9 +134,9 @@ class BasketRow extends Model
         }
         $this->enableCoupon();
         if (! $withQuantity) {
-            $recurringPayment = $this->product->getPriceByCurrency($this->currency, $this->billing)->recurringPayment();
+            $recurringPayment = $this->getUnitPrice()->recurringPayment();
         } else {
-            $recurringPayment = $this->product->getPriceByCurrency($this->currency, $this->billing)->recurringPayment() * $this->quantity;
+            $recurringPayment = $this->getUnitPrice()->recurringPayment() * $this->quantity;
         }
 
         return $this->applyCoupon($recurringPayment, self::PRICE);
@@ -133,9 +149,9 @@ class BasketRow extends Model
         }
         $this->enableCoupon();
         if (! $withQuantity) {
-            $onetimePayment = $this->product->getPriceByCurrency($this->currency, $this->billing)->onetimePayment();
+            $onetimePayment = $this->getUnitPrice()->onetimePayment();
         } else {
-            $onetimePayment = $this->product->getPriceByCurrency($this->currency, $this->billing)->onetimePayment() * $this->quantity;
+            $onetimePayment = $this->getUnitPrice()->onetimePayment() * $this->quantity;
         }
 
         return $this->applyCoupon($onetimePayment, self::PRICE);
@@ -145,9 +161,9 @@ class BasketRow extends Model
     {
         $this->enableCoupon();
         if (! $withQuantity) {
-            $setup = $this->product->getPriceByCurrency($this->currency, $this->billing)->setup();
+            $setup = $this->getUnitPrice()->setup();
         } else {
-            $setup = $this->product->getPriceByCurrency($this->currency, $this->billing)->setup() * $this->quantity;
+            $setup = $this->getUnitPrice()->setup() * $this->quantity;
         }
 
         return $this->applyCoupon($setup, self::SETUP_FEES);
@@ -156,7 +172,7 @@ class BasketRow extends Model
     public function amountBillable(): float
     {
         $this->enableCoupon();
-        $amount = $this->product->getPriceByCurrency($this->currency, $this->billing)->billableAmount() * $this->quantity;
+        $amount = $this->getUnitPrice()->billableAmount() * $this->quantity;
         $amount += $this->optionsAmountBillable();
 
         return $this->applyCoupon($amount, self::PRICE);

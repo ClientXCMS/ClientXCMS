@@ -133,7 +133,7 @@
                     </td>
                     <td class="h-px w-px whitespace-nowrap">
                         <div class="inline-flex rounded-lg shadow-sm">
-                            @if ($service->canManage())
+                            @if ($service->canManage() && auth()->user()->hasServicePermission($service, 'service.show'))
 
                                 <a href="{{ route('front.services.show', ['service' => $service]) }}">
                                           <span class="btn-action-with-icon mr-2">
@@ -142,7 +142,7 @@
                                         </span>
                                 </a>
                             @endif
-                            @if ($service->canRenew() && !isset($count))
+                            @if ($service->canRenew() && !isset($count) && auth()->user()->hasServicePermission($service, 'service.renew'))
                                 <div class="hs-dropdown relative inline-flex">
 
                                     <button class="hs-dropdown-toggle btn-action-with-icon" >

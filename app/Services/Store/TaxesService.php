@@ -44,11 +44,11 @@ class TaxesService
         }
         if ($price != 0) {
             if ($mode === self::MODE_TAX_INCLUDED) {
-                return round(($price * ($taxPercent / 100)), 2);
+                return store_round(($price * ($taxPercent / 100)), 2);
             }
         }
 
-        return round($price * ($taxPercent / 100), 2);
+        return store_round($price * ($taxPercent / 100), 2);
     }
 
     public static function getAmount(float $price, float $taxPercent, ?string $mode = null): float
@@ -57,10 +57,10 @@ class TaxesService
             $mode = setting('store_mode_tax', self::MODE_TAX_EXCLUDED);
         }
         if ($mode === self::MODE_TAX_INCLUDED) {
-            return round($price - self::getTaxAmount($price, $taxPercent, $mode), 2);
+            return store_round($price - self::getTaxAmount($price, $taxPercent, $mode), 2);
         }
 
-        return round($price, 2);
+        return store_round($price, 2);
     }
 
     public static function getVatPrice(float $ht, ?string $iso = null): float

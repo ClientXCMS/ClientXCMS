@@ -25,7 +25,7 @@
             <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">{{ __('auth.login.heading') }}</h1>
             <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                 {{ __('auth.login.no_account') }}
-                <a class="text-indigo-600 decoration-2 hover:underline font-medium dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="{{ route('register') }}">
+                <a class="text-indigo-600 decoration-2 hover:underline font-medium dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="{{ route('register', array_filter(['redirect' => $redirect ?? null, 'email' => $email ?? null])) }}">
                     {{ __('auth.register.register') }}
                 </a>
             </p>

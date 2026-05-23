@@ -67,6 +67,8 @@ class ProfileController extends \App\Http\Controllers\Controller
             'providers' => $providers,
             'qrcode' => $qrcode,
             'code' => $request->session()->get('2fa_secret'),
+            'ownedAccountAccesses' => $request->user('web')->ownedAccountAccesses()->with(['subCustomer', 'services'])->orderBy('created_at', 'desc')->get(),
+            'receivedAccountAccesses' => $request->user('web')->receivedAccountAccesses()->with(['owner', 'services'])->orderBy('created_at', 'desc')->get(),
         ]);
     }
 
@@ -108,8 +110,17 @@ class ProfileController extends \App\Http\Controllers\Controller
         }
         ActionLog::log(ActionLog::TWO_FACTOR_ENABLED, Customer::class, $request->user()->id, null, $request->user()->id);
         $request->user('web')->twoFactorEnable($request->session()->get('2fa_secret'));
+        $request->user('web')->trustTwoFactorIp($request->ip());
 
         return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.enabled'));
+    }
+
+    public function save2faOptions(Request $request): RedirectResponse
+    {
+        $request->user('web')->setTwoFactorEmailOnNewIp($request->has('2fa_email_new_ip'));
+        $request->user('web')->trustTwoFactorIp($request->ip());
+
+        return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.options_saved'));
     }
 
     public function downloadCodes(Request $request)

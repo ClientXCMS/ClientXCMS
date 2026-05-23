@@ -34,10 +34,19 @@ class InvoiceController extends Controller
             if (! in_array($filter, array_keys(Invoice::FILTERS))) {
                 return redirect()->route('front.invoices.index');
             }
-            $invoices = Invoice::where('customer_id', auth()->id())->where('status', '!=', Invoice::STATUS_DRAFT)->where('status', $request->get('filter'))->orderBy('created_at', 'desc')->paginate(10);
+            $invoices = Invoice::accessibleBy(auth()->user())
+                ->where('status', '!=', Invoice::STATUS_DRAFT)
+                ->when($filter !== 'all', function ($query) use ($filter) {
+                    $query->where('status', $filter);
+                })
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
         } else {
             $filter = null;
-            $invoices = Invoice::where('customer_id', auth()->id())->where('status', '!=', Invoice::STATUS_DRAFT)->orderBy('created_at', 'desc')->paginate(10);
+            $invoices = Invoice::accessibleBy(auth()->user())
+                ->where('status', '!=', Invoice::STATUS_DRAFT)
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
         }
 
         return view('front.billing.invoices.index', [
@@ -49,7 +58,7 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
-        abort_if($invoice->customer_id != auth()->id(), 404);
+        abort_if(! auth()->user()->hasInvoicePermission($invoice, 'invoice.show'), 404);
 
         $customer = $invoice->customer;
         $address = $invoice->billing_address;
@@ -63,7 +72,7 @@ class InvoiceController extends Controller
 
     public function pay(Invoice $invoice, string $gateway)
     {
-        abort_if($invoice->customer_id != auth()->id(), 404);
+        abort_if(! auth()->user()->hasInvoicePermission($invoice, 'invoice.pay'), 404);
         if ($invoice->total == 0) {
             $gateway = \App\Models\Billing\Gateway::where('uuid', 'none')->first();
         } else {
@@ -90,27 +99,27 @@ class InvoiceController extends Controller
 
     public function download(Invoice $invoice)
     {
-        abort_if($invoice->customer_id != auth()->id(), 404);
+        abort_if(! auth()->user()->hasInvoicePermission($invoice, 'invoice.download'), 404);
 
         return $invoice->download();
     }
 
     public function pdf(Invoice $invoice)
     {
-        abort_if($invoice->customer_id != auth()->id(), 404);
+        abort_if(! auth()->user()->hasInvoicePermission($invoice, 'invoice.download'), 404);
 
         return $invoice->pdf();
     }
 
     public function balance(Request $request, Invoice $invoice)
     {
-        abort_if($invoice->customer_id != auth()->id(), 404);
+        abort_if(! auth()->user()->hasInvoicePermission($invoice, 'invoice.balance'), 404);
         abort_if(! setting('allow_add_balance_to_invoices'), 404);
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0',
         ]);
         $amount = (float) $validated['amount'];
-        $userBalance = (float) auth('web')->user()->balance;
+        $userBalance = (float) $invoice->customer->balance;
         if ($amount > $userBalance) {
             return redirect()->route('front.invoices.show', $invoice)->with('error', __('client.invoices.balance.balance_not_enough'));
         }

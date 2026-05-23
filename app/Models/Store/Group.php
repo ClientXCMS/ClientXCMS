@@ -156,6 +156,9 @@ class Group extends Model
         'slug',
         'status',
         'description',
+        'badge_title',
+        'badge_color',
+        'badge_icon',
         'sort_order',
         'pinned',
         'image',
@@ -177,6 +180,7 @@ class Group extends Model
         'name' => 'text',
         'description' => 'textarea',
         'slug' => 'text',
+        'badge_title' => 'text',
     ];
 
     protected $with = ['groups', 'products'];

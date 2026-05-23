@@ -17,11 +17,16 @@
  * Year: 2025
  */
 use App\Http\Controllers\Front\Provisioning\ServiceController;
+use App\Http\Controllers\Front\DomainManagementController;
+use App\Http\Controllers\Front\SubUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('/client')->name('front.')->group(function () {
     Route::prefix('/services')->name('services')->middleware(['auth'])->group(function () {
         Route::get('/', [ServiceController::class, 'index'])->name('.index');
+        Route::get('/{service}/subusers', [SubUserController::class, 'service'])->name('.subusers');
+        Route::post('/{service}/subusers/invite', [SubUserController::class, 'storeService'])->name('.subusers.store');
+        Route::post('/{service}/subusers', [SubUserController::class, 'updateService'])->name('.subusers.update');
         Route::get('/{service}', [ServiceController::class, 'show'])->name('.show');
         Route::get('/{service}/upgrade', [ServiceController::class, 'upgrade'])->name('.upgrade');
         Route::get('/{service}/options', [ServiceController::class, 'options'])->name('.options');
@@ -31,6 +36,9 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::post('/name/{service}', [ServiceController::class, 'name'])->name('.name');
         Route::post('/cancel/{service}', [ServiceController::class, 'cancel'])->name('.cancel');
         Route::get('/tab/{service}/{tab}', [ServiceController::class, 'tab'])->name('.tab');
+        Route::post('/domains/{service}/nameservers', [DomainManagementController::class, 'nameservers'])->name('.domains.nameservers');
+        Route::post('/domains/{service}/dns', [DomainManagementController::class, 'storeDns'])->name('.domains.dns.store');
+        Route::delete('/domains/{service}/dns/{record}', [DomainManagementController::class, 'destroyDns'])->name('.domains.dns.destroy');
         Route::get('/{service}/renew/{gateway}', [ServiceController::class, 'renew'])->name('.renew');
         Route::post('/subscription/{service}', [ServiceController::class, 'subscription'])->name('.subscription');
     });

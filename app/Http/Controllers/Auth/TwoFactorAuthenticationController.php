@@ -19,24 +19,36 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Rules\Valid2FACodeRule;
 use Illuminate\Http\Request;
 
 class TwoFactorAuthenticationController
 {
-    public function show()
+    public function show(Request $request)
     {
         return view('front.auth.2fa');
     }
 
+    public function sendEmailCode(Request $request)
+    {
+        $user = $request->user('web');
+        if (! $user->shouldUseEmailTwoFactor('web', $request->ip())) {
+            return redirect()->route('auth.2fa');
+        }
+
+        $user->sendTwoFactorEmailCode('web', $request->ip());
+
+        return redirect()->route('auth.2fa')->with('success', __('client.profile.2fa.email_sent'));
+    }
+
     public function verify(Request $request)
     {
-        $data = $request->validate([
-            '2fa' => ['required', 'string', new Valid2FACodeRule],
+        $request->validate([
+            '2fa' => ['required', 'string'],
         ]);
         if (auth()->user()->isValidate2FA($request->input('2fa'))) {
             $request->session()->regenerate();
             \Session::put('2fa_verified', true);
+            auth()->user()->trustTwoFactorIp($request->ip());
 
             return redirect()->intended('/client');
         }

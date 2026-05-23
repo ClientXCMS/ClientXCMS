@@ -34,12 +34,12 @@ class SecurityQuestionSeeder extends Seeder
         }
 
         $questions = [
-            ['question' => __('install.security_questions.pet_name'), 'sort_order' => 1],
-            ['question' => __('install.security_questions.birth_city'), 'sort_order' => 2],
-            ['question' => __('install.security_questions.mother_maiden_name'), 'sort_order' => 3],
-            ['question' => __('install.security_questions.first_school'), 'sort_order' => 4],
-            ['question' => __('install.security_questions.favorite_movie'), 'sort_order' => 5],
-            ['question' => __('install.security_questions.childhood_nickname'), 'sort_order' => 6],
+            ['question' => 'install.security_questions.pet_name', 'sort_order' => 1],
+            ['question' => 'install.security_questions.birth_city', 'sort_order' => 2],
+            ['question' => 'install.security_questions.mother_maiden_name', 'sort_order' => 3],
+            ['question' => 'install.security_questions.first_school', 'sort_order' => 4],
+            ['question' => 'install.security_questions.favorite_movie', 'sort_order' => 5],
+            ['question' => 'install.security_questions.childhood_nickname', 'sort_order' => 6],
         ];
 
         foreach ($questions as $question) {

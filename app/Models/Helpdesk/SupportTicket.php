@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
@@ -294,14 +295,14 @@ class SupportTicket extends Model
         return false;
     }
 
-    public function notifySubscriber(Admin $subscriber, string $message, bool $firstMessage)
+    public function notifySubscriber(Admin $subscriber, SupportMessage|string $message, bool $firstMessage)
     {
-        $subscriber->notify(new NotifySubscriberEmail($this, $message, $firstMessage));
+        $subscriber->notify(new NotifySubscriberEmail($this, $message instanceof SupportMessage ? $message->message : $message, $firstMessage));
     }
 
-    public function notifyCustomer(string $message)
+    public function notifyCustomer(SupportMessage|string $message)
     {
-        $this->customer->notify(new NotifyCustomerEmail($this, $message));
+        $this->customer->notify(new NotifyCustomerEmail($this, $message instanceof SupportMessage ? $message->message : $message));
     }
 
     public function addMessage(string $content, ?int $customerId = null, ?int $staffId = null)

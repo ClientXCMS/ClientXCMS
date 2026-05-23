@@ -64,6 +64,13 @@
                     <div>
                         @include('admin/shared/input', ['name' => 'helpdesk_reopen_days', 'label' => __('helpdesk.admin.settings.fields.reopen_days'), 'value' => setting('helpdesk_reopen_days'), 'help' => __('helpdesk.admin.settings.fields.reopen_days_help')])
                     </div>
+
+                    <div>
+                        @include('admin/shared/input', ['name' => 'helpdesk_reply_mailbox', 'label' => 'Boîte mail de réponse (local-part)', 'value' => setting('helpdesk_reply_mailbox'), 'help' => 'Ex: support-reply pour support-reply+token@votre-domaine'])
+                    </div>
+                    <div>
+                        @include('admin/shared/password', ['name' => 'helpdesk_inbound_webhook_token', 'label' => 'Token webhook inbound email', 'value' => setting('helpdesk_inbound_webhook_token'), 'help' => 'À configurer côté provider email entrant'])
+                    </div>
                     <div class="relative flex items-start mr-3 mt-3 col-span-2">
                         <div class="flex items-center h-5 mt-1">
                             <input id="hs-checkbox-delete" name="helpdesk_allow_attachments" {{ setting('helpdesk_allow_attachments') ? 'checked' : '' }} type="checkbox" class="hs-collapse-toggle border-gray-200 rounded text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"  data-hs-collapse="#hs-smtp" aria-describedby="hs-smtp-description">

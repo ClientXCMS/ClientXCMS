@@ -131,7 +131,7 @@
                                             <div class="card-body">
                                                 <form method="POST" action="{{ route('front.support.messages.update', ['ticket' => $ticket, 'message' => $message]) }}">
                                                     @csrf
-                                                    <textarea class="editor" name="content">{{ $message->message }}</textarea>
+                                                    <textarea class="editor" data-autofocus="true" name="content">{{ $message->message }}</textarea>
                                                     <button class="btn btn-primary mt-2">{{ __('global.save') }}</button>
                                                 </form>
                                                 <form method="POST" action="{{ route('front.support.messages.destroy', ['ticket' => $ticket, 'message' => $message]) }}">

@@ -20,11 +20,22 @@
 use App\Http\Controllers\Front\Billing\PaymentMethodController;
 use App\Http\Controllers\Front\ClientController;
 use App\Http\Controllers\Front\EmailController;
+use App\Http\Controllers\Front\SubUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('/client')->name('front.')->group(function () {
     Route::get('/', [ClientController::class, 'index'])->middleware(['auth'])->name('client.index');
     Route::get('/onboarding', [ClientController::class, 'onboarding'])->middleware(['auth'])->name('client.onboarding');
+
+    Route::prefix('/profile/subusers')->name('subusers.')->middleware(['auth'])->group(function () {
+        Route::get('/', [SubUserController::class, 'index'])->name('index');
+        Route::post('/', [SubUserController::class, 'store'])->name('store');
+        Route::get('/invitations/{token}', [SubUserController::class, 'accept'])->name('accept')->withoutMiddleware('auth');
+        Route::put('/accesses/{access}', [SubUserController::class, 'update'])->name('accesses.update');
+        Route::delete('/accesses/{access}', [SubUserController::class, 'destroy'])->name('accesses.destroy');
+        Route::post('/invitations/{invitation}/resend', [SubUserController::class, 'resend'])->name('invitations.resend');
+        Route::delete('/invitations/{invitation}', [SubUserController::class, 'revoke'])->name('invitations.revoke');
+    });
 
     Route::prefix('/profile')->name('profile')->middleware(['auth'])->group(function () {
         Route::get('/', [\App\Http\Controllers\Front\ProfileController::class, 'show'])->name('.index');
@@ -32,6 +43,7 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::post('/password', [\App\Http\Controllers\Front\ProfileController::class, 'password'])->name('.password');
         Route::post('/export', [\App\Http\Controllers\Front\ProfileController::class, 'export'])->name('.export');
         Route::post('/2fa', [\App\Http\Controllers\Front\ProfileController::class, 'save2fa'])->name('.2fa');
+        Route::post('/2fa/options', [\App\Http\Controllers\Front\ProfileController::class, 'save2faOptions'])->name('.2fa_options');
         Route::get('/download_codes', [\App\Http\Controllers\Front\ProfileController::class, 'downloadCodes'])->name('.2fa_codes');
         Route::delete('/delete', [\App\Http\Controllers\Front\ProfileController::class, 'deleteAccount'])->name('.delete.confirm');
         Route::post('/security-question', [\App\Http\Controllers\Front\ProfileController::class, 'saveSecurityQuestion'])->name('.security_question');

@@ -31,7 +31,7 @@
         <div class="grid grid-cols-12 gap-4">
 
             <div class="col-span-12 sm:col-span-{{ $types->isEmpty() ? 12 : 8 }}">
-                <form method="POST" class="card" action="{{ route($routePath . '.store') }}">
+                <form method="POST" class="card" action="{{ route($routePath . '.store') }}" autocomplete="off">
                     <div class="card-heading">
                         <div>
                             <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
@@ -67,25 +67,25 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                         <div class="flex flex-col">
-                            @include('admin/shared/input', ['name' => 'name', 'label' => __('global.name'), 'value' => $item->name])
+                            @include('admin/shared/input', ['name' => 'name', 'label' => __('global.name'), 'value' => $item->name, 'attributes' => ['autocomplete' => 'off']])
                         </div>
                         <div class="flex flex-col">
                             @include('admin/shared/select', ['name' => 'type', 'label' => __($translatePrefix . '.type'), 'options' => $types, 'value' => $item->type])
                         </div>
 
                         <div class="flex flex-col">
-                            @include('admin/shared/input', ['name' => 'hostname', 'label' => __($translatePrefix . '.hostname'), 'value' => old('hostname', $item->hostname)])
+                            @include('admin/shared/input', ['name' => 'hostname', 'label' => __($translatePrefix . '.hostname'), 'value' => old('hostname', $item->hostname), 'attributes' => ['autocomplete' => 'off']])
                         </div>
 
                         <div class="flex flex-col">
-                            @include('admin/shared/input', ['name' => 'address', 'label' => __($translatePrefix . '.address'), 'value' => old('address', $item->address)])
+                            @include('admin/shared/input', ['name' => 'address', 'label' => __($translatePrefix . '.address'), 'value' => old('address', $item->address), 'attributes' => ['autocomplete' => 'off']])
                         </div>
                         <div class="flex flex-col">
                             @include('admin/shared/status-select', ['value' => $item->status])
                         </div>
 
                         <div class="flex flex-col">
-                            @include('admin/shared/input', ['name' => 'port', 'label' => __($translatePrefix . '.port'), 'value' => old('port', $item->port), 'type' => 'number', 'min' => 1, 'max' => 65535])
+                            @include('admin/shared/input', ['name' => 'port', 'label' => __($translatePrefix . '.port'), 'value' => old('port', $item->port), 'type' => 'number', 'min' => 1, 'max' => 65535, 'attributes' => ['autocomplete' => 'off']])
                         </div>
 
                         <div class="flex flex-col">

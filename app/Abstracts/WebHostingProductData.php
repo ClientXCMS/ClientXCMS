@@ -20,9 +20,12 @@
 namespace App\Abstracts;
 
 use App\DTO\Store\ProductDataDTO;
+use App\Models\Billing\InvoiceItem;
 use App\Models\Provisioning\SubdomainHost;
+use App\Models\Store\Product;
 use App\Rules\DomainIsNotRegisted;
 use App\Rules\FQDN;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\RequiredIf;
 
@@ -43,6 +46,8 @@ class WebHostingProductData extends AbstractProductData
 
     public function validate(): array
     {
+        $subdomains = $this->availableSubdomainsForCurrentProduct();
+
         return [
             'domain' => ['nullable', 'max:255', new FQDN, new DomainIsNotRegisted, new RequiredIf(function () {
                 return request()->input('domain_subdomain') == null;
@@ -50,14 +55,14 @@ class WebHostingProductData extends AbstractProductData
             ],
 
             'domain_subdomain' => ['nullable', 'string', 'max:255', new DomainIsNotRegisted(true),
-                new RequiredIf(function () {
-                    return request()->input('domain') == null && SubdomainHost::count() > 0;
+                new RequiredIf(function () use ($subdomains) {
+                    return request()->input('domain') == null && $subdomains->count() > 0;
                 }),
                 'regex:/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/',
             ],
-            'subdomain' => ['nullable', 'string', 'max:255', Rule::in(SubdomainHost::all()->pluck('domain')->toArray()),
-                new RequiredIf(function () {
-                    return request()->input('domain') == null && SubdomainHost::count() > 0;
+            'subdomain' => ['nullable', 'string', 'max:255', Rule::in($subdomains->pluck('domain')->toArray()),
+                new RequiredIf(function () use ($subdomains) {
+                    return request()->input('domain') == null && $subdomains->count() > 0;
                 }),
             ],
 
@@ -86,12 +91,41 @@ class WebHostingProductData extends AbstractProductData
 
     public function render(ProductDataDTO $productDataDTO)
     {
-        $subdomains = SubdomainHost::all();
+        $subdomains = SubdomainHost::availableForProduct($productDataDTO->product)->get();
 
         return view($this->view, [
             'productData' => $productDataDTO,
             'data' => $productDataDTO->data,
             'subdomains' => $subdomains,
         ])->render();
+    }
+
+    private function availableSubdomainsForCurrentProduct(): Collection
+    {
+        return SubdomainHost::availableForProduct($this->currentProduct())->get();
+    }
+
+    private function currentProduct(): ?Product
+    {
+        $product = request()->route('product');
+        if ($product instanceof Product) {
+            return $product;
+        }
+
+        $invoiceItem = request()->route('invoiceItem');
+        if ($invoiceItem instanceof InvoiceItem && $invoiceItem->relatedType() instanceof Product) {
+            return $invoiceItem->relatedType();
+        }
+
+        if (request()->input('related') === 'product' && request()->input('related_id') != null) {
+            return Product::find(request()->input('related_id'));
+        }
+
+        $productId = request()->input('product_id');
+        if ($productId == null) {
+            return null;
+        }
+
+        return Product::find($productId);
     }
 }

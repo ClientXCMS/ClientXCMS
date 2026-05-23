@@ -21,13 +21,13 @@ namespace App\Mail\Helpdesk;
 
 use App\Models\Admin\EmailTemplate;
 use App\Models\Helpdesk\SupportTicket;
-use DragonCode\Contracts\Queue\ShouldQueue;
+use App\Services\Helpdesk\HelpdeskMailerService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
 
-class NotifySubscriberEmail extends Notification implements ShouldQueue
+class NotifySubscriberEmail extends Notification
 {
     use Queueable, SerializesModels;
 
@@ -60,19 +60,23 @@ class NotifySubscriberEmail extends Notification implements ShouldQueue
     {
         $ticketUrl = route('admin.support.tickets.show', $this->ticket->id);
 
-        return EmailTemplate::getMailMessage('support_admin_ticket_created', $ticketUrl, [
+        $mail = EmailTemplate::getMailMessage('support_admin_ticket_created', $ticketUrl, [
             'ticket' => $this->ticket,
             'message' => $this->message,
         ], $notifiable);
+
+        return HelpdeskMailerService::apply($mail);
     }
 
     public function replyMessageMail($notifiable): MailMessage
     {
         $ticketUrl = route('admin.support.tickets.show', $this->ticket->id);
 
-        return EmailTemplate::getMailMessage('support_admin_ticket_reply', $ticketUrl, [
+        $mail = EmailTemplate::getMailMessage('support_admin_ticket_reply', $ticketUrl, [
             'ticket' => $this->ticket,
             'message' => $this->message,
         ], $notifiable);
+
+        return HelpdeskMailerService::apply($mail);
     }
 }

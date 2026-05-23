@@ -83,7 +83,7 @@ class RegisteredUserController extends Controller
             'city' => $request->city,
             'zipcode' => $request->zipcode,
             'region' => $request->region,
-            'phone' => $request->phone,
+            'phone' => $data['phone'],
             'country' => $request->country,
             'password' => Hash::make($request->password),
             'locale' => LocaleService::fetchCurrentLocale(),
@@ -122,6 +122,9 @@ class RegisteredUserController extends Controller
         }
 
         Auth::login($user);
+        if ($request->has('redirect') && $request->get('redirect') != null) {
+            return secure_redirect($request->get('redirect'));
+        }
         if (setting('auto_confirm_registration', false) === true) {
             return redirect()->route('front.client.index')->with('success', __('auth.register.success'));
         } else {

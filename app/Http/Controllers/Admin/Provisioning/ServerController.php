@@ -48,6 +48,7 @@ class ServerController extends AbstractCrudController
         'virtualizor_cloud' => ['Key', 'Password'],
         'proxmox' => ['Token Id', 'Secret'],
         'cpanel' => ['Username', 'Password'],
+        'domain' => ['Registrar env key', 'Secret env key'],
     ];
 
     public function config()

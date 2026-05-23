@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             EmailTemplateSeeder::class,
             CancellationReasonSeeder::class,
+            SecurityQuestionSeeder::class,
             GatewaySeeder::class,
             ThemeSeeder::class,
             SupportDepartmentSeeder::class,
