@@ -29,9 +29,9 @@ class InboundEmailTest extends TestCase
         // follow Laravel's default lookup, so we instantiate manually.
         \Database\Factories\Helpdesk\DepartmentFactory::new()->create();
 
-        // Provider expects a configured token. We seed it directly into
-        // the settings cache via the existing helper.
-        setting(['helpdesk_inbound_token' => 'TEST-TOKEN'])->save();
+        // Provider expects a configured token. setting() only reads a
+        // single key — use Setting::updateSettings() to persist.
+        \App\Models\Admin\Setting::updateSettings(['helpdesk_inbound_token' => 'TEST-TOKEN']);
     }
 
     public function test_unknown_token_is_rejected(): void
