@@ -26,6 +26,33 @@
     <div class="{{ theme_metadata('layout_classes', 'max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto') }}">
         @include('shared/alerts')
 
+        {{-- v2.16 — profile photo card, separate form because it ships its own
+             multipart enctype. Kept above the textual profile form so the avatar
+             feels like part of the page header. --}}
+        <div class="card mb-3 flex flex-col md:flex-row items-center gap-4 p-4">
+            <x-avatar :user="auth('web')->user()" size="xl" />
+            <div class="flex-1 text-center md:text-left">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ __('v216::profile.avatar.title') }}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('v216::profile.avatar.description') }}</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <form method="POST" action="{{ route('front.profile.avatar.upload') }}" enctype="multipart/form-data" class="contents">
+                    @csrf
+                    <label for="avatar" class="btn btn-primary cursor-pointer">
+                        {{ auth('web')->user()->avatar_path ? __('v216::profile.avatar.replace') : __('v216::profile.avatar.upload') }}
+                        <input type="file" id="avatar" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" onchange="this.form.submit()">
+                    </label>
+                </form>
+                @if(auth('web')->user()->avatar_path)
+                    <form method="POST" action="{{ route('front.profile.avatar.delete') }}" class="contents" onsubmit="return confirm('{{ __('v216::profile.avatar.remove') }}?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-secondary">{{ __('v216::profile.avatar.remove') }}</button>
+                    </form>
+                @endif
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div class="grid-cols-1 sm:col-span-2">
                 <div class="card">

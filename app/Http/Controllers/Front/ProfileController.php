@@ -26,9 +26,11 @@ use App\Http\Requests\Profile\ProfileUpdateRequest;
 use App\Models\Account\Customer;
 use App\Models\ActionLog;
 use App\Services\Account\AccountDeletionService;
+use App\Services\Account\AvatarService;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use PragmaRX\Google2FAQRCode\Google2FA;
 
 class ProfileController extends \App\Http\Controllers\Controller
@@ -173,5 +175,42 @@ class ProfileController extends \App\Http\Controllers\Controller
 
         return redirect()->route('front.profile.index')
             ->with('success', __('client.profile.security_question_saved'));
+    }
+
+    /**
+     * v2.16 — Upload (or replace) the current customer's avatar.
+     * Validation + resize-to-square happen inside AvatarService.
+     */
+    public function uploadAvatar(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'avatar' => [
+                'required',
+                'file',
+                'image',
+                'mimes:jpg,jpeg,png,webp,gif',
+                'max:'.(int) (AvatarService::MAX_BYTES / 1024), // KB
+            ],
+        ]);
+
+        try {
+            AvatarService::upload($request->user('web'), $request->file('avatar'));
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('front.profile.index')
+            ->with('success', __('v216::profile.avatar.updated'));
+    }
+
+    /**
+     * v2.16 — Remove the current avatar; the model falls back to initials.
+     */
+    public function deleteAvatar(Request $request): RedirectResponse
+    {
+        AvatarService::delete($request->user('web'));
+
+        return redirect()->route('front.profile.index')
+            ->with('success', __('v216::profile.avatar.removed'));
     }
 }

@@ -141,6 +141,8 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
         'locale',
         'security_question_id',
         'security_answer',
+        // v2.16 — relative path on the public disk; null means "no photo"
+        'avatar_path',
     ];
 
     protected $hidden = [

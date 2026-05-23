@@ -136,9 +136,10 @@
                 </div>
                 <div class="hs-dropdown relative inline-flex searchIcons" data-hs-dropdown-placement="bottom-right">
                     <button id="hs-dropdown-with-header" type="button" class="w-[2.375rem] h-[2.375rem] inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-white hover:bg-white/20 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-1 focus:ring-gray-600">
-                        <span class="inline-flex items-center justify-center h-[2.375rem] w-[2.375rem] rounded-full bg-gray-500 font-semibold text-white leading-none">
-  {{ auth('admin')->user()->firstname[0] . auth('admin')->user()->lastname[0] }}
-</span>
+                        {{-- v2.16 — uses the shared <x-avatar> component so admin and customer
+                             headers stay visually consistent and fall back to coloured
+                             initials when no avatar is set. --}}
+                        <x-avatar :user="auth('admin')->user()" size="md" class="!ring-0" />
                     </button>
 
                     <div class="hs-dropdown-menu z-50 transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-[15rem] bg-white shadow-md rounded-lg p-2 dark:bg-gray-800 dark:border dark:border-gray-700" aria-labelledby="hs-dropdown-with-header">

@@ -281,6 +281,8 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'locale',
         'billing_details',
         'company_name',
+        // v2.16 — relative path on the public disk; null means "no photo"
+        'avatar_path',
         'gdpr_compliment',
         'security_question_id',
         'security_answer',
