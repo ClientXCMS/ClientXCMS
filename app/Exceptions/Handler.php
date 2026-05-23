@@ -53,17 +53,34 @@ class Handler extends ExceptionHandler
         });
     }
 
+    /**
+     * v2.16 — Status codes for which we ship a custom branded error page.
+     * Adding a code here is enough as long as resources/views/errors/{code}.blade.php exists.
+     */
+    private const RENDERED_STATUSES = [401, 403, 404, 419, 422, 429, 500, 503];
+
     public function render($request, Throwable $exception)
     {
         if ($exception instanceof ViewException && \Str::contains($exception->getMessage(), 'Vite manifest not found at')) {
             return response("Vite manifest not found. Please execute 'npm install && npm run build'", 404);
         }
+
+        // v2.16 — uniform handler for known HTTP error codes. Falls through
+        // to Laravel's default rendering when the view cannot be rendered
+        // (e.g. theme override is broken) so we never serve a white page.
         if ($this->isHttpException($exception)) {
-            if ($exception->getStatusCode() == 404) {
-                return response()->view('errors.404', [], 404);
-            }
-            if ($exception->getStatusCode() == 500) {
-                return response()->view('errors.500', [], 500);
+            $status = $exception->getStatusCode();
+            if (in_array($status, self::RENDERED_STATUSES, true)) {
+                try {
+                    return response()->view('errors.' . $status, [
+                        'exception' => $exception,
+                    ], $status);
+                } catch (\Throwable $renderError) {
+                    // The branded page itself failed (broken theme override,
+                    // missing translation file, …). Log + fall back to the
+                    // framework default rather than 500'ing on a 404.
+                    logger()->warning('[v2.16] Failed to render errors.' . $status . ' view: ' . $renderError->getMessage());
+                }
             }
         }
 
