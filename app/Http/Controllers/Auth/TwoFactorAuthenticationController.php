@@ -46,9 +46,12 @@ class TwoFactorAuthenticationController
             '2fa' => ['required', 'string'],
         ]);
 
-        $user = auth('admin')->user();
+        // v2.16 — was reading auth('admin')->user() on this client-facing
+        // route, which kicked an authenticated *customer* back to the admin
+        // login page (TwoFactorAuthenticationTest::test_client_can_verify_two_factor_email_code).
+        $user = $request->user('web');
         if (! $user) {
-            return redirect()->route('admin.login');
+            return redirect()->route('login');
         }
         if ($user->isValidate2FA($request->input('2fa'))) {
             $request->session()->regenerate();
