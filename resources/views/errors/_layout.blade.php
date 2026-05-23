@@ -93,7 +93,14 @@
             @hasSection('illustration')
                 <div class="illustration" aria-hidden="true">@yield('illustration')</div>
             @endif
-            <div class="code" aria-hidden="true">{{ __('v216::errors.common.status_code', ['code' => trim((string) View::yieldContent('status_code'))]) }}</div>
+            {{-- v2.16 — $statusCode is forwarded by App\Exceptions\Handler.
+                 We fall back to the section value (set by each page)
+                 just in case the layout is rendered directly without
+                 going through the handler. --}}
+            @php
+                $__renderedStatus = $statusCode ?? trim((string) ($__env->yieldContent('status_code') ?: ''));
+            @endphp
+            <div class="code" aria-hidden="true">{{ __('v216::errors.common.status_code', ['code' => $__renderedStatus]) }}</div>
             <h1>@yield('title')</h1>
             @hasSection('heading')
                 <p class="muted" style="font-weight:500;color:#0f172a">@yield('heading')</p>

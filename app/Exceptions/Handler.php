@@ -74,6 +74,11 @@ class Handler extends ExceptionHandler
                 try {
                     return response()->view('errors.' . $status, [
                         'exception' => $exception,
+                        // v2.16 — pass the code as a real variable so the
+                        // layout doesn't need to call View::yieldContent()
+                        // mid-render (that helper leaks output buffers
+                        // when invoked inside @php / __() expressions).
+                        'statusCode' => $status,
                     ], $status);
                 } catch (\Throwable $renderError) {
                     // The branded page itself failed (broken theme override,

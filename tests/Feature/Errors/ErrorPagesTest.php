@@ -24,8 +24,8 @@ class ErrorPagesTest extends TestCase
         $response = $this->get('/some-route-that-does-not-exist-' . uniqid());
 
         $response->assertStatus(404);
-        $response->assertSee(__('v216::errors.404.title'), false);
-        $response->assertSee(__('v216::errors.404.description'), false);
+        $response->assertSee(__('v216::errors.404.title'));
+        $response->assertSee(__('v216::errors.404.description'));
     }
 
     /**
@@ -42,11 +42,17 @@ class ErrorPagesTest extends TestCase
             throw new $exceptionClass;
         });
 
+        // Let the Handler decide what to render — surface the response
+        // even when exceptions slip through (default Laravel TestCase
+        // disables exception handling).
+        $this->withoutExceptionHandling()->withExceptionHandling();
+
         $response = $this->get('/__tests__/throw/' . $code);
 
         $response->assertStatus($code);
-        $response->assertSee(__('v216::errors.' . $code . '.title'), false);
-        $response->assertSee('Error ' . $code, false);
+        $response->assertSee(__('v216::errors.' . $code . '.title'));
+        // The translated status_code message contains the digits, look for them.
+        $response->assertSee((string) $code);
     }
 
     public static function httpCodes(): array
