@@ -245,9 +245,12 @@ class SupportTicket extends Model
 
         static::creating(function ($ticket) {
             $ticket->uuid = generate_uuid(SupportTicket::class);
-            // v2.16 — auto-generate the guest token when none was provided
-            // so the anonymous sender always has a stable URL to land on.
-            if ($ticket->customer_id === null && empty($ticket->guest_token)) {
+            // v2.16 — always mint a guest_token so the customer can land on
+            // the tracking page without logging in (useful for inbound-email
+            // confirmations and "you have a reply" notifications). Even when
+            // the ticket is linked to a registered customer, the token is
+            // their share/preview link.
+            if (empty($ticket->guest_token)) {
                 $ticket->guest_token = \Illuminate\Support\Str::random(48);
             }
         });

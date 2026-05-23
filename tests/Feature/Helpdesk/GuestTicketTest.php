@@ -68,8 +68,8 @@ class GuestTicketTest extends TestCase
     {
         $this->post(route('front.support.guest.store'), [
             'email' => 'visitor@example.com',
-            'subject' => 'Hi',
-            'message' => 'Initial',
+            'subject' => 'Hi there',
+            'message' => 'Initial message',
         ]);
         $ticket = SupportTicket::first();
 
