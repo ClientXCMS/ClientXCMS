@@ -81,6 +81,9 @@ class SupportController extends Controller
             $ticket->addAttachment($attachment, auth('web')->id());
         }
 
+        // v2.16 — start the SLA clocks based on the department's targets.
+        app(\App\Services\Helpdesk\SlaService::class)->applyOnCreate($ticket);
+
         return redirect()->route('front.support.index');
     }
 
