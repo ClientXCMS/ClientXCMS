@@ -50,6 +50,11 @@ class DatabaseExtensionCommand extends Command
 
             return;
         }
+        if ($this->option('extension') !== null && ! preg_match('/^[a-zA-Z0-9_-]+$/', $this->option('extension'))) {
+            $this->error('Invalid extension identifier.');
+
+            return;
+        }
         $extension = $this->option('extension');
         foreach ($folders as $folder) {
             $directories = \File::directories($folder);

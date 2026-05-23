@@ -21,6 +21,7 @@ namespace App\Http\Controllers\Admin\Personalization;
 
 use App\Events\Resources\ResourceCreatedEvent;
 use App\Events\Resources\ResourceUpdatedEvent;
+use App\Models\Admin\Permission;
 use App\Models\Personalization\SocialNetwork;
 use App\Theme\ThemeManager;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -29,6 +30,8 @@ use Illuminate\Support\Facades\DB;
 
 class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudController
 {
+    protected ?string $managedPermission = Permission::MANAGE_PERSONALIZATION;
+
     protected string $viewPath = 'admin.personalization.socials';
 
     protected string $routePath = 'admin.personalization.socials';
@@ -55,6 +58,7 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
 
     public function store(Request $request)
     {
+        $this->checkPermission('create');
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'icon' => 'required|string|max:255',
@@ -95,6 +99,7 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
 
     public function update(Request $request, SocialNetwork $social)
     {
+        $this->checkPermission('update');
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'icon' => 'required|string|max:255',
@@ -121,6 +126,7 @@ class SocialCrudController extends \App\Http\Controllers\Admin\AbstractCrudContr
 
     public function destroy(SocialNetwork $social)
     {
+        $this->checkPermission('delete');
         $social->delete();
         ThemeManager::clearCache();
 

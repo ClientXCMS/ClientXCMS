@@ -26,6 +26,19 @@ use ZipArchive;
 
 class UpdaterManager
 {
+    /**
+     * Sub-directories under base_path() that an extension archive is allowed
+     * to write into. Any file outside this list is treated as a supply-chain
+     * attempt (overwriting app/Http/Controllers, bootstrap/, vendor/, .env, ...).
+     */
+    private const ALLOWED_PREFIXES = [
+        'modules/',
+        'addons/',
+        'themes/',
+        'email_templates/',
+        'invoice_templates/',
+    ];
+
     public function update(string $uuid)
     {
 
@@ -48,6 +61,7 @@ class UpdaterManager
 
     public function extract(string $file, string $to)
     {
+        self::rejectZipSlip($file);
         $zip = new ZipArchive;
         $finder = new Finder;
 
@@ -64,6 +78,7 @@ class UpdaterManager
                     unlink($to.DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$file);
                 }
             }
+            self::assertExtractedTreeStaysInExtensionDirs($to.DIRECTORY_SEPARATOR.$path);
             $fileSystem->mirror($to.DIRECTORY_SEPARATOR.$path, base_path(), null, ['override' => true]);
         }
         $zip->close();
@@ -73,6 +88,59 @@ class UpdaterManager
         if (is_dir($to)) {
             $fileSystem = new Filesystem;
             $fileSystem->remove($to);
+        }
+    }
+
+    /**
+     * Walk the ZIP entries before extracting and refuse any entry whose name
+     * either escapes the destination (.., absolute path, Windows drive) or
+     * targets a path under a non-extension prefix at the project root.
+     */
+    public static function rejectZipSlip(string $file): void
+    {
+        $zip = new ZipArchive;
+        if ($zip->open($file) !== true) {
+            return;
+        }
+        try {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entry = $zip->getNameIndex($i);
+                if ($entry === false) {
+                    continue;
+                }
+                $normalized = str_replace('\\', '/', $entry);
+                if (str_starts_with($normalized, '/')
+                    || preg_match('#(^|/)\.\.(/|$)#', $normalized)
+                    || preg_match('/^[a-zA-Z]:/', $normalized)) {
+                    throw new \RuntimeException("Zip slip attempt blocked: {$entry}");
+                }
+            }
+        } finally {
+            $zip->close();
+        }
+    }
+
+    /**
+     * Refuse to mirror anything outside the whitelisted extension directories.
+     * The vendor archive layout is `<root>/<prefix>/<extension>/...` where
+     * <prefix> is one of ALLOWED_PREFIXES; files at any other location are
+     * a supply-chain payload trying to overwrite app/, bootstrap/, etc.
+     */
+    public static function assertExtractedTreeStaysInExtensionDirs(string $root): void
+    {
+        $finder = (new Finder)->in($root)->files()->ignoreDotFiles(false);
+        foreach ($finder as $file) {
+            $rel = ltrim(str_replace('\\', '/', $file->getRelativePathname()), '/');
+            $allowed = false;
+            foreach (self::ALLOWED_PREFIXES as $prefix) {
+                if (str_starts_with($rel, $prefix)) {
+                    $allowed = true;
+                    break;
+                }
+            }
+            if (! $allowed) {
+                throw new \RuntimeException("Extension archive contains a file outside the allowed extension directories: {$rel}");
+            }
         }
     }
 

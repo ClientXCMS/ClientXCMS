@@ -39,7 +39,7 @@ Route::name('personalization.')->prefix('/personalization')->group(function () {
     Route::post('/switch_theme/{theme}', [ThemeController::class, 'switchTheme'])->name('switch_theme');
     Route::post('/config_theme/{theme}', [ThemeController::class, 'configTheme'])->name('config_theme');
     Route::resource('sections', SectionController::class)->names('sections')->except('edit');
-    Route::post('/sections/sort', [SectionController::class, 'sort'])->name('sections.sort')->withoutMiddleware('csrf');
+    Route::post('/sections/sort', [SectionController::class, 'sort'])->name('sections.sort');
     Route::post('/sections/{section}/clone', [SectionController::class, 'clone'])->name('sections.clone');
     Route::post('/sections/{section}/switch', [SectionController::class, 'switch'])->name('sections.switch');
     Route::post('/sections/{section}/restore', [SectionController::class, 'restore'])->name('sections.restore');
@@ -53,7 +53,7 @@ Route::post('menulink/{type}', [MenuLinkController::class, 'store'])->whereIn('t
 Route::get('menulink/{type}', [MenuLinkController::class, 'create'])->name('personalization.menulinks.create')->whereIn('type', $types);
 Route::delete('menulink/{menulink}', [MenuLinkController::class, 'delete'])->name('personalization.menulinks.delete');
 Route::get('menulink/{menulink}', [MenuLinkController::class, 'show'])->name('personalization.menulinks.show');
-Route::post('menulink/{type}/sort', [MenuLinkController::class, 'sort'])->name('personalization.menulinks.sort')->withoutMiddleware('csrf');
+Route::post('menulink/{type}/sort', [MenuLinkController::class, 'sort'])->name('personalization.menulinks.sort');
 Route::get('menulink/custom/{type}', [SettingsPersonalizationController::class, 'showCustomMenu'])->name('personalization.menulinks.custom');
 Route::name('settings.')->prefix('settings')->middleware('admin')->group(function () {
     Route::put('/personalization/seo', [SettingsPersonalizationController::class, 'storeSeoSettings'])->name('personalization.seo');

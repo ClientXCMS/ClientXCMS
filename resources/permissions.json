@@ -195,5 +195,10 @@
         "name": "admin.manage_update",
         "label": "permissions.manage_update",
         "group": "permissions.technical"
+    },
+    {
+        "name": "admin.manage_settings",
+        "label": "permissions.manage_settings",
+        "group": "permissions.technical"
     }
 ]

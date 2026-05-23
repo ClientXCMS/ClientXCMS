@@ -86,7 +86,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         try {
             $path = base_path('bootstrap/cache');
             if (! file_exists($path)) {
-                mkdir($path, 0777, true);
+                mkdir($path, 0755, true);
             }
         } catch (\Exception $e) {
             throw new ExtensionException('Unable to create bootstrap/cache directory');

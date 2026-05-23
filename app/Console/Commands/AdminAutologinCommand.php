@@ -62,12 +62,12 @@ class AdminAutologinCommand extends Command
                 return;
             }
         }
-        $key = hash('sha256', Str::uuid()->toString());
-        $admin->attachMetadata('autologin_key', $key);
+        $plainToken = (string) Str::uuid();
+        $admin->attachMetadata('autologin_key', hash('sha256', $plainToken));
         $admin->attachMetadata('autologin_expires_at', now()->addMinutes((int) $this->option('expire')));
         if ($this->option('unique')) {
             $admin->attachMetadata('autologin_unique', true);
         }
-        $this->info('Autologin link: '.URL::signedRoute('admin.autologin', ['id' => $admin->id, 'token' => $key]));
+        $this->info('Autologin link: '.URL::signedRoute('admin.autologin', ['id' => $admin->id, 'token' => $plainToken]));
     }
 }

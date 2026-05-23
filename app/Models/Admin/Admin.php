@@ -118,6 +118,13 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
 {
     use CanUse2FA, HasApiTokens, HasFactory, HasMetadata, Loggable, Notifiable, softDeletes;
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $admin) {
+            $admin->tokens()->delete();
+        });
+    }
+
     protected $fillable = [
         'email',
         'password',

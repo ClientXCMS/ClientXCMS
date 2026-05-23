@@ -50,7 +50,7 @@ class ApiKeysController extends AbstractCrudController
                 'groups:update' => __('global.update'),
                 'groups:delete' => __('global.delete'),
             ],
-            __('admin.products.tariff') . 's' => [
+            __('admin.products.tariff').'s' => [
                 'pricing:index' => __('global.listing'),
                 'pricing:store' => __('global.store'),
                 'pricing:show' => __('global.show'),
@@ -166,6 +166,7 @@ class ApiKeysController extends AbstractCrudController
             'is_admin' => 'nullable',
         ]);
         if (array_key_exists('is_admin', $validated)) {
+            abort_if(! auth('admin')->user()->role?->is_admin, 403);
             $validated['permissions'] = ['*'];
         } else {
             $validated['permissions'] = array_merge(array_keys($validated['permissions']), ['hearth', 'license']);
@@ -188,6 +189,9 @@ class ApiKeysController extends AbstractCrudController
     {
         staff_aborts_permission(Permission::MANAGE_API_KEYS);
         $token = auth('admin')->user()->tokens()->findOrFail($id);
+        if (in_array('*', (array) $token->abilities, true)) {
+            abort_if(! auth('admin')->user()->role?->is_admin, 403);
+        }
         $newToken = auth('admin')->user()->createToken($token->name, $token->abilities);
         $token->delete();
 

@@ -31,6 +31,7 @@ class SettingsExtensionController
 {
     public function showExtensions()
     {
+        staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
         $groups = app('extension')->getGroupsWithExtensions();
 
         $card = app('settings')->getCards()->firstWhere('uuid', 'extensions');
@@ -44,13 +45,23 @@ class SettingsExtensionController
         return view('admin.settings.extensions.index', ['groups' => $groups, 'tags' => app('extension')->fetch()['tags'] ?? []]);
     }
 
+    private const ALLOWED_TYPES = ['modules', 'addons', 'themes', 'email_templates', 'invoice_templates'];
+
+    private function validateExtensionIdentifier(string $type, string $extension): void
+    {
+        if (! in_array($type, self::ALLOWED_TYPES, true)) {
+            abort(404);
+        }
+        if (! preg_match('/^[a-zA-Z0-9_-]+$/', $extension)) {
+            abort(400, 'Invalid extension identifier');
+        }
+    }
+
     public function enable(string $type, string $extension)
     {
         staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
 
-        if (! in_array($type, ['modules', 'addons', 'themes', 'email_templates', 'invoice_templates'])) {
-            abort(404);
-        }
+        $this->validateExtensionIdentifier($type, $extension);
         if (app('extension')->extensionIsEnabled($extension)) {
             return $this->respondWithError(__('extensions.flash.already_enabled'));
         }
@@ -90,9 +101,7 @@ class SettingsExtensionController
     public function disable(string $type, string $extension)
     {
         staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
-        if (! in_array($type, ['modules', 'addons', 'themes', 'email_templates', 'invoice_templates'])) {
-            abort(404);
-        }
+        $this->validateExtensionIdentifier($type, $extension);
         app('extension')->disable($type, $extension);
         ActionLog::log(ActionLog::EXTENSION_DISABLED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
 
@@ -110,9 +119,7 @@ class SettingsExtensionController
     public function update(string $type, string $extension)
     {
         staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
-        if (! in_array($type, ['modules', 'addons', 'themes', 'email_templates', 'invoice_templates'])) {
-            abort(404);
-        }
+        $this->validateExtensionIdentifier($type, $extension);
         try {
             app('extension')->update($type, $extension);
         } catch (\Exception $e) {
@@ -127,9 +134,7 @@ class SettingsExtensionController
     {
         staff_aborts_permission(Permission::MANAGE_EXTENSIONS);
 
-        if (! in_array($type, ['modules', 'addons', 'themes', 'email_templates', 'invoice_templates'])) {
-            abort(404);
-        }
+        $this->validateExtensionIdentifier($type, $extension);
         if (app('extension')->extensionIsEnabledForType($type, $extension)) {
             return $this->respondWithError(__('extensions.flash.uninstall_must_disable_first'));
         }
@@ -155,7 +160,7 @@ class SettingsExtensionController
         $validated = $request->validate([
             'extensions' => 'required|array|min:1',
             'extensions.*.type' => 'required|string|in:modules,addons,themes,email_templates,invoice_templates',
-            'extensions.*.uuid' => 'required|string',
+            'extensions.*.uuid' => 'required|string|regex:/^[a-zA-Z0-9_-]+$/',
             'action' => 'required|string|in:enable,disable,install,update',
         ]);
 

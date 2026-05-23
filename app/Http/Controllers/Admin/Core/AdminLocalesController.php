@@ -21,6 +21,7 @@ namespace App\Http\Controllers\Admin\Core;
 
 use App\Helpers\Countries;
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Permission;
 use App\Services\Core\LocaleService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -29,6 +30,7 @@ class AdminLocalesController extends Controller
 {
     public function index()
     {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $locales = LocaleService::getLocales(false);
         $countries = Countries::allNames();
         $enabledCountries = Countries::enabledCodes();
@@ -45,6 +47,7 @@ class AdminLocalesController extends Controller
 
     public function download(string $locale)
     {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $existing = LocaleService::getLocales(false)[$locale] ?? null;
         if (! $existing) {
             abort(404);
@@ -60,6 +63,7 @@ class AdminLocalesController extends Controller
 
     public function toggle(string $locale)
     {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $existing = LocaleService::getLocales(false)[$locale] ?? null;
         if (! $existing) {
             abort(404);

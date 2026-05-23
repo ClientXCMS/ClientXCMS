@@ -22,6 +22,7 @@ namespace App\Http\Controllers\Admin\Provisioning;
 use App\DTO\Store\ConfigOptionDTO;
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Http\Requests\Provisioning\UpdateConfigOptionServiceRequest;
+use App\Models\Admin\Permission;
 use App\Models\Billing\ConfigOption;
 use App\Models\Provisioning\ConfigOptionService;
 use App\Models\Provisioning\Service;
@@ -32,6 +33,8 @@ use Illuminate\Http\Request;
 
 class ConfigOptionServiceController extends AbstractCrudController
 {
+    protected ?string $managedPermission = Permission::MANAGE_CONFIGOPTIONS;
+
     protected string $model = ConfigOptionService::class;
 
     protected string $viewPath = 'admin.provisioning.config-options-services';
@@ -58,6 +61,7 @@ class ConfigOptionServiceController extends AbstractCrudController
 
     public function show(ConfigOptionService $configoptions_service)
     {
+        $this->checkPermission('show');
         $options = ConfigOption::all()->mapWithKeys(function ($item) {
             return [$item->id => $item->name];
         });
@@ -71,6 +75,7 @@ class ConfigOptionServiceController extends AbstractCrudController
 
     public function update(UpdateConfigOptionServiceRequest $request, ConfigOptionService $configoptions_service)
     {
+        $this->checkPermission('update');
         $validated = $request->validated();
         $configoptions_service->update($validated);
         Pricing::createOrUpdateFromArray($validated, $configoptions_service->id, 'config_options_service');
@@ -81,6 +86,7 @@ class ConfigOptionServiceController extends AbstractCrudController
 
     public function create(Request $request)
     {
+        $this->checkPermission('create');
         $serviceId = $request->get('service_id');
 
         return $this->createView(['options' => ConfigOption::all(), 'service_id' => $serviceId]);
@@ -88,6 +94,7 @@ class ConfigOptionServiceController extends AbstractCrudController
 
     public function store(Request $request)
     {
+        $this->checkPermission('create');
         $validated = $request->validate([
             'value' => 'required',
             'config_option_id' => 'required|exists:config_options,id',
@@ -109,6 +116,7 @@ class ConfigOptionServiceController extends AbstractCrudController
 
     public function destroy(ConfigOptionService $configoptions_service)
     {
+        $this->checkPermission('delete');
         $configoptions_service->delete();
         Pricing::where('related_id', $configoptions_service->id)
             ->where('related_type', 'config_options_service')

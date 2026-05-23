@@ -46,6 +46,7 @@ class TwoFactorAuthenticationController
             '2fa' => ['required', 'string'],
         ]);
         if (auth()->user()->isValidate2FA($request->input('2fa'))) {
+            $request->session()->regenerate();
             \Session::put('2fa_verified', true);
             auth()->user()->trustTwoFactorIp($request->ip());
 

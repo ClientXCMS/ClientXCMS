@@ -198,6 +198,8 @@ class CustomerController extends AbstractCrudController
         \Session::put('autologin', true);
         \Session::put('autologin_customer', $customer->id);
         auth('web')->loginUsingId($customer->id);
+        \Session::regenerate();
+        \Session::forget(['2fa_verified', '2fa_secret']);
         \Session::flash('success', __('admin.customers.autologin.success', ['name' => e($customer->fullName)]));
 
         return redirect()->to(RouteServiceProvider::HOME);
@@ -210,6 +212,8 @@ class CustomerController extends AbstractCrudController
         $customer = Customer::find(\Session::get('autologin_customer'));
         \Session::remove('autologin');
         \Session::remove('autologin_customer');
+        \Session::regenerate();
+        \Session::forget(['2fa_verified', '2fa_secret']);
         \Session::flash('success', __('admin.customers.autologin.logoutsuccess', ['name' => e($customer->fullName)]));
 
         return redirect()->route('admin.customers.show', $customer);
@@ -253,6 +257,7 @@ class CustomerController extends AbstractCrudController
                 }
             }
             if ($request->get('field') == 'service_id') {
+                staff_aborts_permission(\App\Models\Admin\Permission::SHOW_SERVICES);
                 $service = \App\Models\Provisioning\Service::where('id', (int) $request->get('q'))->first();
                 if ($service) {
                     $this->routePath = 'admin.services';
@@ -261,6 +266,7 @@ class CustomerController extends AbstractCrudController
                 }
             }
             if ($request->get('field') == 'invoice_id') {
+                staff_aborts_permission(\App\Models\Admin\Permission::SHOW_INVOICES);
                 $invoice = \App\Models\Billing\Invoice::where('id', (int) $request->get('q'))->first();
                 if ($invoice) {
                     $this->routePath = 'admin.invoices';

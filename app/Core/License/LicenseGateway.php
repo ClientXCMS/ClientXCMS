@@ -48,9 +48,30 @@ class LicenseGateway
         $this->httpClient = new Client(['timeout' => 10, 'headers' => ['Accept' => 'application/json']]);
     }
 
+    /**
+     * Allowed hostnames for the license / update server. CTX_DOMAIN can
+     * still be set via env to point at staging or a CI mirror, but it
+     * MUST resolve to one of these hosts. Anything else (typo, .env
+     * tampering, attacker-controlled domain) falls back to the
+     * canonical production URL.
+     */
+    private const ALLOWED_LICENSE_HOSTS = [
+        'clientxcms.com',
+        'www.clientxcms.com',
+        'staging.clientxcms.com',
+        'api.clientxcms.com',
+    ];
+
     public static function getDomain()
     {
-        return env('CTX_DOMAIN') ?? 'https://clientxcms.com';
+        $candidate = env('CTX_DOMAIN') ?: 'https://clientxcms.com';
+        $host = parse_url($candidate, PHP_URL_HOST);
+        $scheme = parse_url($candidate, PHP_URL_SCHEME);
+        if ($scheme !== 'https' || ! in_array(strtolower((string) $host), self::ALLOWED_LICENSE_HOSTS, true)) {
+            return 'https://clientxcms.com';
+        }
+
+        return rtrim($candidate, '/');
     }
 
     public function getAuthorizationUrl()

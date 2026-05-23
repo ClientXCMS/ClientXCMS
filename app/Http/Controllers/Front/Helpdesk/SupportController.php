@@ -162,6 +162,7 @@ class SupportController extends Controller
     {
         abort_if($ticket->customer_id != auth()->id(), 404);
         abort_if($message->customer_id != auth('web')->id(), 404);
+        abort_if($message->ticket_id !== $ticket->id, 404);
         $message->delete();
 
         return back()->with('success', __('helpdesk.support.ticket_message_deleted'));

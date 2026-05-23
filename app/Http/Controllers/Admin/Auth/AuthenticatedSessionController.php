@@ -38,7 +38,7 @@ class AuthenticatedSessionController extends Controller
             $request->authenticate();
         } catch (ValidationException $e) {
             if ($request->has('redirect')) {
-                return redirect()->away($request->get('redirect'))->with('error', $e->getMessage())->withErrors($e->getMessage());
+                return secure_redirect($request->get('redirect'))->with('error', $e->getMessage())->withErrors($e->getMessage());
             }
             if ($request->expectsJson()) {
                 return response()->json(['error' => $e->getMessage()], 422);
@@ -102,7 +102,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('admin.login');
         }
         $admin = Admin::findOrFail($id);
-        if (! hash_equals($admin->getMetadata('autologin_key'), $token)) {
+        if (! hash_equals($admin->getMetadata('autologin_key'), hash('sha256', $token))) {
             return redirect()->route('admin.login');
         }
         if ($admin->getMetadata('autologin_expires_at') < now()) {

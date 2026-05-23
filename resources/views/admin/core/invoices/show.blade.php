@@ -177,10 +177,13 @@
                                 <i class="bi bi-database mr-2"></i>
                                 {{ __('admin.metadata.title') }}
                             </button>
-                            <a href="{{ route($routePath . '.regenerate_pdf', ['invoice' => $invoice]) }}"
-                                class="btn btn-warning mt-2">
-                                <i class="bi bi-file-earmark-pdf-fill mr-3"></i>
-                                {{ __($translatePrefix . '.regenerate_pdf') }}</a>
+                            <form method="POST" action="{{ route($routePath . '.regenerate_pdf', ['invoice' => $invoice]) }}" class="contents">
+                                @csrf
+                                <button type="submit" class="btn btn-warning mt-2 w-full text-left">
+                                    <i class="bi bi-file-earmark-pdf-fill mr-3"></i>
+                                    {{ __($translatePrefix . '.regenerate_pdf') }}
+                                </button>
+                            </form>
                             <a href="{{ route($routePath . '.notify', ['invoice' => $invoice]) }}"
                                 class="btn btn-info mt-2">
                                 <i class="bi bi-envelope-check-fill mr-3"></i>

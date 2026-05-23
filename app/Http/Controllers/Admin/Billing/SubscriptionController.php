@@ -79,6 +79,7 @@ class SubscriptionController extends AbstractCrudController
 
     public function destroy(Subscription $subscription)
     {
+        $this->checkPermission('delete');
         $subscription->logs()->delete();
         $subscription->delete();
 
