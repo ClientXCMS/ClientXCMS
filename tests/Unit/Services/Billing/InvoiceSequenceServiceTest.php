@@ -43,17 +43,26 @@ class InvoiceSequenceServiceTest extends TestCase
         // numbered CTX-2026-05-0001 … CTX-2026-05-0007 without a row
         // in invoice_sequences.
         $prefix = setting('billing_invoice_prefix', 'CTX');
+        $customer = \App\Models\Account\Customer::factory()->create();
         for ($i = 1; $i <= 7; $i++) {
             DB::table('invoices')->insert([
-                'customer_id' => 1,
+                'customer_id' => $customer->id,
                 'currency' => 'EUR',
                 'status' => 'paid',
                 'invoice_number' => sprintf('%s-2026-05-%04d', $prefix, $i),
                 'due_date' => now(),
+                'total' => 0,
+                'subtotal' => 0,
+                'tax' => 0,
+                'setupfees' => 0,
+                'balance' => 0,
+                'fees' => 0,
+                'notes' => '',
+                'paymethod' => 'none',
+                'billing_address' => '{}',
+                'uuid' => 'fixture-' . $i,
                 'created_at' => now(),
                 'updated_at' => now(),
-                'uuid' => 'fixture-' . $i,
-                'billing_address' => '{}',
             ]);
         }
 
