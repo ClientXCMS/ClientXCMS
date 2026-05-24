@@ -188,6 +188,19 @@ class SubUserController extends Controller
             ]);
         }
 
+        // S1 of the v2.16 audit - mailbox ownership must be proven before
+        // a token can be consumed, otherwise an attacker who intercepts the
+        // invitation link can register the address before the legitimate
+        // recipient and ride the email match through accept(). Pre-existing
+        // registered accounts already verified at registration time pass
+        // straight through.
+        if (! auth()->user()->hasVerifiedEmail()) {
+            $request->session()->put('customer_account_invitation_token', $token);
+
+            return redirect()->route('verification.send')
+                ->with('error', __('client.subusers.alerts.must_verify_email'));
+        }
+
         $access = $invitation->accept(auth()->user());
         $this->sendAccessGranted($access);
         $request->session()->forget('customer_account_invitation_token');
