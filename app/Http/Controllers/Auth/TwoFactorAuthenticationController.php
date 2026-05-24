@@ -19,6 +19,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Rules\Valid2FACodeInput;
 use Illuminate\Http\Request;
 
 class TwoFactorAuthenticationController
@@ -43,7 +44,7 @@ class TwoFactorAuthenticationController
     public function verify(Request $request)
     {
         $request->validate([
-            '2fa' => ['required', 'string'],
+            '2fa' => ['required', 'string', 'max:64', new Valid2FACodeInput],
         ]);
 
         // v2.16 — was reading auth('admin')->user() on this client-facing
