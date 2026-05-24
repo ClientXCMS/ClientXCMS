@@ -25,7 +25,7 @@ Route::prefix('/client')->name('front.')->group(function () {
     Route::prefix('/services')->name('services')->middleware(['auth'])->group(function () {
         Route::get('/', [ServiceController::class, 'index'])->name('.index');
         Route::get('/{service}/subusers', [SubUserController::class, 'service'])->name('.subusers');
-        Route::post('/{service}/subusers/invite', [SubUserController::class, 'storeService'])->name('.subusers.store');
+        Route::post('/{service}/subusers/invite', [SubUserController::class, 'storeService'])->middleware('throttle:10,1')->name('.subusers.store');
         Route::post('/{service}/subusers', [SubUserController::class, 'updateService'])->name('.subusers.update');
         Route::get('/{service}', [ServiceController::class, 'show'])->name('.show');
         Route::get('/{service}/upgrade', [ServiceController::class, 'upgrade'])->name('.upgrade');
