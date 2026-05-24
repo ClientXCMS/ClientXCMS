@@ -113,22 +113,49 @@ trait CanUse2FA
         $this->notify(new TwoFactorCodeEmail($code, $guard, $ip));
     }
 
+    /**
+     * Hard cap on guesses against a single email code. The code lives 5 minutes
+     * in a 900k pool; without this cap an attacker can keep guessing within the
+     * window and gain a non-trivial success probability.
+     */
+    public const EMAIL_2FA_MAX_ATTEMPTS = 5;
+
     public function isValidEmailTwoFactorCode(string $code): bool
     {
         $hash = $this->getMetadata('2fa_email_code');
         $expiresAt = $this->getMetadata('2fa_email_code_expires_at');
-        if (! $hash || ! $expiresAt || now()->gt(\Carbon\Carbon::parse($expiresAt))) {
+
+        if (! $hash || ! $expiresAt) {
+            return false;
+        }
+
+        if (now()->gt(\Carbon\Carbon::parse($expiresAt))) {
+            $this->clearEmailTwoFactorCode();
+
             return false;
         }
 
         if (! Hash::check($code, $hash)) {
+            $attempts = (int) ($this->getMetadata('2fa_email_code_attempts') ?: 0) + 1;
+            if ($attempts >= self::EMAIL_2FA_MAX_ATTEMPTS) {
+                $this->clearEmailTwoFactorCode();
+            } else {
+                $this->attachMetadata('2fa_email_code_attempts', (string) $attempts);
+            }
+
             return false;
         }
 
-        $this->detachMetadata('2fa_email_code');
-        $this->detachMetadata('2fa_email_code_expires_at');
+        $this->clearEmailTwoFactorCode();
 
         return true;
+    }
+
+    private function clearEmailTwoFactorCode(): void
+    {
+        $this->detachMetadata('2fa_email_code');
+        $this->detachMetadata('2fa_email_code_expires_at');
+        $this->detachMetadata('2fa_email_code_attempts');
     }
 
     public function twoFactorRecoveryCodes(): array
