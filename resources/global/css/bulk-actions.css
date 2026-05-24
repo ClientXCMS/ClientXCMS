@@ -4,13 +4,18 @@
  * resources/global/js/admin/bulk-actions.js.
  */
 
+/*
+ * v2.16 — Fixed (not sticky) to the bottom of the viewport, so the bar
+ * floats over the scroll content instead of trailing at the bottom of the
+ * table.
+ */
 [data-bulk-bar] {
-    position: sticky;
-    bottom: 1rem;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-    max-width: 32rem;
+    position: fixed;
+    bottom: 1.25rem;
+    left: 50%;
+    transform: translate(-50%, 0.5rem);
+    max-width: min(32rem, calc(100vw - 2rem));
+    width: max-content;
     background: #1f2937;
     color: #f9fafb;
     padding: 0.6rem 1rem;
@@ -19,16 +24,15 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    z-index: 30;
+    z-index: 60;
     opacity: 0;
-    transform: translateY(0.5rem);
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 [data-bulk-bar].bulk-bar-visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(-50%, 0);
     pointer-events: auto;
 }
 

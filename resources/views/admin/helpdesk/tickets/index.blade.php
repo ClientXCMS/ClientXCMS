@@ -79,7 +79,7 @@
 
                                     <tr>
 
-                                        <th scope="col" class="px-6 py-3 text-start">
+                                        <th scope="col" class="w-10 ps-4 pe-2 py-3 text-start">
                                             <input type="checkbox" data-bulk-master aria-label="Select all" />
                                         </th>
                                         <th scope="col" class="px-6 py-3 text-start">
@@ -159,7 +159,7 @@
                                     @foreach ($active_tickets ?? [] as $item)
                                         <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
                                             {{-- v2.16 — per-row bulk checkbox --}}
-                                            <td class="px-6 py-2">
+                                            <td class="w-10 ps-4 pe-2 py-2 align-middle">
                                                 <input type="checkbox" data-bulk-id="{{ $item->id }}" aria-label="Select ticket #{{ $item->id }}" />
                                             </td>
 
