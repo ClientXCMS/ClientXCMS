@@ -106,6 +106,42 @@ class TrustedTwoFactorIpsTest extends TestCase
         $this->assertSame('2026-06-14 10:00:00', $entries[0]['until'], 'Re-trust must extend the window from now, not stack');
     }
 
+    public function test_trust_persists_user_agent_when_provided(): void
+    {
+        $customer = Customer::factory()->create();
+        $ua = 'Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0';
+
+        $customer->trustTwoFactorIp('1.2.3.4', $ua);
+
+        $entry = $customer->fresh()->twoFactorTrustedIps()[0];
+        $this->assertSame('1.2.3.4', $entry['ip']);
+        $this->assertSame($ua, $entry['user_agent']);
+    }
+
+    public function test_trust_user_agent_defaults_to_null_when_omitted(): void
+    {
+        $customer = Customer::factory()->create();
+
+        $customer->trustTwoFactorIp('1.2.3.4');
+
+        $entry = $customer->fresh()->twoFactorTrustedIps()[0];
+        $this->assertArrayHasKey('user_agent', $entry);
+        $this->assertNull($entry['user_agent']);
+    }
+
+    public function test_legacy_entries_without_user_agent_normalize_to_null(): void
+    {
+        $customer = Customer::factory()->create();
+        // pre-F3.0 shape: entries had {ip, until} only
+        $customer->attachMetadata('2fa_trusted_ips', json_encode([
+            ['ip' => '1.2.3.4', 'until' => '2026-12-31 10:00:00'],
+        ]));
+
+        $entry = $customer->fresh()->twoFactorTrustedIps()[0];
+        $this->assertSame('1.2.3.4', $entry['ip']);
+        $this->assertNull($entry['user_agent'], 'Entries written before F3.0 must surface user_agent=null so the view can render "Unknown device"');
+    }
+
     public function test_trust_ignored_when_ip_is_null(): void
     {
         $customer = Customer::factory()->create();

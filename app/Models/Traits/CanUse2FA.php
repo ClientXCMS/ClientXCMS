@@ -86,10 +86,15 @@ trait CanUse2FA
     }
 
     /**
-     * Returns active trusted entries as [['ip' => ..., 'until' => ISO|null], ...].
-     * Legacy rows (bare IP strings, pre-v2.16-audit) are surfaced as null-until
-     * so existing users are not silently kicked off. Expired entries are
-     * filtered out at read time.
+     * Returns active trusted entries as
+     *   [['ip' => ..., 'until' => ISO|null, 'user_agent' => string|null], ...]
+     *
+     * Legacy rows are surfaced with safe defaults so older entries do not
+     * crash the view:
+     *   - bare IP strings (pre v2.16-audit)        -> until=null, user_agent=null
+     *   - {ip, until} entries (post F1.1, pre F3.0) -> user_agent=null
+     *
+     * Expired entries are filtered out at read time.
      */
     public function twoFactorTrustedIps(): array
     {
@@ -106,12 +111,17 @@ trait CanUse2FA
         return collect($decoded)
             ->map(function ($entry) {
                 if (is_string($entry)) {
-                    return ['ip' => $entry, 'until' => null];
+                    return ['ip' => $entry, 'until' => null, 'user_agent' => null];
                 }
                 if (is_array($entry) && isset($entry['ip']) && is_string($entry['ip'])) {
                     $until = $entry['until'] ?? null;
+                    $ua = $entry['user_agent'] ?? null;
 
-                    return ['ip' => $entry['ip'], 'until' => is_string($until) ? $until : null];
+                    return [
+                        'ip' => $entry['ip'],
+                        'until' => is_string($until) ? $until : null,
+                        'user_agent' => is_string($ua) ? $ua : null,
+                    ];
                 }
 
                 return null;
@@ -122,7 +132,7 @@ trait CanUse2FA
             ->all();
     }
 
-    public function trustTwoFactorIp(?string $ip): void
+    public function trustTwoFactorIp(?string $ip, ?string $userAgent = null): void
     {
         if ($ip === null) {
             return;
@@ -130,10 +140,12 @@ trait CanUse2FA
 
         $days = max(1, (int) setting('trust_device_days', 30));
         $until = now()->addDays($days)->toDateTimeString();
+        // Defensive bound: a malicious UA can be megabytes long.
+        $ua = $userAgent !== null ? mb_substr($userAgent, 0, 512) : null;
 
         $entries = collect($this->twoFactorTrustedIps())
             ->reject(fn (array $entry) => $entry['ip'] === $ip)
-            ->push(['ip' => $ip, 'until' => $until])
+            ->push(['ip' => $ip, 'until' => $until, 'user_agent' => $ua])
             ->take(-self::TRUST_IP_MAX)
             ->values()
             ->all();

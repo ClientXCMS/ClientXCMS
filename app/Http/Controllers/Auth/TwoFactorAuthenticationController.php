@@ -200,7 +200,7 @@ class TwoFactorAuthenticationController
         $request->session()->forget('2fa_totp_verified');
 
         if ($request->boolean('trust_device')) {
-            $user->trustTwoFactorIp($request->ip());
+            $user->trustTwoFactorIp($request->ip(), $request->userAgent());
         }
 
         return redirect()->intended('/client');
