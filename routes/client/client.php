@@ -49,6 +49,8 @@ Route::prefix('/client')->name('front.')->group(function () {
             ->middleware('signed');
         Route::post('/2fa', [\App\Http\Controllers\Front\ProfileController::class, 'save2fa'])->name('.2fa');
         Route::post('/2fa/options', [\App\Http\Controllers\Front\ProfileController::class, 'save2faOptions'])->name('.2fa_options');
+        Route::post('/2fa/trusted/revoke', [\App\Http\Controllers\Front\ProfileController::class, 'revokeTrustedDevice'])->name('.2fa_trusted_revoke');
+        Route::post('/2fa/trusted/revoke-all', [\App\Http\Controllers\Front\ProfileController::class, 'revokeAllTrustedDevices'])->name('.2fa_trusted_revoke_all');
         Route::get('/download_codes', [\App\Http\Controllers\Front\ProfileController::class, 'downloadCodes'])->name('.2fa_codes');
         Route::delete('/delete', [\App\Http\Controllers\Front\ProfileController::class, 'deleteAccount'])->name('.delete.confirm');
         Route::post('/security-question', [\App\Http\Controllers\Front\ProfileController::class, 'saveSecurityQuestion'])->name('.security_question');

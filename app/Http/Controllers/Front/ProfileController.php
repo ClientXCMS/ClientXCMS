@@ -126,6 +126,24 @@ class ProfileController extends \App\Http\Controllers\Controller
         return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.options_saved'));
     }
 
+    public function revokeTrustedDevice(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'ip' => ['required', 'string', 'ip'],
+        ]);
+
+        $request->user('web')->revokeTwoFactorTrust($request->input('ip'));
+
+        return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.trusted_device_revoked'));
+    }
+
+    public function revokeAllTrustedDevices(Request $request): RedirectResponse
+    {
+        $request->user('web')->revokeAllTwoFactorTrust();
+
+        return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.trusted_devices_revoked_all'));
+    }
+
     public function downloadCodes(Request $request)
     {
         $codes = \Auth::user()->twoFactorRecoveryCodes();

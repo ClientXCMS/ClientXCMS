@@ -179,6 +179,24 @@ class AdminController extends AbstractCrudController
         return back()->with('success', __('client.profile.2fa.options_saved'));
     }
 
+    public function revokeTrustedDevice(Request $request)
+    {
+        $request->validate([
+            'ip' => ['required', 'string', 'ip'],
+        ]);
+
+        $request->user('admin')->revokeTwoFactorTrust($request->input('ip'));
+
+        return back()->with('success', __('client.profile.2fa.trusted_device_revoked'));
+    }
+
+    public function revokeAllTrustedDevices(Request $request)
+    {
+        $request->user('admin')->revokeAllTwoFactorTrust();
+
+        return back()->with('success', __('client.profile.2fa.trusted_devices_revoked_all'));
+    }
+
     public function downloadCodes()
     {
         $codes = \Auth::guard('admin')->user()->twoFactorRecoveryCodes();
