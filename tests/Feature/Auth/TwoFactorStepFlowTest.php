@@ -151,6 +151,107 @@ class TwoFactorStepFlowTest extends TestCase
         $this->assertTrue(session()->get('2fa_verified'));
     }
 
+    public function test_trusted_ip_bypasses_email_factor_even_with_email_on_new_ip_enabled(): void
+    {
+        Notification::fake();
+        $customer = $this->customerOnUntrustedIp();
+        // Mark our test IP as trusted (within the 30-day window).
+        $customer->trustTwoFactorIp('127.0.0.1');
+
+        $response = $this->actingAs($customer->fresh(), 'web')
+            ->post(route('auth.2fa'), ['2fa' => $this->currentTotp(self::TOTP_SECRET)]);
+
+        $response->assertRedirect('/client');
+        $this->assertTrue(session()->get('2fa_verified'));
+        Notification::assertNothingSent();
+    }
+
+    public function test_expired_trust_re_engages_email_factor(): void
+    {
+        Notification::fake();
+        $customer = $this->customerOnUntrustedIp();
+        // Pretend we trusted this IP a long time ago - past the 30-day window.
+        \Illuminate\Support\Carbon::setTestNow('2026-01-01 10:00:00');
+        $customer->trustTwoFactorIp('127.0.0.1');
+        \Illuminate\Support\Carbon::setTestNow('2026-05-01 10:00:00');
+
+        $response = $this->actingAs($customer->fresh(), 'web')
+            ->post(route('auth.2fa'), ['2fa' => $this->currentTotp(self::TOTP_SECRET)]);
+
+        // Should land on step 2 (email), not /client - expired trust counts as new IP.
+        $response->assertRedirect(route('auth.2fa'));
+        $this->assertTrue(session()->get('2fa_totp_verified'));
+        $this->assertFalse(session()->get('2fa_verified', false));
+    }
+
+    public function test_full_happy_path_dual_factor_walk_through(): void
+    {
+        Notification::fake();
+        $customer = $this->customerOnUntrustedIp();
+
+        // -- 1) Land on /2fa: step 1 (TOTP) is rendered.
+        $this->actingAs($customer, 'web')
+            ->get(route('auth.2fa'))
+            ->assertOk()
+            ->assertSee(__('client.profile.2fa.step1_subheading'));
+        Notification::assertNothingSent();
+
+        // -- 2) Submit TOTP: redirect to /2fa, totp flag set.
+        $this->post(route('auth.2fa'), ['2fa' => $this->currentTotp(self::TOTP_SECRET)])
+            ->assertRedirect(route('auth.2fa'));
+        $this->assertTrue(session()->get('2fa_totp_verified'));
+        $this->assertFalse(session()->get('2fa_verified', false));
+
+        // -- 3) Land on /2fa again: step 2 rendered, auto-send fires.
+        $this->get(route('auth.2fa'))->assertOk()->assertSee(__('client.profile.2fa.step2_subheading'));
+        Notification::assertSentTo($customer, TwoFactorCodeEmail::class);
+
+        // The auto-sent code is only hashed in metadata, so we can't read it
+        // back. Seed a known value to drive the verify step (same pattern as
+        // other tests in the suite).
+        $customer->attachMetadata('2fa_email_code', \Illuminate\Support\Facades\Hash::make('424242'));
+        $customer->attachMetadata('2fa_email_code_expires_at', now()->addMinutes(5)->toDateTimeString());
+
+        // -- 4) Submit email code with trust_device ticked: complete + trust IP.
+        $this->post(route('auth.2fa'), ['2fa' => '424242', 'trust_device' => '1'])
+            ->assertRedirect('/client');
+
+        $this->assertTrue(session()->get('2fa_verified'));
+        $this->assertNull(session()->get('2fa_totp_verified'), 'Step 1 flag must be cleared on full success');
+        $this->assertContains('127.0.0.1', array_column($customer->fresh()->twoFactorTrustedIps(), 'ip'));
+    }
+
+    public function test_step2_view_displays_cooldown_banner_when_active(): void
+    {
+        Notification::fake();
+        $customer = $this->customerOnUntrustedIp();
+        $customer->attachMetadata('2fa_email_burned_cycles', '3');
+        $customer->attachMetadata('2fa_email_burned_at', now()->toDateTimeString());
+
+        $response = $this->actingAs($customer->fresh(), 'web')
+            ->withSession(['2fa_totp_verified' => true])
+            ->get(route('auth.2fa'));
+
+        $response->assertOk();
+        $response->assertSee(__('client.profile.2fa.cooldown_active', ['minutes' => 5]));
+        Notification::assertNothingSent();
+    }
+
+    public function test_send_email_code_route_surfaces_cooldown_error(): void
+    {
+        $customer = $this->customerOnUntrustedIp();
+        // Push the user past the cooldown threshold directly.
+        $customer->attachMetadata('2fa_email_burned_cycles', '3');
+        $customer->attachMetadata('2fa_email_burned_at', now()->toDateTimeString());
+
+        $response = $this->actingAs($customer->fresh(), 'web')
+            ->withSession(['2fa_totp_verified' => true])
+            ->post(route('auth.2fa.email'));
+
+        $response->assertRedirect(route('auth.2fa'));
+        $response->assertSessionHas('error');
+    }
+
     private function customerOnUntrustedIp(): Customer
     {
         Setting::updateSettings(['force_2fa_client' => 'true']);

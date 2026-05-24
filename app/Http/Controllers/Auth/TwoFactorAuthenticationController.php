@@ -60,15 +60,17 @@ class TwoFactorAuthenticationController
         }
 
         if ($needs['email']) {
-            // Idempotent: sendTwoFactorEmailCode early-returns if an active
-            // code is still in the validity window, so refreshing the page
-            // does not spam the user with new emails.
+            // Idempotent on cooldown too: sendTwoFactorEmailCode no-ops when
+            // the user has burned the cycle cap, so refreshing the page does
+            // not surface a stale "code sent" message either.
             $user->sendTwoFactorEmailCode('web', $request->ip());
 
             return view('front.auth.2fa', [
                 'factorStep' => 'email',
                 'requiresTotpBefore' => $needs['totp'],
                 'maskedEmail' => $this->maskEmail($user->email),
+                'cooldownActive' => $user->isEmailTwoFactorOnCooldown(),
+                'cooldownMinutes' => $user::EMAIL_2FA_COOLDOWN_MINUTES,
             ]);
         }
 
@@ -81,6 +83,12 @@ class TwoFactorAuthenticationController
         $user = $request->user('web');
         if (! $user->shouldUseEmailTwoFactor('web', $request->ip())) {
             return redirect()->route('auth.2fa');
+        }
+
+        if ($user->isEmailTwoFactorOnCooldown()) {
+            return redirect()->route('auth.2fa')->with('error', __('client.profile.2fa.cooldown_active', [
+                'minutes' => $user::EMAIL_2FA_COOLDOWN_MINUTES,
+            ]));
         }
 
         $user->sendTwoFactorEmailCode('web', $request->ip());

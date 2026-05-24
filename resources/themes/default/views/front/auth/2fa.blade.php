@@ -91,12 +91,21 @@
             </button>
         </form>
     @else
-        <div
-            class="mt-5 flex items-start gap-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-200"
-            role="status">
-            <i class="bi bi-envelope-check mt-0.5 flex-shrink-0" aria-hidden="true"></i>
-            <span>{{ __('client.profile.2fa.email_sent_to', ['email' => $maskedEmail ?? '']) }}</span>
-        </div>
+        @if ($cooldownActive ?? false)
+            <div
+                class="mt-5 flex items-start gap-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200"
+                role="alert" aria-live="polite">
+                <i class="bi bi-clock-history mt-0.5 flex-shrink-0" aria-hidden="true"></i>
+                <span>{{ __('client.profile.2fa.cooldown_active', ['minutes' => $cooldownMinutes ?? 5]) }}</span>
+            </div>
+        @else
+            <div
+                class="mt-5 flex items-start gap-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-200"
+                role="status">
+                <i class="bi bi-envelope-check mt-0.5 flex-shrink-0" aria-hidden="true"></i>
+                <span>{{ __('client.profile.2fa.email_sent_to', ['email' => $maskedEmail ?? '']) }}</span>
+            </div>
+        @endif
 
         <form method="POST" action="{{ route('auth.2fa') }}" id="captcha-form" class="mt-5" novalidate>
             @csrf
@@ -131,7 +140,8 @@
             <form method="POST" action="{{ route('auth.2fa.email') }}" class="contents">
                 @csrf
                 <button type="submit"
-                        class="text-blue-700 underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none dark:text-blue-300">
+                        @disabled($cooldownActive ?? false)
+                        class="text-blue-700 underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline dark:text-blue-300 dark:disabled:text-gray-500">
                     {{ __('client.profile.2fa.resend_email_code') }}
                 </button>
             </form>
