@@ -120,7 +120,15 @@ class SupportMessage extends Model
         $parser = new \Parsedown;
         $parser->setSafeMode(true);
 
-        return $parser->parse((string) $this->message);
+        // v2.16 — legacy messages written with the old Quill editor stored
+        // literal `<br>` / `<br/>` tags as line separators. Parsedown in
+        // safe-mode escapes them, so they render as the visible string
+        // "<br/>" inside the bubble. Normalise to real newlines BEFORE the
+        // markdown pass so blocks/heading/list semantics are preserved.
+        $source = (string) $this->message;
+        $source = preg_replace('/<br\s*\/?>/i', "\n", $source);
+
+        return $parser->parse($source);
     }
 
     public function containerClasses(string $view = 'customer')
