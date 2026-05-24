@@ -83,11 +83,10 @@
 
     <div class="hs-dropdown relative inline-flex" data-hs-dropdown-placement="bottom-right">
         <button id="hs-dropdown-with-header" type="button"
-                class="hs-dropdown-toggle w-[2.375rem] h-[2.375rem] inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
-                        <span
-                            class="inline-flex items-center justify-center h-[2.375rem] w-[2.375rem] rounded-full bg-gray-500 font-semibold text-white leading-none">
-                          {{ Auth::user()->firstname[0] . Auth::user()->lastname[0] }}
-                        </span>
+                class="hs-dropdown-toggle inline-flex justify-center items-center text-sm font-semibold rounded-full border border-transparent text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
+            {{-- v2.16 — uses the shared <x-avatar> component so an uploaded photo
+                 appears in the header instead of the hand-rolled initials block. --}}
+            <x-avatar :user="Auth::user()" size="md" class="!ring-0" />
         </button>
 
         <div

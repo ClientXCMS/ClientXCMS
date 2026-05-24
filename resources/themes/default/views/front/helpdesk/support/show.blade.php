@@ -64,12 +64,22 @@
                                     <div class="flex gap-x-3 relative group rounded-lg hover:bg-gray-100 dark:hover:bg-white/10">
 
 
-                                        <!-- Icon -->
+                                        <!-- Icon — v2.16 : avatar à la place de l'icône générique person/person-badge -->
                                         <div class="relative last:after:hidden after:absolute after:top-10 after:bottom-0 after:start-5 after:w-px after:-translate-x-[0.5px] after:bg-gray-200 dark:after:bg-neutral-700">
                                             <div class="relative z-10 size-10 flex justify-center items-center">
-        <span class="flex shrink-0 justify-center items-center size-10 bg-white border border-gray-200 text-[10px] font-semibold uppercase text-gray-600 rounded-full dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400">
-          <i class="bi bi-{{ $message->isStaff() ? 'person-badge' : 'person' }} text-lg"></i>
-        </span>
+                                                @php
+                                                    // Either the staff member or the customer — never both.
+                                                    $messageAuthor = $message->isStaff()
+                                                        ? $message->admin
+                                                        : ($message->isCustomer() ? $message->customer : null);
+                                                @endphp
+                                                @if ($messageAuthor)
+                                                    <x-avatar :user="$messageAuthor" size="md" class="!ring-0" />
+                                                @else
+                                                    <span class="flex shrink-0 justify-center items-center size-10 bg-white border border-gray-200 text-[10px] font-semibold uppercase text-gray-600 rounded-full dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400">
+                                                        <i class="bi bi-{{ $message->isStaff() ? 'person-badge' : 'person' }} text-lg"></i>
+                                                    </span>
+                                                @endif
                                             </div>
                                         </div>
                                         <!-- End Icon -->
