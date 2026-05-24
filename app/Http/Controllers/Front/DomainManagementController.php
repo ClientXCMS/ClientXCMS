@@ -9,6 +9,13 @@ use Illuminate\Http\Request;
 
 class DomainManagementController extends Controller
 {
+    /**
+     * Standard DNS record types. Anything outside this list either is not
+     * supported by mainstream resolvers or only makes sense for niche
+     * use-cases that we do not let users wire through the storefront.
+     */
+    public const ALLOWED_DNS_TYPES = ['A', 'AAAA', 'MX', 'CNAME', 'TXT', 'NS', 'SRV', 'CAA'];
+
     public function nameservers(Request $request, Service $service)
     {
         $this->authorizeService($service);
@@ -25,7 +32,7 @@ class DomainManagementController extends Controller
     {
         $this->authorizeService($service);
         $validated = $request->validate([
-            'type' => 'required|string|max:10',
+            'type' => ['required', 'string', \Illuminate\Validation\Rule::in(self::ALLOWED_DNS_TYPES)],
             'name' => 'required|string|max:253',
             'value' => 'required|string|max:500',
             'ttl' => 'nullable|integer|min:60|max:86400',
