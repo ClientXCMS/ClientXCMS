@@ -34,6 +34,10 @@ Route::post('/2fa/email', [TwoFactorAuthenticationController::class, 'sendEmailC
     ->middleware('throttle:3,1')
     ->withoutMiddleware('auth')
     ->name('auth.2fa.email');
+Route::post('/2fa/reset', [TwoFactorAuthenticationController::class, 'reset'])
+    ->middleware('throttle:6,1')
+    ->withoutMiddleware('auth')
+    ->name('auth.2fa.reset');
 Route::post('/2fa', [TwoFactorAuthenticationController::class, 'verify'])
     ->middleware('throttle:6,1')
     ->withoutMiddleware('auth');

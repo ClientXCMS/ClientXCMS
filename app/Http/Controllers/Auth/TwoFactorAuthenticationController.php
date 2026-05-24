@@ -20,13 +20,59 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Rules\Valid2FACodeInput;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Two-factor verification flow for customers.
+ *
+ * Implements the v2.16 audit F1 fix: on an untrusted IP (when
+ * `2fa_email_new_ip` is enabled) and with TOTP active, the user must
+ * satisfy BOTH the device factor (TOTP or recovery) AND the email
+ * factor in two successive steps. A valid email code alone never
+ * suffices when TOTP is enabled.
+ *
+ * Session state machine:
+ *   - 2fa_totp_verified : true once step 1 succeeds (kept across GETs)
+ *   - 2fa_verified      : true once the full flow completes (read by
+ *                         Validate2FAMiddleware)
+ *
+ * Single-factor flows (TOTP only on trusted IP, or email-only when
+ * TOTP isn't set up) collapse to one step and behave exactly as before.
+ */
 class TwoFactorAuthenticationController
 {
     public function show(Request $request)
     {
-        return view('front.auth.2fa');
+        $user = $request->user('web');
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $needs = $this->factorRequirements($user, $request->ip());
+        $totpDone = $request->session()->get('2fa_totp_verified', false);
+
+        if ($needs['totp'] && ! $totpDone) {
+            return view('front.auth.2fa', [
+                'step' => 'totp',
+                'requiresEmailAfter' => $needs['email'],
+            ]);
+        }
+
+        if ($needs['email']) {
+            // Idempotent: sendTwoFactorEmailCode early-returns if an active
+            // code is still in the validity window, so refreshing the page
+            // does not spam the user with new emails.
+            $user->sendTwoFactorEmailCode('web', $request->ip());
+
+            return view('front.auth.2fa', [
+                'step' => 'email',
+                'requiresTotpBefore' => $needs['totp'],
+            ]);
+        }
+
+        // Middleware bug fallback - should never reach here if 2FA was required.
+        return view('front.auth.2fa', ['step' => 'totp']);
     }
 
     public function sendEmailCode(Request $request)
@@ -41,27 +87,92 @@ class TwoFactorAuthenticationController
         return redirect()->route('auth.2fa')->with('success', __('client.profile.2fa.email_sent'));
     }
 
+    public function reset(Request $request): RedirectResponse
+    {
+        $request->session()->forget('2fa_totp_verified');
+
+        return redirect()->route('auth.2fa');
+    }
+
     public function verify(Request $request)
     {
         $request->validate([
             '2fa' => ['required', 'string', 'max:64', new Valid2FACodeInput],
+            'trust_device' => ['nullable'],
         ]);
 
-        // v2.16 — was reading auth('admin')->user() on this client-facing
-        // route, which kicked an authenticated *customer* back to the admin
-        // login page (TwoFactorAuthenticationTest::test_client_can_verify_two_factor_email_code).
         $user = $request->user('web');
         if (! $user) {
             return redirect()->route('login');
         }
-        if ($user->isValidate2FA($request->input('2fa'))) {
-            $request->session()->regenerate();
-            \Session::put('2fa_verified', true);
-            $user->trustTwoFactorIp($request->ip());
 
-            return redirect()->intended('/client');
+        $code = $request->input('2fa');
+        $needs = $this->factorRequirements($user, $request->ip());
+        $totpDone = $request->session()->get('2fa_totp_verified', false);
+
+        if ($needs['totp'] && ! $totpDone) {
+            return $this->handleDeviceStep($request, $user, $code, $needs['email']);
         }
 
-        return redirect()->route('auth.2fa')->withErrors(['2fa' => __('validation.2fa_code')]);
+        if ($needs['email']) {
+            return $this->handleEmailStep($request, $user, $code);
+        }
+
+        // Edge: neither factor required - middleware should have let through already.
+        return redirect()->route('auth.2fa');
+    }
+
+    /**
+     * Computes which factors are required for this user on this IP.
+     * Mirrors the gates in Validate2FAMiddleware so the flow is consistent.
+     */
+    private function factorRequirements($user, ?string $ip): array
+    {
+        $totpEnabled = $user->twoFactorEnabled();
+        $emailRequired = ($user->shouldForceTwoFactor('web') && ! $totpEnabled)
+            || $user->requiresEmailTwoFactorForIp($ip);
+
+        return [
+            'totp' => $totpEnabled,
+            'email' => $emailRequired,
+        ];
+    }
+
+    private function handleDeviceStep(Request $request, $user, string $code, bool $emailWillFollow): RedirectResponse
+    {
+        if (! $user->verifyDeviceFactor($code)) {
+            return redirect()->route('auth.2fa')->withErrors(['2fa' => __('validation.2fa_code')]);
+        }
+
+        $request->session()->put('2fa_totp_verified', true);
+
+        if (! $emailWillFollow) {
+            // Single-factor flow: TOTP alone is enough.
+            return $this->completeFlow($request, $user);
+        }
+
+        return redirect()->route('auth.2fa');
+    }
+
+    private function handleEmailStep(Request $request, $user, string $code): RedirectResponse
+    {
+        if (! $user->isValidEmailTwoFactorCode(str_replace(' ', '', $code))) {
+            return redirect()->route('auth.2fa')->withErrors(['2fa' => __('validation.2fa_code')]);
+        }
+
+        return $this->completeFlow($request, $user);
+    }
+
+    private function completeFlow(Request $request, $user): RedirectResponse
+    {
+        $request->session()->regenerate();
+        \Session::put('2fa_verified', true);
+        $request->session()->forget('2fa_totp_verified');
+
+        if ($request->boolean('trust_device')) {
+            $user->trustTwoFactorIp($request->ip());
+        }
+
+        return redirect()->intended('/client');
     }
 }

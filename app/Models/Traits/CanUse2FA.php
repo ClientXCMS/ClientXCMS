@@ -282,15 +282,7 @@ trait CanUse2FA
         return false;
     }
 
-    /**
-     * v2.16 — Send a one-time code by SMS through the configured
-     * gateway (see {@see \App\Services\Auth\SmsService}). Mirrors
-     * sendTwoFactorEmailCode(): same 5-minute TTL, same bcrypt-hashed
-     * persistence, same anti-resend rate-limit.
-     *
-     * Returns true when the SMS was attempted, false when the user
-     * has no phone number on file or when the gateway threw.
-     */
+    // Send OTP via configured SMS gateway. Mirrors sendTwoFactorEmailCode.
     public function sendTwoFactorSmsCode(string $guard, ?string $ip = null): bool
     {
         $phone = (string) ($this->phone ?? '');
@@ -303,7 +295,7 @@ trait CanUse2FA
 
         if ($this->getMetadata($expiresKey)
             && now()->lt(\Carbon\Carbon::parse($this->getMetadata($expiresKey)))) {
-            return true; // a previous code is still valid, don't re-send
+            return true;
         }
 
         $code = (string) random_int(100000, 999999);
@@ -324,8 +316,6 @@ trait CanUse2FA
                 'ip' => $ip,
                 'error' => $e->getMessage(),
             ]);
-            // Drop the metadata so the user can request a new code
-            // without being rate-limited by a phantom one.
             $this->detachMetadata('2fa_sms_code');
             $this->detachMetadata($expiresKey);
 
@@ -349,6 +339,26 @@ trait CanUse2FA
         $this->detachMetadata('2fa_sms_code_expires_at');
 
         return true;
+    }
+
+    // Device-bound factor only (TOTP/recovery). Step 1 of two-step; email
+    // alone must never satisfy "something you have" when TOTP is set up.
+    public function verifyDeviceFactor(string $code): bool
+    {
+        $code = str_replace(' ', '', $code);
+        $secret = $this->getMetadata('2fa_secret');
+
+        if ($secret && (new Google2FA)->verifyKey($secret, $code)) {
+            return true;
+        }
+
+        if ($this->isValidRecoveryCode($code)) {
+            $this->useRecoveryCode($code);
+
+            return true;
+        }
+
+        return false;
     }
 
     public function twoFactorVerified(): bool
