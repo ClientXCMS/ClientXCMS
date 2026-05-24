@@ -31,9 +31,20 @@
         // theme manager unavailable — keep the default brand colour
     }
     $appName = config('app.name', 'ClientXCMS');
+    // v2.16 — also follow the in-app dark-mode preference (cookie / DB).
+    // OS-level prefers-color-scheme stays a fallback for unauthenticated
+    // visitors who never toggled.
+    $darkMode = false;
+    try {
+        if (function_exists('is_darkmode')) {
+            $darkMode = is_darkmode();
+        }
+    } catch (\Throwable $e) {
+        $darkMode = false;
+    }
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full {{ $darkMode ? 'dark' : '' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -51,11 +62,21 @@
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
         }
+        /* v2.16 — Forced dark mode (PHP toggle pushes class="dark" on <html>) */
+        html.dark body { background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%); color: #e2e8f0; }
+        html.dark .card { background-color: rgba(15, 23, 42, 0.6); border-color: rgba(148, 163, 184, 0.16); }
+        html.dark .muted { color: #94a3b8; }
+        html.dark .heading { color: #e2e8f0; }
+        html.dark .btn-secondary { background: rgba(148, 163, 184, 0.12); color: #e2e8f0; }
+        html.dark .footer { color: #64748b; }
+        /* OS dark mode — only when no app-level preference forced light */
         @media (prefers-color-scheme: dark) {
-            body { background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%); color: #e2e8f0; }
-            .card { background-color: rgba(15, 23, 42, 0.6) !important; border-color: rgba(148, 163, 184, 0.16) !important; }
-            .muted { color: #94a3b8 !important; }
-            .btn-secondary { background: rgba(148, 163, 184, 0.12) !important; color: #e2e8f0 !important; }
+            html:not(.light) body { background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%); color: #e2e8f0; }
+            html:not(.light) .card { background-color: rgba(15, 23, 42, 0.6); border-color: rgba(148, 163, 184, 0.16); }
+            html:not(.light) .muted { color: #94a3b8; }
+            html:not(.light) .heading { color: #e2e8f0; }
+            html:not(.light) .btn-secondary { background: rgba(148, 163, 184, 0.12); color: #e2e8f0; }
+            html:not(.light) .footer { color: #64748b; }
         }
         .wrap { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; }
         .card {
@@ -71,6 +92,7 @@
         .code { font-size: 0.875rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand); }
         h1 { font-size: 1.875rem; font-weight: 700; margin: 0.75rem 0 0; }
         @media (min-width: 640px) { h1 { font-size: 2.25rem; } }
+        .heading { color: #0f172a; margin-top: 0.75rem; font-size: 1rem; font-weight: 500; }
         .muted { color: #475569; margin-top: 0.75rem; font-size: 1rem; }
         .illustration { margin: 0 auto 1.25rem; height: 80px; width: 80px; display: flex; align-items: center; justify-content: center; }
         .illustration svg { width: 100%; height: 100%; color: var(--brand); }
@@ -103,7 +125,7 @@
             <div class="code" aria-hidden="true">{{ __('v216::errors.common.status_code', ['code' => $__renderedStatus]) }}</div>
             <h1>@yield('title')</h1>
             @hasSection('heading')
-                <p class="muted" style="font-weight:500;color:#0f172a">@yield('heading')</p>
+                <p class="heading">@yield('heading')</p>
             @endif
             <p class="muted">@yield('description')</p>
             <div class="actions">
