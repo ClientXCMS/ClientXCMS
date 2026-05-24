@@ -74,4 +74,4 @@ Route::post('/2fa/email', [TwoFactorAuthenticationController::class, 'sendEmailC
     ->middleware(['auth', 'throttle:3,1'])
     ->name('auth.2fa.email');
 Route::post('/2fa', [TwoFactorAuthenticationController::class, 'verify'])
-    ->middleware('auth');
+    ->middleware(['auth', 'throttle:6,1']);
