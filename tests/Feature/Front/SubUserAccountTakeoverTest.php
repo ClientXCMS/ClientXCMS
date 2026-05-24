@@ -54,10 +54,16 @@ class SubUserAccountTakeoverTest extends TestCase
         $invitation = $this->pendingInvitationFor('bob@example.com');
         $bob = Customer::factory()->create(['email' => 'bob@example.com', 'email_verified_at' => now()]);
 
-        $response = $this->actingAs($bob, 'web')
-            ->get(route('front.subusers.accept', $invitation->plain_text_token));
+        // GET only renders the confirmation page now - the actual
+        // commit happens through POST (S3+S6).
+        $this->actingAs($bob, 'web')
+            ->get(route('front.subusers.accept', $invitation->plain_text_token))
+            ->assertOk();
 
-        $response->assertRedirect(route('front.client.index'));
+        $this->actingAs($bob, 'web')
+            ->post(route('front.subusers.accept.confirm', $invitation->plain_text_token))
+            ->assertRedirect(route('front.client.index'));
+
         $this->assertNotNull(
             $invitation->fresh()->accepted_at,
             'Legitimate verified consumer must complete the flow as before'

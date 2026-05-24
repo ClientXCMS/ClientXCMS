@@ -56,7 +56,7 @@ class SubUserInvitationTest extends TestCase
         $invitation->services()->sync([$service->id]);
 
         $this->actingAs($subUser)
-            ->get(route('front.subusers.accept', $invitation->plain_text_token))
+            ->post(route('front.subusers.accept.confirm', $invitation->plain_text_token))
             ->assertRedirect(route('front.client.index'));
 
         $this->assertDatabaseHas('customer_account_accesses', [
@@ -83,7 +83,7 @@ class SubUserInvitationTest extends TestCase
         $newCustomer = Customer::factory()->create(['email' => $email, 'email_verified_at' => now()]);
 
         $this->actingAs($newCustomer)
-            ->get(route('front.subusers.accept', $invitation->plain_text_token))
+            ->post(route('front.subusers.accept.confirm', $invitation->plain_text_token))
             ->assertRedirect(route('front.client.index'));
 
         $this->assertDatabaseHas('customer_account_accesses', [

@@ -45,7 +45,7 @@ class SubUserTokenHashingTest extends TestCase
         $bob = Customer::factory()->create(['email' => 'bob@example.com', 'email_verified_at' => now()]);
 
         $this->actingAs($bob, 'web')
-            ->get(route('front.subusers.accept', $invitation->plain_text_token))
+            ->post(route('front.subusers.accept.confirm', $invitation->plain_text_token))
             ->assertRedirect(route('front.client.index'));
 
         $this->assertNotNull($invitation->fresh()->accepted_at);
@@ -89,7 +89,7 @@ class SubUserTokenHashingTest extends TestCase
         // The old plain token must no longer accept.
         $bob = Customer::factory()->create(['email' => 'bob@example.com', 'email_verified_at' => now()]);
         $this->actingAs($bob, 'web')
-            ->get(route('front.subusers.accept', $oldPlain))
+            ->post(route('front.subusers.accept.confirm', $oldPlain))
             ->assertNotFound();
     }
 

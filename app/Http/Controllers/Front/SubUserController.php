@@ -175,10 +175,17 @@ class SubUserController extends Controller
         return back()->with('success', __('client.subusers.alerts.invitation_revoked'));
     }
 
-    public function accept(Request $request, string $token)
+    /**
+     * GET the confirmation page. Surfaces what the user is about to grant
+     * (owner email, permissions, services) and a POST form to commit.
+     * Critically: this method NEVER writes - a distracted click on the
+     * invitation link does not consume the token.
+     */
+    public function showAccept(Request $request, string $token)
     {
         $invitation = CustomerAccountInvitation::findByPlainToken($token);
         abort_if($invitation === null, 404);
+
         if (! $invitation->isPending()) {
             if (auth()->check() && strtolower(auth()->user()->email) === strtolower($invitation->email) && $invitation->accepted_at !== null) {
                 return redirect()->route('front.client.index')->with('success', __('client.subusers.alerts.invitation_accepted'));
@@ -196,18 +203,42 @@ class SubUserController extends Controller
             ]);
         }
 
-        // S1 of the v2.16 audit - mailbox ownership must be proven before
-        // a token can be consumed, otherwise an attacker who intercepts the
-        // invitation link can register the address before the legitimate
-        // recipient and ride the email match through accept(). Pre-existing
-        // registered accounts already verified at registration time pass
-        // straight through.
+        // S1 - mailbox ownership must be proven before the user even sees
+        // the confirmation page. Otherwise the registration-takeover path
+        // would render the page and let the attacker click accept.
         if (! auth()->user()->hasVerifiedEmail()) {
             $request->session()->put('customer_account_invitation_token', $token);
 
             return redirect()->route('verification.send')
                 ->with('error', __('client.subusers.alerts.must_verify_email'));
         }
+
+        abort_if(
+            strtolower(auth()->user()->email) !== strtolower($invitation->email),
+            403,
+            __('client.subusers.alerts.invitation_email_mismatch')
+        );
+
+        $invitation->load('owner', 'services');
+
+        return view('front.subusers.confirm', [
+            'invitation' => $invitation,
+            'token' => $token,
+        ]);
+    }
+
+    /**
+     * POST consumes the invitation. CSRF-protected by Laravel's web stack,
+     * throttled at the route layer. Re-runs all the gates of showAccept
+     * because nothing in between guarantees they still hold.
+     */
+    public function accept(Request $request, string $token)
+    {
+        $invitation = CustomerAccountInvitation::findByPlainToken($token);
+        abort_if($invitation === null, 404);
+        abort_if(! $invitation->isPending(), 404);
+        abort_if(! auth()->check(), 401);
+        abort_if(! auth()->user()->hasVerifiedEmail(), 403);
 
         $access = $invitation->accept(auth()->user());
         $this->sendAccessGranted($access);

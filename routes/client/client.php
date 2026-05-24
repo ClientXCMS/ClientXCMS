@@ -30,7 +30,8 @@ Route::prefix('/client')->name('front.')->group(function () {
     Route::prefix('/profile/subusers')->name('subusers.')->middleware(['auth'])->group(function () {
         Route::get('/', [SubUserController::class, 'index'])->name('index');
         Route::post('/', [SubUserController::class, 'store'])->middleware('throttle:10,1')->name('store');
-        Route::get('/invitations/{token}', [SubUserController::class, 'accept'])->name('accept')->withoutMiddleware('auth');
+        Route::get('/invitations/{token}', [SubUserController::class, 'showAccept'])->name('accept')->withoutMiddleware('auth');
+        Route::post('/invitations/{token}', [SubUserController::class, 'accept'])->middleware('throttle:6,1')->name('accept.confirm')->withoutMiddleware('auth');
         Route::put('/accesses/{access}', [SubUserController::class, 'update'])->name('accesses.update');
         Route::delete('/accesses/{access}', [SubUserController::class, 'destroy'])->name('accesses.destroy');
         Route::post('/invitations/{invitation}/resend', [SubUserController::class, 'resend'])->middleware('throttle:5,1')->name('invitations.resend');
