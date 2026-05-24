@@ -381,7 +381,7 @@ class Invoice extends Model implements SupportRelateItemInterface
     public function generatePdf(bool $save = true): PDF
     {
         $filename = 'invoices/'.$this->getPdfName();
-        $domain = request()->getSchemeAndHttpHost();
+        $domain = rtrim(config('app.url'), '/');
         if (str_contains($domain, 'localhost')) {
             $logoSrc = '/'.setting('app_logo_text');
         } else {
