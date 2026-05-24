@@ -68,20 +68,58 @@ trait CanUse2FA
             || $this->requiresEmailTwoFactorForIp($ip);
     }
 
+    /**
+     * Soft cap on trusted device entries. Prevents unbounded metadata growth
+     * if a user roams across many networks; oldest entries are evicted first.
+     */
+    public const TRUST_IP_MAX = 20;
+
     public function requiresEmailTwoFactorForIp(?string $ip): bool
     {
         if (! $this->twoFactorEmailOnNewIpEnabled() || $ip === null) {
             return false;
         }
 
-        return ! in_array($ip, $this->twoFactorTrustedIps(), true);
+        $trustedIps = array_column($this->twoFactorTrustedIps(), 'ip');
+
+        return ! in_array($ip, $trustedIps, true);
     }
 
+    /**
+     * Returns active trusted entries as [['ip' => ..., 'until' => ISO|null], ...].
+     * Legacy rows (bare IP strings, pre-v2.16-audit) are surfaced as null-until
+     * so existing users are not silently kicked off. Expired entries are
+     * filtered out at read time.
+     */
     public function twoFactorTrustedIps(): array
     {
-        $ips = json_decode($this->getMetadata('2fa_trusted_ips') ?: '[]', true);
+        $raw = $this->getMetadata('2fa_trusted_ips');
+        if (! $raw) {
+            return [];
+        }
 
-        return is_array($ips) ? $ips : [];
+        $decoded = json_decode($raw, true);
+        if (! is_array($decoded)) {
+            return [];
+        }
+
+        return collect($decoded)
+            ->map(function ($entry) {
+                if (is_string($entry)) {
+                    return ['ip' => $entry, 'until' => null];
+                }
+                if (is_array($entry) && isset($entry['ip']) && is_string($entry['ip'])) {
+                    $until = $entry['until'] ?? null;
+
+                    return ['ip' => $entry['ip'], 'until' => is_string($until) ? $until : null];
+                }
+
+                return null;
+            })
+            ->filter()
+            ->reject(fn (array $entry) => $entry['until'] !== null && now()->gt(\Carbon\Carbon::parse($entry['until'])))
+            ->values()
+            ->all();
     }
 
     public function trustTwoFactorIp(?string $ip): void
@@ -89,13 +127,18 @@ trait CanUse2FA
         if ($ip === null) {
             return;
         }
-        $ips = collect($this->twoFactorTrustedIps())
-            ->push($ip)
-            ->unique()
-            ->take(-20)
+
+        $days = max(1, (int) setting('trust_device_days', 30));
+        $until = now()->addDays($days)->toDateTimeString();
+
+        $entries = collect($this->twoFactorTrustedIps())
+            ->reject(fn (array $entry) => $entry['ip'] === $ip)
+            ->push(['ip' => $ip, 'until' => $until])
+            ->take(-self::TRUST_IP_MAX)
             ->values()
             ->all();
-        $this->attachMetadata('2fa_trusted_ips', json_encode($ips));
+
+        $this->attachMetadata('2fa_trusted_ips', json_encode($entries));
     }
 
     public function sendTwoFactorEmailCode(string $guard, ?string $ip = null): void

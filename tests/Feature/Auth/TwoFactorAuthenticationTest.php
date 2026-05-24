@@ -58,7 +58,7 @@ class TwoFactorAuthenticationTest extends TestCase
         $this->assertTrue(session()->get('2fa_verified'));
         $customer = $customer->fresh();
         $this->assertNull($customer->getMetadata('2fa_email_code'));
-        $this->assertContains('127.0.0.1', $customer->twoFactorTrustedIps());
+        $this->assertContains('127.0.0.1', array_column($customer->twoFactorTrustedIps(), 'ip'));
     }
 
     public function test_admin_can_request_two_factor_email_code(): void
