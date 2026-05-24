@@ -153,7 +153,14 @@ class SubUserController extends Controller
     {
         abort_if($invitation->owner_customer_id !== auth()->id(), 404);
         abort_if(! $invitation->isPending(), 404);
-        $invitation->forceFill(['expires_at' => now()->addDays(14)])->save();
+        // Rotate the token so the old link goes 404 the moment this fresh
+        // mail is on its way. Otherwise any leak of the original mail
+        // outlives the resend.
+        $invitation->setFreshToken();
+        $invitation->forceFill([
+            'expires_at' => now()->addDays(14),
+            'token' => $invitation->getAttribute('token'),
+        ])->save();
         $this->sendInvitation($invitation);
 
         return back()->with('success', __('client.subusers.alerts.invitation_resent'));
@@ -170,7 +177,8 @@ class SubUserController extends Controller
 
     public function accept(Request $request, string $token)
     {
-        $invitation = CustomerAccountInvitation::where('token', $token)->firstOrFail();
+        $invitation = CustomerAccountInvitation::findByPlainToken($token);
+        abort_if($invitation === null, 404);
         if (! $invitation->isPending()) {
             if (auth()->check() && strtolower(auth()->user()->email) === strtolower($invitation->email) && $invitation->accepted_at !== null) {
                 return redirect()->route('front.client.index')->with('success', __('client.subusers.alerts.invitation_accepted'));
@@ -284,12 +292,22 @@ class SubUserController extends Controller
 
     private function sendInvitation(CustomerAccountInvitation $invitation): void
     {
+        // The plain token only exists right after create()/setFreshToken().
+        // If a caller ever forgets to seed it, the URL would be unusable -
+        // fail fast in that case rather than send a broken mail.
+        if ($invitation->plain_text_token === null) {
+            throw new \LogicException('sendInvitation requires plain_text_token to be set on the invitation instance');
+        }
+
         try {
             $recipient = Customer::where('email', $invitation->email)->first()
                 ?? new EmailAddressNotifiable($invitation->email, locale: $invitation->owner->locale);
-            $recipient->notify(new CustomerAccountInvitationEmail($invitation));
+            $recipient->notify(new CustomerAccountInvitationEmail($invitation, $invitation->plain_text_token));
         } catch (\Exception $e) {
-            \Cache::put('notification_error', $e->getMessage().' | Date : '.date('Y-m-d H:i:s'), 3600 * 24);
+            \Log::error('Failed to send subuser invitation email', [
+                'invitation_id' => $invitation->id,
+                'exception' => $e->getMessage(),
+            ]);
         }
     }
 

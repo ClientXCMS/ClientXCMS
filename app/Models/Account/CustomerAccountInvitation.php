@@ -31,19 +31,50 @@ class CustomerAccountInvitation extends Model
         'revoked_at' => 'datetime',
     ];
 
+    /**
+     * Plain token. Set transiently when the row is created or rotated so
+     * the mail layer can render the invitation URL. Never persisted - the
+     * DB only sees its sha256 hash. After a fresh fetch this is null.
+     */
+    public ?string $plain_text_token = null;
+
     public static function boot()
     {
         parent::boot();
 
         static::creating(function (CustomerAccountInvitation $invitation) {
-            if (empty($invitation->token)) {
-                $invitation->token = Str::random(64);
+            if (empty($invitation->getAttribute('token'))) {
+                $invitation->setFreshToken();
             }
             if ($invitation->expires_at === null) {
                 $invitation->expires_at = now()->addDays(14);
             }
             $invitation->email = strtolower($invitation->email);
         });
+    }
+
+    /**
+     * Generates a new plain token, exposes it on the model instance, and
+     * stores only its sha256. Called on create and on every resend so a
+     * leaked URL stops working as soon as the user asks for a fresh one.
+     */
+    public function setFreshToken(): string
+    {
+        $plain = Str::random(64);
+        $this->plain_text_token = $plain;
+        $this->setAttribute('token', hash('sha256', $plain));
+
+        return $plain;
+    }
+
+    /**
+     * Looks up an invitation by its plain token. The plain value never
+     * touches the DB - the lookup hashes it first and matches the stored
+     * sha256. Returns null when no row matches (caller handles 404).
+     */
+    public static function findByPlainToken(string $plainToken): ?self
+    {
+        return static::where('token', hash('sha256', $plainToken))->first();
     }
 
     public function owner()

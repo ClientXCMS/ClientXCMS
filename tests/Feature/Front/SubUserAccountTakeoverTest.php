@@ -35,7 +35,7 @@ class SubUserAccountTakeoverTest extends TestCase
         $attacker = Customer::factory()->unverified()->create(['email' => 'bob@example.com']);
 
         $response = $this->actingAs($attacker, 'web')
-            ->get(route('front.subusers.accept', $invitation->token));
+            ->get(route('front.subusers.accept', $invitation->plain_text_token));
 
         $response->assertRedirect();
         $this->assertNotEquals(
@@ -55,7 +55,7 @@ class SubUserAccountTakeoverTest extends TestCase
         $bob = Customer::factory()->create(['email' => 'bob@example.com', 'email_verified_at' => now()]);
 
         $response = $this->actingAs($bob, 'web')
-            ->get(route('front.subusers.accept', $invitation->token));
+            ->get(route('front.subusers.accept', $invitation->plain_text_token));
 
         $response->assertRedirect(route('front.client.index'));
         $this->assertNotNull(
@@ -70,7 +70,7 @@ class SubUserAccountTakeoverTest extends TestCase
         $attacker = Customer::factory()->unverified()->create(['email' => 'bob@example.com']);
 
         $response = $this->actingAs($attacker, 'web')
-            ->get(route('front.subusers.accept', $invitation->token));
+            ->get(route('front.subusers.accept', $invitation->plain_text_token));
 
         // UX: the user lands on the resend-verification endpoint so they
         // get a fresh link in their mailbox without an extra click.
