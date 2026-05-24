@@ -28,7 +28,8 @@ class TwoFactorAuthenticationTest extends TestCase
         $response = $this->actingAs($customer, 'web')->get(route('auth.2fa'));
 
         $response->assertOk();
-        $response->assertSee(__('client.profile.2fa.send_email_code'));
+        // The page exposes a resend-by-email control once the auto-send fired.
+        $response->assertSee(__('client.profile.2fa.resend_email_code'));
         Notification::assertSentTo($customer, TwoFactorCodeEmail::class);
     }
 

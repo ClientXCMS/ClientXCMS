@@ -54,7 +54,7 @@ class TwoFactorAuthenticationController
 
         if ($needs['totp'] && ! $totpDone) {
             return view('front.auth.2fa', [
-                'step' => 'totp',
+                'factorStep' => 'totp',
                 'requiresEmailAfter' => $needs['email'],
             ]);
         }
@@ -66,8 +66,9 @@ class TwoFactorAuthenticationController
             $user->sendTwoFactorEmailCode('web', $request->ip());
 
             return view('front.auth.2fa', [
-                'step' => 'email',
+                'factorStep' => 'email',
                 'requiresTotpBefore' => $needs['totp'],
+                'maskedEmail' => $this->maskEmail($user->email),
             ]);
         }
 
@@ -120,6 +121,27 @@ class TwoFactorAuthenticationController
 
         // Edge: neither factor required - middleware should have let through already.
         return redirect()->route('auth.2fa');
+    }
+
+    /**
+     * Mask the local part of an email for shoulder-surfing resistance.
+     *   alex@cerbonix.eu -> a**x@cerbonix.eu
+     *   ab@x.com         -> **@x.com
+     */
+    private function maskEmail(string $email): string
+    {
+        $at = strpos($email, '@');
+        if ($at === false) {
+            return $email;
+        }
+        $local = substr($email, 0, $at);
+        $domain = substr($email, $at);
+
+        if (strlen($local) <= 2) {
+            return str_repeat('*', strlen($local)).$domain;
+        }
+
+        return $local[0].str_repeat('*', strlen($local) - 2).substr($local, -1).$domain;
     }
 
     /**
