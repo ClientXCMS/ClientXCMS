@@ -141,8 +141,29 @@ trait CanUse2FA
         $this->attachMetadata('2fa_trusted_ips', json_encode($entries));
     }
 
+    /**
+     * Hard cap on guesses against a single email code. The code lives 5 minutes
+     * in a 900k pool; without this cap an attacker can keep guessing within the
+     * window and gain a non-trivial success probability.
+     */
+    public const EMAIL_2FA_MAX_ATTEMPTS = 5;
+
+    /**
+     * Soft cap on how many full attempt-cycles the user can burn before the
+     * mailbox goes silent. With MAX_ATTEMPTS=5 and MAX_CYCLES=3, the total
+     * attacker budget over a cooldown window is ~15 guesses against a 900k
+     * pool: ~2.4e-5 chance of a hit per window.
+     */
+    public const EMAIL_2FA_MAX_CYCLES = 3;
+
+    public const EMAIL_2FA_COOLDOWN_MINUTES = 5;
+
     public function sendTwoFactorEmailCode(string $guard, ?string $ip = null): void
     {
+        if ($this->isEmailTwoFactorOnCooldown()) {
+            return;
+        }
+
         $expiresAt = now()->addMinutes(5);
         $metadataKey = '2fa_email_code_expires_at';
 
@@ -155,13 +176,6 @@ trait CanUse2FA
         $this->attachMetadata($metadataKey, $expiresAt->toDateTimeString());
         $this->notify(new TwoFactorCodeEmail($code, $guard, $ip));
     }
-
-    /**
-     * Hard cap on guesses against a single email code. The code lives 5 minutes
-     * in a 900k pool; without this cap an attacker can keep guessing within the
-     * window and gain a non-trivial success probability.
-     */
-    public const EMAIL_2FA_MAX_ATTEMPTS = 5;
 
     public function isValidEmailTwoFactorCode(string $code): bool
     {
@@ -182,6 +196,7 @@ trait CanUse2FA
             $attempts = (int) ($this->getMetadata('2fa_email_code_attempts') ?: 0) + 1;
             if ($attempts >= self::EMAIL_2FA_MAX_ATTEMPTS) {
                 $this->clearEmailTwoFactorCode();
+                $this->markEmailTwoFactorCycleBurned();
             } else {
                 $this->attachMetadata('2fa_email_code_attempts', (string) $attempts);
             }
@@ -190,8 +205,43 @@ trait CanUse2FA
         }
 
         $this->clearEmailTwoFactorCode();
+        $this->resetEmailTwoFactorBurnedCycles();
 
         return true;
+    }
+
+    public function isEmailTwoFactorOnCooldown(): bool
+    {
+        $burned = (int) ($this->getMetadata('2fa_email_burned_cycles') ?: 0);
+        if ($burned < self::EMAIL_2FA_MAX_CYCLES) {
+            return false;
+        }
+
+        $burnedAt = $this->getMetadata('2fa_email_burned_at');
+        if (! $burnedAt) {
+            return false;
+        }
+
+        if (now()->gte(\Carbon\Carbon::parse($burnedAt)->addMinutes(self::EMAIL_2FA_COOLDOWN_MINUTES))) {
+            $this->resetEmailTwoFactorBurnedCycles();
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private function markEmailTwoFactorCycleBurned(): void
+    {
+        $burned = (int) ($this->getMetadata('2fa_email_burned_cycles') ?: 0) + 1;
+        $this->attachMetadata('2fa_email_burned_cycles', (string) $burned);
+        $this->attachMetadata('2fa_email_burned_at', now()->toDateTimeString());
+    }
+
+    private function resetEmailTwoFactorBurnedCycles(): void
+    {
+        $this->detachMetadata('2fa_email_burned_cycles');
+        $this->detachMetadata('2fa_email_burned_at');
     }
 
     private function clearEmailTwoFactorCode(): void
