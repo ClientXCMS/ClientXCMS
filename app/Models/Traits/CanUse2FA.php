@@ -132,6 +132,33 @@ trait CanUse2FA
             ->all();
     }
 
+    /**
+     * Drop a single trusted entry. Returns the remaining count so the caller
+     * can flash a confirmation message ("device revoked, N left"). No-op if
+     * the IP is not in the list.
+     */
+    public function revokeTwoFactorTrust(string $ip): int
+    {
+        $entries = collect($this->twoFactorTrustedIps())
+            ->reject(fn (array $entry) => $entry['ip'] === $ip)
+            ->values()
+            ->all();
+
+        $this->attachMetadata('2fa_trusted_ips', json_encode($entries));
+
+        return count($entries);
+    }
+
+    /**
+     * Wipe the trusted-device list. Called whenever the user takes an action
+     * that implies "the account may be compromised": password change, password
+     * reset, or explicit "revoke all" click.
+     */
+    public function revokeAllTwoFactorTrust(): void
+    {
+        $this->detachMetadata('2fa_trusted_ips');
+    }
+
     public function trustTwoFactorIp(?string $ip, ?string $userAgent = null): void
     {
         if ($ip === null) {

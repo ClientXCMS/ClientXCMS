@@ -90,6 +90,7 @@ class ProfileController extends \App\Http\Controllers\Controller
     public function password(ProfilePasswordRequest $request)
     {
         $request->user('web')->update(['password' => $request->password]);
+        $request->user('web')->revokeAllTwoFactorTrust();
         try {
             \Auth::logoutOtherDevices($request->password);
         } catch (AuthenticationException $e) {

@@ -142,6 +142,48 @@ class TrustedTwoFactorIpsTest extends TestCase
         $this->assertNull($entry['user_agent'], 'Entries written before F3.0 must surface user_agent=null so the view can render "Unknown device"');
     }
 
+    public function test_revoke_single_ip_drops_only_that_entry(): void
+    {
+        $customer = Customer::factory()->create();
+        $customer->trustTwoFactorIp('1.2.3.4');
+        $customer->trustTwoFactorIp('5.6.7.8');
+        $customer->trustTwoFactorIp('9.9.9.9');
+
+        $remaining = $customer->revokeTwoFactorTrust('5.6.7.8');
+
+        $this->assertSame(2, $remaining);
+        $ips = array_column($customer->fresh()->twoFactorTrustedIps(), 'ip');
+        $this->assertContains('1.2.3.4', $ips);
+        $this->assertNotContains('5.6.7.8', $ips);
+        $this->assertContains('9.9.9.9', $ips);
+    }
+
+    public function test_revoke_single_ip_is_noop_when_ip_not_listed(): void
+    {
+        $customer = Customer::factory()->create();
+        $customer->trustTwoFactorIp('1.2.3.4');
+
+        $remaining = $customer->revokeTwoFactorTrust('203.0.113.7');
+
+        $this->assertSame(1, $remaining);
+        $this->assertCount(1, $customer->fresh()->twoFactorTrustedIps());
+    }
+
+    public function test_revoke_all_wipes_the_list(): void
+    {
+        $customer = Customer::factory()->create();
+        $customer->trustTwoFactorIp('1.2.3.4');
+        $customer->trustTwoFactorIp('5.6.7.8');
+
+        $customer->revokeAllTwoFactorTrust();
+
+        $this->assertEmpty($customer->fresh()->twoFactorTrustedIps());
+        $this->assertNull(
+            $customer->fresh()->getMetadata('2fa_trusted_ips'),
+            'revokeAll must detach the metadata row entirely, not just write an empty array'
+        );
+    }
+
     public function test_trust_ignored_when_ip_is_null(): void
     {
         $customer = Customer::factory()->create();

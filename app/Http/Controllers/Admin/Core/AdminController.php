@@ -229,6 +229,7 @@ class AdminController extends AbstractCrudController
             'password' => bcrypt($request->password),
             'remember_token' => \Str::random(60),
         ]);
+        $admin->revokeAllTwoFactorTrust();
         try {
             \Auth::guard('admin')->logoutOtherDevices($request->password);
         } catch (\Illuminate\Auth\AuthenticationException $e) {
