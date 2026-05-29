@@ -163,12 +163,22 @@ class BasketController extends \App\Http\Controllers\Controller
             return response()->json(['message' => __('store.basket.no_prices')], 422);
         }
 
+        // v2.16 — forward the basket-level coupon to the pricing service
+        // so the customer sees the discounted total on the /basket/add
+        // page, not only later at /store/basket.
+        $coupon = null;
+        $basket = Basket::getBasket();
+        if ($basket->coupon_id !== null) {
+            $coupon = \App\Models\Store\Coupon::find($basket->coupon_id);
+        }
+
         $preview = $pricingService->preview(
             $product,
             $validated['billing'],
             $validated['currency'],
             $validated['options'] ?? [],
             $validated,
+            $coupon,
         );
 
         return response()->json($preview + ['errors' => $errors]);
@@ -269,22 +279,63 @@ class BasketController extends \App\Http\Controllers\Controller
     {
         $this->validate($request, [
             'coupon' => 'required|string|max:255',
+            // v2.16 — accept an optional return URL so the customer
+            // who applied the coupon from /basket/config/{product}
+            // stays on that page instead of being yanked to
+            // /store/basket.
+            'redirect_to' => 'nullable|string|max:1000',
         ]);
         $basket = Basket::getBasket();
         $apply = $basket->applyCoupon($request->coupon);
+
+        $target = $this->resolveCouponRedirect($request->input('redirect_to'));
+
         if ($apply === true) {
-            return redirect()->route('front.store.basket.show')->with('success', __('coupon.coupon_applied'));
+            return redirect($target)->with('success', __('coupon.coupon_applied'));
         }
 
-        return redirect()->route('front.store.basket.show');
+        return redirect($target);
     }
 
-    public function removeCoupon()
+    public function removeCoupon(Request $request)
     {
         $basket = Basket::getBasket();
         $basket->update(['coupon_id' => null]);
 
-        return redirect()->route('front.store.basket.show')->with('success', __('coupon.coupon_removed'));
+        $target = $this->resolveCouponRedirect($request->input('redirect_to'));
+
+        return redirect($target)->with('success', __('coupon.coupon_removed'));
+    }
+
+    /**
+     * v2.16 — Whitelist the only allowed redirect destinations after a
+     * coupon apply/remove. Anything else falls back to the default
+     * /store/basket page. Prevents open redirects while still letting
+     * the basket-config page get the user back.
+     */
+    private function resolveCouponRedirect(?string $redirectTo): string
+    {
+        $default = route('front.store.basket.show');
+        if ($redirectTo === null || $redirectTo === '') {
+            return $default;
+        }
+        // Same-host paths only (must start with our APP_URL or be a
+        // relative URL beginning with /). Drop any query string we
+        // don't recognise just in case.
+        $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+        $parsed = parse_url($redirectTo);
+        $host = $parsed['host'] ?? null;
+        if ($host !== null && $host !== $appHost) {
+            return $default;
+        }
+        // Only allow paths that look like our basket-config or
+        // basket-show routes so coupons can't be used to bounce
+        // a customer onto an arbitrary page.
+        $path = $parsed['path'] ?? '';
+        if (! str_starts_with($path, '/store/basket') && ! str_starts_with($path, '/basket')) {
+            return $default;
+        }
+        return $redirectTo;
     }
 
     private function checkPrerequisites(bool $flash, Basket $basket, string $route)

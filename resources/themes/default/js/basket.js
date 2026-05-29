@@ -39,6 +39,24 @@ const applySummary = (payload) => {
     setText('taxes', formatted.taxes ?? formatMoney(totals.tax, currency));
     setText('total', formatted.total ?? formatMoney(totals.total, currency));
 
+    // v2.16 — render the inline coupon line. The pricing service
+    // returns `payload.coupon = { code, discount_ht, formatted_discount }`
+    // when the basket-level coupon shaved off some money. Hide the
+    // line when there's nothing to display so the layout stays clean.
+    const couponLine = document.getElementById('coupon-line');
+    if (couponLine) {
+        const meta = payload.coupon;
+        const discountHt = Number(totals.discount_ht || 0);
+        if (meta && discountHt > 0) {
+            couponLine.classList.remove('hidden');
+            setText('coupon-code', meta.code ?? '');
+            setText('coupon-discount', meta.formatted_discount ?? `-${formatMoney(discountHt, currency)}`);
+        } else if (!meta) {
+            // No coupon at all → hide.
+            couponLine.classList.add('hidden');
+        }
+    }
+
     (payload.options ?? []).forEach((option) => {
         const key = option.key;
         setText(`options_price[${key}]`, option.formatted ?? formatMoney(option.amount_ht, currency));
