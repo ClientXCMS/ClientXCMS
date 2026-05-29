@@ -193,6 +193,9 @@ class Invoice extends Model implements SupportRelateItemInterface
         'uuid',
         'payment_method_id',
         'balance',
+        // v2.16 — SHA-256 of the latest generated PDF, proves the
+        // delivered document has not been tampered with.
+        'pdf_sha256',
     ];
 
     protected $casts = [
@@ -399,7 +402,21 @@ class Invoice extends Model implements SupportRelateItemInterface
             'primaryColor' => $primaryColor,
         ]);
         if ($save) {
-            Storage::put($filename, $pdf->output());
+            $bytes = $pdf->output();
+            Storage::put($filename, $bytes);
+            // v2.16 — record the SHA-256 of the generated PDF so we can
+            // later prove the file served to the customer is the one we
+            // originally produced. quietly() avoids triggering the
+            // updated-observer for what is effectively a cache.
+            try {
+                $this->forceFill(['pdf_sha256' => hash('sha256', $bytes)])->saveQuietly();
+            } catch (\Throwable $e) {
+                // Backfill is best-effort — never let a hash issue block PDF generation.
+                logger()->warning('billing.invoice.pdf_hash_failed', [
+                    'invoice_id' => $this->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         return $pdf;
@@ -480,20 +497,24 @@ class Invoice extends Model implements SupportRelateItemInterface
         InvoiceLog::log($this, InvoiceLog::SEND_INVOICE);
     }
 
+    /**
+     * v2.16 — Atomic invoice number allocation.
+     *
+     * Delegates to {@see \App\Services\Billing\InvoiceSequenceService}
+     * which uses a row-level locked counter. The previous
+     * implementation relied on `count() + 1` which is a race condition:
+     * two parallel paying customers could be assigned the same number,
+     * breaking the sequential-numbering legal requirement
+     * (FR: CGI art. 289, EU: similar wording across member states).
+     *
+     * Signature is kept identical so callers do not need to change. The
+     * `$add` parameter is now ignored (no longer necessary — the
+     * counter already guarantees uniqueness) but preserved for source
+     * compatibility with any extension that calls the method.
+     */
     public static function generateInvoiceNumber(?string $date = null, bool $creation = true, int $add = 1): string
     {
-        $prefix = setting('billing_invoice_prefix', 'CTX');
-        $key = $date ?? now()->format('Y-m');
-        if ($creation && InvoiceService::getBillingType() == InvoiceService::PRO_FORMA) {
-            $prefix = "$prefix-PROFORMA-".str_pad(Invoice::withTrashed()->where('invoice_number', 'like', $prefix.'-PROFORMA-'.$key.'%')->count() + $add, 4, '0', STR_PAD_LEFT);
-        } else {
-            $prefix = $prefix.'-'.$key.'-'.str_pad(Invoice::withTrashed()->where('invoice_number', 'like', $prefix.'-'.$key.'%')->count() + $add, 4, '0', STR_PAD_LEFT);
-        }
-        if (Invoice::withTrashed()->where('invoice_number', $prefix)->exists()) {
-            return self::generateInvoiceNumber($date, $creation, $add + 1);
-        }
-
-        return $prefix;
+        return \App\Services\Billing\InvoiceSequenceService::nextNumber($date, $creation);
     }
 
     public static function updateInvoicePrefix(string $new): void
