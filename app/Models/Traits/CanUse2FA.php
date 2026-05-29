@@ -20,6 +20,7 @@
 namespace App\Models\Traits;
 
 use App\Mail\Auth\TwoFactorCodeEmail;
+use App\Services\Auth\MfaConfig;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
@@ -29,7 +30,7 @@ trait CanUse2FA
 {
     public function shouldForceTwoFactor(string $guard): bool
     {
-        return in_array(setting($guard === 'admin' ? 'force_2fa_admin' : 'force_2fa_client', 'false'), ['true', true, 1, '1'], true);
+        return MfaConfig::forceFor($guard);
     }
 
     public function twoFactorEnabled(): bool
@@ -68,7 +69,7 @@ trait CanUse2FA
             || $this->requiresEmailTwoFactorForIp($ip);
     }
 
-    // Soft cap, oldest evicted first (anti metadata bloat).
+    /** @deprecated Use {@see MfaConfig::trustedDevicesMax()}. Kept for BC. */
     public const TRUST_IP_MAX = 20;
 
     public function requiresEmailTwoFactorForIp(?string $ip): bool
@@ -145,27 +146,27 @@ trait CanUse2FA
             return;
         }
 
-        $days = max(1, (int) setting('trust_device_days', 30));
-        $until = now()->addDays($days)->toDateTimeString();
+        $until = now()->addDays(MfaConfig::trustedDeviceLifetimeDays())->toDateTimeString();
         // Defensive bound: a malicious UA can be megabytes long.
         $ua = $userAgent !== null ? mb_substr($userAgent, 0, 512) : null;
 
         $entries = collect($this->twoFactorTrustedIps())
             ->reject(fn (array $entry) => $entry['ip'] === $ip)
             ->push(['ip' => $ip, 'until' => $until, 'user_agent' => $ua])
-            ->take(-self::TRUST_IP_MAX)
+            ->take(-MfaConfig::trustedDevicesMax())
             ->values()
             ->all();
 
         $this->attachMetadata('2fa_trusted_ips', json_encode($entries));
     }
 
-    // Hard cap on guesses per code (6 digits, 5 min, 900k pool).
+    /** @deprecated Use {@see MfaConfig::emailMaxAttempts()}. Kept for BC. */
     public const EMAIL_2FA_MAX_ATTEMPTS = 5;
 
-    // After 3 burned cycles (15 guesses), mailbox cooldown -> ~2.4e-5 hit/window.
+    /** @deprecated Use {@see MfaConfig::emailMaxCycles()}. Kept for BC. */
     public const EMAIL_2FA_MAX_CYCLES = 3;
 
+    /** @deprecated Use {@see MfaConfig::emailCooldownMinutes()}. Kept for BC. */
     public const EMAIL_2FA_COOLDOWN_MINUTES = 5;
 
     public function sendTwoFactorEmailCode(string $guard, ?string $ip = null): void
@@ -174,7 +175,7 @@ trait CanUse2FA
             return;
         }
 
-        $expiresAt = now()->addMinutes(5);
+        $expiresAt = now()->addMinutes(MfaConfig::emailCodeTtlMinutes());
         $metadataKey = '2fa_email_code_expires_at';
 
         if ($this->getMetadata($metadataKey) && now()->lt(\Carbon\Carbon::parse($this->getMetadata($metadataKey)))) {
@@ -204,7 +205,7 @@ trait CanUse2FA
 
         if (! Hash::check($code, $hash)) {
             $attempts = (int) ($this->getMetadata('2fa_email_code_attempts') ?: 0) + 1;
-            if ($attempts >= self::EMAIL_2FA_MAX_ATTEMPTS) {
+            if ($attempts >= MfaConfig::emailMaxAttempts()) {
                 $this->clearEmailTwoFactorCode();
                 $this->markEmailTwoFactorCycleBurned();
             } else {
@@ -223,7 +224,7 @@ trait CanUse2FA
     public function isEmailTwoFactorOnCooldown(): bool
     {
         $burned = (int) ($this->getMetadata('2fa_email_burned_cycles') ?: 0);
-        if ($burned < self::EMAIL_2FA_MAX_CYCLES) {
+        if ($burned < MfaConfig::emailMaxCycles()) {
             return false;
         }
 
@@ -232,7 +233,7 @@ trait CanUse2FA
             return false;
         }
 
-        if (now()->gte(\Carbon\Carbon::parse($burnedAt)->addMinutes(self::EMAIL_2FA_COOLDOWN_MINUTES))) {
+        if (now()->gte(\Carbon\Carbon::parse($burnedAt)->addMinutes(MfaConfig::emailCooldownMinutes()))) {
             $this->resetEmailTwoFactorBurnedCycles();
 
             return false;
@@ -342,15 +343,38 @@ trait CanUse2FA
         return false;
     }
 
+    /** @deprecated Use {@see MfaConfig::smsDailyCap()}. Kept for BC. */
+    public const SMS_2FA_DAILY_CAP = 10;
+
     // Send OTP via configured SMS gateway. Mirrors sendTwoFactorEmailCode.
     public function sendTwoFactorSmsCode(string $guard, ?string $ip = null): bool
     {
         $phone = (string) ($this->phone ?? '');
-        if ($phone === '') {
+        // E.164: leading '+', country code 1-9, total 8-15 digits.
+        if (! preg_match('/^\+[1-9]\d{7,14}$/', $phone)) {
             return false;
         }
 
-        $expiresAt = now()->addMinutes(5);
+        // Daily cap (rolling 24h). Resets when the window expires.
+        $dailyKey = '2fa_sms_daily_count';
+        $resetKey = '2fa_sms_daily_reset_at';
+        $reset = $this->getMetadata($resetKey);
+        $count = (int) ($this->getMetadata($dailyKey) ?: 0);
+        if ($reset && now()->gt(\Carbon\Carbon::parse($reset))) {
+            $count = 0;
+            $this->detachMetadata($resetKey);
+            $this->detachMetadata($dailyKey);
+        }
+        if ($count >= MfaConfig::smsDailyCap()) {
+            logger()->warning('mfa.sms.daily_cap_hit', [
+                'guard' => $guard,
+                'user_id' => $this->id,
+            ]);
+
+            return false;
+        }
+
+        $expiresAt = now()->addMinutes(MfaConfig::smsCodeTtlMinutes());
         $expiresKey = '2fa_sms_code_expires_at';
 
         if ($this->getMetadata($expiresKey)
@@ -368,6 +392,11 @@ trait CanUse2FA
                 $phone,
                 sprintf('%s — code de connexion : %s (valide 5 min)', $appName, $code)
             );
+
+            $this->attachMetadata($dailyKey, (string) ($count + 1));
+            if (! $reset) {
+                $this->attachMetadata($resetKey, now()->addDay()->toDateTimeString());
+            }
 
             return true;
         } catch (\Throwable $e) {

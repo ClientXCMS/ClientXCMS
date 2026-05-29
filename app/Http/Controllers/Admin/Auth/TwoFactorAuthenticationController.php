@@ -20,6 +20,7 @@
 namespace App\Http\Controllers\Admin\Auth;
 
 use App\Rules\Valid2FACodeInput;
+use App\Services\Auth\MfaConfig;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -57,7 +58,7 @@ class TwoFactorAuthenticationController
                 'requiresTotpBefore' => $needs['totp'],
                 'maskedEmail' => $this->maskEmail($user->email),
                 'cooldownActive' => $user->isEmailTwoFactorOnCooldown(),
-                'cooldownMinutes' => $user::EMAIL_2FA_COOLDOWN_MINUTES,
+                'cooldownMinutes' => MfaConfig::emailCooldownMinutes(),
             ]);
         }
 
@@ -76,7 +77,7 @@ class TwoFactorAuthenticationController
 
         if ($user->isEmailTwoFactorOnCooldown()) {
             return redirect()->route('admin.auth.2fa')->with('error', __('client.profile.2fa.cooldown_active', [
-                'minutes' => $user::EMAIL_2FA_COOLDOWN_MINUTES,
+                'minutes' => MfaConfig::emailCooldownMinutes(),
             ]));
         }
 
