@@ -30,8 +30,7 @@ class TrustedDevicesUiTest extends TestCase
         $response->assertOk();
         $response->assertSee('1.2.3.4');
         $response->assertSee('5.6.7.8');
-        $response->assertSee('Firefox', false);
-        $response->assertSee('Chrome', false);
+        $response->assertSee(__('client.profile.2fa.device_label'));
     }
 
     public function test_revoke_single_device_endpoint_drops_only_one_entry(): void

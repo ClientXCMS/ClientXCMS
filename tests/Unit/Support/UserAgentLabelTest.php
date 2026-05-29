@@ -47,10 +47,10 @@ class UserAgentLabelTest extends TestCase
     #[DataProvider('knownAgentsProvider')]
     public function test_summarizes_known_browsers_and_oses(string $ua, string $browser, string $os): void
     {
-        $label = UserAgentLabel::summarize($ua);
-
-        $this->assertStringContainsString($browser, $label);
-        $this->assertStringContainsString($os, $label);
+        $this->assertSame(
+            __('client.profile.2fa.device_label', ['browser' => $browser, 'os' => $os]),
+            UserAgentLabel::summarize($ua)
+        );
     }
 
     public function test_returns_unknown_device_label_for_null_or_empty(): void
