@@ -79,6 +79,15 @@ class CreditNote extends Model
         $prefix = setting('billing_credit_note_prefix', 'AVOIR');
         $yearMonth = $date ?? now()->format('Y-m');
 
+        // Atomic pre-create, cf. InvoiceSequenceService::nextNumber.
+        DB::table('invoice_sequences')->insertOrIgnore([
+            'prefix' => $prefix,
+            'year_month' => $yearMonth,
+            'last_number' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         return DB::transaction(function () use ($prefix, $yearMonth) {
             $row = DB::table('invoice_sequences')
                 ->where('prefix', $prefix)
@@ -86,18 +95,7 @@ class CreditNote extends Model
                 ->lockForUpdate()
                 ->first();
 
-            if ($row === null) {
-                DB::table('invoice_sequences')->insert([
-                    'prefix' => $prefix,
-                    'year_month' => $yearMonth,
-                    'last_number' => 0,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-                $next = 1;
-            } else {
-                $next = (int) $row->last_number + 1;
-            }
+            $next = (int) $row->last_number + 1;
 
             DB::table('invoice_sequences')
                 ->where('prefix', $prefix)
