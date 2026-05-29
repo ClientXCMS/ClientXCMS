@@ -328,10 +328,12 @@ class BasketController extends \App\Http\Controllers\Controller
         if ($host !== null && $host !== $appHost) {
             return $default;
         }
-        // Only allow paths that look like our basket-config or
-        // basket-show routes so coupons can't be used to bounce
-        // a customer onto an arbitrary page.
+        // Reject path traversal sequences before prefix-matching: /basket/../admin
+        // would pass str_starts_with but the browser resolves it to /admin.
         $path = $parsed['path'] ?? '';
+        if (str_contains($path, '..')) {
+            return $default;
+        }
         if (! str_starts_with($path, '/store/basket') && ! str_starts_with($path, '/basket')) {
             return $default;
         }
