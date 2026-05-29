@@ -38,6 +38,10 @@ class GdprExportService
         if (! is_dir($tmpDir)) {
             mkdir($tmpDir, 0755, true);
         }
+        // GDPR storage limitation: the signed URL TTL is 24h, anything older
+        // is unreachable and just retains PII on disk - delete it.
+        $this->purgeStaleArchives($tmpDir);
+
         $filename = sprintf('export-%s-%s.zip', $customer->id, now()->format('YmdHis'));
         $zipPath = $tmpDir.'/'.$filename;
 
@@ -64,7 +68,11 @@ class GdprExportService
             try {
                 $pdfBytes = $invoice->invoiceOutput();
                 if ($pdfBytes !== '') {
-                    $zip->addFromString('invoices/'.$invoice->invoice_number.'.pdf', $pdfBytes);
+                    // Sanitize the entry name: invoice_number is admin-influenced
+                    // (prefix setting) and a stray '/' or '..' would let an
+                    // extractor write outside the invoices/ folder.
+                    $safeName = preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $invoice->invoice_number);
+                    $zip->addFromString('invoices/'.$safeName.'.pdf', $pdfBytes);
                 }
             } catch (\Throwable $e) {
                 logger()->warning('gdpr.export.invoice_pdf_failed', [
@@ -77,6 +85,20 @@ class GdprExportService
         $zip->close();
 
         return self::STORAGE_DIR.'/'.$customer->id.'/'.$filename;
+    }
+
+    /**
+     * Delete archives older than the signed-URL TTL (24h). Keeps the
+     * gdpr/{id}/ folder free of stale PII bundles.
+     */
+    private function purgeStaleArchives(string $dir): void
+    {
+        $cutoff = now()->subDay()->getTimestamp();
+        foreach (glob($dir.'/*.zip') ?: [] as $file) {
+            if (@filemtime($file) < $cutoff) {
+                @unlink($file);
+            }
+        }
     }
 
     /**

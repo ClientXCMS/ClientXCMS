@@ -8,6 +8,7 @@
 namespace App\Console\Commands\Purge;
 
 use App\Models\Account\Customer;
+use App\Models\ActionLog;
 use App\Notifications\Account\AccountPurgeReminder;
 use App\Services\Account\AccountDeletionService;
 use Illuminate\Console\Command;
@@ -51,7 +52,15 @@ class PurgeInactiveAccountsCommand extends Command
         $dryRun = (bool) $this->option('dry-run');
         $cutoff = Carbon::now()->subDays($days);
 
-        $candidates = Customer::query()
+        $now = Carbon::now();
+        $reminders = [30, 7, 1];
+        $purged = 0;
+        $reminded = 0;
+        $scanned = 0;
+
+        // Stream candidates in chunks to keep memory bounded on installs
+        // with very large customer bases.
+        Customer::query()
             ->whereNull('deleted_at')
             ->where(function ($q) use ($cutoff) {
                 $q->whereNull('last_login')
@@ -69,63 +78,86 @@ class PurgeInactiveAccountsCommand extends Command
                     \App\Models\Provisioning\Service::STATUS_PENDING,
                 ]);
             })
-            ->get();
+            ->orderBy('id')
+            ->chunkById(100, function ($chunk) use (
+                $deleter, $now, $reminders, $days, $dryRun,
+                &$purged, &$reminded, &$scanned
+            ) {
+                foreach ($chunk as $customer) {
+                    $scanned++;
+                    $reference = $customer->last_login ?? $customer->created_at;
+                    $eligibleAt = $reference->copy()->addDays($days);
+                    $daysLeft = (int) ceil($now->floatDiffInDays($eligibleAt, false));
 
-        if ($candidates->isEmpty()) {
-            $this->info('No inactive accounts to purge.');
-            return self::SUCCESS;
-        }
-
-        $now = Carbon::now();
-        $reminders = [30, 7, 1];
-        $purged = 0;
-        $reminded = 0;
-
-        foreach ($candidates as $customer) {
-            $reference = $customer->last_login ?? $customer->created_at;
-            $eligibleAt = $reference->copy()->addDays($days);
-            $daysLeft = (int) ceil($now->floatDiffInDays($eligibleAt, false));
-
-            // D-0 — actually delete.
-            if ($daysLeft <= 0) {
-                $this->line(sprintf('[PURGE] #%d %s (last_login=%s)',
-                    $customer->id, $customer->email, $reference->toDateString()));
-
-                if (! $dryRun) {
-                    $deleter->delete($customer, true);
-                }
-                $purged++;
-                continue;
-            }
-
-            // Otherwise send a reminder when crossing one of the
-            // configured milestones. The metadata "gdpr_purge_reminder_{N}"
-            // ensures we don't notify the same customer twice for the
-            // same milestone.
-            foreach ($reminders as $milestone) {
-                if ($daysLeft <= $milestone && ! $customer->hasMetadata("gdpr_purge_reminder_{$milestone}")) {
-                    $this->line(sprintf('[REMIND %d] #%d %s', $milestone, $customer->id, $customer->email));
-                    if (! $dryRun) {
-                        try {
-                            $customer->notify(new AccountPurgeReminder($daysLeft));
-                            $customer->attachMetadata("gdpr_purge_reminder_{$milestone}", $now->toIso8601String());
-                        } catch (\Throwable $e) {
-                            logger()->warning('gdpr.purge.reminder_failed', [
-                                'customer_id' => $customer->id,
-                                'days_left' => $daysLeft,
-                                'error' => $e->getMessage(),
-                            ]);
-                        }
+                    if ($daysLeft <= 0) {
+                        $this->processDelete($customer, $deleter, $dryRun, $reference);
+                        $purged++;
+                        continue;
                     }
-                    $reminded++;
-                    break;
+
+                    if ($this->sendMilestoneReminder($customer, $daysLeft, $reminders, $now, $dryRun)) {
+                        $reminded++;
+                    }
                 }
-            }
-        }
+            });
 
         $this->info(sprintf('Purged: %d, reminded: %d, candidates scanned: %d (dry-run=%s)',
-            $purged, $reminded, $candidates->count(), $dryRun ? 'yes' : 'no'));
+            $purged, $reminded, $scanned, $dryRun ? 'yes' : 'no'));
 
         return self::SUCCESS;
+    }
+
+    private function processDelete(Customer $customer, AccountDeletionService $deleter, bool $dryRun, Carbon $reference): void
+    {
+        $this->line(sprintf('[PURGE] #%d %s (last_login=%s)',
+            $customer->id, $customer->email, $reference->toDateString()));
+
+        if ($dryRun) {
+            return;
+        }
+
+        // Capture identity BEFORE delete; AccountDeletionService nulls fields.
+        $payload = [
+            'reason' => 'gdpr_inactive',
+            'email' => $customer->email,
+            'last_login' => optional($customer->last_login)->toIso8601String(),
+        ];
+
+        try {
+            $deleter->delete($customer, true);
+            ActionLog::log(ActionLog::ACCOUNT_DELETED, Customer::class, $customer->id, null, null, $payload);
+        } catch (\Throwable $e) {
+            logger()->error('gdpr.purge.delete_failed', [
+                'customer_id' => $customer->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function sendMilestoneReminder(Customer $customer, int $daysLeft, array $reminders, Carbon $now, bool $dryRun): bool
+    {
+        foreach ($reminders as $milestone) {
+            if ($daysLeft > $milestone || $customer->hasMetadata("gdpr_purge_reminder_{$milestone}")) {
+                continue;
+            }
+            $this->line(sprintf('[REMIND %d] #%d %s', $milestone, $customer->id, $customer->email));
+            if ($dryRun) {
+                return true;
+            }
+            try {
+                $customer->notify(new AccountPurgeReminder($daysLeft));
+                $customer->attachMetadata("gdpr_purge_reminder_{$milestone}", $now->toIso8601String());
+            } catch (\Throwable $e) {
+                logger()->warning('gdpr.purge.reminder_failed', [
+                    'customer_id' => $customer->id,
+                    'days_left' => $daysLeft,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }

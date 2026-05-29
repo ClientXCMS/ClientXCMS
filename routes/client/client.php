@@ -42,7 +42,10 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Front\ProfileController::class, 'show'])->name('.index');
         Route::post('/', [\App\Http\Controllers\Front\ProfileController::class, 'update'])->name('.update');
         Route::post('/password', [\App\Http\Controllers\Front\ProfileController::class, 'password'])->name('.password');
-        Route::post('/export', [\App\Http\Controllers\Front\ProfileController::class, 'export'])->name('.export');
+        // GDPR export: cap to 3 builds per day per user (heavy: zips every invoice PDF).
+        Route::post('/export', [\App\Http\Controllers\Front\ProfileController::class, 'export'])
+            ->middleware('throttle:3,1440')
+            ->name('.export');
         // v2.16 — signed download endpoint used by the link returned by export()
         Route::get('/export/download/{path}', [\App\Http\Controllers\Front\ProfileController::class, 'downloadExport'])
             ->where('path', '.*')

@@ -72,4 +72,50 @@ class GdprExportTest extends TestCase
         $response = $this->actingAs($customer, 'web')->get($url);
         $response->assertForbidden();
     }
+
+    public function test_build_archive_purges_zips_older_than_24h(): void
+    {
+        $customer = Customer::factory()->create();
+        $service = new GdprExportService;
+
+        $dir = storage_path('app/'.GdprExportService::STORAGE_DIR.'/'.$customer->id);
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        $stale = $dir.'/export-stale.zip';
+        $fresh = $dir.'/export-fresh.zip';
+        file_put_contents($stale, 'old');
+        file_put_contents($fresh, 'new');
+        touch($stale, now()->subDays(2)->getTimestamp());
+        touch($fresh, now()->subHours(2)->getTimestamp());
+
+        $service->buildArchive($customer);
+
+        $this->assertFileDoesNotExist($stale);
+        $this->assertFileExists($fresh);
+    }
+
+    public function test_invoice_number_with_path_traversal_chars_is_sanitised(): void
+    {
+        $customer = Customer::factory()->create();
+        $invoice = Invoice::factory()->create([
+            'customer_id' => $customer->id,
+            'invoice_number' => 'CTX/../escape',
+        ]);
+
+        $service = new GdprExportService;
+        $relative = $service->buildArchive($customer);
+
+        $zip = new ZipArchive;
+        $zip->open(storage_path('app/'.$relative));
+        $entries = [];
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $entries[] = $zip->getNameIndex($i);
+        }
+        $zip->close();
+
+        foreach ($entries as $name) {
+            $this->assertStringNotContainsString('..', $name, "ZIP entry '$name' leaked the traversal sequence");
+        }
+    }
 }
