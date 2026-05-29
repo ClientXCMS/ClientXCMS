@@ -65,4 +65,43 @@ class ServiceLiveStatusTest extends TestCase
         // 'auth' middleware on the parent group redirects to /login
         $this->assertContains($response->status(), [302, 401]);
     }
+
+    public function test_subuser_with_service_show_permission_can_poll(): void
+    {
+        $owner = Customer::factory()->create();
+        $subuser = Customer::factory()->create();
+        $service = $this->createServiceModel($owner->id);
+
+        \App\Models\Account\CustomerAccountAccess::create([
+            'owner_customer_id' => $owner->id,
+            'sub_customer_id' => $subuser->id,
+            'permissions' => ['service.show'],
+            'all_services' => true,
+        ]);
+
+        $response = $this->actingAs($subuser, 'web')
+            ->getJson(route('front.services.status', $service));
+
+        $response->assertOk();
+        $this->assertSame($service->uuid, $response->json('uuid'));
+    }
+
+    public function test_subuser_without_service_show_permission_is_refused(): void
+    {
+        $owner = Customer::factory()->create();
+        $subuser = Customer::factory()->create();
+        $service = $this->createServiceModel($owner->id);
+
+        \App\Models\Account\CustomerAccountAccess::create([
+            'owner_customer_id' => $owner->id,
+            'sub_customer_id' => $subuser->id,
+            'permissions' => ['invoice.show'], // unrelated permission
+            'all_services' => true,
+        ]);
+
+        $response = $this->actingAs($subuser, 'web')
+            ->getJson(route('front.services.status', $service));
+
+        $response->assertNotFound();
+    }
 }
