@@ -41,5 +41,9 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::delete('/domains/{service}/dns/{record}', [DomainManagementController::class, 'destroyDns'])->name('.domains.dns.destroy');
         Route::get('/{service}/renew/{gateway}', [ServiceController::class, 'renew'])->name('.renew');
         Route::post('/subscription/{service}', [ServiceController::class, 'subscription'])->name('.subscription');
+        // v2.16 — JSON status endpoint polled by resources/global/js/service-live.js
+        Route::get('/{service}/status',
+            \App\Http\Controllers\Front\Provisioning\ServiceStatusController::class
+        )->name('.status')->middleware('throttle:60,1');
     });
 });

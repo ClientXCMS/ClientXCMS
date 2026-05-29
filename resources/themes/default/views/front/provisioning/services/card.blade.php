@@ -113,7 +113,13 @@
                 </tr>
             @endif
             @foreach($services as $i => $service)
-                <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
+                {{-- v2.16 — each row is a live-status root: the poller swaps the
+                     badge + days-remaining inline whenever the service state changes,
+                     so the customer doesn't have to refresh after a provisioning
+                     callback, a manual suspension, or renewal. --}}
+                <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800"
+                    data-service-live
+                    data-status-url="{{ route('front.services.status', ['service' => $service]) }}">
                     <td class="h-px w-px whitespace-nowrap">
 
                     <span class="block px-6 py-2">
@@ -125,10 +131,10 @@
                       <span class="text-sm text-gray-600 dark:text-gray-400">{{ formatted_price($service->getBillingPrice()->displayPrice(), $service->currency) }}</span>
                     </span>
                     </td>
-                    <td class="h-px w-px whitespace-nowrap">
+                    <td class="h-px w-px whitespace-nowrap" data-service-field="status_badge_html">
                         <x-badge-state state="{{ $service->status }}"></x-badge-state>
                     </td>
-                    <td class="h-px w-px whitespace-nowrap">
+                    <td class="h-px w-px whitespace-nowrap" data-service-field="days_remaining_html">
                         <x-service-days-remaining expires_at="{{ $service->expires_at }}" state="{{ $service->status }}"></x-service-days-remaining>
                     </td>
                     <td class="h-px w-px whitespace-nowrap">
