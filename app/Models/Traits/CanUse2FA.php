@@ -68,10 +68,7 @@ trait CanUse2FA
             || $this->requiresEmailTwoFactorForIp($ip);
     }
 
-    /**
-     * Soft cap on trusted device entries. Prevents unbounded metadata growth
-     * if a user roams across many networks; oldest entries are evicted first.
-     */
+    // Soft cap, oldest evicted first (anti metadata bloat).
     public const TRUST_IP_MAX = 20;
 
     public function requiresEmailTwoFactorForIp(?string $ip): bool
@@ -85,17 +82,8 @@ trait CanUse2FA
         return ! in_array($ip, $trustedIps, true);
     }
 
-    /**
-     * Returns active trusted entries as
-     *   [['ip' => ..., 'until' => ISO|null, 'user_agent' => string|null], ...]
-     *
-     * Legacy rows are surfaced with safe defaults so older entries do not
-     * crash the view:
-     *   - bare IP strings (pre v2.16-audit)        -> until=null, user_agent=null
-     *   - {ip, until} entries (post F1.1, pre F3.0) -> user_agent=null
-     *
-     * Expired entries are filtered out at read time.
-     */
+    // Returns [{ip, until, user_agent}]. Backfills legacy shapes (bare
+    // string IP, no user_agent) and filters out expired entries.
     public function twoFactorTrustedIps(): array
     {
         $raw = $this->getMetadata('2fa_trusted_ips');
@@ -132,11 +120,7 @@ trait CanUse2FA
             ->all();
     }
 
-    /**
-     * Drop a single trusted entry. Returns the remaining count so the caller
-     * can flash a confirmation message ("device revoked, N left"). No-op if
-     * the IP is not in the list.
-     */
+    // Returns remaining count (used by caller for "N left" toast). No-op if IP not in list.
     public function revokeTwoFactorTrust(string $ip): int
     {
         $entries = collect($this->twoFactorTrustedIps())
@@ -149,11 +133,7 @@ trait CanUse2FA
         return count($entries);
     }
 
-    /**
-     * Wipe the trusted-device list. Called whenever the user takes an action
-     * that implies "the account may be compromised": password change, password
-     * reset, or explicit "revoke all" click.
-     */
+    // Called on compromise signals: password change, reset, explicit "revoke all".
     public function revokeAllTwoFactorTrust(): void
     {
         $this->detachMetadata('2fa_trusted_ips');
@@ -180,19 +160,10 @@ trait CanUse2FA
         $this->attachMetadata('2fa_trusted_ips', json_encode($entries));
     }
 
-    /**
-     * Hard cap on guesses against a single email code. The code lives 5 minutes
-     * in a 900k pool; without this cap an attacker can keep guessing within the
-     * window and gain a non-trivial success probability.
-     */
+    // Hard cap on guesses per code (6 digits, 5 min, 900k pool).
     public const EMAIL_2FA_MAX_ATTEMPTS = 5;
 
-    /**
-     * Soft cap on how many full attempt-cycles the user can burn before the
-     * mailbox goes silent. With MAX_ATTEMPTS=5 and MAX_CYCLES=3, the total
-     * attacker budget over a cooldown window is ~15 guesses against a 900k
-     * pool: ~2.4e-5 chance of a hit per window.
-     */
+    // After 3 burned cycles (15 guesses), mailbox cooldown -> ~2.4e-5 hit/window.
     public const EMAIL_2FA_MAX_CYCLES = 3;
 
     public const EMAIL_2FA_COOLDOWN_MINUTES = 5;

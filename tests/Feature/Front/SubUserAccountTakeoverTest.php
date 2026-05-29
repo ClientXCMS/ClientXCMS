@@ -7,24 +7,10 @@ use App\Models\Account\CustomerAccountInvitation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * S1 of the Subusers audit - prevent the "register-with-victim-email"
- * account takeover.
- *
- * Threat: an attacker who intercepts an invitation link (sent to a
- * fresh user who does not yet have an account) can register the email
- * to themselves, log in, and consume the invitation - getting access
- * to the inviter's services. The victim cannot recover their email
- * because the address is already taken.
- *
- * Defense: a freshly registered account has email_verified_at = null
- * until the user clicks the verification link in their mailbox.
- * Without that proof of mailbox ownership, the accept endpoint must
- * refuse to consume the token. The attacker cannot pass this gate
- * unless they also control the victim's mailbox - in which case the
- * invitation was already compromised at the email level, not at our
- * application boundary.
- */
+// S1: prevent "register-with-victim-email" takeover. Attacker who intercepts
+// an invitation link registers the email themselves and consumes the
+// invitation. Defense: refuse to consume if email_verified_at is null
+// (proof of mailbox control). Beyond that, the email channel is compromised.
 class SubUserAccountTakeoverTest extends TestCase
 {
     use RefreshDatabase;

@@ -7,22 +7,8 @@ use App\Models\Account\CustomerAccountInvitation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * S3 + S6 of the Subusers audit. The accept endpoint used to consume
- * a token on a plain GET, so a distracted click on the invitation
- * link (or a CSRF on a logged-in victim, or a bot following the link
- * for preview) immediately granted access. The fix splits the flow:
- *
- *   GET  /accept/{token}  - renders a confirmation page with the
- *                           details of what the user is about to
- *                           accept. No DB write.
- *   POST /accept/{token}  - actually consumes the token, requires
- *                           CSRF, only fires from the confirmation
- *                           form.
- *
- * This also gives the user something to read before clicking
- * "Accept" - who invited me, which services, which permissions.
- */
+// S3+S6: split GET (read-only confirmation) / POST (CSRF-protected commit).
+// Plain GET used to consume the token (distracted-click, previewers, CSRF).
 class SubUserAcceptConfirmTest extends TestCase
 {
     use RefreshDatabase;

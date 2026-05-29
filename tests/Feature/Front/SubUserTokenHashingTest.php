@@ -7,21 +7,8 @@ use App\Models\Account\CustomerAccountInvitation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * S2 + S4 of the Subusers audit.
- *
- * S2: tokens used to live in the database verbatim. A DB leak (SQLi,
- * backup theft, accidental dump in support tickets) handed every
- * pending invitation to the attacker. Now the DB only holds the
- * sha256 of the token, and the plain value lives just long enough
- * to render the outgoing email.
- *
- * S4: resending an invitation used to keep the same token. If the
- * original mail leaked (forwarded by mistake, copy-pasted in chat),
- * the only way to invalidate the leak is to revoke + create a new
- * one - which loses the audit trail. Resend now rotates the token,
- * so an old link goes 404 the moment a fresh one is on the wire.
- */
+// S2: tokens stored as sha256, plain only lives for the outgoing mail.
+// S4: resend rotates the token, leaked old link 404s as soon as fresh one is out.
 class SubUserTokenHashingTest extends TestCase
 {
     use RefreshDatabase;

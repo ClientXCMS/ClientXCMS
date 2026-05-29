@@ -23,23 +23,10 @@ use App\Rules\Valid2FACodeInput;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
-/**
- * Two-factor verification flow for customers.
- *
- * Implements the v2.16 audit F1 fix: on an untrusted IP (when
- * `2fa_email_new_ip` is enabled) and with TOTP active, the user must
- * satisfy BOTH the device factor (TOTP or recovery) AND the email
- * factor in two successive steps. A valid email code alone never
- * suffices when TOTP is enabled.
- *
- * Session state machine:
- *   - 2fa_totp_verified : true once step 1 succeeds (kept across GETs)
- *   - 2fa_verified      : true once the full flow completes (read by
- *                         Validate2FAMiddleware)
- *
- * Single-factor flows (TOTP only on trusted IP, or email-only when
- * TOTP isn't set up) collapse to one step and behave exactly as before.
- */
+// Customer 2FA flow. On untrusted IP + TOTP enabled, requires BOTH device
+// factor (TOTP/recovery) AND email code in two steps. Session keys:
+// 2fa_totp_verified (step 1 done), 2fa_verified (full flow done, read by
+// Validate2FAMiddleware). Single-factor flows collapse to one step.
 class TwoFactorAuthenticationController
 {
     public function show(Request $request)
@@ -60,9 +47,7 @@ class TwoFactorAuthenticationController
         }
 
         if ($needs['email']) {
-            // Idempotent on cooldown too: sendTwoFactorEmailCode no-ops when
-            // the user has burned the cycle cap, so refreshing the page does
-            // not surface a stale "code sent" message either.
+            // Idempotent: no-ops when cooldown active, no stale "code sent" on refresh.
             $user->sendTwoFactorEmailCode('web', $request->ip());
 
             return view('front.auth.2fa', [
@@ -131,11 +116,7 @@ class TwoFactorAuthenticationController
         return redirect()->route('auth.2fa');
     }
 
-    /**
-     * Mask the local part of an email for shoulder-surfing resistance.
-     *   alex@cerbonix.eu -> a**x@cerbonix.eu
-     *   ab@x.com         -> **@x.com
-     */
+    // Mask local part: alex@cerbonix.eu -> a**x@cerbonix.eu, ab@x.com -> **@x.com.
     private function maskEmail(string $email): string
     {
         $at = strpos($email, '@');
@@ -152,10 +133,7 @@ class TwoFactorAuthenticationController
         return $local[0].str_repeat('*', strlen($local) - 2).substr($local, -1).$domain;
     }
 
-    /**
-     * Computes which factors are required for this user on this IP.
-     * Mirrors the gates in Validate2FAMiddleware so the flow is consistent.
-     */
+    // Mirror of Validate2FAMiddleware gates, must stay in sync.
     private function factorRequirements($user, ?string $ip): array
     {
         $totpEnabled = $user->twoFactorEnabled();

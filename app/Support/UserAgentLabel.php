@@ -19,17 +19,9 @@
 
 namespace App\Support;
 
-/**
- * Squeezes a User-Agent string into a short human label ("Firefox on Linux")
- * for the trusted-devices UI.
- *
- * Best-effort, not a full UA parser. We accept that obscure UAs get a
- * generic fallback rather than pull in a library for what is fundamentally
- * a row in a list of 20.
- *
- * Browser-detection order matters: Chrome/Edge advertise "Safari" in their
- * UA, Edge advertises "Chrome", and so on. The first match wins.
- */
+// UA -> "Firefox on Linux" for trusted-devices UI. Best-effort, no lib for
+// a 20-row list. Detection order matters (Chrome/Edge advertise "Safari",
+// Edge advertises "Chrome"); first match wins.
 final class UserAgentLabel
 {
     public static function summarize(?string $userAgent): string

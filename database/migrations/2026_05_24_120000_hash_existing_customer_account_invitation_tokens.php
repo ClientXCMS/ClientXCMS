@@ -3,21 +3,9 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-/**
- * S2 of the v2.16 audit - retro-hash plain invitation tokens in flight.
- *
- * The CustomerAccountInvitation model used to persist Str::random(64) as
- * the token. Now we only persist sha256(plain). Rows written before this
- * deploy hold the plain value; this migration rewrites each such row to
- * sha256(value) so the same outstanding invitation URLs keep working.
- *
- * Detection heuristic: sha256 hex is exactly 64 chars matching ^[0-9a-f]$.
- * Str::random uses base62 (a-zA-Z0-9), so any token containing a char
- * outside the hex alphabet is provably a plain. Tokens that happen to be
- * 64 hex chars - probability negligible for 64 random base62 chars - are
- * left alone (already considered hashed). Worst-case false-positive: one
- * invitation URL stops working, the owner can resend.
- */
+// S2: retro-hash plain invitation tokens left in flight after the model
+// switched to sha256-at-rest. Heuristic: anything not matching ^[0-9a-f]{64}$
+// is plain (Str::random is base62). Worst-case false-positive: one URL dies, owner resends.
 return new class extends Migration
 {
     public function up(): void
@@ -38,8 +26,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // sha256 is one-way - we cannot recover the original plain tokens.
-        // Down is a no-op; downgrading this audit fix requires invalidating
-        // pending invitations and asking owners to resend.
+        // sha256 is one-way: down is a no-op, downgrade requires resending invitations.
     }
 };

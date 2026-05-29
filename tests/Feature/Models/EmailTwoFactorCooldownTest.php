@@ -8,20 +8,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
-/**
- * Pins the cross-cycle brute-force defense.
- *
- * F5 caps a single email code to 5 guesses. Without further limits, an
- * attacker could chain (5 fails -> code wiped -> auto-resend -> 5 fails)
- * indefinitely, accumulating roughly 15 attempts per minute against the
- * 900k pool. F1.4 adds a soft global cap of 3 burned cycles before the
- * mailbox is silenced for 5 minutes, capping the total budget to ~15
- * guesses per 15 minutes (~2.4e-5 chance of a hit per cooldown window).
- *
- * The window resets on successful verification and after the cooldown
- * elapses, so a real user who fat-fingered the code twice yesterday is
- * not punished today.
- */
+// F5 + F1.4: cross-cycle brute-force defense. 5 guesses/code, then 3 burned
+// cycles -> 5min mailbox cooldown -> ~15 guesses / 15 min on 900k pool.
+// Window resets on success or cooldown expiry (real user typos forgiven).
 class EmailTwoFactorCooldownTest extends TestCase
 {
     use RefreshDatabase;

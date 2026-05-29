@@ -31,11 +31,7 @@ class CustomerAccountInvitation extends Model
         'revoked_at' => 'datetime',
     ];
 
-    /**
-     * Plain token. Set transiently when the row is created or rotated so
-     * the mail layer can render the invitation URL. Never persisted - the
-     * DB only sees its sha256 hash. After a fresh fetch this is null.
-     */
+    // Transient plain token for mail rendering, never persisted (DB has sha256 only).
     public ?string $plain_text_token = null;
 
     public static function boot()
@@ -53,11 +49,7 @@ class CustomerAccountInvitation extends Model
         });
     }
 
-    /**
-     * Generates a new plain token, exposes it on the model instance, and
-     * stores only its sha256. Called on create and on every resend so a
-     * leaked URL stops working as soon as the user asks for a fresh one.
-     */
+    // Rotate token: leak of the old URL stops working as soon as caller resends.
     public function setFreshToken(): string
     {
         $plain = Str::random(64);
@@ -67,11 +59,7 @@ class CustomerAccountInvitation extends Model
         return $plain;
     }
 
-    /**
-     * Looks up an invitation by its plain token. The plain value never
-     * touches the DB - the lookup hashes it first and matches the stored
-     * sha256. Returns null when no row matches (caller handles 404).
-     */
+    // Hashes the plain token before lookup; returns null on miss (caller 404s).
     public static function findByPlainToken(string $plainToken): ?self
     {
         return static::where('token', hash('sha256', $plainToken))->first();

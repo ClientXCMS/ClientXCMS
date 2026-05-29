@@ -10,18 +10,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
-/**
- * Locks the two-step 2FA flow for the new-IP / dual-factor path (F1).
- *
- * Threat model: an attacker with the password and access to the user's
- * mailbox should still be blocked by the TOTP gate. Conversely, a TOTP
- * thief who can't read the user's mailbox should be blocked at the
- * email gate. Email and TOTP must be required *together* on untrusted
- * IPs, not interchangeably.
- *
- * The trusted-IP single-factor path (TOTP-only on a known IP) remains
- * unchanged so legitimate users don't get punished for the new defense.
- */
+// F1: TOTP and email must be required *together* on untrusted IPs, not
+// interchangeably. Trusted-IP single-factor path (TOTP-only) untouched.
 class TwoFactorStepFlowTest extends TestCase
 {
     use RefreshDatabase;
@@ -141,8 +131,7 @@ class TwoFactorStepFlowTest extends TestCase
     {
         $customer = Customer::factory()->create();
         $customer->twoFactorEnable(self::TOTP_SECRET);
-        // Note: deliberately NOT enabling email-on-new-IP - this is the
-        // baseline pre-feature flow and must still work in one shot.
+        // Baseline pre-F1 flow: email-on-new-IP off, must still complete in one shot.
 
         $response = $this->actingAs($customer, 'web')
             ->post(route('auth.2fa'), ['2fa' => $this->currentTotp(self::TOTP_SECRET)]);
@@ -206,9 +195,7 @@ class TwoFactorStepFlowTest extends TestCase
         $this->get(route('auth.2fa'))->assertOk()->assertSee(__('client.profile.2fa.step2_subheading'));
         Notification::assertSentTo($customer, TwoFactorCodeEmail::class);
 
-        // The auto-sent code is only hashed in metadata, so we can't read it
-        // back. Seed a known value to drive the verify step (same pattern as
-        // other tests in the suite).
+        // Auto-sent code is hashed; seed a known value to drive step 2.
         $customer->attachMetadata('2fa_email_code', \Illuminate\Support\Facades\Hash::make('424242'));
         $customer->attachMetadata('2fa_email_code_expires_at', now()->addMinutes(5)->toDateTimeString());
 
@@ -258,8 +245,7 @@ class TwoFactorStepFlowTest extends TestCase
         $customer = Customer::factory()->create();
         $customer->twoFactorEnable(self::TOTP_SECRET);
         $customer->setTwoFactorEmailOnNewIp(true);
-        // twoFactorEnable seeds the session 2fa_verified=true so the just-
-        // activated user is not bounced - but that pollutes our test session.
+        // twoFactorEnable seeds 2fa_verified in session, would skip the flow we're testing.
         session()->forget('2fa_verified');
 
         return $customer->fresh();

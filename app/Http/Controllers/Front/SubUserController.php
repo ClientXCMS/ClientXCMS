@@ -153,9 +153,7 @@ class SubUserController extends Controller
     {
         abort_if($invitation->owner_customer_id !== auth()->id(), 404);
         abort_if(! $invitation->isPending(), 404);
-        // Rotate the token so the old link goes 404 the moment this fresh
-        // mail is on its way. Otherwise any leak of the original mail
-        // outlives the resend.
+        // Rotate token so any leaked old mail 404s once the resend is out.
         $invitation->setFreshToken();
         $invitation->forceFill([
             'expires_at' => now()->addDays(14),
@@ -175,12 +173,8 @@ class SubUserController extends Controller
         return back()->with('success', __('client.subusers.alerts.invitation_revoked'));
     }
 
-    /**
-     * GET the confirmation page. Surfaces what the user is about to grant
-     * (owner email, permissions, services) and a POST form to commit.
-     * Critically: this method NEVER writes - a distracted click on the
-     * invitation link does not consume the token.
-     */
+    // Read-only: shows what's about to be granted + POST form. NEVER writes,
+    // so a distracted click on the invitation link doesn't consume the token.
     public function showAccept(Request $request, string $token)
     {
         $invitation = CustomerAccountInvitation::findByPlainToken($token);
@@ -203,9 +197,7 @@ class SubUserController extends Controller
             ]);
         }
 
-        // S1 - mailbox ownership must be proven before the user even sees
-        // the confirmation page. Otherwise the registration-takeover path
-        // would render the page and let the attacker click accept.
+        // S1: block registration-takeover - mailbox must be proven first.
         if (! auth()->user()->hasVerifiedEmail()) {
             $request->session()->put('customer_account_invitation_token', $token);
 
@@ -227,11 +219,8 @@ class SubUserController extends Controller
         ]);
     }
 
-    /**
-     * POST consumes the invitation. CSRF-protected by Laravel's web stack,
-     * throttled at the route layer. Re-runs all the gates of showAccept
-     * because nothing in between guarantees they still hold.
-     */
+    // POST consumes the invitation. Re-runs every showAccept gate; nothing
+    // in between guarantees they still hold. CSRF + throttle at route layer.
     public function accept(Request $request, string $token)
     {
         $invitation = CustomerAccountInvitation::findByPlainToken($token);
@@ -323,9 +312,7 @@ class SubUserController extends Controller
 
     private function sendInvitation(CustomerAccountInvitation $invitation): void
     {
-        // The plain token only exists right after create()/setFreshToken().
-        // If a caller ever forgets to seed it, the URL would be unusable -
-        // fail fast in that case rather than send a broken mail.
+        // Plain token only set after create()/setFreshToken(); fail fast rather than mail a dead URL.
         if ($invitation->plain_text_token === null) {
             throw new \LogicException('sendInvitation requires plain_text_token to be set on the invitation instance');
         }

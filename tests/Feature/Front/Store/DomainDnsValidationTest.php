@@ -5,18 +5,8 @@ namespace Tests\Feature\Front\Store;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * D4 + D5 of the Domain TLD audit.
- *
- * D4: DNS record type used to allow any 10-char string. The registrar
- * driver is then free to accept the garbage and write something that
- * downstream resolvers will refuse to interpret. Pin the input to
- * the standard RFC types.
- *
- * D5: dns store/destroy endpoints had no rate limit. A compromised
- * account or a runaway script could churn the registrar API; the cap
- * makes that explicit.
- */
+// D4: pin DNS record type to RFC list (was any 10-char string).
+// D5: rate-limit dns store/destroy (was unbounded, registrar API at risk).
 class DomainDnsValidationTest extends TestCase
 {
     use RefreshDatabase;
