@@ -34,7 +34,7 @@
             @include('admin/shared/input', ['name' => 'payment_method_id', 'label' => __('client.payment-methods.payment_method_used'), 'value' => $invoice->payment_method_id, 'help' => __('client.payment-methods.payment_method_used_help')])
         </div>
         <div>
-            @include('admin/shared/input', ['name' => 'balance', 'label' => __('client.invoices.balance.title'), 'value' => $invoice->balance, 'type' => 'number', 'step' => 'any'])
+            @include('admin/shared/input', ['name' => 'balance', 'label' => __('client.invoices.balance.title'), 'value' => $invoice->balance, 'type' => 'number', 'step' => '0.01'])
         </div>
         <div>
             @include('admin/shared/flatpickr', ['name' => 'paid_at', 'label' => __('client.invoices.paid_date'), 'value' => $invoice->paid_at])
@@ -46,12 +46,12 @@
 
     <div class="grid sm:grid-cols-2 gap-2 mt-2">
         <div>
-            @include('admin/shared/input', ['name' => 'fees', 'label' => __('store.transaction_fee'), 'value' => $invoice->fees, 'type' => 'number', 'step' => 'any'])
+            @include('admin/shared/input', ['name' => 'fees', 'label' => __('store.transaction_fee'), 'value' => $invoice->fees, 'type' => 'number', 'step' => '0.01'])
         </div>
         <div>
             <label for="tax" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">{{ __('store.vat') }} / {{ __('global.currency') }}</label>
             <div class="relative mt-2">
-                <input type="text" id="tax" name="tax" class="py-3 px-4 ps-9 pe-20 input-text" placeholder="0.00" value="{{ old('tax', $invoice->tax) }}">
+                <input type="number" step="0.01" min="0" id="tax" name="tax" class="py-3 px-4 ps-9 pe-20 input-text" placeholder="0.00" value="{{ old('tax', $invoice->tax) }}">
                 <div class="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
                     <label for="currency" class="sr-only">{{ __('global.currency') }}</label>
                     <select id="currency" name="currency" class="store w-full border-transparent rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700">
