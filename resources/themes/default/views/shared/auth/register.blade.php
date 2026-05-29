@@ -34,27 +34,16 @@
                     <div class="sm:col-span-3">
                         @include("shared.input", ["name" => "email", "label" => __('global.email'), "type" => "email", "value" => old('email', $email ?? null)])
                     </div>
+                    {{-- v2.16 — replaced the country-meta widget with the
+                         intl-tel-input partial which renders the flag +
+                         dial-code directly inside the input. --}}
                     <div class="sm:col-span-3">
-                        <div class="flex gap-3 items-end">
-                            <div class="w-52">
-                                <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 h-[58px]">
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ __('global.country') }}
-                                    </div>
-                                    <div id="phone-country-meta"
-                                        class="mt-1 text-sm font-medium text-gray-800 dark:text-gray-200">
-                                        -
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex-1">
-                                @include("shared.input", [
-                                    "name" => "phone",
-                                    "label" => __('global.phone'),
-                                    "optional" => true
-                                ])
-                            </div>
-                        </div>
+                        @include('shared.phone-intl', [
+                            'name' => 'phone',
+                            'label' => __('global.phone'),
+                            'optional' => true,
+                            'country' => old('country', 'FR'),
+                        ])
                     </div>
 
                     <div class="sm:col-span-3">
@@ -107,33 +96,6 @@
 </form>
 
 
-@section('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const meta = @json($countryPhoneMeta ?? []);
-        const countrySelect = document.getElementById('country');
-        const phoneInput = document.getElementById('phone');
-        const metaEl = document.getElementById('phone-country-meta');
-
-        const updatePhoneMeta = () => {
-            if (!countrySelect || !metaEl) return;
-            const selected = countrySelect.value;
-            const item = meta[selected];
-            if (!item) {
-                metaEl.textContent = '-';
-                return;
-            }
-
-            const dial = item.dial_code ?? '';
-            metaEl.textContent = `${item.flag ?? ''} ${item.name} (${dial}) · Langue: ${item.language ?? 'n/a'}`;
-
-            if (phoneInput && dial && !phoneInput.value) {
-                phoneInput.placeholder = `${dial} 6 12 34 56 78`;
-            }
-        };
-
-        countrySelect?.addEventListener('change', updatePhoneMeta);
-        updatePhoneMeta();
-    });
-</script>
-@endsection
+{{-- v2.16 — the previous phone-country-meta widget is now replaced by the
+     intl-tel-input partial. The country select / flag synchronisation is
+     handled inside resources/global/js/phone-intl.js. --}}

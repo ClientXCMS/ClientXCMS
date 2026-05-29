@@ -97,10 +97,11 @@
                                 ])
                             </div>
                             <div class="sm:col-span-3">
-                                @include('shared.input', [
+                                @include('shared.phone-intl', [
                                     'name' => 'phone',
                                     'label' => __('global.phone'),
                                     'value' => auth('web')->user()->phone ?? old('phone'),
+                                    'country' => auth('web')->user()->country ?? old('country', 'FR'),
                                 ])
                             </div>
                             <div class="sm:col-span-2">
