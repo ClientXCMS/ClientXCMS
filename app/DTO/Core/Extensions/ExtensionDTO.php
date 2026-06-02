@@ -239,7 +239,12 @@ class ExtensionDTO implements Arrayable
 
     public function getSections()
     {
-        $dir = $this->extensionPath().'/views/sections';
+        $extensionPath = $this->extensionPath();
+        if (! is_dir($extensionPath)) {
+            return [];
+        }
+
+        $dir = $extensionPath.'/views/sections';
         if (! \File::exists($dir)) {
             return [];
         }
