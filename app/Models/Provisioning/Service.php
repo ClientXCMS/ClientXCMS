@@ -58,6 +58,7 @@ use Illuminate\Support\Str;
  * @property string $billing
  * @property int $server_id
  * @property int $product_id
+ * @property int|null $pack_id
  * @property int $invoice_id
  * @property string $status
  * @property Carbon $expires_at
@@ -307,6 +308,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         'billing',
         'server_id',
         'product_id',
+        'pack_id',
         'invoice_id',
         'status',
         'expires_at',
@@ -550,6 +552,16 @@ class Service extends Model implements HasNotifiableVariablesInterface
         return $this->hasOne(\App\Models\Billing\Subscription::class)->withTrashed();
     }
 
+    public function pack()
+    {
+        return $this->belongsTo(Service::class, 'pack_id');
+    }
+
+    public function packServices()
+    {
+        return $this->hasMany(Service::class, 'pack_id');
+    }
+
     public function getSubscription()
     {
         return $this->subscription()->first() ?? new \App\Models\Billing\Subscription;
@@ -622,6 +634,9 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public function canRenew()
     {
+        if ($this->pack_id !== null) {
+            return false;
+        }
         if ($this->expires_at == null) {
             return false;
         }

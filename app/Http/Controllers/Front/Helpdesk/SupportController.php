@@ -57,12 +57,29 @@ class SupportController extends Controller
         $content = $request->query('content') ?? null;
         $priority = $request->query('priority') ?? null;
         $related_id = $request->query('related_id') ?? 'none';
-        if ($currentdepartment) {
-            if (! $departments->contains('id', $currentdepartment)) {
-                return redirect()->route('front.support.create');
+
+        if (app('extension')->extensionIsEnabled('support-access-rules')) {
+            $policy = app(\App\Addons\SupportAccessRules\Services\TicketAccessPolicy::class);
+            $departments = $policy->filterDepartments($departments, auth()->user());
+            if ($currentdepartment) {
+                if (! $departments->contains('id', $currentdepartment)) {
+                    $currentdepartment = $departments->first()->id ?? null;
+                }
+            } else {
+                $currentdepartment = $departments->first()->id ?? null;
+            }
+            if ($currentdepartment) {
+                $allowed = $policy->allowedPriorities(auth()->user(), (int) $currentdepartment);
+                $priorities = $priorities->filter(fn ($value, $key) => in_array($key, $allowed));
             }
         } else {
-            $currentdepartment = $departments->first()->id ?? null;
+            if ($currentdepartment) {
+                if (! $departments->contains('id', $currentdepartment)) {
+                    return redirect()->route('front.support.create');
+                }
+            } else {
+                $currentdepartment = $departments->first()->id ?? null;
+            }
         }
         $data = compact('departments', 'priorities', 'related', 'currentdepartment', 'subject', 'content', 'priority', 'related_id');
 

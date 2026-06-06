@@ -370,7 +370,9 @@ class InvoiceService
             'next_billing_on' => $nextBilling,
             'created_at' => Carbon::now(),
         ]);
+        $invoice->unsetRelation('items');
         $invoice->recalculate();
+        $invoice->refresh();
     }
 
     public static function appendProductOnExistingInvoice(AddProductToInvoiceDTO $dto)
