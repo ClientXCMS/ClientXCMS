@@ -28,8 +28,18 @@ class CreateThemeCommand extends Command
      * The name and signature of the console command.
      *
      * @var string
-     */
-    protected $signature = 'clientxcms:create-theme';
+     *
+    */
+    protected $signature = 'clientxcms:create-theme {--name=: Theme name}
+    {--uuid= : Theme UUID}
+    {--parent=default : Parent theme: default or bootstrap}
+    {--description= : Description}
+    {--author-name= : Author name}
+    {--author-email= : Author email}
+    {--css=1 : Create CSS file}
+    {--js=1 : Create JS file}
+    {--config=1 : Create config files}
+    {--lang=1 : Create lang files}';
 
     /**
      * The console command description.
@@ -44,19 +54,25 @@ class CreateThemeCommand extends Command
     public function handle()
     {
 
-        $name = $this->ask('What is the name of the theme?');
-        $uuid = sanitize($this->ask('What is the UUID of the theme?'));
-        $parent = $this->choice('What is framework parent used for this theme?', ['default' => 'Tailwind CSS', 'bootstrap' => 'Bootstrap'], 'default');
+        $name = $this->option('name');
+        $uuid = sanitize($this->option('uuid'));
+        $parent = $this->option('parent') ?: 'default';
+
+        if (! $name || ! $uuid) {
+            $this->error('Options required: --name and --uuid');
+            return self::FAILURE;
+        }
+
+        $description = $this->option('description') ?: $this->ask('What is the description of the theme?', "A theme for CLIENTXCMS named $name.");
+        $author_name = $this->option('author-name') ?: $this->ask('What is the name of the author?');
+        $author_email = $this->option('author-email') ?: $this->ask('What is the email of the author?');
         if (File::exists(resource_path("themes/$uuid"))) {
             $this->error('The theme already exists.');
 
             return;
         }
-        $description = $this->ask('What is the description of the theme?', "A theme for CLIENTXCMS named $name.");
         $this->info("Creating a new theme named $name...");
         File::makeDirectory(resource_path("themes/$uuid/views"), 0755, true, true);
-        $author_name = $this->ask('What is the name of the author?');
-        $author_email = $this->ask('What is the email of the author?');
 
         $this->info("Creating a new theme named $name...");
         File::put(resource_path("themes/$uuid/theme.json"), json_encode([
@@ -71,7 +87,7 @@ class CreateThemeCommand extends Command
             'unofficial' => true,
             'parent_theme' => $parent,
         ], JSON_PRETTY_PRINT));
-        $css = $this->confirm('Do you make a CSS file for this theme?', true);
+        $css = $this->hasOption('css') ? filter_var($this->option('css'), FILTER_VALIDATE_BOOLEAN) : $this->confirm('Do you make a CSS file for this theme?', true);
         if ($css) {
             File::makeDirectory(resource_path("themes/$uuid/css"), 0755, true, true);
             File::put(resource_path("themes/$uuid/css/app.css"), "@tailwind base;
@@ -81,7 +97,7 @@ class CreateThemeCommand extends Command
 @import 'flatpickr/dist/flatpickr.min.css';
 /* Your CSS code here */");
         }
-        $js = $this->confirm('Do you make a JS file for this theme?', true);
+        $js = $this->hasOption('js') ? filter_var($this->option('js'), FILTER_VALIDATE_BOOLEAN) : $this->confirm('Do you make a JS file for this theme?', true);
         File::makeDirectory(resource_path("themes/$uuid/js"), 0755, true, true);
         if ($js) {
             File::put(resource_path("themes/$uuid/js/app.js"), "import 'preline'
@@ -91,7 +107,7 @@ import.meta.glob([
 ]);
 ");
         }
-        $config = $this->confirm('Do you make a config file for this theme?', true);
+        $config = $this->hasOption('config') ? filter_var($this->option('config'), FILTER_VALIDATE_BOOLEAN) : $this->confirm('Do you make a config file for this theme?', true);
         if ($config) {
             File::makeDirectory(resource_path("themes/$uuid/config"), 0755, true, true);
             File::put(resource_path("themes/$uuid/config/config.php"), "<?php\n\nreturn [];");
@@ -99,7 +115,7 @@ import.meta.glob([
             File::put(resource_path("themes/$uuid/config/config.blade.php"), '');
             $this->info('Config created successfully.');
         }
-        $lang = $this->confirm('Do you make a lang file for this theme?', true);
+        $lang = $this->hasOption('lang') ? filter_var($this->option('lang'), FILTER_VALIDATE_BOOLEAN) : $this->confirm('Do you make a lang file for this theme?', true);
         if ($lang) {
             File::makeDirectory(resource_path("themes/$uuid/lang"), 0755, true, true);
             File::makeDirectory(resource_path("themes/$uuid/lang/en"), 0755, true, true);
