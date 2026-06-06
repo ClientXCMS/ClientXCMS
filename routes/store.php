@@ -24,7 +24,9 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('/store')->name('front.')->group(function () {
     Route::get('/', [StoreController::class, 'index'])->name('store.index');
     Route::get('/domains', [DomainSearchController::class, 'index'])->name('store.domains.index');
-    Route::post('/domains/search', [DomainSearchController::class, 'search'])->name('store.domains.search');
+    Route::post('/domains/search', [DomainSearchController::class, 'search'])
+        ->middleware('throttle:30,1')
+        ->name('store.domains.search');
 
     Route::prefix('/basket')->name('store.basket.')->group(function () {
         Route::get('/', [BasketController::class, 'show'])->name('show');

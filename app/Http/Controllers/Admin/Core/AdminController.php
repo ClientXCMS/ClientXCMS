@@ -166,7 +166,7 @@ class AdminController extends AbstractCrudController
             return back()->with('success', __('client.profile.2fa.disabled'));
         }
         $request->user('admin')->twoFactorEnable($request->session()->get('2fa_secret_admin'));
-        $request->user('admin')->trustTwoFactorIp($request->ip());
+        $request->user('admin')->trustTwoFactorIp($request->ip(), $request->userAgent());
 
         return back()->with('success', __('client.profile.2fa.enabled'));
     }
@@ -174,9 +174,27 @@ class AdminController extends AbstractCrudController
     public function save2faOptions(Request $request)
     {
         $request->user('admin')->setTwoFactorEmailOnNewIp($request->has('2fa_email_new_ip'));
-        $request->user('admin')->trustTwoFactorIp($request->ip());
+        $request->user('admin')->trustTwoFactorIp($request->ip(), $request->userAgent());
 
         return back()->with('success', __('client.profile.2fa.options_saved'));
+    }
+
+    public function revokeTrustedDevice(Request $request)
+    {
+        $request->validate([
+            'ip' => ['required', 'string', 'ip'],
+        ]);
+
+        $request->user('admin')->revokeTwoFactorTrust($request->input('ip'));
+
+        return back()->with('success', __('client.profile.2fa.trusted_device_revoked'));
+    }
+
+    public function revokeAllTrustedDevices(Request $request)
+    {
+        $request->user('admin')->revokeAllTwoFactorTrust();
+
+        return back()->with('success', __('client.profile.2fa.trusted_devices_revoked_all'));
     }
 
     public function downloadCodes()
@@ -229,6 +247,7 @@ class AdminController extends AbstractCrudController
             'password' => bcrypt($request->password),
             'remember_token' => \Str::random(60),
         ]);
+        $admin->revokeAllTwoFactorTrust();
         try {
             \Auth::guard('admin')->logoutOtherDevices($request->password);
         } catch (\Illuminate\Auth\AuthenticationException $e) {

@@ -153,7 +153,12 @@ class SubUserController extends Controller
     {
         abort_if($invitation->owner_customer_id !== auth()->id(), 404);
         abort_if(! $invitation->isPending(), 404);
-        $invitation->forceFill(['expires_at' => now()->addDays(14)])->save();
+        // Rotate token so any leaked old mail 404s once the resend is out.
+        $invitation->setFreshToken();
+        $invitation->forceFill([
+            'expires_at' => now()->addDays(14),
+            'token' => $invitation->getAttribute('token'),
+        ])->save();
         $this->sendInvitation($invitation);
 
         return back()->with('success', __('client.subusers.alerts.invitation_resent'));
@@ -168,9 +173,13 @@ class SubUserController extends Controller
         return back()->with('success', __('client.subusers.alerts.invitation_revoked'));
     }
 
-    public function accept(Request $request, string $token)
+    // Read-only: shows what's about to be granted + POST form. NEVER writes,
+    // so a distracted click on the invitation link doesn't consume the token.
+    public function showAccept(Request $request, string $token)
     {
-        $invitation = CustomerAccountInvitation::where('token', $token)->firstOrFail();
+        $invitation = CustomerAccountInvitation::findByPlainToken($token);
+        abort_if($invitation === null, 404);
+
         if (! $invitation->isPending()) {
             if (auth()->check() && strtolower(auth()->user()->email) === strtolower($invitation->email) && $invitation->accepted_at !== null) {
                 return redirect()->route('front.client.index')->with('success', __('client.subusers.alerts.invitation_accepted'));
@@ -187,6 +196,38 @@ class SubUserController extends Controller
                 'email' => $invitation->email,
             ]);
         }
+
+        // S1: block registration-takeover - mailbox must be proven first.
+        if (! auth()->user()->hasVerifiedEmail()) {
+            $request->session()->put('customer_account_invitation_token', $token);
+
+            return redirect()->route('verification.send')
+                ->with('error', __('client.subusers.alerts.must_verify_email'));
+        }
+
+        abort_if(
+            strtolower(auth()->user()->email) !== strtolower($invitation->email),
+            403,
+            __('client.subusers.alerts.invitation_email_mismatch')
+        );
+
+        $invitation->load('owner', 'services');
+
+        return view('front.subusers.confirm', [
+            'invitation' => $invitation,
+            'token' => $token,
+        ]);
+    }
+
+    // POST consumes the invitation. Re-runs every showAccept gate; nothing
+    // in between guarantees they still hold. CSRF + throttle at route layer.
+    public function accept(Request $request, string $token)
+    {
+        $invitation = CustomerAccountInvitation::findByPlainToken($token);
+        abort_if($invitation === null, 404);
+        abort_if(! $invitation->isPending(), 404);
+        abort_if(! auth()->check(), 401);
+        abort_if(! auth()->user()->hasVerifiedEmail(), 403);
 
         $access = $invitation->accept(auth()->user());
         $this->sendAccessGranted($access);
@@ -271,12 +312,20 @@ class SubUserController extends Controller
 
     private function sendInvitation(CustomerAccountInvitation $invitation): void
     {
+        // Plain token only set after create()/setFreshToken(); fail fast rather than mail a dead URL.
+        if ($invitation->plain_text_token === null) {
+            throw new \LogicException('sendInvitation requires plain_text_token to be set on the invitation instance');
+        }
+
         try {
             $recipient = Customer::where('email', $invitation->email)->first()
                 ?? new EmailAddressNotifiable($invitation->email, locale: $invitation->owner->locale);
-            $recipient->notify(new CustomerAccountInvitationEmail($invitation));
+            $recipient->notify(new CustomerAccountInvitationEmail($invitation, $invitation->plain_text_token));
         } catch (\Exception $e) {
-            \Cache::put('notification_error', $e->getMessage().' | Date : '.date('Y-m-d H:i:s'), 3600 * 24);
+            \Log::error('Failed to send subuser invitation email', [
+                'invitation_id' => $invitation->id,
+                'exception' => $e->getMessage(),
+            ]);
         }
     }
 

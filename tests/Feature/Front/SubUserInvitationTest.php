@@ -12,7 +12,7 @@ class SubUserInvitationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_existing_email_creates_pending_invitation_until_accepted(): void
+    public function test_post_creates_pending_invitation_row(): void
     {
         Mail::fake();
         $owner = Customer::factory()->create();
@@ -25,15 +25,40 @@ class SubUserInvitationTest extends TestCase
             'services' => [$service->id],
         ])->assertRedirect();
 
-        $invitation = CustomerAccountInvitation::where('email', $subUser->email)->firstOrFail();
-
+        $this->assertDatabaseHas('customer_account_invitations', [
+            'owner_customer_id' => $owner->id,
+            'email' => $subUser->email,
+            'all_services' => false,
+            'accepted_at' => null,
+        ]);
         $this->assertDatabaseMissing('customer_account_accesses', [
             'owner_customer_id' => $owner->id,
             'sub_customer_id' => $subUser->id,
         ]);
+    }
+
+    public function test_existing_email_invitation_can_be_accepted_through_plain_token(): void
+    {
+        $owner = Customer::factory()->create();
+        $subUser = Customer::factory()->create(['email_verified_at' => now()]);
+        $service = $this->createServiceModel($owner->id);
+
+        // The POST path persists the sha256 of the token and the plain
+        // value lives only on the freshly created instance, so we go
+        // through the factory directly here. The POST -> persist path
+        // is covered by test_post_creates_pending_invitation_row above.
+        $invitation = CustomerAccountInvitation::create([
+            'owner_customer_id' => $owner->id,
+            'email' => $subUser->email,
+            'permissions' => ['service.show', 'invoice.show'],
+            'all_services' => false,
+        ]);
+        $invitation->services()->sync([$service->id]);
+
         $this->actingAs($subUser)
-            ->get(route('front.subusers.accept', $invitation->token))
+            ->post(route('front.subusers.accept.confirm', $invitation->plain_text_token))
             ->assertRedirect(route('front.client.index'));
+
         $this->assertDatabaseHas('customer_account_accesses', [
             'owner_customer_id' => $owner->id,
             'sub_customer_id' => $subUser->id,
@@ -41,24 +66,24 @@ class SubUserInvitationTest extends TestCase
         ]);
     }
 
-    public function test_unknown_email_creates_invitation_and_can_be_accepted(): void
+    public function test_unknown_email_invitation_can_be_accepted_after_registration(): void
     {
-        Mail::fake();
         $owner = Customer::factory()->create();
         $service = $this->createServiceModel($owner->id);
         $email = 'future@example.com';
 
-        $this->actingAs($owner)->post(route('front.subusers.store'), [
+        $invitation = CustomerAccountInvitation::create([
+            'owner_customer_id' => $owner->id,
             'email' => $email,
             'permissions' => ['service.show'],
-            'services' => [$service->id],
-        ])->assertRedirect();
+            'all_services' => false,
+        ]);
+        $invitation->services()->sync([$service->id]);
 
-        $invitation = CustomerAccountInvitation::where('email', $email)->firstOrFail();
-        $newCustomer = Customer::factory()->create(['email' => $email]);
+        $newCustomer = Customer::factory()->create(['email' => $email, 'email_verified_at' => now()]);
 
         $this->actingAs($newCustomer)
-            ->get(route('front.subusers.accept', $invitation->token))
+            ->post(route('front.subusers.accept.confirm', $invitation->plain_text_token))
             ->assertRedirect(route('front.client.index'));
 
         $this->assertDatabaseHas('customer_account_accesses', [
@@ -71,7 +96,7 @@ class SubUserInvitationTest extends TestCase
     public function test_revoked_invitation_is_rejected(): void
     {
         $owner = Customer::factory()->create();
-        $customer = Customer::factory()->create(['email' => 'revoked@example.com']);
+        $customer = Customer::factory()->create(['email' => 'revoked@example.com', 'email_verified_at' => now()]);
         $invitation = CustomerAccountInvitation::create([
             'owner_customer_id' => $owner->id,
             'email' => $customer->email,
@@ -81,7 +106,7 @@ class SubUserInvitationTest extends TestCase
         ]);
 
         $this->actingAs($customer)
-            ->get(route('front.subusers.accept', $invitation->token))
+            ->get(route('front.subusers.accept', $invitation->plain_text_token))
             ->assertNotFound();
     }
 }

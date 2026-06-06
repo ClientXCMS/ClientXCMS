@@ -39,30 +39,25 @@ class InvoiceSequenceService
 
         $yearMonth = $date ?? now()->format('Y-m');
 
+        // Pre-create the row atomically. lockForUpdate on 0 rows only gap-locks
+        // under MySQL REPEATABLE READ; on READ COMMITTED / PostgreSQL the loser
+        // of two parallel first-of-month calls hits UNIQUE -> exception.
+        DB::table('invoice_sequences')->insertOrIgnore([
+            'prefix' => $prefix,
+            'year_month' => $yearMonth,
+            'last_number' => self::bootstrapCounter($prefix, $yearMonth),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         return DB::transaction(function () use ($prefix, $yearMonth) {
-            // Lock the row for this prefix + month. If it doesn't
-            // exist yet, bootstrap it from the highest existing
-            // invoice_number that matches the legacy pattern so we
-            // don't restart at 1 on a v2.15 → v2.16 upgrade.
             $row = DB::table('invoice_sequences')
                 ->where('prefix', $prefix)
                 ->where('year_month', $yearMonth)
                 ->lockForUpdate()
                 ->first();
 
-            if ($row === null) {
-                $boot = self::bootstrapCounter($prefix, $yearMonth);
-                DB::table('invoice_sequences')->insert([
-                    'prefix' => $prefix,
-                    'year_month' => $yearMonth,
-                    'last_number' => $boot,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-                $next = $boot + 1;
-            } else {
-                $next = (int) $row->last_number + 1;
-            }
+            $next = (int) $row->last_number + 1;
 
             DB::table('invoice_sequences')
                 ->where('prefix', $prefix)
@@ -78,9 +73,9 @@ class InvoiceSequenceService
 
     private static function bootstrapCounter(string $prefix, string $yearMonth): int
     {
-        // Find the highest 4-digit tail among existing invoices whose
-        // number matches "<prefix>-<yyyy-mm>-NNNN".
-        $like = $prefix . '-' . $yearMonth . '-%';
+        // Escape LIKE wildcards (prefix is admin-controlled setting).
+        $likePrefix = addcslashes($prefix, '\\%_');
+        $like = $likePrefix . '-' . $yearMonth . '-%';
         $max = Invoice::withTrashed()
             ->where('invoice_number', 'like', $like)
             ->pluck('invoice_number')

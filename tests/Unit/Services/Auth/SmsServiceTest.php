@@ -99,4 +99,35 @@ class SmsServiceTest extends TestCase
 
         $this->assertFalse($customer->sendTwoFactorSmsCode('web'));
     }
+
+    public function test_non_e164_phone_is_rejected(): void
+    {
+        // Bypass the propaganistas cast to simulate legacy or DB-injected garbage.
+        Setting::updateSettings(['mfa_sms_driver' => 'log']);
+        /** @var Customer $customer */
+        $customer = Customer::factory()->create();
+        \DB::table('customers')->where('id', $customer->id)->update(['phone' => 'not-a-phone']);
+        $customer = Customer::find($customer->id);
+
+        $this->assertFalse($customer->sendTwoFactorSmsCode('web'));
+    }
+
+    public function test_daily_cap_blocks_sms_after_limit(): void
+    {
+        Setting::updateSettings(['mfa_sms_driver' => 'log']);
+        /** @var Customer $customer */
+        $customer = Customer::factory()->create();
+        $customer->phone = '+33612345678';
+        $customer->save();
+
+        // Burn the cap by clearing the active code between each send so
+        // the anti-resend gate doesn't short-circuit the counter increment.
+        for ($i = 0; $i < \App\Services\Auth\MfaConfig::smsDailyCap(); $i++) {
+            $this->assertTrue($customer->sendTwoFactorSmsCode('web'));
+            $customer->detachMetadata('2fa_sms_code');
+            $customer->detachMetadata('2fa_sms_code_expires_at');
+        }
+
+        $this->assertFalse($customer->sendTwoFactorSmsCode('web'));
+    }
 }

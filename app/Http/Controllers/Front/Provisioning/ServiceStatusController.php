@@ -40,7 +40,9 @@ class ServiceStatusController extends Controller
     public function __invoke(Request $request, Service $service): JsonResponse
     {
         $user = $request->user('web');
-        if ($user === null || (int) $service->customer_id !== (int) $user->id) {
+        // Honour the subuser ACL (customer_account_accesses) so users granted
+        // 'service.show' on the owner's account can poll their delegated services.
+        if ($user === null || ! Service::query()->accessibleBy($user)->whereKey($service->id)->exists()) {
             abort(404); // never leak the existence of someone else's service
         }
 

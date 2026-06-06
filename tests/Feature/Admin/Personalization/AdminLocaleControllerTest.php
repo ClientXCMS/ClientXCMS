@@ -76,6 +76,27 @@ class AdminLocaleControllerTest extends \Tests\TestCase
         $this->assertSame(['BE' => 'Belgium', 'FR' => 'France'], Countries::names());
     }
 
+    public function test_admin_without_manage_settings_cannot_update_countries(): void
+    {
+        // L1 of the v2.16 audit. countries() was the only method on this
+        // controller missing the staff_aborts_permission check, so a
+        // staff member without MANAGE_SETTINGS could silently rewrite the
+        // geo-list and break the sales funnel.
+        Storage::fake('local');
+
+        // performAdminAction with non-* permissions strips the super-admin
+        // role and applies the (empty) sync, so MANAGE_SETTINGS is absent.
+        $response = $this->performAdminAction(
+            'POST',
+            route('admin.locales.countries'),
+            ['countries' => ['FR']],
+            ['some_other_permission']
+        );
+
+        $response->assertForbidden();
+        Storage::assertMissing('enabled_countries.json');
+    }
+
     public function test_countries_use_limited_default_enabled_list(): void
     {
         Storage::fake('local');

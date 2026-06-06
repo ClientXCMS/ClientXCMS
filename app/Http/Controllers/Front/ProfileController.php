@@ -90,6 +90,7 @@ class ProfileController extends \App\Http\Controllers\Controller
     public function password(ProfilePasswordRequest $request)
     {
         $request->user('web')->update(['password' => $request->password]);
+        $request->user('web')->revokeAllTwoFactorTrust();
         try {
             \Auth::logoutOtherDevices($request->password);
         } catch (AuthenticationException $e) {
@@ -112,7 +113,7 @@ class ProfileController extends \App\Http\Controllers\Controller
         }
         ActionLog::log(ActionLog::TWO_FACTOR_ENABLED, Customer::class, $request->user()->id, null, $request->user()->id);
         $request->user('web')->twoFactorEnable($request->session()->get('2fa_secret'));
-        $request->user('web')->trustTwoFactorIp($request->ip());
+        $request->user('web')->trustTwoFactorIp($request->ip(), $request->userAgent());
 
         return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.enabled'));
     }
@@ -120,9 +121,27 @@ class ProfileController extends \App\Http\Controllers\Controller
     public function save2faOptions(Request $request): RedirectResponse
     {
         $request->user('web')->setTwoFactorEmailOnNewIp($request->has('2fa_email_new_ip'));
-        $request->user('web')->trustTwoFactorIp($request->ip());
+        $request->user('web')->trustTwoFactorIp($request->ip(), $request->userAgent());
 
         return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.options_saved'));
+    }
+
+    public function revokeTrustedDevice(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'ip' => ['required', 'string', 'ip'],
+        ]);
+
+        $request->user('web')->revokeTwoFactorTrust($request->input('ip'));
+
+        return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.trusted_device_revoked'));
+    }
+
+    public function revokeAllTrustedDevices(Request $request): RedirectResponse
+    {
+        $request->user('web')->revokeAllTwoFactorTrust();
+
+        return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.trusted_devices_revoked_all'));
     }
 
     public function downloadCodes(Request $request)

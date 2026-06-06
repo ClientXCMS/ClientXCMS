@@ -75,6 +75,7 @@ class AdminLocalesController extends Controller
 
     public function countries(Request $request)
     {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $validated = $request->validate([
             'countries' => ['required', 'array', 'min:1'],
             'countries.*' => ['required', 'string', Rule::in(array_keys(Countries::allNames()))],

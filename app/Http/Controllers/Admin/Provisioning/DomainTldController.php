@@ -110,12 +110,40 @@ class DomainTldController extends AbstractCrudController
         ];
     }
 
+    /**
+     * D3 of the v2.16 audit. The pricing matrix arrives as a nested array
+     * keyed by [currency][action][billing]. Validation rules only
+     * constrained the leaf values; the keys themselves could be anything,
+     * letting a misbehaving admin form (or a manually crafted request)
+     * persist garbage like currency='<script>' or action='whatever' that
+     * then renders through views and never matches the catalog lookups.
+     *
+     * We accept-list the keys here against the same enumerations the
+     * form was supposed to render and silently drop everything else.
+     */
     private function syncPrices(DomainTld $tld, array $prices): void
     {
+        $allowedCurrencies = app(\App\Services\Store\CurrencyService::class)->getCurrenciesKeys();
+        $allowedActions = [
+            \App\Services\Domain\DomainPricingService::ACTION_REGISTER,
+            \App\Services\Domain\DomainPricingService::ACTION_RENEW,
+            \App\Services\Domain\DomainPricingService::ACTION_TRANSFER,
+        ];
+        $allowedBillings = ['annually', 'biennially', 'triennially'];
+
         $tld->prices()->delete();
         foreach ($prices as $currency => $actions) {
+            if (! in_array($currency, $allowedCurrencies, true) || ! is_array($actions)) {
+                continue;
+            }
             foreach ($actions as $action => $billings) {
+                if (! in_array($action, $allowedActions, true) || ! is_array($billings)) {
+                    continue;
+                }
                 foreach ($billings as $billing => $price) {
+                    if (! in_array($billing, $allowedBillings, true) || ! is_array($price)) {
+                        continue;
+                    }
                     if (($price['price'] ?? null) === null && ($price['setup'] ?? null) === null) {
                         continue;
                     }

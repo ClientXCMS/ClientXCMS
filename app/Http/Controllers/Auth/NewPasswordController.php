@@ -72,6 +72,9 @@ class NewPasswordController extends Controller
                     'password' => Hash::make($request->password),
                     'remember_token' => Str::random(60),
                 ])->save();
+                // F3.1: a password reset is the action a compromised user takes;
+                // any device on the trusted-IP list could be the attacker's.
+                $user->revokeAllTwoFactorTrust();
                 ActionLog::log(ActionLog::PASSWORD_RESET, Customer::class, $user->id, null, $user->id);
                 event(new PasswordReset($user));
             }

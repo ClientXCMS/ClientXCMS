@@ -53,6 +53,17 @@ class BasketConfigRequest extends FormRequest
             'billing' => ['required', 'string', Rule::in($authorizedBilling)],
             'currency' => ['required', 'string', Rule::in(app(CurrencyService::class)->getCurrenciesKeys())],
         ];
+        if ($this->product->type === ProductTypeInterface::DOMAIN) {
+            // D1 - pin the tld to the active catalog. Without it, the
+            // basket row stores whatever label the user posted and
+            // priceFor() falls back to the product default, opening a
+            // pricing-manipulation window for any unknown tld.
+            $rules['tld'] = ['required', 'string', function ($attribute, $value, $fail) {
+                if (app(DomainPricingService::class)->findTld($value) === null) {
+                    $fail(__('validation.exists', ['attribute' => $attribute]));
+                }
+            }];
+        }
         if ($productType->data($this->product) !== null) {
             $rules = array_merge($rules, $productType->data($this->product)->validate());
         }

@@ -9,23 +9,29 @@ namespace App\Services\Auth;
 
 use App\Contracts\Auth\SmsGatewayContract;
 use App\Services\Auth\Sms\LogSmsGateway;
-use App\Services\Auth\Sms\TwilioSmsGateway;
 
 /**
- * v2.16 — Resolves the configured SMS gateway based on the
- * `mfa_sms_driver` setting. Extensions can register additional
- * drivers via {@see SmsService::extend()}; the resolution falls back
- * to {@see LogSmsGateway} when the operator has not configured
- * anything — which keeps a fresh install from blowing up.
+ * Registry of SMS gateways. Only the in-tree `log` driver is hardcoded;
+ * extensions add their own (twilio, ovh, vonage, ...) via extend().
+ * Unknown driver -> falls back to log (defense in depth).
  */
 class SmsService
 {
-    /** @var array<string, callable(): SmsGatewayContract> */
+    /** @var array<string, array{factory: callable(): SmsGatewayContract, label: string}> */
     private static array $factories = [];
 
-    public static function extend(string $driver, callable $factory): void
+    public static function extend(string $driver, callable $factory, ?string $label = null): void
     {
-        self::$factories[strtolower($driver)] = $factory;
+        $key = strtolower($driver);
+        self::$factories[$key] = [
+            'factory' => $factory,
+            'label' => $label ?? ucfirst($key),
+        ];
+    }
+
+    public static function forget(string $driver): void
+    {
+        unset(self::$factories[strtolower($driver)]);
     }
 
     public static function gateway(): SmsGatewayContract
@@ -33,30 +39,20 @@ class SmsService
         $driver = strtolower((string) setting('mfa_sms_driver', 'log'));
 
         if (isset(self::$factories[$driver])) {
-            return (self::$factories[$driver])();
+            return (self::$factories[$driver]['factory'])();
         }
 
-        return match ($driver) {
-            'twilio' => new TwilioSmsGateway,
-            'log', '' => new LogSmsGateway,
-            default => new LogSmsGateway, // unknown driver — degrade safely
-        };
+        return new LogSmsGateway;
     }
 
     /**
-     * Returns the list of driver keys the admin UI can offer in the
-     * MFA settings dropdown.
-     *
      * @return array<string, string> [driver_key => human_label]
      */
     public static function availableDrivers(): array
     {
-        $base = [
-            'log' => 'Log only (development)',
-            'twilio' => 'Twilio',
-        ];
-        foreach (array_keys(self::$factories) as $key) {
-            $base[$key] = ucfirst($key);
+        $base = ['log' => 'Log only (development)'];
+        foreach (self::$factories as $key => $entry) {
+            $base[$key] = $entry['label'];
         }
 
         return $base;

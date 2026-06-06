@@ -46,6 +46,30 @@ class DomainManagerTest extends TestCase
         $this->assertCount(1, $registrar->getDnsRecords($service));
     }
 
+    public function test_basket_config_rejects_unknown_tld(): void
+    {
+        // D1: a known TLD with valid pricing is the only acceptable input.
+        // Without this, an attacker can hand a TLD label that ends up in the
+        // basket row data and shifts the unit price away from the catalog
+        // (priceFor() falls back, opening a pricing-manipulation window).
+        $product = $this->createProductModel('active', 10, []);
+        $product->type = 'domain';
+        $product->save();
+
+        $response = $this->post(route('front.store.basket.config', $product), [
+            'currency' => 'USD',
+            'billing' => 'annually',
+            'domain' => 'example.com',
+            'tld' => '.does-not-exist',
+        ]);
+
+        // BasketConfigRequest surfaces validation failure via a back()
+        // redirect with a flash 'error' instead of the standard errors
+        // bag - pre-existing pattern in BasketController::configProduct.
+        $response->assertSessionHas('error');
+        $this->assertSame(0, Basket::getBasket()->rows()->count(), 'No row must land in the basket on rejected input');
+    }
+
     public function test_domain_product_uses_tld_pricing_in_basket(): void
     {
         $product = $this->createProductModel('active', 10, []);

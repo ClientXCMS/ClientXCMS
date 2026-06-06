@@ -32,6 +32,8 @@ Route::get('/profile', [AdminController::class, 'profile'])->name('staffs.profil
 Route::put('/profile', [AdminController::class, 'updateProfile']);
 Route::post('/profile/2fa', [AdminController::class, 'save2fa'])->name('profile.2fa');
 Route::post('/profile/2fa/options', [AdminController::class, 'save2faOptions'])->name('profile.2fa_options');
+Route::post('/profile/2fa/trusted/revoke', [AdminController::class, 'revokeTrustedDevice'])->name('profile.2fa_trusted_revoke');
+Route::post('/profile/2fa/trusted/revoke-all', [AdminController::class, 'revokeAllTrustedDevices'])->name('profile.2fa_trusted_revoke_all');
 Route::get('/profile/download_codes', [AdminController::class, 'downloadCodes'])->name('profile.2fa_codes');
 Route::put('/profile/password', [AdminController::class, 'updatePassword'])->name('profile.password');
 Route::post('/profile/security_question', [AdminController::class, 'saveSecurityQuestion'])->name('profile.security_question');

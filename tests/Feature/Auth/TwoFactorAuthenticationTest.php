@@ -15,8 +15,12 @@ class TwoFactorAuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_client_two_factor_page_shows_email_code_button_without_sending_automatically(): void
+    public function test_client_two_factor_page_auto_sends_email_when_email_factor_required(): void
     {
+        // v2.16 audit F1: the /2fa landing now auto-sends the email code
+        // when the email factor is required (force_2fa_client without TOTP,
+        // or new IP with email-on-new-IP). User-triggered re-send remains
+        // available via the dedicated button.
         Notification::fake();
         Setting::updateSettings(['force_2fa_client' => 'true']);
         $customer = Customer::factory()->create();
@@ -24,8 +28,9 @@ class TwoFactorAuthenticationTest extends TestCase
         $response = $this->actingAs($customer, 'web')->get(route('auth.2fa'));
 
         $response->assertOk();
-        $response->assertSee(__('client.profile.2fa.send_email_code'));
-        Notification::assertNothingSent();
+        // The page exposes a resend-by-email control once the auto-send fired.
+        $response->assertSee(__('client.profile.2fa.resend_email_code'));
+        Notification::assertSentTo($customer, TwoFactorCodeEmail::class);
     }
 
     public function test_client_can_request_two_factor_email_code(): void
@@ -50,15 +55,17 @@ class TwoFactorAuthenticationTest extends TestCase
         $customer->attachMetadata('2fa_email_code', Hash::make('123456'));
         $customer->attachMetadata('2fa_email_code_expires_at', now()->addMinutes(5)->toDateTimeString());
 
+        // v2.16 audit F1: trust is now opt-in via the trust_device checkbox.
         $response = $this->actingAs($customer, 'web')->post(route('auth.2fa'), [
             '2fa' => '123456',
+            'trust_device' => '1',
         ]);
 
         $response->assertRedirect('/client');
         $this->assertTrue(session()->get('2fa_verified'));
         $customer = $customer->fresh();
         $this->assertNull($customer->getMetadata('2fa_email_code'));
-        $this->assertContains('127.0.0.1', $customer->twoFactorTrustedIps());
+        $this->assertContains('127.0.0.1', array_column($customer->twoFactorTrustedIps(), 'ip'));
     }
 
     public function test_admin_can_request_two_factor_email_code(): void

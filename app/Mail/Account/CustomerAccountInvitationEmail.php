@@ -13,7 +13,12 @@ class CustomerAccountInvitationEmail extends Notification
 {
     use Queueable, SerializesModels;
 
-    public function __construct(private CustomerAccountInvitation $invitation) {}
+    /**
+     * The plain token must be passed in by the caller because the model
+     * never persists it. Looking at $invitation->token would surface the
+     * sha256 hash and produce an unusable URL.
+     */
+    public function __construct(private CustomerAccountInvitation $invitation, private string $plainToken) {}
 
     public function via($notifiable): array
     {
@@ -22,7 +27,7 @@ class CustomerAccountInvitationEmail extends Notification
 
     public function toMail($notifiable): MailMessage
     {
-        $url = route('front.subusers.accept', $this->invitation->token);
+        $url = route('front.subusers.accept', $this->plainToken);
         $registerUrl = route('register', [
             'redirect' => $url,
             'email' => $this->invitation->email,

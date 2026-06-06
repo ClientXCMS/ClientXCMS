@@ -31,19 +31,38 @@ class CustomerAccountInvitation extends Model
         'revoked_at' => 'datetime',
     ];
 
+    // Transient plain token for mail rendering, never persisted (DB has sha256 only).
+    public ?string $plain_text_token = null;
+
     public static function boot()
     {
         parent::boot();
 
         static::creating(function (CustomerAccountInvitation $invitation) {
-            if (empty($invitation->token)) {
-                $invitation->token = Str::random(64);
+            if (empty($invitation->getAttribute('token'))) {
+                $invitation->setFreshToken();
             }
             if ($invitation->expires_at === null) {
                 $invitation->expires_at = now()->addDays(14);
             }
             $invitation->email = strtolower($invitation->email);
         });
+    }
+
+    // Rotate token: leak of the old URL stops working as soon as caller resends.
+    public function setFreshToken(): string
+    {
+        $plain = Str::random(64);
+        $this->plain_text_token = $plain;
+        $this->setAttribute('token', hash('sha256', $plain));
+
+        return $plain;
+    }
+
+    // Hashes the plain token before lookup; returns null on miss (caller 404s).
+    public static function findByPlainToken(string $plainToken): ?self
+    {
+        return static::where('token', hash('sha256', $plainToken))->first();
     }
 
     public function owner()
