@@ -8,3 +8,47 @@
   2026-04-04 15:08:07 App\Mail\Auth\ResetPasswordEmail .......... 25.84ms DONE
   2026-04-04 15:09:32 App\Mail\Auth\ResetPasswordEmail ............... RUNNING
   2026-04-04 15:09:32 App\Mail\Auth\ResetPasswordEmail .......... 33.88ms DONE
+
+   App\Exceptions\ExtensionException 
+
+  cURL error 6: Could not resolve host: clientxcms.com (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://clientxcms.com/api/resources
+
+  at /home/martin-delebecque/Sites/clientxcms/ClientXCMS/app/Extensions/ExtensionManager.php:153
+    149▕             $response = \Http::timeout(10)->get(LicenseGateway::getDomain().'/api/resources');
+    150▕ 
+    151▕             return $response->json('data', []);
+    152▕         } catch (\Exception $e) {
+  ➜ 153▕             throw new ExtensionException($e->getMessage());
+    154▕         }
+    155▕     }
+    156▕ 
+    157▕     public function getExtension(string $type, string $uuid): ExtensionDTO
+
+  1   /home/martin-delebecque/Sites/clientxcms/ClientXCMS/app/Extensions/ExtensionManager.php:110
+      App\Extensions\ExtensionManager::makeRequest()
+
+  2   /home/martin-delebecque/Sites/clientxcms/ClientXCMS/app/Theme/ThemeManager.php:420
+      App\Extensions\ExtensionManager::fetch()
+
+
+   App\Exceptions\ExtensionException 
+
+  cURL error 6: Could not resolve host: clientxcms.com (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://clientxcms.com/api/resources
+
+  at /home/martin-delebecque/Sites/clientxcms/ClientXCMS/app/Extensions/ExtensionManager.php:153
+    149▕             $response = \Http::timeout(10)->get(LicenseGateway::getDomain().'/api/resources');
+    150▕ 
+    151▕             return $response->json('data', []);
+    152▕         } catch (\Exception $e) {
+  ➜ 153▕             throw new ExtensionException($e->getMessage());
+    154▕         }
+    155▕     }
+    156▕ 
+    157▕     public function getExtension(string $type, string $uuid): ExtensionDTO
+
+  1   /home/martin-delebecque/Sites/clientxcms/ClientXCMS/app/Extensions/ExtensionManager.php:110
+      App\Extensions\ExtensionManager::makeRequest()
+
+  2   /home/martin-delebecque/Sites/clientxcms/ClientXCMS/app/Theme/ThemeManager.php:420
+      App\Extensions\ExtensionManager::fetch()
+
