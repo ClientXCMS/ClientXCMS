@@ -78,7 +78,7 @@ class LicenseGateway
     {
         $params = [
             'client_id' => env('OAUTH_CLIENT_ID'),
-            'redirect_uri' => $this->fullUri().'/licensing/return',
+            'redirect_uri' => route('licensing.return'),
             'response_type' => 'code',
             'scope' => '',
         ];
@@ -93,7 +93,7 @@ class LicenseGateway
             $params = [
                 'client_id' => env('OAUTH_CLIENT_ID'),
                 'client_secret' => env('OAUTH_CLIENT_SECRET'),
-                'redirect_uri' => $this->fullUri().'/licensing/return',
+                'redirect_uri' => route('licensing.return'),
                 'code' => $code,
                 'grant_type' => 'authorization_code',
             ];
@@ -197,11 +197,6 @@ class LicenseGateway
         }
 
         return $json['access_token'];
-    }
-
-    private function fullUri()
-    {
-        return \URL::getRequest()->getScheme().'://'.\URL::getRequest()->getHttpHost();
     }
 
     public function restartNPM()

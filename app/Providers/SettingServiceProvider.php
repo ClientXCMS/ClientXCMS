@@ -63,7 +63,7 @@ class SettingServiceProvider extends ServiceProvider
             $service->initTranslatedSettings();
             // Ajout de valeur par default
             $service->setDefaultValue('app_name', config('app.name'));
-            $service->setDefaultValue('app_url', request()->getSchemeAndHttpHost());
+            $service->setDefaultValue('app_url', config('app.url'));
             $service->setDefaultValue('app_timezone', 'Europe/Paris');
             $service->setDefaultValue('app_address', config('app.name') . ', You can set your address in the settings');
             $service->setDefaultValue('app_debug', config('app.debug', 'false'));
@@ -96,7 +96,7 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('mail_smtp_password', env('MAIL_PASSWORD'));
             $service->setDefaultValue('mail_smtp_encryption', env('MAIL_ENCRYPTION'));
             $service->setDefaultValue('mail_smtp_enable', env('MAIL_MAILER') == 'smtp');
-            $service->setDefaultValue('mail_domain', env('APP_URL', request()->getSchemeAndHttpHost()));
+            $service->setDefaultValue('mail_domain', config('app.url'));
             $service->setDefaultValue('theme_footer_description', config('app.name') . ' You can modify this text in the settings. Powered By CLIENTXCMS');
             $service->setDefaultValue('theme_home_enabled', true);
             $service->setDefaultValue('theme_switch_mode', 'both');
