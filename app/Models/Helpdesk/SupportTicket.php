@@ -190,11 +190,21 @@ class SupportTicket extends Model
         'closed_by_id',
         'assigned_to',
         'uuid',
+        // v2.16 — SLA tracking
+        'first_response_due_at',
+        'resolution_due_at',
+        'first_response_at',
+        'sla_breached_notified_at',
     ];
 
     protected $casts = [
         'staff_subscribers' => 'array',
         'closed_at' => 'datetime',
+        // v2.16 — SLA timestamps
+        'first_response_due_at' => 'datetime',
+        'resolution_due_at' => 'datetime',
+        'first_response_at' => 'datetime',
+        'sla_breached_notified_at' => 'datetime',
     ];
 
     public static function boot()
@@ -351,6 +361,11 @@ class SupportTicket extends Model
                 ActionLog::log(ActionLog::TICKET_REPLIED, get_class($this), $this->id, $staffId, $customerId, ['subject' => $this->subject]);
             }
         }
+
+        // v2.16 — let callers (controllers, SLA service) interact with the
+        // newly-persisted message. Returning null is reserved for the
+        // spam-guard short-circuit above.
+        return $message;
     }
 
     public function readMessages()

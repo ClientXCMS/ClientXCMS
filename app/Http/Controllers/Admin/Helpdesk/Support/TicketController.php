@@ -228,10 +228,18 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
     {
         $this->checkPermission('reply', $ticket);
         abort_if(! $ticket->staffCanView(auth('admin')->user()), 403);
-        $ticket->addMessage($request->get('content'), null, auth('admin')->id());
+        $message = $ticket->addMessage($request->get('content'), null, auth('admin')->id());
         foreach ($request->file('attachments', []) as $attachment) {
             $ticket->addAttachment($attachment, $ticket->customer_id, auth('admin')->id());
         }
+
+        // v2.16 — stop the first-response SLA clock the first time a
+        // staff member replies. Safe to call repeatedly.
+        if ($message instanceof \App\Models\Helpdesk\SupportMessage) {
+            app(\App\Services\Helpdesk\SlaService::class)
+                ->recordFirstResponse($ticket->refresh(), $message);
+        }
+
         if ($request->has('close')) {
             $ticket->close('admin', auth('admin')->id());
 
