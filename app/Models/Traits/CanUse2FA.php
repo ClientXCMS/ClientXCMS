@@ -191,6 +191,10 @@ trait CanUse2FA
         if ($this->isValidEmailTwoFactorCode($code)) {
             return true;
         }
+        // v2.16 — SMS challenge runs in parallel to the email channel.
+        if ($this->isValidSmsTwoFactorCode($code)) {
+            return true;
+        }
         $secret = $this->getMetadata('2fa_secret');
         if (! $secret) {
             return false;
@@ -206,6 +210,75 @@ trait CanUse2FA
         }
 
         return false;
+    }
+
+    /**
+     * v2.16 — Send a one-time code by SMS through the configured
+     * gateway (see {@see \App\Services\Auth\SmsService}). Mirrors
+     * sendTwoFactorEmailCode(): same 5-minute TTL, same bcrypt-hashed
+     * persistence, same anti-resend rate-limit.
+     *
+     * Returns true when the SMS was attempted, false when the user
+     * has no phone number on file or when the gateway threw.
+     */
+    public function sendTwoFactorSmsCode(string $guard, ?string $ip = null): bool
+    {
+        $phone = (string) ($this->phone ?? '');
+        if ($phone === '') {
+            return false;
+        }
+
+        $expiresAt = now()->addMinutes(5);
+        $expiresKey = '2fa_sms_code_expires_at';
+
+        if ($this->getMetadata($expiresKey)
+            && now()->lt(\Carbon\Carbon::parse($this->getMetadata($expiresKey)))) {
+            return true; // a previous code is still valid, don't re-send
+        }
+
+        $code = (string) random_int(100000, 999999);
+        $this->attachMetadata('2fa_sms_code', Hash::make($code));
+        $this->attachMetadata($expiresKey, $expiresAt->toDateTimeString());
+
+        try {
+            $appName = config('app.name', 'ClientXCMS');
+            \App\Services\Auth\SmsService::gateway()->send(
+                $phone,
+                sprintf('%s — code de connexion : %s (valide 5 min)', $appName, $code)
+            );
+
+            return true;
+        } catch (\Throwable $e) {
+            logger()->warning('mfa.sms.send_failed', [
+                'guard' => $guard,
+                'ip' => $ip,
+                'error' => $e->getMessage(),
+            ]);
+            // Drop the metadata so the user can request a new code
+            // without being rate-limited by a phantom one.
+            $this->detachMetadata('2fa_sms_code');
+            $this->detachMetadata($expiresKey);
+
+            return false;
+        }
+    }
+
+    public function isValidSmsTwoFactorCode(string $code): bool
+    {
+        $hash = $this->getMetadata('2fa_sms_code');
+        $expiresAt = $this->getMetadata('2fa_sms_code_expires_at');
+        if (! $hash || ! $expiresAt || now()->gt(\Carbon\Carbon::parse($expiresAt))) {
+            return false;
+        }
+
+        if (! Hash::check($code, $hash)) {
+            return false;
+        }
+
+        $this->detachMetadata('2fa_sms_code');
+        $this->detachMetadata('2fa_sms_code_expires_at');
+
+        return true;
     }
 
     public function twoFactorVerified(): bool

@@ -18,9 +18,7 @@ use Illuminate\Support\ServiceProvider;
  *
  * Once the same keys have been merged into ctx-translations, the
  * corresponding files under resources/translations/v216 can be removed
- * and call sites updated to drop the `v216::` prefix. Until then this
- * provider guarantees the new error pages, profile screens, a11y and
- * helpdesk strings have working translations on any fresh install.
+ * and call sites updated to drop the `v216::` prefix.
  */
 class V216TranslationServiceProvider extends ServiceProvider
 {

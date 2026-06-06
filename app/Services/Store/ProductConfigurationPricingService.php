@@ -5,12 +5,20 @@ namespace App\Services\Store;
 use App\DTO\Store\ConfigOptionDTO;
 use App\Contracts\Store\ProductTypeInterface;
 use App\Models\Billing\ConfigOption;
+use App\Models\Store\Basket\BasketRow;
+use App\Models\Store\Coupon;
 use App\Models\Store\Product;
 use App\Services\Domain\DomainPricingService;
 
 class ProductConfigurationPricingService
 {
-    public function preview(Product $product, string $billing, string $currency, array $optionsInput = [], array $data = []): array
+    /**
+     * v2.16 — preview() now accepts an optional `$coupon` so the
+     * /basket/add config page can render the discounted total inline.
+     * The coupon is *not* persisted here; that still happens through
+     * BasketController::coupon().
+     */
+    public function preview(Product $product, string $billing, string $currency, array $optionsInput = [], array $data = [], ?Coupon $coupon = null): array
     {
         if ($product->type === ProductTypeInterface::DOMAIN && ! empty($data['tld'])) {
             $price = app(DomainPricingService::class)->priceFor($data['tld'], $currency, $billing) ?? $product->getPriceByCurrency($currency, $billing);
@@ -26,6 +34,36 @@ class ProductConfigurationPricingService
         $setupHt = $price->setupHT() + $optionTotals['setup'];
 
         $firstPaymentHt = $price->firstPayment() + $optionTotals['first_payment'];
+
+        // v2.16 — apply the basket coupon BEFORE VAT so the customer
+        // sees the same discounted total they'll be charged at
+        // checkout. Coupon::applyAmount() honours the recurring vs
+        // setup-fees split, the fixed-vs-percent type, and the
+        // free_setup flag.
+        $discountHt = 0.0;
+        $couponMeta = null;
+        if ($coupon !== null) {
+            $afterCouponRecurringAndOnetime = $coupon->applyAmount(
+                $recurringHt + $onetimeHt,
+                $billing,
+                BasketRow::PRICE
+            );
+            $afterCouponSetup = $coupon->applyAmount(
+                $setupHt,
+                $billing,
+                BasketRow::SETUP_FEES
+            );
+            $discountedFirstPayment = $afterCouponRecurringAndOnetime + $afterCouponSetup;
+            $discountHt = max(0.0, $firstPaymentHt - $discountedFirstPayment);
+            $firstPaymentHt = $discountedFirstPayment;
+            $couponMeta = [
+                'code' => $coupon->code,
+                'type' => $coupon->type,
+                'discount_ht' => $this->store_round($discountHt),
+                'formatted_discount' => '-' . formatted_price($discountHt, $currency),
+            ];
+        }
+
         $taxAmount = TaxesService::getVatPrice($firstPaymentHt);
         $totalTtc = $firstPaymentHt + $taxAmount;
 
@@ -42,6 +80,7 @@ class ProductConfigurationPricingService
                 'first_payment_ht' => $this->store_round($firstPaymentHt),
                 'tax' => $this->store_round($taxAmount),
                 'total' => $this->store_round($totalTtc),
+                'discount_ht' => $this->store_round($discountHt),
             ],
             'options' => array_values($this->formatOptions($options, $currency, $billing)),
             'formatted' => [
@@ -51,7 +90,9 @@ class ProductConfigurationPricingService
                 'subtotal' => $this->formatMoney($firstPaymentHt, $currency),
                 'taxes' => formatted_price($taxAmount, $currency),
                 'total' => formatted_price($totalTtc, $currency),
+                'discount' => $discountHt > 0 ? '-' . $this->formatMoney($discountHt, $currency) : '',
             ],
+            'coupon' => $couponMeta,
         ];
     }
 

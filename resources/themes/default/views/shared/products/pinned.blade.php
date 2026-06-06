@@ -38,8 +38,8 @@ $showSetup = $pricing->hasSetup() && (isset($showSetup) ? $showSetup : true);
       </span>
     @else
         <span class="mt-5 font-bold text-5xl text-gray-800 dark:text-gray-200">
-        {{ $pricing->getPriceByDisplayMode() }}
-        <span class="font-bold text-2xl -me-2">{{ $pricing->getSymbol() }} {{ $pricing->taxTitle() }}</span>
+        {{ formatted_price((float) $pricing->getPriceByDisplayMode(), $pricing->currency ?? currency()) }}
+        <span class="font-bold text-2xl -me-2">{{ $pricing->taxTitle() }}</span>
       </span>
         @if ($showSetup)
             <p class="mt-2 text-sm text-gray-500">{{ $pricing->pricingMessage() }}</p>

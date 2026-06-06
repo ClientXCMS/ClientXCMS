@@ -32,9 +32,18 @@
         @endif</label>
 @endif
 <div class="mt-2">
+    {{-- v2.16 — single-source-of-truth for the selected option: old() if
+         the user is being shown a validation error, otherwise the model's
+         current value. Previous code OR'd both conditions which could
+         silently select two options when they did not match.
+         The is_scalar guard protects against callers that accidentally
+         pass an array (e.g. multi-select hooks): casting an array to
+         string with (string) triggers a PHP "Array to string conversion"
+         warning that would 500 the page. --}}
+    @php $__selected = old($name, $value ?? null); @endphp
     <select name="{{ $name }}" id="{{ $name }}" class="input-text" @foreach($attributes ?? [] as $k => $v) {{ $k }}="{{ $v }}"@endforeach >
         @foreach($options as $_value => $option)
-            <option value="{{ $_value }}"{{ $value == $_value || old($name) == $_value ? ' selected' : '' }} @foreach($options_attributes[$_value] ?? [] as $k => $v) {{ $k }}="{{ $v }}"@endforeach >{{ $option }}</option>
+            <option value="{{ $_value }}"{{ is_scalar($__selected) && (string) $__selected === (string) $_value ? ' selected' : '' }} @foreach($options_attributes[$_value] ?? [] as $k => $v) {{ $k }}="{{ $v }}"@endforeach >{{ $option }}</option>
         @endforeach
     </select>
     @error($name)

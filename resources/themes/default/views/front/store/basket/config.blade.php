@@ -105,6 +105,20 @@
                             <span id="subtotal">0</span>
                         </div>
 
+                        {{-- v2.16 — coupon line. Hidden by default; the JS
+                             un-hides it when the preview response carries
+                             a non-zero discount. --}}
+                        @php $basket = \App\Models\Store\Basket\Basket::getBasket(); @endphp
+                        @php $activeCoupon = $basket->coupon_id ? \App\Models\Store\Coupon::find($basket->coupon_id) : null; @endphp
+                        <div id="coupon-line" class="flex justify-between mb-2 {{ $activeCoupon ? '' : 'hidden' }}">
+                            <span class="text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-x-1">
+                                <i class="bi bi-tag-fill"></i>
+                                {{ __('coupon.coupon') }}
+                                <span id="coupon-code" class="font-mono">{{ $activeCoupon?->code }}</span>
+                            </span>
+                            <span class="text-emerald-700 dark:text-emerald-400 font-semibold" id="coupon-discount">0</span>
+                        </div>
+
                         <div class="flex justify-between mb-2">
                             <span>{{ __('store.vat') }}</span>
                             <span id="taxes">0</span>
@@ -114,6 +128,36 @@
                             <span class="font-semibold">{{ __('store.total') }}</span>
                             <span class="font-semibold" id="total">0</span>
                         </div>
+
+                        {{-- v2.16 — apply / remove coupon inline. Form
+                             targets the existing /basket/coupon endpoint
+                             but passes redirect_to so the customer stays
+                             on this config page. --}}
+                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                            @if($activeCoupon)
+                                <form method="POST" action="{{ route('front.store.basket.coupon.remove') }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
+                                    <button type="submit" class="text-xs text-red-600 hover:underline">
+                                        {{ __('coupon.remove') ?? 'Retirer le code promo' }}
+                                    </button>
+                                </form>
+                            @else
+                                <details class="text-sm">
+                                    <summary class="cursor-pointer text-indigo-600 hover:underline">
+                                        <i class="bi bi-tag"></i> {{ __('coupon.have_one') ?? "J'ai un code promo" }}
+                                    </summary>
+                                    <form method="POST" action="{{ route('front.store.basket.coupon') }}" class="mt-2 flex gap-2">
+                                        @csrf
+                                        <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
+                                        <input type="text" name="coupon" placeholder="{{ __('coupon.code') ?? 'Code' }}" class="input-text flex-1" autocomplete="off" required>
+                                        <button class="bg-indigo-600 text-white px-3 rounded-lg text-sm">{{ __('coupon.apply') ?? 'Appliquer' }}</button>
+                                    </form>
+                                </details>
+                            @endif
+                        </div>
+
                         <button class="bg-indigo-600 text-white py-2 px-4 rounded-lg mt-4 w-full">{{ __('store.basket.addtocart') }}</button>
                     </div>
             </div>
