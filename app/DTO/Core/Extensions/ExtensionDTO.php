@@ -60,10 +60,6 @@ class ExtensionDTO implements Arrayable
 
     public static function fromArray(array $module)
     {
-        // v2.16 — be defensive about missing keys; legacy extensions.json
-        // rows didn't always carry a "version" entry. PR #17's sandbox
-        // tests crashed in CreatesApplication setup when one such row was
-        // loaded, blocking the rest of the boot.
         return new self(
             $module['uuid'],
             $module['type'],

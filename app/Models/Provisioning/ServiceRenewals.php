@@ -84,7 +84,6 @@ class ServiceRenewals extends Model
 {
     use HasFactory, SoftDeletes;
 
-    // v2.16 — explicit lifecycle for a renewal row.
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_PAID = 'paid';

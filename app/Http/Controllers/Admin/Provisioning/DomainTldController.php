@@ -110,17 +110,6 @@ class DomainTldController extends AbstractCrudController
         ];
     }
 
-    /**
-     * D3 of the v2.16 audit. The pricing matrix arrives as a nested array
-     * keyed by [currency][action][billing]. Validation rules only
-     * constrained the leaf values; the keys themselves could be anything,
-     * letting a misbehaving admin form (or a manually crafted request)
-     * persist garbage like currency='<script>' or action='whatever' that
-     * then renders through views and never matches the catalog lookups.
-     *
-     * We accept-list the keys here against the same enumerations the
-     * form was supposed to render and silently drop everything else.
-     */
     private function syncPrices(DomainTld $tld, array $prices): void
     {
         $allowedCurrencies = app(\App\Services\Store\CurrencyService::class)->getCurrenciesKeys();

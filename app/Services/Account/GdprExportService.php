@@ -2,7 +2,19 @@
 
 /*
  * This file is part of the CLIENTXCMS project.
- * Year: 2026 — v2.16 release.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
  */
 
 namespace App\Services\Account;
@@ -34,7 +46,7 @@ class GdprExportService
 
     public function buildArchive(Customer $customer): string
     {
-        $tmpDir = storage_path('app/'.self::STORAGE_DIR.'/'.$customer->id);
+        $tmpDir = storage_path('app/' . self::STORAGE_DIR . '/' . $customer->id);
         if (! is_dir($tmpDir)) {
             mkdir($tmpDir, 0755, true);
         }
@@ -43,11 +55,11 @@ class GdprExportService
         $this->purgeStaleArchives($tmpDir);
 
         $filename = sprintf('export-%s-%s.zip', $customer->id, now()->format('YmdHis'));
-        $zipPath = $tmpDir.'/'.$filename;
+        $zipPath = $tmpDir . '/' . $filename;
 
         $zip = new ZipArchive;
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new \RuntimeException('Could not open ZIP archive for writing: '.$zipPath);
+            throw new \RuntimeException('Could not open ZIP archive for writing: ' . $zipPath);
         }
 
         $zip->addFromString('manifest.json', $this->encode([
@@ -72,7 +84,7 @@ class GdprExportService
                     // (prefix setting) and a stray '/' or '..' would let an
                     // extractor write outside the invoices/ folder.
                     $safeName = preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $invoice->invoice_number);
-                    $zip->addFromString('invoices/'.$safeName.'.pdf', $pdfBytes);
+                    $zip->addFromString('invoices/' . $safeName . '.pdf', $pdfBytes);
                 }
             } catch (\Throwable $e) {
                 logger()->warning('gdpr.export.invoice_pdf_failed', [
@@ -84,7 +96,7 @@ class GdprExportService
 
         $zip->close();
 
-        return self::STORAGE_DIR.'/'.$customer->id.'/'.$filename;
+        return self::STORAGE_DIR . '/' . $customer->id . '/' . $filename;
     }
 
     /**
@@ -94,7 +106,7 @@ class GdprExportService
     private function purgeStaleArchives(string $dir): void
     {
         $cutoff = now()->subDay()->getTimestamp();
-        foreach (glob($dir.'/*.zip') ?: [] as $file) {
+        foreach (glob($dir . '/*.zip') ?: [] as $file) {
             if (@filemtime($file) < $cutoff) {
                 @unlink($file);
             }
@@ -117,10 +129,26 @@ class GdprExportService
     private function profile(Customer $c): array
     {
         $row = $c->only([
-            'id', 'firstname', 'lastname', 'email', 'phone', 'address',
-            'address2', 'city', 'region', 'country', 'zipcode', 'locale',
-            'company_name', 'billing_details', 'balance', 'created_at',
-            'updated_at', 'email_verified_at', 'last_login', 'last_ip',
+            'id',
+            'firstname',
+            'lastname',
+            'email',
+            'phone',
+            'address',
+            'address2',
+            'city',
+            'region',
+            'country',
+            'zipcode',
+            'locale',
+            'company_name',
+            'billing_details',
+            'balance',
+            'created_at',
+            'updated_at',
+            'email_verified_at',
+            'last_login',
+            'last_ip',
         ]);
         $row['has_two_factor'] = $c->twoFactorEnabled();
         return $row;
@@ -128,7 +156,7 @@ class GdprExportService
 
     private function invoices(Customer $c): array
     {
-        return $c->invoices()->get()->map(fn ($i) => [
+        return $c->invoices()->get()->map(fn($i) => [
             'id' => $i->id,
             'invoice_number' => $i->invoice_number,
             'status' => $i->status,
@@ -143,7 +171,7 @@ class GdprExportService
 
     private function services(Customer $c): array
     {
-        return $c->services()->get()->map(fn ($s) => [
+        return $c->services()->get()->map(fn($s) => [
             'id' => $s->id,
             'uuid' => $s->uuid,
             'name' => $s->name,
@@ -156,13 +184,13 @@ class GdprExportService
 
     private function tickets(Customer $c): array
     {
-        return $c->tickets()->with('messages')->get()->map(fn ($t) => [
+        return $c->tickets()->with('messages')->get()->map(fn($t) => [
             'id' => $t->id,
             'subject' => $t->subject,
             'status' => $t->status,
             'priority' => $t->priority,
             'department_id' => $t->department_id,
-            'messages' => $t->messages->map(fn ($m) => [
+            'messages' => $t->messages->map(fn($m) => [
                 'author' => $m->isStaff() ? 'staff' : 'you',
                 'message' => $m->message,
                 'created_at' => $m->created_at,
@@ -176,7 +204,7 @@ class GdprExportService
         if (! method_exists($c, 'tokens')) {
             return [];
         }
-        return $c->tokens()->get()->map(fn ($t) => [
+        return $c->tokens()->get()->map(fn($t) => [
             'name' => $t->name,
             'created_at' => $t->created_at,
             'last_used_at' => $t->last_used_at,

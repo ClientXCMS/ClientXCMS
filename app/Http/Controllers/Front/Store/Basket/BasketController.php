@@ -162,10 +162,6 @@ class BasketController extends \App\Http\Controllers\Controller
         if (! $product->hasPricesForCurrency($validated['currency'])) {
             return response()->json(['message' => __('store.basket.no_prices')], 422);
         }
-
-        // v2.16 — forward the basket-level coupon to the pricing service
-        // so the customer sees the discounted total on the /basket/add
-        // page, not only later at /store/basket.
         $coupon = null;
         $basket = Basket::getBasket();
         if ($basket->coupon_id !== null) {
@@ -279,10 +275,6 @@ class BasketController extends \App\Http\Controllers\Controller
     {
         $this->validate($request, [
             'coupon' => 'required|string|max:255',
-            // v2.16 — accept an optional return URL so the customer
-            // who applied the coupon from /basket/config/{product}
-            // stays on that page instead of being yanked to
-            // /store/basket.
             'redirect_to' => 'nullable|string|max:1000',
         ]);
         $basket = Basket::getBasket();
@@ -307,12 +299,6 @@ class BasketController extends \App\Http\Controllers\Controller
         return redirect($target)->with('success', __('coupon.coupon_removed'));
     }
 
-    /**
-     * v2.16 — Whitelist the only allowed redirect destinations after a
-     * coupon apply/remove. Anything else falls back to the default
-     * /store/basket page. Prevents open redirects while still letting
-     * the basket-config page get the user back.
-     */
     private function resolveCouponRedirect(?string $redirectTo): string
     {
         $default = route('front.store.basket.show');

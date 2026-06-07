@@ -454,10 +454,6 @@ class ExtensionManager extends ExtensionCollectionsManager
     {
         $modules = app('module')->getExtensions($enabledOnly);
         foreach ($modules as $module) {
-            // v2.16 — sandbox each extension boot so a broken one
-            // never crashes the whole request. The sandbox also
-            // flips the extension to disabled in extensions.json so
-            // the NEXT request boots clean.
             ExtensionSandbox::autoload(app('module'), $module, app(), $composer);
         }
     }

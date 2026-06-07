@@ -87,6 +87,31 @@ if (searchForm) {
         location.href = location.pathname + '?' + updatedQueryString;
     })
 }
+function updateMassActionFloatingBar() {
+    const floatingBar = document.querySelector('#mass-action-floating-bar');
+    if (!floatingBar) return;
+    const checkboxes = document.querySelector('#mass_action_table').querySelectorAll('input[type="checkbox"]:checked');
+    let totalCount = 0;
+    checkboxes.forEach(function(checkbox) {
+        if (checkbox.dataset.id) {
+            totalCount++;
+        }
+    });
+    const selectedCountEl = document.querySelector('#mass-action-selected-count');
+    if (selectedCountEl) {
+        selectedCountEl.innerText = totalCount;
+    }
+    if (totalCount > 0) {
+        floatingBar.classList.remove('hidden');
+    } else {
+        floatingBar.classList.add('hidden');
+        const massActionSelect = document.querySelector('#mass_action_select');
+        if (massActionSelect) {
+            massActionSelect.value = 'action';
+        }
+    }
+}
+
 const checkboxAll = document.querySelector('#checkbox-all');
 if (checkboxAll) {
     document.querySelector('#checkbox-all').addEventListener('change', function () {
@@ -95,8 +120,22 @@ if (checkboxAll) {
         checkboxes.forEach(function (checkbox) {
             checkbox.checked = self.checked;
         });
+        updateMassActionFloatingBar();
     });
 }
+
+const massActionTable = document.querySelector('#mass_action_table');
+if (massActionTable) {
+    massActionTable.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
+        if (checkbox !== checkboxAll) {
+            checkbox.addEventListener('change', function() {
+                updateMassActionFloatingBar();
+            });
+        }
+    });
+    updateMassActionFloatingBar();
+}
+
 const massActionSelect = document.querySelector('#mass_action_select');
 const massActionForm = document.querySelector('#mass_action_form');
 if (massActionSelect) {
@@ -134,5 +173,6 @@ if (massActionSelect) {
             console.log('hidden');
         }
         HSOverlay.open(document.querySelector('#mass_action_btn'));
+        this.value = 'action';
     });
 }

@@ -35,9 +35,6 @@ class RenewServiceListerner
                 }
                 $item->delivered_at = now();
                 $item->save();
-                // v2.16 — also flip the status to "paid". The partial unique
-                // index uses status as part of its CASE expression, so this
-                // simultaneously releases the pending lock for the service.
                 ServiceRenewals::where('invoice_id', $invoice->id)->update([
                     'renewed_at' => now(),
                     'status' => ServiceRenewals::STATUS_PAID,

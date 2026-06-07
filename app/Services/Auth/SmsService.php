@@ -2,7 +2,19 @@
 
 /*
  * This file is part of the CLIENTXCMS project.
- * Year: 2026 — v2.16 release.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
  */
 
 namespace App\Services\Auth;
@@ -34,15 +46,22 @@ class SmsService
         unset(self::$factories[strtolower($driver)]);
     }
 
-    public static function gateway(): SmsGatewayContract
+    public static function make(string $driver): SmsGatewayContract
     {
-        $driver = strtolower((string) setting('mfa_sms_driver', 'log'));
+        $driver = strtolower($driver);
 
         if (isset(self::$factories[$driver])) {
             return (self::$factories[$driver]['factory'])();
         }
 
         return new LogSmsGateway;
+    }
+
+    public static function gateway(): SmsGatewayContract
+    {
+        $driver = strtolower((string) setting('mfa_sms_driver', 'log'));
+
+        return self::make($driver);
     }
 
     /**

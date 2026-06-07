@@ -196,28 +196,16 @@ class ProfileController extends \App\Http\Controllers\Controller
             ->with('success', __('client.profile.security_question_saved'));
     }
 
-    /**
-     * v2.16 — GDPR Article 20 (right to data portability).
-     *
-     * Builds a ZIP containing the customer's profile, invoices,
-     * services, tickets and API token names; flashes a one-shot
-     * signed download URL on the redirect-back. The link expires
-     * after 24 h.
-     */
     public function export(Request $request, GdprExportService $service): RedirectResponse
     {
         $customer = $request->user('web');
         $relativePath = $service->buildArchive($customer);
 
         return redirect()->route('front.profile.index')
-            ->with('success', __('v216::gdpr.export.ready'))
+            ->with('success', __('client.gdpr.export.ready'))
             ->with('gdpr_export_url', $service->signedUrl($relativePath));
     }
 
-    /**
-     * Serve a previously-built GDPR export. The route is signed and
-     * scoped to the authenticated customer's storage prefix.
-     */
     public function downloadExport(Request $request, string $path): \Symfony\Component\HttpFoundation\BinaryFileResponse|RedirectResponse
     {
         // Path must live under gdpr/{customer_id}/...
@@ -228,7 +216,7 @@ class ProfileController extends \App\Http\Controllers\Controller
         }
         if (! Storage::disk('local')->exists($path)) {
             return redirect()->route('front.profile.index')
-                ->with('error', __('v216::gdpr.export.expired'));
+                ->with('error', __('client.gdpr.export.expired'));
         }
 
         return response()->download(

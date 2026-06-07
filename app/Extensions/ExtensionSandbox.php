@@ -2,7 +2,19 @@
 
 /*
  * This file is part of the CLIENTXCMS project.
- * Year: 2026 — v2.16 release.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
  */
 
 namespace App\Extensions;
@@ -11,30 +23,6 @@ use App\DTO\Core\Extensions\ExtensionDTO;
 use Composer\Autoload\ClassLoader;
 use Illuminate\Foundation\Application;
 
-/**
- * v2.16 — Tiny try/catch wrapper around extension boot so a broken
- * extension can never bring the whole app down.
- *
- * Operators occasionally upload an extension whose service provider
- * throws on register/boot — missing dependency, fatal in a constructor,
- * incompatible PHP / Laravel version. Before v2.16 that crash bubbled
- * up to the kernel and the customer area went 500. With this
- * sandbox:
- *
- *   1. The faulty extension is automatically marked disabled in
- *      `bootstrap/cache/extensions.json` so the NEXT request boots
- *      fine without the broken code.
- *   2. The error is captured and surfaced in `/admin/extensions` via
- *      the `boot_error` metadata so the operator knows what to fix.
- *   3. The current request keeps going — the rest of the extensions
- *      and the core app boot normally.
- *
- * A "safe boot" mode is also available via the APP_SAFE_BOOT env var:
- * when set to "true" the sandbox skips every extension during autoload
- * (and ExtensionManager::readExtensionJson() honours it too). Useful
- * when the operator needs to log in to fix a broken extension that's
- * preventing /admin/extensions itself from rendering.
- */
 class ExtensionSandbox
 {
     public const SAFE_BOOT_ENV = 'APP_SAFE_BOOT';
