@@ -2,7 +2,19 @@
 
 /*
  * This file is part of the CLIENTXCMS project.
- * Year: 2026 — v2.16 release.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
  */
 
 namespace App\Console\Commands\Helpdesk;
@@ -12,18 +24,7 @@ use App\Services\Helpdesk\SlaService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
-/**
- * v2.16 — flags newly-breached SLA tickets so staff can react. Each
- * matching ticket gets `sla_breached_notified_at = now()` so we don't
- * fire a notification more than once.
- *
- * The actual notification channel is intentionally pluggable: by
- * default we just emit a structured log line that monitoring stacks
- * pick up. An extension or installation hook can listen for the
- * model event and wire Slack / Discord / mail.
- *
- * Schedule it every 5 minutes in app/Console/Kernel.
- */
+
 class NotifySlaBreachCommand extends Command
 {
     protected $signature = 'helpdesk:notify-sla-breach

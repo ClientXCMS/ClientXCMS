@@ -65,8 +65,12 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         $params = parent::getIndexParams($items, $translatePrefix);
         $ticketStatsService = new TicketStatisticsService;
 
-        $params['tickets_to_reply'] = $ticketStatsService->getTicketsToReply();
-        $params['active_tickets'] = $ticketStatsService->getActiveTickets();
+        $priorityTickets = $ticketStatsService->getPriorityTickets();
+        $priorityIds = $priorityTickets->pluck('id')->toArray();
+
+        $params['priority_tickets'] = $priorityTickets;
+        $params['tickets_to_reply'] = $ticketStatsService->getTicketsToReply()->filter(fn($ticket) => !in_array($ticket->id, $priorityIds));
+        $params['active_tickets'] = $ticketStatsService->getActiveTickets()->filter(fn($ticket) => !in_array($ticket->id, $priorityIds));
 
         return $params;
     }
@@ -82,6 +86,7 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         $tickets_last_week = SupportTicket::where('created_at', '>=', now()->subWeek())->count();
         $widgets = collect();
         $stats = $ticketStatsService->getClosedTicketStats();
+        $slaStats = $ticketStatsService->getSlaStats();
 
         $widgets->push(new AdminCountWidget('pending_tickets', 'bi bi-ticket-detailed', 'helpdesk.admin.widgets.pending_tickets', $pending_tickets, true));
         $widgets->push(new AdminCountWidget('active_tickets', 'bi bi-headset', 'helpdesk.admin.widgets.active_tickets', $active_tickets, true));
@@ -89,6 +94,8 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
         $widgets->push(new AdminCountWidget('tickets_last_week', 'bi bi-calendar-week', 'helpdesk.admin.widgets.tickets_last_week', $tickets_last_week, true));
         $widgets->push(new AdminCountWidget('avg_reply_time', 'bi bi-clock-history', 'helpdesk.admin.widgets.avg_reply_time', $stats['avg_reply_time'], true, true));
         $widgets->push(new AdminCountWidget('avg_resolution_time', 'bi bi-stopwatch', 'helpdesk.admin.widgets.avg_resolution_time', $stats['avg_resolution_time'], true, true));
+        $widgets->push(new AdminCountWidget('sla_compliance_rate', 'bi bi-shield-check', 'helpdesk.admin.widgets.sla_compliance_rate', $slaStats['compliance_rate'] . '%', true, true));
+        $widgets->push(new AdminCountWidget('sla_breached_count', 'bi bi-exclamation-octagon text-red-500', 'helpdesk.admin.widgets.sla_breached_count', $slaStats['open_breached_count'], true, true));
 
         $data = [
             'helpdesk_widgets' => $widgets,
@@ -233,8 +240,6 @@ class TicketController extends \App\Http\Controllers\Admin\AbstractCrudControlle
             $ticket->addAttachment($attachment, $ticket->customer_id, auth('admin')->id());
         }
 
-        // v2.16 — stop the first-response SLA clock the first time a
-        // staff member replies. Safe to call repeatedly.
         if ($message instanceof \App\Models\Helpdesk\SupportMessage) {
             app(\App\Services\Helpdesk\SlaService::class)
                 ->recordFirstResponse($ticket->refresh(), $message);

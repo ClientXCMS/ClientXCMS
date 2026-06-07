@@ -190,7 +190,6 @@ class SupportTicket extends Model
         'closed_by_id',
         'assigned_to',
         'uuid',
-        // v2.16 — SLA tracking
         'first_response_due_at',
         'resolution_due_at',
         'first_response_at',
@@ -200,7 +199,6 @@ class SupportTicket extends Model
     protected $casts = [
         'staff_subscribers' => 'array',
         'closed_at' => 'datetime',
-        // v2.16 — SLA timestamps
         'first_response_due_at' => 'datetime',
         'resolution_due_at' => 'datetime',
         'first_response_at' => 'datetime',
@@ -362,9 +360,6 @@ class SupportTicket extends Model
             }
         }
 
-        // v2.16 — let callers (controllers, SLA service) interact with the
-        // newly-persisted message. Returning null is reserved for the
-        // spam-guard short-circuit above.
         return $message;
     }
 

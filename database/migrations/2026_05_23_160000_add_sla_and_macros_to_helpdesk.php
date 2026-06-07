@@ -11,9 +11,6 @@
  *        resolution_due_at and first_response_at so we can highlight
  *        tickets at risk and stop the clock when staff replies.
  *
- *   2. support_macros — pre-baked staff replies (a.k.a. "canned
- *      responses"). Each macro can target a list of departments
- *      (JSON), so the operator can curate per-team libraries.
  *
  * All columns are nullable / additive — removing the migration leaves
  * existing tickets and departments untouched.
@@ -54,28 +51,10 @@ return new class extends Migration
                 }
             });
         }
-
-        if (! Schema::hasTable('support_macros')) {
-            Schema::create('support_macros', function (Blueprint $t) {
-                $t->id();
-                $t->string('name', 120);
-                $t->string('shortcut', 40)->nullable()->index(); // e.g. ":welcome"
-                $t->text('content'); // markdown body, supports %fullname% %service_name% %ticket_id%
-                $t->json('department_ids')->nullable(); // null = available everywhere
-                $t->unsignedInteger('use_count')->default(0);
-                $t->boolean('enabled')->default(true)->index();
-                $t->foreignId('created_by_id')->nullable()->constrained('admins')->nullOnDelete();
-                $t->timestamps();
-            });
-        }
     }
 
     public function down(): void
     {
-        if (Schema::hasTable('support_macros')) {
-            Schema::dropIfExists('support_macros');
-        }
-
         if (Schema::hasTable('support_tickets')) {
             Schema::table('support_tickets', function (Blueprint $t) {
                 foreach (['first_response_due_at', 'resolution_due_at', 'first_response_at', 'sla_breached_notified_at'] as $col) {

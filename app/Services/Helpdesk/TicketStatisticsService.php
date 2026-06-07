@@ -31,7 +31,7 @@ class TicketStatisticsService
     {
         $closedTickets = SupportTicket::where('status', SupportTicket::STATUS_CLOSED)
             ->whereNotNull('closed_at')
-            ->with(['messages' => fn($q) => $q->orderBy('created_at', 'asc')])
+            ->select('id', 'created_at', 'first_response_at', 'closed_at')
             ->get();
 
         $totalReplySeconds = 0;
@@ -40,10 +40,11 @@ class TicketStatisticsService
         $closedTicketCount = $closedTickets->count();
 
         foreach ($closedTickets as $ticket) {
-            $totalResolutionSeconds += $ticket->closed_at->diffInSeconds($ticket->created_at);
-            $firstAdminMessage = $ticket->messages->firstWhere('admin_id', '!=', null);
-            if ($firstAdminMessage) {
-                $totalReplySeconds += $firstAdminMessage->created_at->diffInSeconds($ticket->created_at);
+            if ($ticket->closed_at && $ticket->created_at) {
+                $totalResolutionSeconds += $ticket->closed_at->diffInSeconds($ticket->created_at);
+            }
+            if ($ticket->first_response_at && $ticket->created_at) {
+                $totalReplySeconds += $ticket->first_response_at->diffInSeconds($ticket->created_at);
                 $ticketsWithAdminReply++;
             }
         }
@@ -79,6 +80,67 @@ class TicketStatisticsService
             ->allowedSorts(['updated_at'])
             ->get()
             ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()));
+    }
+
+    public function getPriorityTickets()
+    {
+        $now = now();
+        return QueryBuilder::for(SupportTicket::class)
+            ->where('status', SupportTicket::STATUS_OPEN)
+            ->with('customer:id,firstname,lastname', 'department:id,name')
+            ->get()
+            ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()))
+            ->map(function ($ticket) use ($now) {
+                $slaBreached = false;
+                $slaDueSeconds = null;
+                $priorityWeight = 0;
+
+                // Priority mapping
+                if ($ticket->priority === 'high') {
+                    $priorityWeight = 30;
+                } elseif ($ticket->priority === 'medium') {
+                    $priorityWeight = 20;
+                } else {
+                    $priorityWeight = 10;
+                }
+
+                if ($ticket->first_response_at === null && $ticket->first_response_due_at !== null) {
+                    $slaDueSeconds = $now->diffInSeconds($ticket->first_response_due_at, false);
+                    if ($slaDueSeconds < 0) {
+                        $slaBreached = true;
+                        $priorityWeight = 1000 + abs($slaDueSeconds);
+                    } else {
+                        // Due soon (within 24 hours gets boosted)
+                        if ($slaDueSeconds < 86400) {
+                            $priorityWeight = 500 + ((86400 - $slaDueSeconds) / 100);
+                        } else {
+                            $priorityWeight = 100;
+                        }
+                    }
+                } elseif ($ticket->resolution_due_at !== null) {
+                    $slaDueSeconds = $now->diffInSeconds($ticket->resolution_due_at, false);
+                    if ($slaDueSeconds < 0) {
+                        $slaBreached = true;
+                        $priorityWeight = 800 + abs($slaDueSeconds);
+                    } else {
+                        if ($slaDueSeconds < 86400) {
+                            $priorityWeight = 400 + ((86400 - $slaDueSeconds) / 100);
+                        } else {
+                            $priorityWeight = 80;
+                        }
+                    }
+                }
+
+                $ticket->sla_breached = $slaBreached;
+                $ticket->sla_due_seconds = $slaDueSeconds;
+                $ticket->priority_weight = $priorityWeight;
+
+                return $ticket;
+            })
+            ->filter(function ($ticket) {
+                return $ticket->priority === 'high' || $ticket->sla_due_seconds !== null;
+            })
+            ->sortByDesc('priority_weight');
     }
 
     public function getStaffMessageCounts()
@@ -145,5 +207,58 @@ class TicketStatisticsService
         }
 
         return json_encode([$data, $messages]);
+    }
+
+    public function getSlaStats(): array
+    {
+        $now = Carbon::now();
+
+        // 1. Open/active tickets that have already breached SLA
+        $openBreachedCount = SupportTicket::where('status', '!=', SupportTicket::STATUS_CLOSED)
+            ->where(function ($q) use ($now) {
+                $q->where(function ($q2) use ($now) {
+                    $q2->whereNull('first_response_at')
+                        ->whereNotNull('first_response_due_at')
+                        ->where('first_response_due_at', '<', $now);
+                })->orWhere(function ($q2) use ($now) {
+                    $q2->whereNotNull('resolution_due_at')
+                        ->where('resolution_due_at', '<', $now);
+                });
+            })->count();
+
+        // 2. Closed tickets with SLA targets, checking if they were met or breached
+        $closedTickets = SupportTicket::where('status', SupportTicket::STATUS_CLOSED)
+            ->where(function ($q) {
+                $q->whereNotNull('first_response_due_at')
+                    ->orWhereNotNull('resolution_due_at');
+            })->get();
+
+        $closedTotal = $closedTickets->count();
+        $closedBreached = 0;
+
+        foreach ($closedTickets as $ticket) {
+            $breached = false;
+            if ($ticket->first_response_due_at !== null) {
+                $respAt = $ticket->first_response_at ?? $ticket->closed_at;
+                if ($respAt !== null && $respAt->greaterThan($ticket->first_response_due_at)) {
+                    $breached = true;
+                }
+            }
+            if ($ticket->resolution_due_at !== null) {
+                if ($ticket->closed_at !== null && $ticket->closed_at->greaterThan($ticket->resolution_due_at)) {
+                    $breached = true;
+                }
+            }
+            if ($breached) {
+                $closedBreached++;
+            }
+        }
+
+        $complianceRate = $closedTotal > 0 ? round((($closedTotal - $closedBreached) / $closedTotal) * 100) : 100;
+
+        return [
+            'open_breached_count' => $openBreachedCount,
+            'compliance_rate' => $complianceRate,
+        ];
     }
 }
