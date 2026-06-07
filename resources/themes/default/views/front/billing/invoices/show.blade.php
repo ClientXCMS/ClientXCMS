@@ -251,6 +251,54 @@
                     </div>
                 </div>
             @endif
+
+            @if ($invoice->creditNotes->isNotEmpty())
+                <div class="flex flex-col mt-4">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ __('client.invoices.credit_notes') }}</h3>
+                    <div class="-m-1.5 overflow-x-auto">
+                        <div class="p-1.5 min-w-full inline-block align-middle">
+                            <div class="overflow-hidden">
+                                <div class="border border-gray-200 p-2 rounded-lg space-y-2 dark:border-gray-700 mt-2">
+                                    <div class="overflow-hidden">
+                                        <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                                            <thead>
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">
+                                                    {{ __('client.invoices.credit_note_number') }}</th>
+                                                <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">
+                                                    {{ __('client.invoices.amount') }}</th>
+                                                <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">
+                                                    {{ __('client.invoices.reason') }}</th>
+                                                <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">
+                                                    {{ __('client.invoices.date') }}</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                                            @foreach ($invoice->creditNotes as $creditNote)
+                                            <tr>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">
+                                                    {{ $creditNote->credit_note_number }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
+                                                    {{ formatted_price($creditNote->amount + $creditNote->tax, $invoice->currency) }}
+                                                </td>
+                                                <td class="px-6 py-4 text-sm text-gray-800 dark:text-neutral-200">
+                                                    {{ $creditNote->reason ?? '-' }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
+                                                    {{ $creditNote->created_at->format('d/m/y H:i') }}
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
                 <!-- End Table -->
 
                 <!-- Flex -->

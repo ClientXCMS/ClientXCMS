@@ -12,7 +12,7 @@
     </div>
 </div>
 
-<div class="mt-8 grid sm:grid-cols-2 gap-3">
+<div class="mt-4 grid sm:grid-cols-2 gap-3">
     @if ($customer)
     <a href="{{ route('admin.customers.show', ['customer' => $customer]) }}" target="_blank">
     @endif

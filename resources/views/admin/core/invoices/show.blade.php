@@ -40,6 +40,119 @@
             @endphp
         @endif
         @include('admin/shared/alerts')
+        <div class="card mb-4 card-body">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl font-bold">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                            {{ __('global.invoice') }} #{{ $invoice->invoice_number ?? $invoice->id }}
+                            <x-badge-state state="{{ $invoice->status }}"></x-badge-state>
+                        </h2>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            @if ($invoice->customer)
+                                <a href="{{ route('admin.customers.show', ['customer' => $invoice->customer]) }}" class="hover:underline">
+                                    <i class="bi bi-person mr-1"></i>{{ $invoice->customer->fullname }}
+                                </a>
+                            @else
+                                {{ __('admin.customers.no_customer') }}
+                            @endif
+                        </p>
+                    </div>
+                </div>
+
+                @if (
+                    !$invoice->isDraft() ||
+                        staff_has_permission('admin.create_invoices') ||
+                        (staff_has_permission('admin.manage_invoices') && $invoice->canDelete()))
+                    <div class="flex items-center gap-2">
+                        <div class="hs-dropdown relative inline-flex">
+                            <button id="hs-dropdown-with-title" type="button" class="hs-dropdown-toggle btn btn-secondary"
+                                aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
+                                {{ __('global.actions') }}
+                                <i class="bi bi-caret-down-fill hs-dropdown-open:rotate-180 ml-1"></i>
+                            </button>
+
+                            <div style="z-index: 10000"
+                                class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-60 bg-white shadow-md rounded-lg mt-2 divide-y divide-gray-200 dark:bg-gray-800 dark:border dark:border-neutral-700 dark:divide-neutral-700"
+                                role="menu">
+                                <div class="p-1 space-y-0.5">
+                                    @if (!$invoice->isDraft())
+                                        <button class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 text-left cursor-pointer" type="button"
+                                            data-hs-overlay="#metadata-overlay">
+                                            <i class="bi bi-database mr-2"></i>
+                                            {{ __('admin.metadata.title') }}
+                                        </button>
+                                        <form method="POST"
+                                            action="{{ route($routePath . '.regenerate_pdf', ['invoice' => $invoice]) }}"
+                                            class="contents">
+                                            @csrf
+                                            <button type="submit" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 text-left">
+                                                <i class="bi bi-file-earmark-pdf-fill mr-2"></i>
+                                                {{ __($translatePrefix . '.regenerate_pdf') }}
+                                            </button>
+                                        </form>
+                                        <a href="{{ route($routePath . '.notify', ['invoice' => $invoice]) }}"
+                                            class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700">
+                                            <i class="bi bi-envelope-check-fill mr-2"></i>
+                                            {{ __($translatePrefix . '.notify') }}
+                                        </a>
+                                        @if (staff_has_permission('admin.manage_invoices'))
+                                            <button class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 text-left cursor-pointer" type="button"
+                                                data-hs-overlay="#credit-note-overlay">
+                                                <i class="bi bi-file-earmark-diff mr-2"></i>
+                                                {{ __('admin.credit_notes.issue_credit_note') }}
+                                            </button>
+                                        @endif
+                                        <a href="{{ route($routePath . '.pdf', ['invoice' => $invoice]) }}" target="_blank">
+                                            <button type="button" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700">
+                                                <i class="bi bi-file-earmark-pdf-fill mr-2"></i>
+                                                {{ __('client.invoices.download') }}
+                                            </button>
+                                        </a>
+                                    @endif
+
+                                    @if ($invoice->isDraft() && staff_has_permission('admin.create_invoices'))
+                                        <form method="POST" action="{{ route($routePath . '.validate', ['invoice' => $invoice]) }}" class="contents">
+                                            @csrf
+                                            <button type="submit" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 text-left">
+                                                <i class="bi bi-check-circle-fill text-success mr-2"></i>
+                                                {{ __($translatePrefix . '.draft.validatebtn') }}
+                                            </button>
+                                        </form>
+                                    @elseif ($invoice->status == \App\Models\Billing\Invoice::STATUS_PENDING && staff_has_permission('admin.create_invoices'))
+                                        <form method="POST" action="{{ route($routePath . '.edit', ['invoice' => $invoice]) }}" class="contents">
+                                            @csrf
+                                            <button type="submit" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 text-left">
+                                                <i class="bi bi-pen mr-2"></i>
+                                                {{ __($translatePrefix . '.edit') }}
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+
+                                @if (staff_has_permission('admin.manage_invoices') && $invoice->canDelete())
+                                    <div class="p-1 space-y-0.5">
+                                        <form method="POST" action="{{ route($routePath . '.destroy', ['invoice' => $invoice]) }}" onsubmit="return confirmation();" class="contents">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-red-600 hover:bg-gray-100 dark:text-red-500 dark:hover:bg-gray-700 text-left">
+                                                <i class="bi bi-trash mr-2"></i>
+                                                {{ __('global.delete') }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+
         <div class="flex flex-col md:flex-row gap-4">
             <div class="md:w-2/3">
                 <div class="card">
@@ -171,24 +284,6 @@
                                 ])
                             </div>
                         </div>
-                        @if (!$invoice->isDraft())
-                            <button class="btn btn-secondary text-left mt-2" type="button"
-                                data-hs-overlay="#metadata-overlay">
-                                <i class="bi bi-database mr-2"></i>
-                                {{ __('admin.metadata.title') }}
-                            </button>
-                            <form method="POST" action="{{ route($routePath . '.regenerate_pdf', ['invoice' => $invoice]) }}" class="contents">
-                                @csrf
-                                <button type="submit" class="btn btn-warning mt-2 w-full text-left">
-                                    <i class="bi bi-file-earmark-pdf-fill mr-3"></i>
-                                    {{ __($translatePrefix . '.regenerate_pdf') }}
-                                </button>
-                            </form>
-                            <a href="{{ route($routePath . '.notify', ['invoice' => $invoice]) }}"
-                                class="btn btn-info mt-2">
-                                <i class="bi bi-envelope-check-fill mr-3"></i>
-                                {{ __($translatePrefix . '.notify') }}</a>
-                        @endif
                     </form>
 
                 </div>
@@ -214,24 +309,6 @@
                 @endif
 
                 @stack('invoice-sidebar')
-
-                @if ($invoice->isDraft() && staff_has_permission('admin.create_invoices'))
-                    <form method="POST" action="{{ route($routePath . '.validate', ['invoice' => $invoice]) }}">
-                        @csrf
-                        <button class="btn btn-secondary w-full mt-2">
-                            <i class="bi bi-check-circle-fill text-success"></i>
-
-                            {{ __($translatePrefix . '.draft.validatebtn') }}</button>
-                    </form>
-                @elseif ($invoice->status == \App\Models\Billing\Invoice::STATUS_PENDING && staff_has_permission('admin.create_invoices'))
-                    <form method="POST" action="{{ route($routePath . '.edit', ['invoice' => $invoice]) }}">
-                        @csrf
-                        <button class="btn btn-secondary w-full mt-2">
-                            <i class="bi bi-pen"></i>
-
-                            {{ __($translatePrefix . '.edit') }}</button>
-                    </form>
-                @endif
             </div>
             @include('admin/metadata/overlay', [
                 'item' => $invoice,
@@ -239,6 +316,63 @@
             ])
             @if ($invoice->isDraft())
                 @include('admin/core/invoices/draftoverlay', ['invoice' => $invoice])
+            @endif
+            @if (staff_has_permission('admin.manage_invoices') && !$invoice->isDraft())
+                <div id="credit-note-overlay"
+                    class="hs-overlay hs-overlay-open:translate-x-0 hidden translate-x-full fixed top-0 end-0 transition-all duration-300 transform h-full max-w-sm w-full z-[80] bg-white border-s dark:bg-gray-800 dark:border-gray-700"
+                    tabindex="-1">
+                    <div class="flex justify-between items-center py-3 px-4 border-b dark:border-gray-700">
+                        <h3 class="font-bold text-gray-800 dark:text-white">
+                            {{ __('admin.credit_notes.issue_credit_note') }}
+                        </h3>
+                        <button type="button"
+                            class="flex justify-center items-center w-7 h-7 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                            data-hs-overlay="#credit-note-overlay">
+                            <span class="sr-only">{{ __('global.closemodal') }}</span>
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <form method="POST"
+                            action="{{ route('admin.customers.credit_notes.store', ['customer' => $invoice->customer]) }}">
+                            @csrf
+                            <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
+
+                            <div class="mb-4">
+                                <label
+                                    class="block text-sm font-medium mb-2 dark:text-white">{{ __('admin.credit_notes.original_invoice') }}</label>
+                                <input type="text"
+                                    class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm bg-gray-100 dark:bg-slate-700 dark:border-gray-600 dark:text-gray-400"
+                                    readonly
+                                    value="#{{ $invoice->invoice_number }} ({{ formatted_price($invoice->total, $invoice->currency) }})">
+                            </div>
+
+                            <div class="mb-4">
+                                @include('admin/shared/input', [
+                                    'name' => 'amount',
+                                    'label' => __('admin.credit_notes.amount'),
+                                    'type' => 'number',
+                                    'value' => old('amount', $invoice->total),
+                                    'step' => '0.01',
+                                    'required' => true,
+                                ])
+                            </div>
+
+                            <div class="mb-4">
+                                @include('admin/shared/textarea', [
+                                    'name' => 'reason',
+                                    'label' => __('admin.credit_notes.reason'),
+                                    'value' => old('reason'),
+                                    'required' => false,
+                                ])
+                            </div>
+
+                            <button type="submit" class="w-full btn btn-indigo-600">
+                                {{ __('global.create') }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
             @endif
         </div>
     @endsection

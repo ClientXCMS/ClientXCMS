@@ -193,8 +193,6 @@ class Invoice extends Model implements SupportRelateItemInterface
         'uuid',
         'payment_method_id',
         'balance',
-        // v2.16 — SHA-256 of the latest generated PDF, proves the
-        // delivered document has not been tampered with.
         'pdf_sha256',
     ];
 
@@ -262,6 +260,11 @@ class Invoice extends Model implements SupportRelateItemInterface
     public function items()
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    public function creditNotes()
+    {
+        return $this->hasMany(CreditNote::class);
     }
 
     public function customer()
@@ -404,14 +407,9 @@ class Invoice extends Model implements SupportRelateItemInterface
         if ($save) {
             $bytes = $pdf->output();
             Storage::put($filename, $bytes);
-            // v2.16 — record the SHA-256 of the generated PDF so we can
-            // later prove the file served to the customer is the one we
-            // originally produced. quietly() avoids triggering the
-            // updated-observer for what is effectively a cache.
             try {
                 $this->forceFill(['pdf_sha256' => hash('sha256', $bytes)])->saveQuietly();
             } catch (\Throwable $e) {
-                // Backfill is best-effort — never let a hash issue block PDF generation.
                 logger()->warning('billing.invoice.pdf_hash_failed', [
                     'invoice_id' => $this->id,
                     'error' => $e->getMessage(),
@@ -498,7 +496,7 @@ class Invoice extends Model implements SupportRelateItemInterface
     }
 
     /**
-     * v2.16 — Atomic invoice number allocation.
+     * Atomic invoice number allocation.
      *
      * Delegates to {@see \App\Services\Billing\InvoiceSequenceService}
      * which uses a row-level locked counter. The previous
