@@ -2,7 +2,19 @@
 
 /*
  * This file is part of the CLIENTXCMS project.
- * Year: 2026 — v2.16 release.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
  */
 
 namespace App\Services\Auth\Sms;
@@ -36,6 +48,11 @@ class LogSmsGateway implements SmsGatewayContract
         return 'log';
     }
 
+    public function rules(array $data): array
+    {
+        return [];
+    }
+
     private function mask(string $to): string
     {
         $len = strlen($to);
@@ -43,6 +60,6 @@ class LogSmsGateway implements SmsGatewayContract
             return str_repeat('*', $len);
         }
 
-        return substr($to, 0, 2).str_repeat('*', max(0, $len - 4)).substr($to, -2);
+        return substr($to, 0, 2) . str_repeat('*', max(0, $len - 4)) . substr($to, -2);
     }
 }

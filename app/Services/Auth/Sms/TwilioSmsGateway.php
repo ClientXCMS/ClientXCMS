@@ -2,7 +2,19 @@
 
 /*
  * This file is part of the CLIENTXCMS project.
- * Year: 2026 — v2.16 release.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
  */
 
 namespace App\Services\Auth\Sms;
@@ -43,12 +55,21 @@ class TwilioSmsGateway implements SmsGatewayContract
             ]);
 
         if (! $response->successful()) {
-            throw new \RuntimeException('Twilio SMS send failed: HTTP '.$response->status());
+            throw new \RuntimeException('Twilio SMS send failed: HTTP ' . $response->status());
         }
     }
 
     public function name(): string
     {
         return 'twilio';
+    }
+
+    public function rules(array $data): array
+    {
+        return [
+            'mfa_sms_twilio_sid' => 'required|string',
+            'mfa_sms_twilio_token' => 'required|string',
+            'mfa_sms_twilio_from' => 'required|string',
+        ];
     }
 }

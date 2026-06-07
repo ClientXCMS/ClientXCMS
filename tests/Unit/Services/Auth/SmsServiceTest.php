@@ -43,6 +43,7 @@ class SmsServiceTest extends TestCase
         $fake = new class implements SmsGatewayContract {
             public function send(string $to, string $message): void {}
             public function name(): string { return 'fake'; }
+            public function rules(array $data): array { return []; }
         };
         SmsService::extend('fake', fn () => $fake);
         Setting::updateSettings(['mfa_sms_driver' => 'fake']);
