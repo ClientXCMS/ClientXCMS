@@ -124,6 +124,9 @@ class CustomerController extends AbstractCrudController
             'invoices' => CustomerAccountAccess::INVOICE_PERMISSIONS,
         ];
 
+        $params['creditNotes'] = $customer->creditNotes()->orderBy('id', 'desc')->paginate(20, ['*'], 'credit_notes')->appends(request()->query());
+        $params['invoices_list'] = $customer->invoices()->orderBy('id', 'desc')->get();
+
         return $this->showView($params);
     }
 
@@ -134,10 +137,6 @@ class CustomerController extends AbstractCrudController
             $filters = [$this->filterField => $filters];
         }
         $checkedFilters = [];
-        // v2.16 — trans('global.states') returns the key string when no
-        // translation file is loaded (e.g. fresh CI run before
-        // translations:import succeeds). Guard against that case so the
-        // controller doesn't 500 on the customer detail page.
         $statesTranslations = trans('global.states');
         $values = is_array($statesTranslations) ? array_keys($statesTranslations) : [];
         foreach ($filters as $field => $value) {

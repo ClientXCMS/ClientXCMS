@@ -375,6 +375,11 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         return $this->hasMany(Invoice::class, 'customer_id');
     }
 
+    public function creditNotes()
+    {
+        return $this->hasMany(\App\Models\Billing\CreditNote::class, 'customer_id');
+    }
+
     public function tickets()
     {
         return $this->hasMany(SupportTicket::class, 'customer_id');

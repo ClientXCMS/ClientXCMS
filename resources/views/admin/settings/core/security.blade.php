@@ -46,8 +46,24 @@
                 cloudflare.style.display = 'none';
             }
         };
-        document.addEventListener('DOMContentLoaded', updateCaptchaLabel);
+
+        const updateSmsLabel = function() {
+            const driver = document.querySelector('select[name="mfa_sms_driver"]').value;
+            const twilioFields = document.querySelectorAll('.sms-twilio-field');
+
+            if (driver === 'twilio') {
+                twilioFields.forEach(el => el.style.display = 'block');
+            } else {
+                twilioFields.forEach(el => el.style.display = 'none');
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCaptchaLabel();
+            updateSmsLabel();
+        });
         document.querySelector('select[name="captcha_driver"]').addEventListener('change', updateCaptchaLabel);
+        document.querySelector('select[name="mfa_sms_driver"]').addEventListener('change', updateSmsLabel);
     </script>
 @endsection
 @section('setting')
@@ -79,6 +95,15 @@
                     'label' => __('admin.settings.core.security.fields.gdrp_cookies_privacy_link'),
                     'name' => 'gdrp_cookies_privacy_link',
                     'value' => setting('gdrp_cookies_privacy_link', 'https://clientxcms.com/privacy'),
+            ])
+
+            @include('admin/shared/input', [
+                    'label' => __('admin.settings.core.security.fields.gdpr_purge_inactive_days'),
+                    'name' => 'gdpr_purge_inactive_days',
+                    'value' => setting('gdpr_purge_inactive_days', 0),
+                    'type' => 'number',
+                    'min' => 0,
+                    'help' => __('admin.settings.core.security.fields.gdpr_purge_inactive_days_help')
             ])
             <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400 mt-2">{{ __('admin.settings.core.security.captcha.title') }}</h3>
 
@@ -112,6 +137,41 @@
                 <p class="text-sm text-gray-500 mt-2" id="captcha-help-hcaptcha">{!! __('admin.settings.core.security.captcha.fields.driver_hcaptcha_help', ['url' => 'www.hcaptcha.com/']) !!}</p>
                 <p class="text-sm text-gray-500 mt-2" id="captcha-help-cloudflare">{!! __('admin.settings.core.security.captcha.fields.driver_cloudflare_help', ['url' => 'dash.cloudflare.com/?to=/:account/turnstile']) !!}</p>
             </div>
+            
+            <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400 mt-2">{{ __('admin.settings.core.security.sms.title') }}</h3>
+
+            <div class="grid grid-cols-4 gap-4">
+                <div>
+                @include('admin/shared/select', [
+                    'label' => __('admin.settings.core.security.sms.fields.driver'),
+                    'name' => 'mfa_sms_driver',
+                    'value' => setting('mfa_sms_driver', 'log'),
+                    'options' => $smsDrivers,
+                ])
+                </div>
+                <div class="sms-twilio-field">
+                @include('admin/shared/password', [
+                    'label' => __('admin.settings.core.security.sms.fields.twilio_sid'),
+                    'name' => 'mfa_sms_twilio_sid',
+                    'value' => setting('mfa_sms_twilio_sid'),
+                ])
+                </div>
+                <div class="sms-twilio-field">
+                @include('admin/shared/password', [
+                    'label' => __('admin.settings.core.security.sms.fields.twilio_token'),
+                    'name' => 'mfa_sms_twilio_token',
+                    'value' => setting('mfa_sms_twilio_token'),
+                ])
+                </div>
+                <div class="sms-twilio-field">
+                @include('admin/shared/input', [
+                    'label' => __('admin.settings.core.security.sms.fields.twilio_from'),
+                    'name' => 'mfa_sms_twilio_from',
+                    'value' => setting('mfa_sms_twilio_from'),
+                ])
+                </div>
+            </div>
+
             <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400 my-2">{{ __('admin.settings.core.security.auth') }}</h3>
 
             @include('admin/shared/input', [

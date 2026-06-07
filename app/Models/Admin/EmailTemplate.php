@@ -96,10 +96,6 @@ class EmailTemplate extends Model
             ->lines($parts)
             ->salutation(self::replacePlaceholders(self::bladeRender(setting('mail_salutation'), $context), $notifiable));
 
-        // v2.16 — only attach a CTA when BOTH text and URL are populated.
-        // Previously ->action() was invoked unconditionally, which produced
-        // empty buttons in manually-sent admin emails when the URL field
-        // was left blank.
         $hasCta = ! empty($url) && ! empty($template->button_text);
         if ($hasCta) {
             $mail->action($template->button_text, $url);

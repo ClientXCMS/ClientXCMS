@@ -40,14 +40,22 @@ class SettingsSecurityController
             'hcaptcha' => 'hCaptcha',
             'cloudflare' => 'Cloudflare turnstile',
         ];
+        $smsDrivers = \App\Services\Auth\SmsService::availableDrivers();
 
-        return view('admin.settings.core.security', compact('drivers', 'captcha'));
+        return view('admin.settings.core.security', compact('drivers', 'captcha', 'smsDrivers'));
     }
 
     public function storeSecurity(Request $request)
     {
         staff_aborts_permission(Permission::MANAGE_SETTINGS);
-        $data = $request->validate([
+        $smsDriver = $request->input('mfa_sms_driver', 'log');
+        $smsRules = [];
+        try {
+            $gateway = \App\Services\Auth\SmsService::make($smsDriver);
+            $smsRules = $gateway->rules($request->all());
+        } catch (\Throwable $e) {}
+
+        $rules = [
             'hash_driver' => 'required|string',
             'allow_reset_password' => 'nullable|string|in:true,false',
             'allow_registration' => 'nullable|string|in:true,false',
@@ -63,7 +71,12 @@ class SettingsSecurityController
             'captcha_site_key' => [new RequiredIf($request->captcha_driver != 'none')],
             'captcha_secret_key' => [new RequiredIf($request->captcha_driver != 'none')],
             'gdrp_cookies_privacy_link' => ['nullable', 'string', 'url'],
-        ]);
+            'gdpr_purge_inactive_days' => ['nullable', 'integer', 'min:0'],
+            'mfa_sms_driver' => 'required|string',
+        ];
+
+        $data = $request->validate(array_merge($rules, $smsRules));
+
         EnvEditor::updateEnv([
             'HASH_DRIVER' => $data['hash_driver'],
             'ADMIN_PREFIX' => $data['admin_prefix'],

@@ -2,7 +2,19 @@
 
 /*
  * This file is part of the CLIENTXCMS project.
- * Year: 2026 — v2.16 release.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
  */
 
 namespace App\Notifications\Account;
@@ -13,7 +25,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * v2.16 — Pre-purge reminder for inactive accounts. Sent at D-30,
+ * Pre-purge reminder for inactive accounts. Sent at D-30,
  * D-7 and D-1 by {@see \App\Console\Commands\Purge\PurgeInactiveAccountsCommand}.
  *
  * The mail uses the standard Notification channel so operators that

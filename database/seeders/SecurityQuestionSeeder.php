@@ -42,12 +42,25 @@ class SecurityQuestionSeeder extends Seeder
             ['question' => 'install.security_questions.childhood_nickname', 'sort_order' => 6],
         ];
 
+        $originalLocale = app()->getLocale();
+        $locales = array_keys(\App\Services\Core\LocaleService::getLocales(false));
+
         foreach ($questions as $question) {
-            SecurityQuestion::create([
+            $item = SecurityQuestion::create([
                 'question' => $question['question'],
                 'is_active' => true,
                 'sort_order' => $question['sort_order'],
             ]);
+
+            foreach ($locales as $locale) {
+                $shortLocale = explode('_', $locale)[0];
+                app()->setLocale($shortLocale);
+                $translated = __($question['question']);
+                if ($translated !== $question['question']) {
+                    $item->saveTranslation('question', $locale, $translated);
+                }
+            }
         }
+        app()->setLocale($originalLocale);
     }
 }

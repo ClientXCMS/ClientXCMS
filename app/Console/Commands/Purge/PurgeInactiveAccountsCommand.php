@@ -2,7 +2,19 @@
 
 /*
  * This file is part of the CLIENTXCMS project.
- * Year: 2026 — v2.16 release.
+ * It is the property of the CLIENTXCMS association.
+ *
+ * Personal and non-commercial use of this source code is permitted.
+ * However, any use in a project that generates profit (directly or indirectly),
+ * or any reuse for commercial purposes, requires prior authorization from CLIENTXCMS.
+ *
+ * To request permission or for more information, please contact our support:
+ * https://clientxcms.com/client/support
+ *
+ * Learn more about CLIENTXCMS License at:
+ * https://clientxcms.com/eula
+ *
+ * Year: 2025
  */
 
 namespace App\Console\Commands\Purge;
@@ -14,26 +26,6 @@ use App\Services\Account\AccountDeletionService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
-/**
- * v2.16 — GDPR Article-5 (storage limitation) helper.
- *
- * Scans customers that:
- *   - have never paid an invoice (no `paid_at` on any of theirs)
- *   - have no active or pending service
- *   - have not logged in for `gdpr_purge_inactive_days` days
- *
- * For each match the command:
- *   1. sends a "your account is about to be deleted" reminder at D-30,
- *      D-7, D-1 (idempotent via metadata so we never spam).
- *   2. on D-0 deletes the account through {@see AccountDeletionService}
- *      (soft delete + dissociation of all references).
- *
- * Operators opt in by setting `gdpr_purge_inactive_days` to a positive
- * integer (default: 0 = disabled). Dry-run via --dry-run.
- *
- * Schedule it daily via app/Console/Kernel:
- *   $schedule->command('purge:inactive-accounts')->dailyAt('03:00');
- */
 class PurgeInactiveAccountsCommand extends Command
 {
     protected $signature = 'purge:inactive-accounts {--dry-run}';
