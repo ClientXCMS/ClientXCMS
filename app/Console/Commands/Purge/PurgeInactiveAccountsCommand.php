@@ -108,7 +108,6 @@ class PurgeInactiveAccountsCommand extends Command
             return;
         }
 
-        // Capture identity BEFORE delete; AccountDeletionService nulls fields.
         $payload = [
             'reason' => 'gdpr_inactive',
             'email' => $customer->email,

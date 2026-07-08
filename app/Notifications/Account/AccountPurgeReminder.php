@@ -19,6 +19,7 @@
 
 namespace App\Notifications\Account;
 
+use App\Models\Admin\EmailTemplate;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -49,14 +50,10 @@ class AccountPurgeReminder extends Notification implements ShouldQueue
         $appName = config('app.name', 'ClientXCMS');
         $loginUrl = url('/login');
 
-        $line1 = __('v216::gdpr.purge_reminder.line1', ['days' => $this->daysLeft, 'app' => $appName]);
-        $line2 = __('v216::gdpr.purge_reminder.line2');
-
-        return (new MailMessage)
-            ->subject(__('v216::gdpr.purge_reminder.subject', ['days' => $this->daysLeft]))
-            ->greeting(__('v216::gdpr.purge_reminder.greeting'))
-            ->line($line1)
-            ->line($line2)
-            ->action(__('v216::gdpr.purge_reminder.cta'), $loginUrl);
+        return EmailTemplate::getMailMessage('account_purge_reminder', $loginUrl, [
+            'days' => $this->daysLeft,
+            'app' => $appName,
+            'customer' => $notifiable,
+        ], $notifiable);
     }
 }

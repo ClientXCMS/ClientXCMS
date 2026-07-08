@@ -51,6 +51,23 @@
             "body": "Su cuenta ha sido reactivada. Puede iniciar sesión en su cuenta haciendo clic en el botón de abajo."
         }
     },
+    "account_purge_reminder": {
+        "fr_FR": {
+            "subject": "Compte inactif - suppression dans {{ $days }} jour(s)",
+            "button": "Se connecter",
+            "body": "Votre compte {{ $app }} est inactif et sa suppression est planifiée dans {{ $days }} jour(s) afin de respecter notre politique de conservation des données.\nConnectez-vous avant cette date pour confirmer votre activité et annuler cette suppression."
+        },
+        "en_GB": {
+            "subject": "Inactive account - deletion in {{ $days }} day(s)",
+            "button": "Log in",
+            "body": "Your {{ $app }} account has been inactive and is scheduled to be deleted in {{ $days }} day(s) to comply with our data-retention policy.\nLog in before this date to confirm your activity and cancel this deletion."
+        },
+        "es_ES": {
+            "subject": "Cuenta inactiva - eliminación en {{ $days }} día(s)",
+            "button": "Iniciar sesión",
+            "body": "Su cuenta {{ $app }} ha estado inactiva y está programada para eliminarse en {{ $days }} día(s) para cumplir con nuestra política de conservación de datos.\nInicie sesión antes de esta fecha para confirmar su actividad y cancelar esta eliminación."
+        }
+    },
     "customer_account_invitation": {
         "fr_FR": {
             "subject": "Invitation à accéder à un compte client",
