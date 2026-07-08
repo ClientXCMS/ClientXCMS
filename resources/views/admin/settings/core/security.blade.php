@@ -50,11 +50,18 @@
         const updateSmsLabel = function() {
             const driver = document.querySelector('select[name="mfa_sms_driver"]').value;
             const twilioFields = document.querySelectorAll('.sms-twilio-field');
+            const ovhFields = document.querySelectorAll('.sms-ovh-field');
 
             if (driver === 'twilio') {
                 twilioFields.forEach(el => el.style.display = 'block');
             } else {
                 twilioFields.forEach(el => el.style.display = 'none');
+            }
+
+            if (driver === 'ovh') {
+                ovhFields.forEach(el => el.style.display = 'block');
+            } else {
+                ovhFields.forEach(el => el.style.display = 'none');
             }
         };
 
@@ -168,6 +175,49 @@
                     'label' => __('admin.settings.core.security.sms.fields.twilio_from'),
                     'name' => 'mfa_sms_twilio_from',
                     'value' => setting('mfa_sms_twilio_from'),
+                ])
+                </div>
+                <div class="sms-ovh-field">
+                @include('admin/shared/select', [
+                    'label' => __('admin.settings.core.security.sms.fields.ovh_endpoint'),
+                    'name' => 'mfa_sms_ovh_endpoint',
+                    'value' => setting('mfa_sms_ovh_endpoint', 'ovh-eu'),
+                    'options' => \App\Services\Auth\Sms\OvhSmsGateway::endpoints(),
+                ])
+                </div>
+                <div class="sms-ovh-field">
+                @include('admin/shared/password', [
+                    'label' => __('admin.settings.core.security.sms.fields.ovh_application_key'),
+                    'name' => 'mfa_sms_ovh_application_key',
+                    'value' => setting('mfa_sms_ovh_application_key'),
+                ])
+                </div>
+                <div class="sms-ovh-field">
+                @include('admin/shared/password', [
+                    'label' => __('admin.settings.core.security.sms.fields.ovh_application_secret'),
+                    'name' => 'mfa_sms_ovh_application_secret',
+                    'value' => setting('mfa_sms_ovh_application_secret'),
+                ])
+                </div>
+                <div class="sms-ovh-field">
+                @include('admin/shared/password', [
+                    'label' => __('admin.settings.core.security.sms.fields.ovh_consumer_key'),
+                    'name' => 'mfa_sms_ovh_consumer_key',
+                    'value' => setting('mfa_sms_ovh_consumer_key'),
+                ])
+                </div>
+                <div class="sms-ovh-field">
+                @include('admin/shared/input', [
+                    'label' => __('admin.settings.core.security.sms.fields.ovh_service_name'),
+                    'name' => 'mfa_sms_ovh_service_name',
+                    'value' => setting('mfa_sms_ovh_service_name'),
+                ])
+                </div>
+                <div class="sms-ovh-field">
+                @include('admin/shared/input', [
+                    'label' => __('admin.settings.core.security.sms.fields.ovh_sender'),
+                    'name' => 'mfa_sms_ovh_sender',
+                    'value' => setting('mfa_sms_ovh_sender'),
                 ])
                 </div>
             </div>

@@ -19,6 +19,7 @@
 
 namespace App\Providers;
 
+use App\Services\Auth\Sms\OvhSmsGateway;
 use App\Services\Auth\Sms\TwilioSmsGateway;
 use App\Services\Auth\SmsService;
 use Illuminate\Support\ServiceProvider;
@@ -44,6 +45,12 @@ class MfaServiceProvider extends ServiceProvider
             'twilio',
             fn () => new TwilioSmsGateway,
             'Twilio',
+        );
+
+        SmsService::extend(
+            'ovh',
+            fn () => new OvhSmsGateway,
+            'OVHcloud',
         );
     }
 }
