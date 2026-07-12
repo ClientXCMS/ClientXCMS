@@ -94,6 +94,7 @@
             <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">
                 {{ __('provisioning.admin.settings.services.subscription') }}</h3>
             <div class="grid md:grid-cols-1 gap-4">
+                @if (config('features.domain_management'))
                 <div>
                     @include('admin/shared/checkbox', [
                         'label' => __('provisioning.admin.settings.services.fields.domain_search_enabled'),
@@ -101,6 +102,7 @@
                         'checked' => setting('domain_search_enabled', true),
                     ])
                 </div>
+                @endif
                 <div>
                     @include('admin/shared/input', [
                         'label' => __('provisioning.admin.settings.services.fields.max_subscription_tries'),
