@@ -32,6 +32,7 @@ use App\Services\Billing\InvoiceService;
 use App\Services\Provisioning\ServiceService;
 use App\Services\Store\GatewayService;
 use App\Traits\Controllers\ServiceControllerTrait;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -168,6 +169,26 @@ class ServiceController extends Controller
         return view('front.provisioning.services.show', compact('service', 'customer', 'gateways', 'panel_html', 'subUserAccesses', 'serviceSubUserPermissions'));
     }
 
+    public function status(Request $request, Service $service): JsonResponse
+    {
+        $user = $request->user('web');
+        if ($user === null || ! $user->hasServicePermission($service, 'service.show')) {
+            abort(404);
+        }
+
+        $data = [
+            'status_badge_html' => view('components.badge-state-componant', [
+                'state' => $service->status,
+            ])->render(),
+        ];
+
+        if ($request->boolean('panel')) {
+            $data['panel_html'] = (string) ProvisioningTabDTO::renderPanel($service);
+        }
+
+        return response()->json($data);
+    }
+
     public function renew(Request $request, Service $service, string $gateway)
     {
         if (! auth('web')->user()->hasServicePermission($service, 'service.renew')) {
@@ -186,7 +207,7 @@ class ServiceController extends Controller
             logger()->error($e->getMessage());
             $message = __('store.checkout.wrong_payment');
             if (auth('admin')->check()) {
-                $message .= ' Debug admin : ' . $e->getMessage();
+                $message .= ' Debug admin : '.$e->getMessage();
             }
 
             return back()->with('error', $message);
@@ -239,8 +260,8 @@ class ServiceController extends Controller
         })->join(',');
         $gateways = Gateway::getAvailable();
         $this->validate($request, [
-            'billing' => 'required|in:' . $recurrings,
-            'gateway' => 'nullable|in:' . $gateways->pluck('uuid')->join(','),
+            'billing' => 'required|in:'.$recurrings,
+            'gateway' => 'nullable|in:'.$gateways->pluck('uuid')->join(','),
         ]);
         $service->billing = $request->get('billing');
         event(new \App\Events\Core\Service\ServiceChangeBillingEvent($service, $request->get('billing')));
@@ -255,7 +276,7 @@ class ServiceController extends Controller
                 logger()->error($e->getMessage());
                 $message = __('store.checkout.wrong_payment');
                 if (auth('admin')->check()) {
-                    $message .= ' Debug admin : ' . $e->getMessage();
+                    $message .= ' Debug admin : '.$e->getMessage();
                 }
 
                 return back()->with('error', $message);
@@ -296,7 +317,7 @@ class ServiceController extends Controller
         }
         $request->validate([
             'reason' => ['required', 'string', 'exists:cancellation_reasons,id'],
-            'details' => 'nullable|string',
+            'details' => 'nullable|string|max:2000',
             'expiration' => ['required', 'string', 'in:end_of_period,now'],
         ]);
         if (! $service->canCancel()) {
@@ -305,7 +326,12 @@ class ServiceController extends Controller
         $cancellationReason = \App\Models\Provisioning\CancellationReason::findOrFail($request->reason);
 
         if ($cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_SUPPORT_TICKET) {
-            return redirect()->route('front.support.create')
+            return redirect()->route('front.support.create', [
+                'cancellation_service' => $service->uuid,
+                'cancellation_reason' => $cancellationReason->id,
+                'cancellation_expiration' => $request->expiration,
+                'cancellation_details' => $request->details,
+            ])
                 ->with('info', __('provisioning.cancellation.requires_ticket'));
         }
 
@@ -318,7 +344,7 @@ class ServiceController extends Controller
                 ->with('error', __('provisioning.cancellation.after_expiration_only'));
         }
 
-        $reason = $cancellationReason->reason . (! empty($request->details) ? ' - ' . $request->details : '');
+        $reason = $cancellationReason->reason.(! empty($request->details) ? ' - '.$request->details : '');
 
         if ($cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_IMMEDIATE) {
             $request->request->set('expiration', 'now');

@@ -53,7 +53,7 @@
                                         @include("shared/select", ["name" => "priority", "label" => __("helpdesk.priority"), "options" => $priorities, 'value' => old('priority', $priority)])
                                     </div>
                                     <div class="col-span-2 sm:col-span-1">
-                                        @include("shared/select", ["name" => "related_id", "label" => __("helpdesk.support.create.relatedto"), "options" => $related, 'value' => old('related_id',$related)])
+                                        @include("shared/select", ["name" => "related_id", "label" => __("helpdesk.support.create.relatedto"), "options" => $related, 'value' => old('related_id', $related_id)])
                                     </div>
                                     <div class="col-span-2 sm:col-span-1">
                                         <label for="department_id" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">{{ __('helpdesk.department') }}</label>

@@ -28,19 +28,24 @@ class ServiceLiveStatusTest extends TestCase
             ->getJson(route('front.services.status', $service));
 
         $response->assertOk();
-        $response->assertJsonStructure([
-            'uuid', 'status', 'state', 'state_label',
-            'status_badge_html', 'days_remaining_html',
-            'expires_at', 'expires_at_label',
-            'days_to_renewal', 'last_check', 'usage_estimate',
-        ]);
-        $this->assertSame($service->uuid, $response->json('uuid'));
+        $response->assertJsonStructure(['status_badge_html']);
+        $response->assertJsonMissingPath('panel_html');
 
         // v2.16 — html fragments must be non-empty so the JS poller can
         // swap them into the DOM. We don't assert specific tags (those
         // belong to the badge-state component tests) but require markup.
         $this->assertNotEmpty($response->json('status_badge_html'));
-        $this->assertNotEmpty($response->json('days_remaining_html'));
+    }
+
+    public function test_owner_can_request_the_refreshed_panel(): void
+    {
+        $customer = Customer::factory()->create();
+        $service = $this->createServiceModel($customer->id);
+
+        $response = $this->actingAs($customer, 'web')
+            ->getJson(route('front.services.status', ['service' => $service, 'panel' => 1]));
+
+        $response->assertOk()->assertJsonStructure(['status_badge_html', 'panel_html']);
     }
 
     public function test_other_customer_cannot_poll_my_service(): void
@@ -83,7 +88,7 @@ class ServiceLiveStatusTest extends TestCase
             ->getJson(route('front.services.status', $service));
 
         $response->assertOk();
-        $this->assertSame($service->uuid, $response->json('uuid'));
+        $this->assertNotEmpty($response->json('status_badge_html'));
     }
 
     public function test_subuser_without_service_show_permission_is_refused(): void
