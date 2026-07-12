@@ -93,6 +93,10 @@ class BasketController extends \App\Http\Controllers\Controller
         if (! $product->canAddToBasket()) {
             return back()->with('error', __('store.basket.already_ordered', ['product' => $product->name]));
         }
+        if ($request->has('coupon')) {
+            $row->basket->applyCoupon($request->coupon, true);
+            $row->refresh();
+        }
         $context = ['product' => $product, 'options' => [], 'billing' => $billing, 'row' => $row];
         if ($product->productType()->data($product) !== null) {
             $context['data_html'] = $product->productType()->data($product)->render(new ProductDataDTO($product, $row->data ?? [], $context['options'] ?? [], []));
@@ -107,6 +111,7 @@ class BasketController extends \App\Http\Controllers\Controller
             return [$product->key => ['pricing' => $product->getPricingArray(), 'key' => $product->key, 'type' => $product->type, 'step' => $product->step, 'unit' => $product->unit, 'title' => $product->name]];
         });
         $context['options'] = $configoptions;
+        $context['pricings'] = $product->pricingAvailable(currency());
 
         return view('front.store.basket.config', $context);
     }
@@ -305,17 +310,12 @@ class BasketController extends \App\Http\Controllers\Controller
         if ($redirectTo === null || $redirectTo === '') {
             return $default;
         }
-        // Same-host paths only (must start with our APP_URL or be a
-        // relative URL beginning with /). Drop any query string we
-        // don't recognise just in case.
         $appHost = parse_url(config('app.url'), PHP_URL_HOST);
         $parsed = parse_url($redirectTo);
         $host = $parsed['host'] ?? null;
         if ($host !== null && $host !== $appHost) {
             return $default;
         }
-        // Reject path traversal sequences before prefix-matching: /basket/../admin
-        // would pass str_starts_with but the browser resolves it to /admin.
         $path = $parsed['path'] ?? '';
         if (str_contains($path, '..')) {
             return $default;

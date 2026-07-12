@@ -173,7 +173,6 @@
                                     </div>
                                 @endif
                                 <div id="hs-checkout-collapse" class="hs-collapse w-full overflow-hidden transition-[height] duration-300" aria-labelledby="hs-show-hide-collapse">
-                                    <hr class="my-2">
 
 
                                     @if ($basket->coupon)
