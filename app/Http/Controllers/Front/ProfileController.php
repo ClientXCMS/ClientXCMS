@@ -154,7 +154,7 @@ class ProfileController extends \App\Http\Controllers\Controller
                 return $code;
             });
             echo $codes->join("\n");
-        }, '2fa_recovery_codes_' . \Str::slug(config('app.name')) . '.txt');
+        }, '2fa_recovery_codes_'.\Str::slug(config('app.name')).'.txt');
     }
 
     public function deleteAccount(DeleteAccountRequest $request): RedirectResponse
@@ -201,7 +201,7 @@ class ProfileController extends \App\Http\Controllers\Controller
         $customer = $request->user('web');
         $relativePath = $service->buildArchive($customer);
 
-        return redirect()->route('front.profile.index')
+        return redirect()->to(route('front.profile.index').'#pane-export')
             ->with('success', __('client.gdpr.export.ready'))
             ->with('gdpr_export_url', $service->signedUrl($relativePath));
     }
@@ -210,7 +210,7 @@ class ProfileController extends \App\Http\Controllers\Controller
     {
         // Path must live under gdpr/{customer_id}/...
         $customer = $request->user('web');
-        $prefix = GdprExportService::STORAGE_DIR . '/' . $customer->id . '/';
+        $prefix = GdprExportService::STORAGE_DIR.'/'.$customer->id.'/';
         if (! str_starts_with($path, $prefix) || str_contains($path, '..')) {
             abort(403);
         }

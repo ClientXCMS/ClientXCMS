@@ -6,7 +6,6 @@ use App\Models\Account\Customer;
 use App\Models\Billing\Invoice;
 use App\Services\Account\GdprExportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -20,7 +19,7 @@ class GdprExportTest extends TestCase
 
         $response = $this->actingAs($customer, 'web')->post(route('front.profile.export'));
 
-        $response->assertRedirect(route('front.profile.index'));
+        $response->assertRedirect(route('front.profile.index').'#pane-export');
         $response->assertSessionHas('success');
         $response->assertSessionHas('gdpr_export_url');
     }
@@ -32,7 +31,7 @@ class GdprExportTest extends TestCase
         $service = new GdprExportService;
         $relative = $service->buildArchive($customer);
 
-        $absolute = storage_path('app/' . $relative);
+        $absolute = storage_path('app/'.$relative);
         $this->assertFileExists($absolute);
 
         $zip = new ZipArchive;
@@ -47,8 +46,14 @@ class GdprExportTest extends TestCase
         $this->assertContains('manifest.json', $names);
         $this->assertContains('profile.json', $names);
         $this->assertContains('invoices.json', $names);
+        $this->assertContains('credit_notes.json', $names);
         $this->assertContains('services.json', $names);
+        $this->assertContains('subscriptions.json', $names);
+        $this->assertContains('upgrades.json', $names);
         $this->assertContains('tickets.json', $names);
+        $this->assertContains('emails.json', $names);
+        $this->assertContains('account_accesses.json', $names);
+        $this->assertContains('coupon_usages.json', $names);
         $this->assertContains('api_tokens.json', $names);
     }
 

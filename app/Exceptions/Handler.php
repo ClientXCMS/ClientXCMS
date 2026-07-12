@@ -20,6 +20,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\View\ViewException;
 use Symfony\Component\Mailer\Exception\TransportException;
 use Throwable;
@@ -55,6 +56,15 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $exception)
     {
+        if ($exception instanceof ThrottleRequestsException && $request->routeIs('front.profile.export')) {
+            $retryAfter = max(1, (int) ($exception->getHeaders()['Retry-After'] ?? 60));
+
+            return redirect()->to(route('front.profile.index').'#pane-export')
+                ->with('error', __('client.gdpr.export.throttled', [
+                    'minutes' => (int) ceil($retryAfter / 60),
+                ]));
+        }
+
         if ($exception instanceof ViewException && \Str::contains($exception->getMessage(), 'Vite manifest not found at')) {
             return response("Vite manifest not found. Please execute 'npm install && npm run build'", 404);
         }
