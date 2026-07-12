@@ -83,8 +83,6 @@ trait CanUse2FA
         return ! in_array($ip, $trustedIps, true);
     }
 
-    // Returns [{ip, until, user_agent}]. Backfills legacy shapes (bare
-    // string IP, no user_agent) and filters out expired entries.
     public function twoFactorTrustedIps(): array
     {
         $raw = $this->getMetadata('2fa_trusted_ips');
