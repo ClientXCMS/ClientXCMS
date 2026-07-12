@@ -1,4 +1,5 @@
 import {HSOverlay} from "preline";
+import "../flatpickr.js";
 
 function getUrlParams() {
     let params = {};
@@ -71,20 +72,54 @@ document.querySelectorAll('.filter-checkbox').forEach(function(el) {
 
 const searchForm = document.querySelector("#searchForm");
 if (searchForm) {
+    const fieldSelect = searchForm.querySelector('[data-search-field-select]');
+    const controls = searchForm.querySelectorAll('[data-search-control]');
+    const previousSearchField = fieldSelect ? fieldSelect.value : null;
+
+    const activateSearchControl = function (field) {
+        controls.forEach(function (control) {
+            const active = control.dataset.searchControl === field;
+            control.classList.toggle('hidden', !active);
+            control.classList.toggle('flex', active);
+            control.querySelectorAll('[data-filter-key]').forEach(function (input) {
+                input.disabled = !active;
+            });
+        });
+    };
+
+    if (fieldSelect) {
+        activateSearchControl(fieldSelect.value);
+        fieldSelect.addEventListener('change', function () {
+            activateSearchControl(this.value);
+        });
+    }
+
     searchForm.addEventListener('submit', function (e) {
         e.preventDefault();
         let params = getUrlParams();
-        let queryString = this.querySelector('input[type="text"]').value;
-        let type = this.querySelector('select').value;
-        Object.keys(params).forEach(function (key) {
-            if (key.startsWith('filter[') && key.includes(localStorage.getItem('type'))) {
-                delete params[key];
-            }
-        });
-        localStorage.setItem('type', type);
-        params['filter[' + type + ']'] = [queryString];
+        const activeControl = this.querySelector('[data-search-control]:not(.hidden)');
+
+        const previousControl = previousSearchField
+            ? searchForm.querySelector('[data-search-control="' + CSS.escape(previousSearchField) + '"]')
+            : null;
+        if (previousControl) {
+            previousControl.querySelectorAll('[data-filter-key]').forEach(function (input) {
+                delete params['filter[' + input.dataset.filterKey + ']'];
+            });
+        }
+
+        if (activeControl) {
+            activeControl.querySelectorAll('[data-filter-key]').forEach(function (input) {
+                const value = input.value.trim();
+                if (value !== '') {
+                    params['filter[' + input.dataset.filterKey + ']'] = [value];
+                }
+            });
+        }
+
+        delete params.page;
         let updatedQueryString = buildQueryString(params);
-        location.href = location.pathname + '?' + updatedQueryString;
+        location.href = location.pathname + (updatedQueryString ? '?' + updatedQueryString : '');
     })
 }
 function updateMassActionFloatingBar() {

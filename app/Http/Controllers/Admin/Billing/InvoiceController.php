@@ -38,7 +38,9 @@ use App\Models\Store\Product;
 use App\Services\Billing\InvoiceService;
 use App\Services\InvoiceExporterService;
 use App\Services\Store\RecurringService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class InvoiceController extends AbstractCrudController
 {
@@ -71,6 +73,30 @@ class InvoiceController extends AbstractCrudController
             'invoice_number' => __('admin.invoices.invoice_number'),
             'external_id' => __('admin.invoices.show.external_id'),
             'uuid' => 'UUID',
+            'status_filter' => [
+                'label' => __('global.status'),
+                'type' => 'select',
+                'fields' => [$this->filterField],
+                'options' => $this->getIndexFilters(),
+            ],
+        ];
+    }
+
+    protected function getDateRangeSearchFields(): array
+    {
+        return [
+            'created_at_range' => [
+                'label' => __('admin.invoices.filters.created_range'),
+                'type' => 'date_range',
+                'column' => 'created_at',
+                'fields' => ['date_from', 'date_to'],
+            ],
+            'paid_at_range' => [
+                'label' => __('admin.invoices.filters.paid_range'),
+                'type' => 'date_range',
+                'column' => 'paid_at',
+                'fields' => ['paid_from', 'paid_to'],
+            ],
         ];
     }
 
@@ -78,8 +104,26 @@ class InvoiceController extends AbstractCrudController
     {
         $params = parent::getIndexParams($items, $translatePrefix);
         $params['exportFormats'] = InvoiceExporterService::getAvailableFormats();
+        $params['dateFrom'] = request()->input('filter.date_from');
+        $params['dateTo'] = request()->input('filter.date_to');
 
         return $params;
+    }
+
+    protected function queryIndex(): LengthAwarePaginator
+    {
+        $allowedFilters = $this->getAllowedSearchFilters();
+        if (! in_array($this->filterField, $allowedFilters, true)) {
+            $allowedFilters[] = $this->filterField;
+        }
+
+        return QueryBuilder::for($this->model)
+            ->allowedFilters($allowedFilters)
+            ->allowedSorts($this->sorts)
+            ->with($this->relations)
+            ->orderBy('created_at', 'desc')
+            ->paginate($this->perPage)
+            ->appends(request()->query());
     }
 
     public function getMassActions()

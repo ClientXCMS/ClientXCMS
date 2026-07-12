@@ -37,39 +37,46 @@
                 <div class="p-1.5 min-w-full inline-block align-middle">
                     <div class="card">
                         <div class="card-heading">
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                                    {{ __($translatePrefix . '.title') }}
-                                </h2>
+                                <div>
+                                    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                                        {{ __($translatePrefix . '.title') }}
+                                    </h2>
                                 <p class="text-sm text-gray-600 dark:text-gray-400">
                                     {{ __($translatePrefix . '.subheading') }}
                                 </p>
                             </div>
-                            @include('admin/shared/mass_actions/header', [
-                                'searchFields' => $searchFields,
-                                'search' => $search,
-                                'searchField' => $searchField,
-                                'filters' => $filters,
-                                'checkedFilters' => $checkedFilters,
-                            ])
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                @include('admin/shared/mass_actions/header', [
+                                    'searchFields' => $searchFields,
+                                    'search' => $search,
+                                    'searchField' => $searchField,
+                                    'filters' => $filters,
+                                    'checkedFilters' => $checkedFilters,
+                                ])
+                                @if (staff_has_permission('admin.export_invoices') && $items->count() > 0)
+                                    <a class="btn btn-secondary text-sm justify-center"
+                                        href="#" data-hs-overlay="#export-overlay">
+                                        {{ __($translatePrefix . '.export.btn') }}
+                                    </a>
+                                @endif
+                                @if (staff_has_permission('admin.show_invoices'))
+                                    <a class="btn btn-secondary text-sm w-1/2 sm:w-auto ml-1" href="{{ route('admin.credit_notes.index') }}">
+                                        <i class="bi bi-file-earmark-diff"></i> {{ __('admin.credit_notes.credit_notes') }}
+                                    </a>
+                                @endif
 
-                            @if (staff_has_permission('admin.create_invoices'))
-                                <a class="btn btn-primary text-sm sm:ml-1 mt-2 sm:mt-0 w-full max-w-md sm:w-auto"
-                                    href="{{ route($routePath . '.create') }}">
-                                    {{ __('admin.create') }}
-                                </a>
-                            @endif
-                            @if (staff_has_permission('admin.export_invoices') && $items->count() > 0)
-                                <a class="btn btn-secondary text-sm sm:ml-1 mt-2 sm:mt-0 w-full max-w-md sm:w-auto"
-                                    href="#" data-hs-overlay="#export-overlay">
-
-                                    {{ __($translatePrefix . '.export.btn') }}
-                                </a>
-                            @endif
+                                @if (staff_has_permission('admin.create_invoices'))
+                                    <a class="btn btn-primary text-sm justify-center ml-1"
+                                        href="{{ route($routePath . '.create') }}">
+                                        {{ __('admin.create') }}
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-                    </div>
-                    <div class="border rounded-lg overflow-hidden dark:border-gray-700">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="mass_action_table">
+                        </div>
+
+                        <div class="border rounded-lg overflow-hidden dark:border-gray-700 mt-4">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="mass_action_table">
                             <thead>
 
                                 <tr>
@@ -83,6 +90,7 @@
                                                         class="border-gray-200 rounded text-blue-600 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800">
                                                     <label for="checkbox-all" class="sr-only">Checkbox</label>
                                                 </div>
+                                                {{ __('admin.invoices.invoice_number') }}
                                             </span>
                                         </div>
                                     </th>
@@ -254,17 +262,19 @@
                                 </tr>
                                 @endforeach
                             </tbody>
-                        </table>
-                    </div>
+                            </table>
+                        </div>
 
-                    @include('admin/shared/mass_actions/select', [
-                        'mass_actions' => $mass_actions,
-                        'items' => $items,
-                    ])
+                        <div>
+                            @include('admin/shared/mass_actions/select', [
+                                'mass_actions' => $mass_actions,
+                                'items' => $items,
+                            ])
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     </div>
     @if (staff_has_permission('admin.export_invoices') && $items->count() > 0)
         <div id="export-overlay"
@@ -276,7 +286,7 @@
                 </h3>
                 <button type="button"
                     class="flex justify-center items-center w-7 h-7 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                    data-hs-overlay="#config-overlay">
+                    data-hs-overlay="#export-overlay">
                     <span class="sr-only">{{ __('global.closemodal') }}</span>
                     <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

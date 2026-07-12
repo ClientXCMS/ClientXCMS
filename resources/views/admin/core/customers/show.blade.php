@@ -867,8 +867,8 @@
                             ])
                         </div>
 
-                        <button type="submit" class="w-full btn btn-indigo-600">
-                            {{ __('global.submit') }}
+                        <button type="submit" class="w-full btn btn-primary">
+                            {{ __('global.apply') }}
                         </button>
                     </form>
                 </div>

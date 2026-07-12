@@ -17,9 +17,9 @@
  * Year: 2025
  */
 
+use App\Http\Controllers\Admin\Billing\CreditNoteController;
 use App\Http\Controllers\Admin\Billing\InvoiceController;
 use App\Http\Controllers\Admin\Billing\SubscriptionController;
-use App\Http\Controllers\Admin\Billing\CreditNoteController;
 use App\Http\Controllers\Admin\Core\DashboardController;
 use App\Http\Controllers\Admin\Settings\SettingsBillingController;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +44,7 @@ Route::post('/invoices/mass_action', [InvoiceController::class, 'massAction'])->
 Route::resource('/subscriptions', SubscriptionController::class)->names('subscriptions')->except('edit');
 
 Route::post('/customers/{customer}/credit-notes', [CreditNoteController::class, 'store'])->name('customers.credit_notes.store');
+Route::get('/credit-notes', [CreditNoteController::class, 'index'])->name('credit_notes.index');
 Route::get('/credit-notes/{credit_note}/pdf', [CreditNoteController::class, 'pdf'])->name('credit_notes.pdf');
 Route::get('/credit-notes/{credit_note}/download', [CreditNoteController::class, 'download'])->name('credit_notes.download');
 Route::delete('/credit-notes/{credit_note}', [CreditNoteController::class, 'destroy'])->name('credit_notes.destroy');
