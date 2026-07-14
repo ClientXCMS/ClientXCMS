@@ -11,6 +11,15 @@ class DomainDnsValidationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        if (! filter_var(env('DOMAIN_MANAGEMENT_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
+            $this->markTestSkipped('Domain management is disabled.');
+        }
+
+        parent::setUp();
+    }
+
     public function test_dns_record_type_rejects_unknown_value(): void
     {
         // The full stack of middleware on the storefront makes feature
@@ -22,7 +31,7 @@ class DomainDnsValidationTest extends TestCase
         $source = file_get_contents($reflection->getFileName());
 
         $this->assertMatchesRegularExpression(
-            "/Rule::in\\(self::ALLOWED_DNS_TYPES\\)/",
+            '/Rule::in\\(self::ALLOWED_DNS_TYPES\\)/',
             $source,
             'storeDns must constrain the type field to the standard RFC list, not just max:10'
         );

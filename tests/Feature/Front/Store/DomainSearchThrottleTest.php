@@ -20,6 +20,15 @@ class DomainSearchThrottleTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        if (! filter_var(env('DOMAIN_MANAGEMENT_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
+            $this->markTestSkipped('Domain management is disabled.');
+        }
+
+        parent::setUp();
+    }
+
     public function test_domain_search_endpoint_is_rate_limited(): void
     {
         for ($i = 0; $i < 30; $i++) {
