@@ -21,7 +21,7 @@
 @section('title', __('client.services.index'))
 @section('scripts')
     <script src="{{ Vite::asset('resources/themes/default/js/filter.js') }}"></script>
-    <script src="{{ Vite::asset('resources/themes/default/js/service-live.js') }}"></script>
+    <script src="{{ Vite::asset('resources/global/js/service-live.js') }}"></script>
 @endsection
 @section('styles')
     <link rel="stylesheet" href="{{ Vite::asset('resources/global/css/service-live.css') }}">
