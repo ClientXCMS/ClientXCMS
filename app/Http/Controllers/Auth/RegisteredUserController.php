@@ -122,6 +122,7 @@ class RegisteredUserController extends Controller
         }
 
         Auth::login($user);
+
         if ($request->filled('redirect')) {
             $target = (string) $request->get('redirect');
             $sameDomain = parse_url($target, PHP_URL_HOST) === parse_url(url('/'), PHP_URL_HOST);

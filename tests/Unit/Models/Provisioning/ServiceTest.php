@@ -156,6 +156,14 @@ class ServiceTest extends TestCase
         // Test normal active case
         $this->assertTrue($service->canRenew());
 
+        // // Test pack_id restriction
+        // $service->pack_id = 999;
+        // $service->save();
+        // $this->assertFalse($service->canRenew());
+
+        // $service->pack_id = null;
+        // $service->save();
+
         // Test max renewals check
         $service->max_renewals = 5;
         $service->renewals = 4;

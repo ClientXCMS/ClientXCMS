@@ -75,4 +75,31 @@ class SubmitTicketRequest extends FormRequest
             $this->merge(['related_id' => $relatedId, 'related_type' => $relatedType]);
         }
     }
+
+    public function withValidator(\Illuminate\Validation\Validator $validator)
+    {
+        $validator->after(function ($validator) {
+            if ($validator->errors()->any()) {
+                return;
+            }
+
+            if (app('extension')->extensionIsEnabled('support-access-rules')) {
+                $customer = $this->user();
+                if ($customer instanceof \App\Models\Account\Customer) {
+                    $policy = app(\App\Addons\SupportAccessRules\Services\TicketAccessPolicy::class);
+                    $violations = $policy->violations(
+                        $customer,
+                        (int) $this->input('department_id'),
+                        $this->input('priority'),
+                        $this->input('related_type'),
+                        $this->input('related_id') ? (int) $this->input('related_id') : null
+                    );
+
+                    foreach ($violations as $violation) {
+                        $validator->errors()->add('department_id', $violation);
+                    }
+                }
+            }
+        });
+    }
 }

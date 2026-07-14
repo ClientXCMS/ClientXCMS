@@ -30,6 +30,18 @@
         <div class="flex flex-col md:flex-row gap-4">
         <div class="md:w-3/4">
             @include('shared/alerts')
+
+            @if ($service->pack_id !== null)
+                <div class="alert text-blue-800 bg-blue-100 mt-2" role="alert">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span>
+                        {{ __('pack::lang.service_linked_to_pack') }}
+                        <a href="{{ route('front.services.show', ['service' => $service->pack_id]) }}" class="underline font-semibold ml-1 hover:text-blue-900">
+                            {{ __('pack::lang.view_pack') }}
+                        </a>
+                    </span>
+                </div>
+            @endif
             <div data-service-field="panel_html">
                 {!! $panel_html !!}
             </div>
