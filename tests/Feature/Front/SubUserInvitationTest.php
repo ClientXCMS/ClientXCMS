@@ -107,6 +107,7 @@ class SubUserInvitationTest extends TestCase
 
         $this->actingAs($customer)
             ->get(route('front.subusers.accept', $invitation->plain_text_token))
-            ->assertNotFound();
+            ->assertRedirect(route('front.client.index'))
+            ->assertSessionHas('error', __('client.subusers.alerts.invitation_unavailable'));
     }
 }

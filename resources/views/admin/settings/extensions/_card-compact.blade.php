@@ -33,7 +33,11 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
 
     <div class="flex-shrink-0 text-right">
         <div class="font-bold text-gray-900 dark:text-white">{{ $extension->price(true) }}</div>
-        @if($extension->isEnabled())
+        @if($extension->hasBootError())
+        <span class="text-xs font-medium text-red-600 dark:text-red-400" title="{{ $extension->bootError()['message'] }}">
+            <i class="bi bi-exclamation-triangle-fill mr-1"></i>{{ __('extensions.settings.boot_error') }}
+        </span>
+        @elseif($extension->isEnabled())
         <span class="text-xs text-green-600 dark:text-green-400">{{ __('extensions.settings.enabled') }}</span>
         @elseif($extension->isInstalled())
         <span class="text-xs text-blue-600 dark:text-blue-400">{{ __('extensions.settings.installed') }}</span>

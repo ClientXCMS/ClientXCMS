@@ -23,10 +23,11 @@ use App\Models\Admin\EmailTemplate;
 use App\Models\Helpdesk\SupportTicket;
 use App\Services\Helpdesk\InboundReplyService;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
 
-class NotifyCustomerEmail extends Notification
+class NotifyCustomerEmail extends Notification implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

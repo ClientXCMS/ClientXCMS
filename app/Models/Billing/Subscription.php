@@ -130,7 +130,6 @@ class Subscription extends Model
                 $service->subscription->payment_method_id = $paymentMethodId;
                 $service->subscription->state = 'active';
                 $service->subscription->save();
-                $service->subscription->syncRemoteSubscription();
 
                 return $service->subscription;
             }
@@ -142,7 +141,6 @@ class Subscription extends Model
             $subscription->state = 'active';
             $subscription->billing_day = $subscription->getFirstBillingDay();
             $subscription->save();
-            $subscription->syncRemoteSubscription();
 
             return $subscription;
         });
@@ -209,33 +207,6 @@ class Subscription extends Model
         return $result;
     }
 
-
-    private function syncRemoteSubscription(): void
-    {
-        try {
-            if (! $this->service || ! $this->service->customer) {
-                return;
-            }
-            $source = $this->service->customer->getSourceById($this->payment_method_id);
-            if (! $source) {
-                return;
-            }
-            $gateway = app(PaymentTypeService::class)->get($source->gateway_uuid);
-            if (! $gateway || ! method_exists($gateway, 'createRemoteSubscription')) {
-                return;
-            }
-
-            $remoteId = $gateway->createRemoteSubscription($this->service, $source, $this);
-            if ($remoteId) {
-                Log::info('Remote subscription synced', ['subscription_id' => $this->id, 'remote_id' => $remoteId]);
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Failed to sync remote subscription', [
-                'subscription_id' => $this->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-    }
 
     public function toggle()
     {

@@ -39,10 +39,6 @@ const applySummary = (payload) => {
     setText('taxes', formatted.taxes ?? formatMoney(totals.tax, currency));
     setText('total', formatted.total ?? formatMoney(totals.total, currency));
 
-    // v2.16 — render the inline coupon line. The pricing service
-    // returns `payload.coupon = { code, discount_ht, formatted_discount }`
-    // when the basket-level coupon shaved off some money. Hide the
-    // line when there's nothing to display so the layout stays clean.
     const couponLine = document.getElementById('coupon-line');
     if (couponLine) {
         const meta = payload.coupon;

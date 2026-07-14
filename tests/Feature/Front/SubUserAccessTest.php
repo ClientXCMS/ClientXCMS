@@ -20,10 +20,6 @@ class SubUserAccessTest extends TestCase
         $subUser = Customer::factory()->create();
         $allowed = $this->createServiceModel($owner->id);
         $denied = $this->createServiceModel($owner->id);
-        // v2.16 — createServiceModel() defaults both services to the name
-        // "Test Service", which made assertDontSee($denied) impossible since
-        // the allowed row already contained that exact string. Use distinct
-        // names so the assertion can actually differentiate them.
         $allowed->update(['name' => 'Allowed-Service-AAA']);
         $denied->update(['name' => 'Denied-Service-BBB']);
 

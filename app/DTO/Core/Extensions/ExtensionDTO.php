@@ -154,6 +154,16 @@ class ExtensionDTO implements Arrayable
         return false;
     }
 
+    public function hasBootError(): bool
+    {
+        return isset($this->api['boot_error']['message']);
+    }
+
+    public function bootError(): ?array
+    {
+        return $this->hasBootError() ? $this->api['boot_error'] : null;
+    }
+
     public function thumbnail()
     {
         if ($this->type == 'theme' && file_exists(base_path('resources/themes/'.$this->uuid.'/screenshot.png'))) {

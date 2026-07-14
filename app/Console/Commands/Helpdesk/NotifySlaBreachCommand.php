@@ -52,15 +52,6 @@ class NotifySlaBreachCommand extends Command
                 $ticket->resolution_due_at?->toIso8601String() ?? '-',
             ));
 
-            logger()->warning('helpdesk.sla.breach', [
-                'ticket_id' => $ticket->id,
-                'department_id' => $ticket->department_id,
-                'priority' => $ticket->priority,
-                'first_response_at' => $ticket->first_response_at,
-                'first_response_due_at' => $ticket->first_response_due_at,
-                'resolution_due_at' => $ticket->resolution_due_at,
-            ]);
-
             if (! $this->option('dry-run')) {
                 $ticket->sla_breached_notified_at = Carbon::now();
                 $ticket->save();

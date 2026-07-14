@@ -19,11 +19,14 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Controllers\Concerns\ManagesSettingUploads;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
 
 class OnUpdateCommand extends Command
 {
+    use ManagesSettingUploads;
+
     /**
      * The name and signature of the console command.
      *
@@ -67,6 +70,18 @@ class OnUpdateCommand extends Command
             }
         }
 
+        $this->cleanupBrandImages();
+
         $this->info('CLIENTXCMS is up to date.');
+    }
+
+    private function cleanupBrandImages(): void
+    {
+        $fields = ['app_logo', 'app_favicon', 'app_logo_text'];
+
+        $this->cleanupUnusedUploads(
+            $fields,
+            collect($fields)->map(fn (string $field) => setting($field))->filter()->all()
+        );
     }
 }

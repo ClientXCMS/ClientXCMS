@@ -1,21 +1,5 @@
 <?php
 
-/*
- * v2.16 — Helpdesk advanced features.
- *
- *   1. SLA tracking on tickets:
- *      - sla_first_response_minutes / sla_resolution_minutes on
- *        support_departments lets the operator declare per-department
- *        targets. NULL columns mean "no SLA" (current behaviour).
- *      - support_tickets gets first_response_due_at,
- *        resolution_due_at and first_response_at so we can highlight
- *        tickets at risk and stop the clock when staff replies.
- *
- *
- * All columns are nullable / additive — removing the migration leaves
- * existing tickets and departments untouched.
- */
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

@@ -8,13 +8,6 @@ use Database\Seeders\EmailTemplateSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/**
- * v2.16 regression coverage for EmailTemplate::getMailMessage().
- *
- * The "custom" template is what backs the admin's manual mail-send flow.
- * Previously the method called MailMessage->action() unconditionally, which
- * produced an empty CTA button when the admin left the URL field blank.
- */
 class EmailTemplateTest extends TestCase
 {
     use RefreshDatabase;

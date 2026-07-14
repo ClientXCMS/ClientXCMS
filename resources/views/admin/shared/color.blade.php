@@ -32,7 +32,6 @@
     @endif
 </label>
 @endif
-{{-- v2.16 — old() must win over $value on validation re-render. --}}
 @php $__color = old($name, $value ?? '#3b82f6'); @endphp
 <div class="mt-2 flex items-center gap-2">
     <input type="color"

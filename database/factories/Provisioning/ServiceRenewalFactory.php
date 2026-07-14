@@ -34,8 +34,6 @@ class ServiceRenewalFactory extends Factory
             'renewed_at' => Carbon::now(),
             'first_period' => true,
             'next_billing_on' => Carbon::now()->addMonths(6),
-            // v2.16 — keep factory consistent with the new lifecycle column.
-            // Default factory builds an already-renewed row, hence 'paid'.
             'status' => ServiceRenewals::STATUS_PAID,
         ];
     }

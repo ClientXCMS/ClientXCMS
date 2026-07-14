@@ -18,8 +18,6 @@
 ?>
 
 @php
-    // v2.16 — same lifecycle as checkbox.blade.php: preserve toggle state
-    // across a validation re-render.
     if (session()->hasOldInput()) {
         $__old = session()->getOldInput($name);
         $checked = $__old !== null && in_array((string) $__old, ['true', '1', 'on'], true);

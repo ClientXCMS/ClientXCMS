@@ -19,37 +19,42 @@
 
 namespace App\Http\Controllers\Admin\Billing;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Models\Account\Customer;
 use App\Models\ActionLog;
 use App\Models\Billing\CreditNote;
 use App\Models\Billing\Invoice;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Spatie\QueryBuilder\QueryBuilder;
 
-class CreditNoteController extends Controller
+class CreditNoteController extends AbstractCrudController
 {
-    public function index(Request $request)
+    protected string $viewPath = 'admin.core.credit_notes';
+
+    protected string $routePath = 'admin.credit_notes';
+
+    protected string $translatePrefix = 'admin.credit_notes';
+
+    protected string $model = CreditNote::class;
+
+    protected string $filterField = 'currency';
+
+    protected array $relations = ['customer', 'invoice', 'admin'];
+
+    private $summaryRows;
+
+    protected function queryIndex(): LengthAwarePaginator
     {
-        staff_aborts_permission('admin.show_invoices');
+        $query = QueryBuilder::for($this->model)
+            ->allowedFilters($this->getAllowedSearchFilters())
+            ->with($this->relations)
+            ->orderByDesc('created_at');
 
-        $currencies = CreditNote::query()
-            ->select('currency')
-            ->whereNotNull('currency')
-            ->distinct()
-            ->orderBy('currency')
-            ->pluck('currency');
-
-        $query = CreditNote::query()
-            ->with(['customer', 'invoice', 'admin'])
-            ->latest();
-
-        $this->applyIndexFilters($query, $request);
-
-        $summaryQuery = (clone $query)->reorder()->setEagerLoads([]);
-        $summaryRows = $summaryQuery
+        $this->summaryRows = (clone $query)->getEloquentBuilder()
+            ->reorder()
+            ->setEagerLoads([])
             ->select([
                 'currency',
                 DB::raw('COUNT(*) as count'),
@@ -61,22 +66,15 @@ class CreditNoteController extends Controller
             ->orderBy('currency')
             ->get();
 
-        $items = $query->paginate(25)->appends($request->query());
-        $filterValues = $request->query('filter', []);
-        $filterValues = is_array($filterValues) ? $filterValues : [];
-        $searchDefinitions = $this->getSearchFields();
-        $searchDefinitions['currency_filter'] = [
-            'label' => __('global.currency'),
-            'type' => 'select',
-            'fields' => ['currency'],
-            'options' => $currencies->mapWithKeys(fn ($currency) => [$currency => $currency])->all(),
-        ];
-        $selectedSearchField = ! blank($filterValues['currency'] ?? null)
-            ? 'currency_filter'
-            : $this->getSearchField($request);
+        return $query->paginate($this->perPage)->appends(request()->query());
+    }
 
-        return view('admin.core.credit_notes.index', [
-            'items' => $items,
+    protected function getIndexParams($items, string $translatePrefix)
+    {
+        $params = parent::getIndexParams($items, $translatePrefix);
+        $summaryRows = $this->summaryRows ?? collect();
+
+        return array_merge($params, [
             'summaryRows' => $summaryRows,
             'summaryTotals' => [
                 'count' => (int) $summaryRows->sum('count'),
@@ -84,29 +82,45 @@ class CreditNoteController extends Controller
                 'tax' => (float) $summaryRows->sum('tax'),
                 'total' => (float) $summaryRows->sum('total'),
             ],
-            'dateFrom' => $request->input('filter.date_from', $request->query('date_from')),
-            'dateTo' => $request->input('filter.date_to', $request->query('date_to')),
-            'filters' => $this->getIndexFilters($currencies),
-            'checkedFilters' => $this->getCheckedFilters($request, $currencies->all()),
-            'searchFields' => $this->getSearchFields(),
-            'searchDefinitions' => $searchDefinitions,
-            'searchValues' => [
-                'credit_note_number' => $filterValues['credit_note_number'] ?? null,
-                'customer.email' => $filterValues['customer.email'] ?? null,
-                'invoice.invoice_number' => $filterValues['invoice.invoice_number'] ?? null,
-                'date_from' => $request->input('filter.date_from', $request->query('date_from')),
-                'date_to' => $request->input('filter.date_to', $request->query('date_to')),
-                'currency' => $filterValues['currency'] ?? null,
-            ],
-            'search' => $this->getSearchValue($request),
-            'searchField' => $selectedSearchField,
-            'filterField' => 'currency',
+            'dateFrom' => request()->input('filter.date_from'),
+            'dateTo' => request()->input('filter.date_to'),
         ]);
+    }
+
+    protected function getIndexFilters(): array
+    {
+        return ['all' => __('global.states.all')] + $this->currencies();
+    }
+
+    protected function getSearchFields(): array
+    {
+        return [
+            'credit_note_number' => __('admin.credit_notes.credit_note_number'),
+            'customer.email' => __('global.customer'),
+            'invoice.invoice_number' => __('admin.credit_notes.original_invoice'),
+            'currency_filter' => [
+                'label' => __('global.currency'),
+                'type' => 'select',
+                'fields' => ['currency'],
+                'options' => $this->currencies(),
+            ],
+        ];
+    }
+
+    protected function getPermissions(string $tablename): array
+    {
+        return [
+            'showAny' => 'admin.show_invoices',
+            'show' => 'admin.show_invoices',
+            'create' => 'admin.manage_invoices',
+            'update' => 'admin.manage_invoices',
+            'delete' => 'admin.manage_invoices',
+        ];
     }
 
     public function store(Request $request, Customer $customer)
     {
-        staff_aborts_permission('admin.manage_invoices');
+        $this->checkPermission('create');
 
         $request->validate([
             'invoice_id' => 'required|integer|exists:invoices,id',
@@ -174,21 +188,21 @@ class CreditNoteController extends Controller
 
     public function pdf(CreditNote $creditNote)
     {
-        staff_aborts_permission('admin.show_invoices');
+        $this->checkPermission('show', $creditNote);
 
         return $creditNote->pdf();
     }
 
     public function download(CreditNote $creditNote)
     {
-        staff_aborts_permission('admin.show_invoices');
+        $this->checkPermission('show', $creditNote);
 
         return $creditNote->download();
     }
 
     public function destroy(CreditNote $creditNote)
     {
-        staff_aborts_permission('admin.manage_invoices');
+        $this->checkPermission('delete', $creditNote);
 
         $number = $creditNote->credit_note_number;
         $customerId = $creditNote->customer_id;
@@ -210,172 +224,13 @@ class CreditNoteController extends Controller
         return back()->with('success', __('admin.credit_notes.deleted_success', ['number' => $number]));
     }
 
-    private function applyIndexFilters(Builder $query, Request $request): void
+    private function currencies(): array
     {
-        $dateFrom = $this->parseDateFilter($request->input('filter.date_from', $request->query('date_from')));
-        if ($dateFrom !== null) {
-            $query->where('created_at', '>=', $dateFrom->startOfDay());
-        }
-
-        $dateTo = $this->parseDateFilter($request->input('filter.date_to', $request->query('date_to')));
-        if ($dateTo !== null) {
-            $query->where('created_at', '<=', $dateTo->endOfDay());
-        }
-
-        $filters = $request->query('filter', []);
-        if (! is_array($filters)) {
-            $filters = [];
-        }
-
-        $currencies = $this->splitFilterValues($filters['currency'] ?? null);
-        if (! empty($currencies) && ! in_array('all', $currencies, true)) {
-            $query->whereIn('currency', $currencies);
-        }
-
-        if (! blank($filters['credit_note_number'] ?? null)) {
-            $query->where('credit_note_number', 'like', '%'.trim((string) $filters['credit_note_number']).'%');
-        }
-
-        if (! blank($filters['customer.email'] ?? null)) {
-            $customerSearch = trim((string) $filters['customer.email']);
-            $query->whereHas('customer', function ($query) use ($customerSearch) {
-                $query->where('email', 'like', '%'.$customerSearch.'%')
-                    ->orWhere('firstname', 'like', '%'.$customerSearch.'%')
-                    ->orWhere('lastname', 'like', '%'.$customerSearch.'%');
-            });
-        }
-
-        if (! blank($filters['invoice.invoice_number'] ?? null)) {
-            $invoiceSearch = trim((string) $filters['invoice.invoice_number']);
-            $query->whereHas('invoice', function ($query) use ($invoiceSearch) {
-                $query->where('invoice_number', 'like', '%'.$invoiceSearch.'%');
-            });
-        }
-
-        $search = trim((string) $request->query('q', ''));
-        if ($search === '') {
-            return;
-        }
-
-        $query->where(function ($query) use ($search) {
-            $query->where('credit_note_number', 'like', '%'.$search.'%')
-                ->orWhereHas('customer', function ($query) use ($search) {
-                    $query->where('email', 'like', '%'.$search.'%')
-                        ->orWhere('firstname', 'like', '%'.$search.'%')
-                        ->orWhere('lastname', 'like', '%'.$search.'%');
-                })
-                ->orWhereHas('invoice', function ($query) use ($search) {
-                    $query->where('invoice_number', 'like', '%'.$search.'%');
-                });
-        });
-    }
-
-    private function getIndexFilters($currencies): array
-    {
-        $filters = ['all' => __('global.states.all')];
-
-        foreach ($currencies as $currency) {
-            $filters[$currency] = $currency;
-        }
-
-        return $filters;
-    }
-
-    private function getSearchFields(): array
-    {
-        return [
-            'credit_note_number' => ['label' => __('admin.credit_notes.credit_note_number'), 'type' => 'text', 'fields' => ['credit_note_number'], 'options' => []],
-            'customer.email' => ['label' => __('global.customer'), 'type' => 'text', 'fields' => ['customer.email'], 'options' => []],
-            'invoice.invoice_number' => ['label' => __('admin.credit_notes.original_invoice'), 'type' => 'text', 'fields' => ['invoice.invoice_number'], 'options' => []],
-            'created_at_range' => [
-                'label' => __('global.created'),
-                'type' => 'date_range',
-                'fields' => ['date_from', 'date_to'],
-                'options' => [],
-            ],
-        ];
-    }
-
-    private function getCheckedFilters(Request $request, array $currencies): array
-    {
-        $filters = $request->query('filter', []);
-        if (! is_array($filters)) {
-            $filters = [];
-        }
-
-        $checkedFilters = [];
-        foreach ($this->splitFilterValues($filters['currency'] ?? null) as $currency) {
-            if (in_array($currency, $currencies, true)) {
-                $checkedFilters[] = $currency;
-            }
-        }
-
-        return $checkedFilters;
-    }
-
-    private function getSearchValue(Request $request): ?string
-    {
-        $filters = $request->query('filter', []);
-        if (! is_array($filters)) {
-            return $this->stringQuery($request, 'q');
-        }
-
-        foreach (array_keys($this->getSearchFields()) as $field) {
-            if (! blank($filters[$field] ?? null)) {
-                return (string) $filters[$field];
-            }
-        }
-
-        return $this->stringQuery($request, 'q');
-    }
-
-    private function getSearchField(Request $request): string
-    {
-        $filters = $request->query('filter', []);
-        if (is_array($filters)) {
-            if (! blank($filters['date_from'] ?? null) || ! blank($filters['date_to'] ?? null)) {
-                return 'created_at_range';
-            }
-            foreach (array_keys($this->getSearchFields()) as $field) {
-                if (! blank($filters[$field] ?? null)) {
-                    return $field;
-                }
-            }
-        }
-
-        return 'credit_note_number';
-    }
-
-    private function splitFilterValues(mixed $value): array
-    {
-        if (blank($value)) {
-            return [];
-        }
-
-        if (is_array($value)) {
-            return array_filter($value, fn ($item) => ! blank($item));
-        }
-
-        return array_filter(explode(',', (string) $value), fn ($item) => ! blank($item));
-    }
-
-    private function stringQuery(Request $request, string $key): ?string
-    {
-        $value = $request->query($key);
-
-        return is_scalar($value) && ! blank($value) ? (string) $value : null;
-    }
-
-    private function parseDateFilter(mixed $value): ?Carbon
-    {
-        if (blank($value)) {
-            return null;
-        }
-
-        try {
-            return Carbon::parse((string) $value);
-        } catch (\Throwable) {
-            return null;
-        }
+        return CreditNote::query()
+            ->whereNotNull('currency')
+            ->distinct()
+            ->orderBy('currency')
+            ->pluck('currency', 'currency')
+            ->all();
     }
 }

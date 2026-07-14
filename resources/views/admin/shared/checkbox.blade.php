@@ -25,10 +25,6 @@
 @endif
 @php
     $rand = rand(1, 999);
-    // v2.16 — preserve the user's choice after a validation error. We rely
-    // on session()->hasOldInput() to distinguish "first GET" (use $checked
-    // as-is) from "validation re-render" (use the submitted value, even
-    // when it is null because an unchecked checkbox is never POSTed).
     if (session()->hasOldInput()) {
         $__old = session()->getOldInput($name);
         $checked = $__old !== null && in_array((string) $__old, ['true', '1', 'on'], true);

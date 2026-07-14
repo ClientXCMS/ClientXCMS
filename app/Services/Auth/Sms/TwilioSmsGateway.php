@@ -21,17 +21,6 @@ namespace App\Services\Auth\Sms;
 
 use App\Contracts\Auth\SmsGatewayContract;
 
-/**
- * v2.16 — Twilio implementation of {@see SmsGatewayContract}. Uses
- * the bare REST API over Guzzle so we don't have to depend on the
- * Twilio SDK (composer.json already has guzzlehttp/guzzle).
- *
- * Credentials are read from operator-level settings, not env vars,
- * so multi-tenant installs can override per instance:
- *   - mfa_sms_twilio_sid
- *   - mfa_sms_twilio_token
- *   - mfa_sms_twilio_from   (E.164 sender)
- */
 class TwilioSmsGateway implements SmsGatewayContract
 {
     public function send(string $to, string $message): void

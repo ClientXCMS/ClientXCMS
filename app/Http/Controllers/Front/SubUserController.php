@@ -11,6 +11,7 @@ use App\Models\Account\CustomerAccountAccess;
 use App\Models\Account\CustomerAccountInvitation;
 use App\Models\ActionLog;
 use App\Models\Provisioning\Service;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class SubUserController extends Controller
@@ -53,7 +54,7 @@ class SubUserController extends Controller
         ]);
         $this->syncServices($invitation, $validated);
         $this->sendInvitation($invitation);
-        $this->log('customer_account_invitation_created', $invitation->id, $owner->id, $email);
+        $this->log(ActionLog::SUBUSER_INVITATION_CREATED, $invitation->id, $owner->id, $email);
 
         return back()->with('success', __('client.subusers.alerts.invitation_sent'));
     }
@@ -78,8 +79,6 @@ class SubUserController extends Controller
             ->get();
         $servicePermissions = CustomerAccountAccess::SERVICE_PERMISSIONS;
         $invoicePermissions = CustomerAccountAccess::INVOICE_PERMISSIONS;
-
-
 
         return view('front.provisioning.services.subusers', compact('service', 'accesses', 'invitations', 'servicePermissions', 'invoicePermissions'));
     }
@@ -120,7 +119,9 @@ class SubUserController extends Controller
         ]);
         $invitation->services()->sync([$service->id]);
         $this->sendInvitation($invitation);
-        $this->log('customer_account_service_invitation_created', $invitation->id, $owner->id, $email);
+        $this->log(ActionLog::SUBUSER_INVITATION_CREATED, $invitation->id, $owner->id, $email, [
+            'service_id' => $service->id,
+        ]);
 
         return back()->with('success', __('client.subusers.alerts.invitation_sent'));
     }
@@ -134,7 +135,7 @@ class SubUserController extends Controller
             'all_services' => $validated['all_services'],
         ]);
         $this->syncServices($access, $validated);
-        $this->log('customer_account_access_updated', $access->id, auth()->id(), $access->subCustomer->email);
+        $this->log(ActionLog::SUBUSER_ACCESS_UPDATED, $access->id, auth()->id(), $access->subCustomer->email);
 
         return back()->with('success', __('client.subusers.alerts.access_updated'));
     }
@@ -144,7 +145,7 @@ class SubUserController extends Controller
         abort_if($access->owner_customer_id !== auth()->id() && $access->sub_customer_id !== auth()->id(), 404);
         $email = $access->subCustomer->email;
         $access->delete();
-        $this->log('customer_account_access_revoked', $access->id, auth()->id(), $email);
+        $this->log(ActionLog::SUBUSER_ACCESS_REVOKED, $access->id, auth()->id(), $email);
 
         return back()->with('success', __('client.subusers.alerts.access_revoked'));
     }
@@ -160,6 +161,7 @@ class SubUserController extends Controller
             'token' => $invitation->getAttribute('token'),
         ])->save();
         $this->sendInvitation($invitation);
+        $this->log(ActionLog::SUBUSER_INVITATION_RESENT, $invitation->id, auth()->id(), $invitation->email);
 
         return back()->with('success', __('client.subusers.alerts.invitation_resent'));
     }
@@ -168,7 +170,7 @@ class SubUserController extends Controller
     {
         abort_if($invitation->owner_customer_id !== auth()->id(), 404);
         $invitation->forceFill(['revoked_at' => now()])->save();
-        $this->log('customer_account_invitation_revoked', $invitation->id, auth()->id(), $invitation->email);
+        $this->log(ActionLog::SUBUSER_INVITATION_REVOKED, $invitation->id, auth()->id(), $invitation->email);
 
         return back()->with('success', __('client.subusers.alerts.invitation_revoked'));
     }
@@ -177,39 +179,10 @@ class SubUserController extends Controller
     // so a distracted click on the invitation link doesn't consume the token.
     public function showAccept(Request $request, string $token)
     {
-        $invitation = CustomerAccountInvitation::findByPlainToken($token);
-        abort_if($invitation === null, 404);
-
-        if (! $invitation->isPending()) {
-            if (auth()->check() && strtolower(auth()->user()->email) === strtolower($invitation->email) && $invitation->accepted_at !== null) {
-                return redirect()->route('front.client.index')->with('success', __('client.subusers.alerts.invitation_accepted'));
-            }
-            abort(404);
+        $invitation = $this->resolveInvitationAcceptance($request, $token);
+        if ($invitation instanceof RedirectResponse) {
+            return $invitation;
         }
-
-        if (! auth()->check()) {
-            $request->session()->put('customer_account_invitation_token', $token);
-            $route = Customer::where('email', $invitation->email)->exists() ? 'login' : 'register';
-
-            return redirect()->route($route, [
-                'redirect' => route('front.subusers.accept', $token),
-                'email' => $invitation->email,
-            ]);
-        }
-
-        // S1: block registration-takeover - mailbox must be proven first.
-        if (! auth()->user()->hasVerifiedEmail()) {
-            $request->session()->put('customer_account_invitation_token', $token);
-
-            return redirect()->route('verification.send')
-                ->with('error', __('client.subusers.alerts.must_verify_email'));
-        }
-
-        abort_if(
-            strtolower(auth()->user()->email) !== strtolower($invitation->email),
-            403,
-            __('client.subusers.alerts.invitation_email_mismatch')
-        );
 
         $invitation->load('owner', 'services');
 
@@ -223,11 +196,10 @@ class SubUserController extends Controller
     // in between guarantees they still hold. CSRF + throttle at route layer.
     public function accept(Request $request, string $token)
     {
-        $invitation = CustomerAccountInvitation::findByPlainToken($token);
-        abort_if($invitation === null, 404);
-        abort_if(! $invitation->isPending(), 404);
-        abort_if(! auth()->check(), 401);
-        abort_if(! auth()->user()->hasVerifiedEmail(), 403);
+        $invitation = $this->resolveInvitationAcceptance($request, $token);
+        if ($invitation instanceof RedirectResponse) {
+            return $invitation;
+        }
 
         $access = $invitation->accept(auth()->user());
         $this->sendAccessGranted($access);
@@ -266,6 +238,9 @@ class SubUserController extends Controller
             $permissions = collect($access->permissions ?? [])->reject(fn ($permission) => str_starts_with($permission, 'service.'));
             $servicePermissions = collect($validated['permissions'][$access->id] ?? []);
             $access->update(['permissions' => $this->applyPermissionDependencies($permissions->merge($servicePermissions)->all())]);
+            $this->log(ActionLog::SUBUSER_ACCESS_UPDATED, $access->id, auth()->id(), $access->subCustomer->email, [
+                'service_id' => $service->id,
+            ]);
         }
 
         return back()->with('success', __('client.subusers.alerts.service_access_updated'));
@@ -297,6 +272,54 @@ class SubUserController extends Controller
         }
 
         return $validated;
+    }
+
+    private function resolveInvitationAcceptance(Request $request, string $token): CustomerAccountInvitation|RedirectResponse
+    {
+        $invitation = CustomerAccountInvitation::findByPlainToken($token);
+        if ($invitation === null) {
+            return $this->invitationErrorRedirect(__('client.subusers.alerts.invitation_invalid'));
+        }
+
+        if (! $invitation->isPending()) {
+            if (auth()->check()
+                && strtolower(auth()->user()->email) === strtolower($invitation->email)
+                && $invitation->accepted_at !== null) {
+                return redirect()->route('front.client.index')
+                    ->with('success', __('client.subusers.alerts.invitation_accepted'));
+            }
+
+            return $this->invitationErrorRedirect(__('client.subusers.alerts.invitation_unavailable'));
+        }
+
+        if (! auth()->check()) {
+            $request->session()->put('customer_account_invitation_token', $token);
+            $route = Customer::where('email', $invitation->email)->exists() ? 'login' : 'register';
+
+            return redirect()->route($route, [
+                'redirect' => route('front.subusers.accept', $token),
+                'email' => $invitation->email,
+            ]);
+        }
+
+        if (! auth()->user()->hasVerifiedEmail()) {
+            $request->session()->put('customer_account_invitation_token', $token);
+
+            return redirect()->route('verification.send')
+                ->with('error', __('client.subusers.alerts.must_verify_email'));
+        }
+
+        if (strtolower(auth()->user()->email) !== strtolower($invitation->email)) {
+            return redirect()->route('front.client.index')
+                ->with('error', __('client.subusers.alerts.invitation_email_mismatch'));
+        }
+
+        return $invitation;
+    }
+
+    private function invitationErrorRedirect(string $message): RedirectResponse
+    {
+        return redirect()->route(auth()->check() ? 'front.client.index' : 'login')->with('error', $message);
     }
 
     private function syncServices(CustomerAccountAccess|CustomerAccountInvitation $model, array $validated): void
@@ -357,11 +380,14 @@ class SubUserController extends Controller
         return $permissions->unique()->values()->all();
     }
 
-    private function log(string $message, int $modelId, int $customerId, string $email): void
+    private function log(string $action, int $modelId, int $customerId, string $email, array $payload = []): void
     {
-        ActionLog::log(ActionLog::OTHER, CustomerAccountAccess::class, $modelId, null, $customerId, [
-            'message' => $message,
+        $model = str_starts_with($action, 'subuser_invitation_')
+            ? CustomerAccountInvitation::class
+            : CustomerAccountAccess::class;
+
+        ActionLog::log($action, $model, $modelId, null, $customerId, [
             'email' => $email,
-        ]);
+        ] + $payload);
     }
 }

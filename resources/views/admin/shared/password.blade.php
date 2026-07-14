@@ -23,7 +23,6 @@
     <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2" for="{{ $name }}{{ $rand }}">{{ $label }}@if(isset($optional)) ({{ __('global.optional') }}) @endif</label>
     @endif
     <div class="relative mt-2">
-        {{-- v2.16 — preserve typed password on validation re-render. --}}
         <input id="{{ $name }}{{ $rand }}" name="{{ $name }}" type="password" class="input-text input-password @error($name) border-red-500 @enderror" value="{{ old($name, $value ?? '') }}">
         <button type="button" data-hs-toggle-password='{
         "target": "#{{ $name }}{{ $rand }}"

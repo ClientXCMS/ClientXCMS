@@ -2,19 +2,25 @@
 
 namespace App\Http\Controllers\Admin\Core;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Models\Account\Customer;
 use App\Models\Account\CustomerAccountAccess;
 use App\Models\Account\CustomerAccountInvitation;
 use App\Models\ActionLog;
 use Illuminate\Http\Request;
 
-class CustomerSubUserController extends Controller
+class CustomerSubUserController extends AbstractCrudController
 {
+    protected string $viewPath = 'admin.core.customers';
+
+    protected string $routePath = 'admin.customers';
+
+    protected string $model = CustomerAccountAccess::class;
+
     public function update(Request $request, Customer $customer, CustomerAccountAccess $access)
     {
-        abort_if(! staff_has_permission('admin.manage_customers'), 403);
-        abort_if($access->owner_customer_id !== $customer->id, 404);
+        $this->checkPermission('update', $access);
+        $this->ensureBelongsToCustomer($customer, $access->owner_customer_id);
         $validated = $this->validatePayload($request, $customer);
 
         $access->update([
@@ -29,8 +35,8 @@ class CustomerSubUserController extends Controller
 
     public function destroy(Customer $customer, CustomerAccountAccess $access)
     {
-        abort_if(! staff_has_permission('admin.manage_customers'), 403);
-        abort_if($access->owner_customer_id !== $customer->id, 404);
+        $this->checkPermission('delete', $access);
+        $this->ensureBelongsToCustomer($customer, $access->owner_customer_id);
         $email = $access->subCustomer->email;
         $access->delete();
         $this->log('admin_customer_account_access_revoked', $access->id, $customer->id, $email);
@@ -40,12 +46,28 @@ class CustomerSubUserController extends Controller
 
     public function revokeInvitation(Customer $customer, CustomerAccountInvitation $invitation)
     {
-        abort_if(! staff_has_permission('admin.manage_customers'), 403);
-        abort_if($invitation->owner_customer_id !== $customer->id, 404);
+        $this->checkPermission('delete');
+        $this->ensureBelongsToCustomer($customer, $invitation->owner_customer_id);
         $invitation->forceFill(['revoked_at' => now()])->save();
         $this->log('admin_customer_account_invitation_revoked', $invitation->id, $customer->id, $invitation->email);
 
         return back()->with('success', __('client.subusers.alerts.invitation_revoked'));
+    }
+
+    protected function getPermissions(string $tablename): array
+    {
+        return [
+            'showAny' => 'admin.show_customers',
+            'show' => 'admin.show_customers',
+            'create' => 'admin.manage_customers',
+            'update' => 'admin.manage_customers',
+            'delete' => 'admin.manage_customers',
+        ];
+    }
+
+    private function ensureBelongsToCustomer(Customer $customer, int $ownerCustomerId): void
+    {
+        abort_if($ownerCustomerId !== $customer->id, 404);
     }
 
     private function validatePayload(Request $request, Customer $owner): array

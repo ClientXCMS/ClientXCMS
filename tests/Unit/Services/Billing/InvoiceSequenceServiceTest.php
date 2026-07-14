@@ -7,10 +7,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
-/**
- * v2.16 — verifies the atomic invoice numbering replaces the previous
- * count()+1 race condition.
- */
 class InvoiceSequenceServiceTest extends TestCase
 {
     use RefreshDatabase;

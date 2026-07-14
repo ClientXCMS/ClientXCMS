@@ -17,6 +17,10 @@ class DomainProvisioningPanel implements PanelProvisioningInterface
 
     public function tabs(Service $service): array
     {
+        if (! config('features.domain_management')) {
+            return [];
+        }
+
         return [
             new ProvisioningTabDTO([
                 'uuid' => 'nameservers',

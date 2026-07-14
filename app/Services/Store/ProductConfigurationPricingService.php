@@ -12,12 +12,6 @@ use App\Services\Domain\DomainPricingService;
 
 class ProductConfigurationPricingService
 {
-    /**
-     * v2.16 — preview() now accepts an optional `$coupon` so the
-     * /basket/add config page can render the discounted total inline.
-     * The coupon is *not* persisted here; that still happens through
-     * BasketController::coupon().
-     */
     public function preview(Product $product, string $billing, string $currency, array $optionsInput = [], array $data = [], ?Coupon $coupon = null): array
     {
         if ($product->type === ProductTypeInterface::DOMAIN && ! empty($data['tld'])) {
@@ -35,11 +29,6 @@ class ProductConfigurationPricingService
 
         $firstPaymentHt = $price->firstPayment() + $optionTotals['first_payment'];
 
-        // v2.16 — apply the basket coupon BEFORE VAT so the customer
-        // sees the same discounted total they'll be charged at
-        // checkout. Coupon::applyAmount() honours the recurring vs
-        // setup-fees split, the fixed-vs-percent type, and the
-        // free_setup flag.
         $discountHt = 0.0;
         $couponMeta = null;
         if ($coupon !== null) {

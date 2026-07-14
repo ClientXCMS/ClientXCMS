@@ -21,11 +21,12 @@ namespace App\Mail;
 
 use App\Models\Admin\Admin;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
 
-class MailTested extends Notification
+class MailTested extends Notification implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

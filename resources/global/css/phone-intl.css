@@ -1,21 +1,3 @@
-/*
- * v2.16 — design polish for the intl-tel-input widget.
- *
- * Goals:
- *   - match the Tailwind .input-text height + radius + ring colour
- *     used everywhere else in the form, so the phone field doesn't
- *     stand out as a third-party widget.
- *   - dark-mode parity for the dropdown, the country search input
- *     and the flag column.
- *   - bigger flag column (44 px) for WCAG touch-target compliance
- *     on mobile.
- *   - smoother dropdown shadow + rounded corners that follow the
- *     rest of the registration card.
- *
- * Loaded once per page via the @once block in
- * resources/views/shared/phone-intl.blade.php.
- */
-
 .iti {
     width: 100%;
     display: block;

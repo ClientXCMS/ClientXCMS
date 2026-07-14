@@ -117,7 +117,6 @@ class TwoFactorAuthenticationController
         return redirect()->route('auth.2fa');
     }
 
-    // Mask local part: alex@cerbonix.eu -> a**x@cerbonix.eu, ab@x.com -> **@x.com.
     private function maskEmail(string $email): string
     {
         $at = strpos($email, '@');
@@ -134,7 +133,6 @@ class TwoFactorAuthenticationController
         return $local[0].str_repeat('*', strlen($local) - 2).substr($local, -1).$domain;
     }
 
-    // Mirror of Validate2FAMiddleware gates, must stay in sync.
     private function factorRequirements($user, ?string $ip): array
     {
         $totpEnabled = $user->twoFactorEnabled();

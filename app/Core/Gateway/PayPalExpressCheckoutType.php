@@ -367,14 +367,6 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
         return new GatewayPayInvoiceResultDTO(true, 'Done', $invoice, $sourceDTO);
     }
 
-
-    public function createRemoteSubscription(Service $service, PaymentMethodSourceDTO $sourceDTO, Subscription $subscription): ?string
-    {
-        // PayPal vault tokens are currently used for direct invoice captures.
-        // A dedicated PayPal Billing Plan agreement flow can be added later.
-        return null;
-    }
-
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
     {
         if ($invoice->external_id) {

@@ -17,10 +17,6 @@ class TwoFactorAuthenticationTest extends TestCase
 
     public function test_client_two_factor_page_auto_sends_email_when_email_factor_required(): void
     {
-        // v2.16 audit F1: the /2fa landing now auto-sends the email code
-        // when the email factor is required (force_2fa_client without TOTP,
-        // or new IP with email-on-new-IP). User-triggered re-send remains
-        // available via the dedicated button.
         Notification::fake();
         Setting::updateSettings(['force_2fa_client' => 'true']);
         $customer = Customer::factory()->create();
@@ -55,7 +51,6 @@ class TwoFactorAuthenticationTest extends TestCase
         $customer->attachMetadata('2fa_email_code', Hash::make('123456'));
         $customer->attachMetadata('2fa_email_code_expires_at', now()->addMinutes(5)->toDateTimeString());
 
-        // v2.16 audit F1: trust is now opt-in via the trust_device checkbox.
         $response = $this->actingAs($customer, 'web')->post(route('auth.2fa'), [
             '2fa' => '123456',
             'trust_device' => '1',

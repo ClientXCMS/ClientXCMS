@@ -1,15 +1,5 @@
 <?php
 
-/*
- * This file is part of the CLIENTXCMS project.
- * Year: 2026 — v2.16 release.
- *
- * Multi-factor authentication knobs. Every value can be overridden at
- * runtime via the `setting()` helper using the key listed in the
- * "setting" sub-key (DB > config > default). When no setting row
- * exists, the constant below applies.
- */
-
 return [
     /*
      * One-time email codes (channel = 'email').

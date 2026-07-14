@@ -25,7 +25,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::resource('/cancellation_reasons', CancellationReasonController::class)->names('cancellation_reasons')->except('edit');
 Route::resource('/subdomains_hosts', SubdomainHostController::class)->names('subdomains_hosts')->except('edit');
-// Route::resource('/domain_tlds', \App\Http\Controllers\Admin\Provisioning\DomainTldController::class)->names('domain_tlds')->except('edit');
+if (config('features.domain_management')) {
+    Route::resource('/domain_tlds', \App\Http\Controllers\Admin\Provisioning\DomainTldController::class)->names('domain_tlds')->except('edit');
+}
 Route::get('/upgrades', [\App\Http\Controllers\Admin\Billing\UpgradeController::class, 'index'])->name('upgrades.index');
 Route::resource('/servers', ServerController::class)->names('servers')->except('edit');
 Route::get('/testservers', [ServerController::class, 'test'])->name('servers.test');

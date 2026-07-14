@@ -65,7 +65,6 @@ class TrustedTwoFactorIpsTest extends TestCase
     public function test_legacy_string_array_is_treated_as_permanent_trust(): void
     {
         $customer = Customer::factory()->create();
-        // pre-v2.16-audit shape: bare array of IP strings
         $customer->attachMetadata('2fa_trusted_ips', json_encode(['9.9.9.9', '8.8.8.8']));
 
         $entries = $customer->fresh()->twoFactorTrustedIps();

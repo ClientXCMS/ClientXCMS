@@ -34,9 +34,6 @@
                     <div class="sm:col-span-3">
                         @include("shared.input", ["name" => "email", "label" => __('global.email'), "type" => "email", "value" => old('email', $email ?? null)])
                     </div>
-                    {{-- v2.16 — replaced the country-meta widget with the
-                         intl-tel-input partial which renders the flag +
-                         dial-code directly inside the input. --}}
                     <div class="sm:col-span-3">
                         @include('shared.phone-intl', [
                             'name' => 'phone',
@@ -94,8 +91,3 @@
         </div>
     </div>
 </form>
-
-
-{{-- v2.16 — the previous phone-country-meta widget is now replaced by the
-     intl-tel-input partial. The country select / flag synchronisation is
-     handled inside resources/global/js/phone-intl.js. --}}

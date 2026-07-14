@@ -85,7 +85,6 @@
                                     @include("admin/shared/input", ["name" => "zipcode", "label" => __('global.zip'), 'value' => old('zipcode', $item->zipcode)])
                                 </div>
                                 <div>
-                                    {{-- v2.16 — international phone field with flag/dial-code dropdown --}}
                                     @include('shared.phone-intl', [
                                         'name' => 'phone',
                                         'label' => __('global.phone'),

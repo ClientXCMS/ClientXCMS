@@ -24,20 +24,6 @@ use App\Models\Helpdesk\SupportMessage;
 use App\Models\Helpdesk\SupportTicket;
 use Illuminate\Support\Carbon;
 
-/**
- * v2.16 — Helpdesk SLA tracking.
- *
- * Departments declare two intervals in minutes:
- *   - sla_first_response_minutes  → due_at for the *first staff reply*
- *   - sla_resolution_minutes      → due_at for the *closure*
- *
- * When a ticket is opened the service computes the absolute timestamps
- * and stores them on the row. When staff replies for the first time,
- * `first_response_at` is set, stopping the "first response" clock.
- * Closing the ticket is the only thing that closes the "resolution"
- * clock — SupportTicket::close() already records `closed_at` and we
- * read that.
- */
 class SlaService
 {
     public function applyOnCreate(SupportTicket $ticket): void

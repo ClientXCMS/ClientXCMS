@@ -1,28 +1,5 @@
 <?php
 
-/*
- * v2.16 — Legal-compliance hardening of the billing flow.
- *
- *   1. invoice_sequences — atomic counter for invoice numbers.
- *      Previously Invoice::generateInvoiceNumber() did
- *      `Invoice::where(...)->count() + 1` which is a textbook race
- *      condition: two parallel paying customers can be allocated the
- *      same invoice_number, breaking the sequential numbering legally
- *      required in France (CGI art. 289) and most of the EU. This
- *      table stores one row per (prefix, year_month) with a
- *      `last_number` that we INCREMENT inside a transaction.
- *
- *   2. invoices.pdf_sha256 — SHA-256 of the generated PDF, computed
- *      once when the file is produced. Lets admins prove a posteriori
- *      that the PDF served to the customer has not been tampered with
- *      (auditor's question: "is this still the original?").
- *
- * Both additions are nullable / additive — every existing invoice
- * row keeps working without modification. Backfill happens lazily on
- * the next PDF (re)generation for hashes; existing invoice numbers
- * are preserved and the sequence table is bootstrapped from them on
- * first call to nextNumber().
- */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

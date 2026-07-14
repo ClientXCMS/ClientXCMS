@@ -194,12 +194,6 @@ class ServiceServiceTest extends TestCase
         $this->assertEquals($invoice->subtotal, 10);
     }
 
-    /**
-     * v2.16 — Anti-duplication regression test.
-     * Calling createRenewalInvoice() twice in a row with the same billing
-     * cycle must reuse the existing pending invoice, never create a second
-     * one. Customers were previously able to spam the renew button.
-     */
     public function test_create_renewal_invoice_is_idempotent_for_same_billing()
     {
         $service = $this->createServiceModel(Customer::first()->id, 'active', ['monthly' => 10]);
@@ -214,11 +208,6 @@ class ServiceServiceTest extends TestCase
         $this->assertDatabaseCount('service_renewals', 1);
     }
 
-    /**
-     * v2.16 — When the customer changes their billing cycle before paying,
-     * the old pending invoice must be cancelled and a brand new one issued.
-     * The partial unique index would otherwise block the new INSERT.
-     */
     public function test_create_renewal_invoice_cancels_old_when_billing_changes()
     {
         $service = $this->createServiceModel(Customer::first()->id, 'active', ['monthly' => 10, 'quarterly' => 12]);
@@ -242,11 +231,6 @@ class ServiceServiceTest extends TestCase
         );
     }
 
-    /**
-     * v2.16 — Once a pending invoice is cancelled (by the customer or by
-     * staff), the InvoiceObserver releases the pending lock so a brand new
-     * renewal attempt can succeed.
-     */
     public function test_pending_renewal_lock_is_released_when_invoice_is_cancelled()
     {
         $service = $this->createServiceModel(Customer::first()->id, 'active', ['monthly' => 10]);
@@ -260,11 +244,6 @@ class ServiceServiceTest extends TestCase
         $this->assertEquals(Invoice::STATUS_PENDING, $second->status);
     }
 
-    /**
-     * v2.16 — Defence-in-depth: even if some legacy code path bypasses the
-     * service layer, the database partial unique index must reject a second
-     * pending row for the same service.
-     */
     public function test_database_unique_index_blocks_concurrent_pending_renewals()
     {
         $service = $this->createServiceModel(Customer::first()->id, 'active', ['monthly' => 10]);

@@ -113,10 +113,6 @@
                 </tr>
             @endif
             @foreach($services as $i => $service)
-                {{-- v2.16 — each row is a live-status root: the poller swaps the
-                     badge + days-remaining inline whenever the service state changes,
-                     so the customer doesn't have to refresh after a provisioning
-                     callback, a manual suspension, or renewal. --}}
                 <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800"
                     data-service-live
                     data-status-url="{{ route('front.services.status', ['service' => $service]) }}">

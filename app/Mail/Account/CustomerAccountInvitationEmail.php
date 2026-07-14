@@ -5,11 +5,12 @@ namespace App\Mail\Account;
 use App\Models\Account\CustomerAccountInvitation;
 use App\Models\Admin\EmailTemplate;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
 
-class CustomerAccountInvitationEmail extends Notification
+class CustomerAccountInvitationEmail extends Notification implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

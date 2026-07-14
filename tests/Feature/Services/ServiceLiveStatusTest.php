@@ -31,9 +31,6 @@ class ServiceLiveStatusTest extends TestCase
         $response->assertJsonStructure(['status_badge_html']);
         $response->assertJsonMissingPath('panel_html');
 
-        // v2.16 — html fragments must be non-empty so the JS poller can
-        // swap them into the DOM. We don't assert specific tags (those
-        // belong to the badge-state component tests) but require markup.
         $this->assertNotEmpty($response->json('status_badge_html'));
     }
 

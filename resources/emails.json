@@ -241,17 +241,17 @@
     },
     "two_factor_code": {
         "fr_FR": {
-            "subject": "Code de double authentification est {{ $code }}",
+            "subject": "Code de double authentification",
             "button": "Continuer la connexion",
             "body": "Votre code de double authentification est : <strong>{{ $code }}</strong><br/>\nCe code est valide pendant {{ $expires_in }} minutes.<br/>\n@if($ip)<strong>Adresse IP</strong> : {{ $ip }}@endif"
         },
         "en_GB": {
-            "subject": "Two-factor authentication code is {{ $code }}",
+            "subject": "Two-factor authentication code",
             "button": "Continue login",
             "body": "Your two-factor authentication code is: <strong>{{ $code }}</strong><br/>\nThis code is valid for {{ $expires_in }} minutes.<br/>\n@if($ip)<strong>IP address</strong>: {{ $ip }}@endif"
         },
         "es_ES": {
-            "subject": "Código de autenticación en dos factores es {{ $code }}",
+            "subject": "Código de autenticación en dos factores",
             "button": "Continuar inicio de sesión",
             "body": "Su código de autenticación en dos factores es: <strong>{{ $code }}</strong><br/>\nEste código es válido durante {{ $expires_in }} minutos.<br/>\n@if($ip)<strong>Dirección IP</strong>: {{ $ip }}@endif"
         }

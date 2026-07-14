@@ -320,7 +320,6 @@ trait CanUse2FA
         if ($this->isValidEmailTwoFactorCode($code)) {
             return true;
         }
-        // v2.16 — SMS challenge runs in parallel to the email channel.
         if ($this->isValidSmsTwoFactorCode($code)) {
             return true;
         }

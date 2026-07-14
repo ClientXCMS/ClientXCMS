@@ -27,26 +27,7 @@ use App\Models\Store\CouponUsage;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
-/**
- * v2.16 — Builds the customer's GDPR Article-20 data export.
- *
- * Output is a ZIP file containing:
- *   - manifest.json   (export metadata + locale + generated_at)
- *   - profile.json    (selected personal/account fields — no authentication secrets)
- *   - invoices.json   (list + totals)
- *   - invoices/*.pdf  (each invoice as PDF — generated on demand)
- *   - services.json
- *   - credit_notes.json, subscriptions.json, upgrades.json
- *   - tickets.json    (each ticket with messages + attachment metadata)
- *   - ticket attachment contents (under each ticket folder, when available)
- *   - emails.json, account_accesses.json, coupon_usages.json
- *   - api_tokens.json (token names only — no secrets)
- *
- * The ZIP is stored under `gdpr/{customer-uuid}/{random}.zip` on the
- * default storage disk; the controller serves it through a signed URL
- * with a 24-hour TTL so it never sits unprotected behind a guessable
- * filename.
- */
+
 class GdprExportService
 {
     public const STORAGE_DIR = 'gdpr';
@@ -57,8 +38,6 @@ class GdprExportService
         if (! is_dir($tmpDir)) {
             mkdir($tmpDir, 0755, true);
         }
-        // GDPR storage limitation: the signed URL TTL is 24h, anything older
-        // is unreachable and just retains PII on disk - delete it.
         $this->purgeStaleArchives($tmpDir);
 
         $filename = sprintf('export-%s-%s.zip', $customer->id, now()->format('YmdHis'));

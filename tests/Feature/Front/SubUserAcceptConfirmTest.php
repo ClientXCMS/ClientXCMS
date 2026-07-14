@@ -41,6 +41,32 @@ class SubUserAcceptConfirmTest extends TestCase
         $this->assertNotNull($invitation->fresh()->accepted_at);
     }
 
+    public function test_post_redirects_an_unverified_user_to_email_verification(): void
+    {
+        $invitation = $this->pendingInvitationFor('bob@example.com');
+        $bob = Customer::factory()->unverified()->create(['email' => 'bob@example.com']);
+
+        $this->actingAs($bob, 'web')
+            ->post(route('front.subusers.accept.confirm', $invitation->plain_text_token))
+            ->assertRedirect(route('verification.send'))
+            ->assertSessionHas('error', __('client.subusers.alerts.must_verify_email'));
+
+        $this->assertNull($invitation->fresh()->accepted_at);
+    }
+
+    public function test_post_redirects_when_the_authenticated_email_does_not_match(): void
+    {
+        $invitation = $this->pendingInvitationFor('bob@example.com');
+        $alice = Customer::factory()->create(['email' => 'alice@example.com', 'email_verified_at' => now()]);
+
+        $this->actingAs($alice, 'web')
+            ->post(route('front.subusers.accept.confirm', $invitation->plain_text_token))
+            ->assertRedirect(route('front.client.index'))
+            ->assertSessionHas('error', __('client.subusers.alerts.invitation_email_mismatch'));
+
+        $this->assertNull($invitation->fresh()->accepted_at);
+    }
+
     public function test_post_without_csrf_or_wrong_route_does_not_accept(): void
     {
         $invitation = $this->pendingInvitationFor('bob@example.com');

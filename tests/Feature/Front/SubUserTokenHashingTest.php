@@ -56,7 +56,8 @@ class SubUserTokenHashingTest extends TestCase
 
         $this->actingAs($eve, 'web')
             ->get(route('front.subusers.accept', 'plaintext-legacy-token'))
-            ->assertNotFound();
+            ->assertRedirect(route('front.client.index'))
+            ->assertSessionHas('error', __('client.subusers.alerts.invitation_invalid'));
     }
 
     public function test_resend_rotates_the_token(): void
@@ -77,7 +78,8 @@ class SubUserTokenHashingTest extends TestCase
         $bob = Customer::factory()->create(['email' => 'bob@example.com', 'email_verified_at' => now()]);
         $this->actingAs($bob, 'web')
             ->post(route('front.subusers.accept.confirm', $oldPlain))
-            ->assertNotFound();
+            ->assertRedirect(route('front.client.index'))
+            ->assertSessionHas('error', __('client.subusers.alerts.invitation_invalid'));
     }
 
     private function makeInvitation(string $email = 'invitee@example.com'): CustomerAccountInvitation

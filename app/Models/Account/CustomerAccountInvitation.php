@@ -104,8 +104,7 @@ class CustomerAccountInvitation extends Model
 
         $this->forceFill(['accepted_at' => now()])->save();
 
-        ActionLog::log(ActionLog::OTHER, self::class, $this->id, null, $this->owner_customer_id, [
-            'message' => 'customer_account_invitation_accepted',
+        ActionLog::log(ActionLog::SUBUSER_ACCESS_ACCEPTED, CustomerAccountAccess::class, $access->id, null, $this->owner_customer_id, [
             'email' => $this->email,
         ]);
 

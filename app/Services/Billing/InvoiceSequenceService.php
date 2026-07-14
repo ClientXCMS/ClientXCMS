@@ -22,24 +22,6 @@ namespace App\Services\Billing;
 use App\Models\Billing\Invoice;
 use Illuminate\Support\Facades\DB;
 
-/**
- * v2.16 — Atomic invoice number generator.
- *
- * Replaces the race-prone `Invoice::where(...)->count() + 1` pattern
- * with a row-level locked counter, one per (prefix, year_month).
- * Backfills the counter from the existing invoice rows on first call
- * so installs upgrading from v2.15 don't restart at 1 mid-month.
- *
- * Returns the FULL invoice number ready to assign to the row, e.g.
- *   "CTX-2026-05-0042"
- *   "CTX-PROFORMA-2026-05-0042"
- *
- * Legal context (FR): CGI art. 289 requires invoice numbers to be
- * issued in a continuous, sequential, chronological order. A race
- * resulting in two invoices sharing a number is a compliance
- * violation. The DB transaction + lockForUpdate make the increment
- * single-writer.
- */
 class InvoiceSequenceService
 {
     public static function nextNumber(?string $date = null, bool $creation = true): string
@@ -51,9 +33,6 @@ class InvoiceSequenceService
 
         $yearMonth = $date ?? now()->format('Y-m');
 
-        // Pre-create the row atomically. lockForUpdate on 0 rows only gap-locks
-        // under MySQL REPEATABLE READ; on READ COMMITTED / PostgreSQL the loser
-        // of two parallel first-of-month calls hits UNIQUE -> exception.
         DB::table('invoice_sequences')->insertOrIgnore([
             'prefix' => $prefix,
             'year_month' => $yearMonth,

@@ -1,19 +1,3 @@
-{{--
-    v2.16 — International phone input partial.
-
-    Expected variables (all optional unless noted):
-      $name         input name attribute (default: "phone")
-      $label        visible label (required)
-      $value        prefilled E.164 phone, defaults to old($name)
-      $country      ISO-2 country code used to set the initial flag
-      $optional     mark the field as optional in the label
-      $help         tooltip help text
-      $required     bool, defaults to false
-
-    Generates a <input type="tel" data-phone-intl> picked up by the
-    companion JS module resources/global/js/phone-intl.js, which mounts
-    intl-tel-input and serialises the value to E.164 on submit.
---}}
 @php
     $name = $name ?? 'phone';
     $value = $value ?? old($name, '');
@@ -56,13 +40,5 @@
 </div>
 
 @once
-    {{-- v2.16 — use @vite() (not Vite::asset()) so Vite also emits the
-         <link rel="stylesheet"> for the CSS imported inside phone-intl.js
-         (intl-tel-input's flag/dial-code styling). Without this the JS
-         loads but the flag dropdown stays invisible — that's the regression
-         spotted on the live registration form.
-         Also pulls phone-intl.css which polishes the widget to match the
-         rest of the form: same height/radius as .input-text, dark-mode
-         parity, WCAG-friendly touch targets, search-input style. --}}
     @vite(['resources/global/js/phone-intl.js', 'resources/global/css/phone-intl.css'])
 @endonce

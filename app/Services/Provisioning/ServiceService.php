@@ -75,30 +75,6 @@ class ServiceService
      *
      * @throws \WrongPaymentException
      */
-    /**
-     * Idempotent renewal invoice creation.
-     *
-     * Hardened in v2.16 to fix the duplicate-pending-invoice bug:
-     *   - A row-level lock on the service is taken inside a DB transaction.
-     *   - We look up the latest non-renewed (=pending) ServiceRenewals row
-     *     instead of trusting only $service->invoice_id, which is stale when
-     *     a previous renewal was appended to a basket invoice rather than
-     *     created standalone.
-     *   - Same billing cycle requested → existing pending invoice is reused.
-     *   - Different billing cycle → old pending invoice is cancelled, its
-     *     ServiceRenewals row is soft-cancelled (releasing the partial unique
-     *     index `service_renewals_pending_lock_unique`), then a fresh invoice
-     *     is created.
-     *   - The partial unique index guarantees no race condition can produce
-     *     two pending renewals for the same service.
-     *
-     * @param  Service  $service  service to create invoice for
-     * @param  string   $billing  billing cycle code (e.g. monthly, quarterly)
-     * @param  string   $mode     InvoiceService::CREATE_INVOICE or APPEND_SERVICE
-     * @param  int|null $invoice_id  append to existing invoice
-     *
-     * @throws WrongPaymentException
-     */
     public static function createRenewalInvoice(Service $service, string $billing, string $mode = InvoiceService::CREATE_INVOICE, ?int $invoice_id = null): Invoice
     {
         if ($service->billing == 'onetime') {
@@ -110,12 +86,6 @@ class ServiceService
         }
 
         return DB::transaction(function () use ($service, $billing, $mode, $invoice_id) {
-            // Acquire a row-level lock on the service so two concurrent
-            // renew requests serialize through this critical section, then
-            // refresh the caller's model instance so any mutation we make
-            // (e.g. $service->update(['invoice_id' => …])) is visible to
-            // the caller after the transaction commits — preserving the
-            // v2.15 semantics that the test suite relies on.
             $exists = Service::query()->whereKey($service->id)->lockForUpdate()->exists();
             if (! $exists) {
                 throw new WrongPaymentException('Service not found while locking for renewal');
@@ -124,8 +94,6 @@ class ServiceService
 
             $existingInvoice = self::findReusablePendingInvoice($service, $billing);
             if ($existingInvoice !== null) {
-                // Idempotent path: keep the existing pending invoice + its
-                // pending ServiceRenewals row.
                 if ($service->invoice_id !== $existingInvoice->id) {
                     $service->update(['invoice_id' => $existingInvoice->id]);
                 }
