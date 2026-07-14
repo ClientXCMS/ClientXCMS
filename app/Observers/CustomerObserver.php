@@ -61,10 +61,12 @@ class CustomerObserver
             'balance' => 0,
             'billing_details' => null,
             'company_name' => null,
-            'support_id' => null,
             'gdpr_compliment' => false,
             'security_question_id' => null,
             'security_question_answer' => null,
         ]);
+        if ($customer->support_id) {
+            $customer->update(['support_id' => null]);
+        }
     }
 }
