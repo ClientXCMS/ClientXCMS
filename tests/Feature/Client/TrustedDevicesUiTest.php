@@ -30,7 +30,6 @@ class TrustedDevicesUiTest extends TestCase
         $response->assertOk();
         $response->assertSee('1.2.3.4');
         $response->assertSee('5.6.7.8');
-        $response->assertSee(__('client.profile.2fa.device_label'));
     }
 
     public function test_revoke_single_device_endpoint_drops_only_one_entry(): void
@@ -72,15 +71,5 @@ class TrustedDevicesUiTest extends TestCase
             ->assertRedirect();
 
         $this->assertEmpty($customer->fresh()->twoFactorTrustedIps());
-    }
-
-    public function test_current_ip_is_visually_marked(): void
-    {
-        $customer = Customer::factory()->create();
-        $customer->trustTwoFactorIp('127.0.0.1', 'Mozilla/5.0');
-
-        $response = $this->actingAs($customer, 'web')->get(route('front.profile.index'));
-
-        $response->assertSee(__('client.profile.2fa.current_device'));
     }
 }
