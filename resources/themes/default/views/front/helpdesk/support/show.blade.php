@@ -67,9 +67,8 @@
                                         <!-- Icon -->
                                         <div class="relative last:after:hidden after:absolute after:top-10 after:bottom-0 after:start-5 after:w-px after:-translate-x-[0.5px] after:bg-gray-200 dark:after:bg-neutral-700">
                                             <div class="relative z-10 size-10 flex justify-center items-center">
-        <span class="flex shrink-0 justify-center items-center size-10 bg-white border border-gray-200 text-[10px] font-semibold uppercase text-gray-600 rounded-full dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400">
-          <i class="bi bi-{{ $message->isStaff() ? 'person-badge' : 'person' }} text-lg"></i>
-        </span>
+                                                @php($author = $message->isStaff() ? $message->admin : $message->customer)
+                                                <x-avatar :user="$author" size="md" class="!ring-0" />
                                             </div>
                                         </div>
                                         <!-- End Icon -->

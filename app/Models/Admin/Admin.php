@@ -123,6 +123,7 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
         static::deleting(function (self $admin) {
             $admin->tokens()->delete();
         });
+        static::forceDeleted(fn (self $admin) => app(\App\Services\Account\AvatarService::class)->purge($admin));
     }
 
     protected $fillable = [
@@ -141,6 +142,7 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
         'locale',
         'security_question_id',
         'security_answer',
+        'avatar_path',
     ];
 
     protected $hidden = [

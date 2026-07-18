@@ -70,7 +70,7 @@ final class MfaConfig
 
     public static function trustedDeviceLifetimeDays(): int
     {
-        return max(1, (int) self::resolve('trust_device_days', 'mfa.trusted_devices.default_lifetime_days', 30));
+        return max(1, (int) self::resolve('trust_device_days', 'mfa.trusted_devices.default_lifetime_days', 7));
     }
 
     public static function forceFor(string $guard): bool

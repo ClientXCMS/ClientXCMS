@@ -25,7 +25,7 @@ return [
      */
     'trusted_devices' => [
         'max_entries' => 20,                              // soft cap, oldest evicted first
-        'default_lifetime_days' => 30,                    // setting('trust_device_days') overrides
+        'default_lifetime_days' => 7,                    // setting('trust_device_days') overrides
     ],
 
     /*

@@ -56,6 +56,8 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::get('/download_codes', [\App\Http\Controllers\Front\ProfileController::class, 'downloadCodes'])->name('.2fa_codes');
         Route::delete('/delete', [\App\Http\Controllers\Front\ProfileController::class, 'deleteAccount'])->name('.delete.confirm');
         Route::post('/security-question', [\App\Http\Controllers\Front\ProfileController::class, 'saveSecurityQuestion'])->name('.security_question');
+        Route::post('/avatar', [\App\Http\Controllers\Front\ProfileController::class, 'uploadAvatar'])->name('.avatar.upload');
+        Route::delete('/avatar', [\App\Http\Controllers\Front\ProfileController::class, 'deleteAvatar'])->name('.avatar.delete');
     });
     Route::prefix('/emails')->name('emails.')->group(function () {
         Route::get('/', [EmailController::class, 'index'])->middleware(['auth', 'verified'])->name('index');

@@ -32,11 +32,8 @@
                     <div class="flex flex-col">
                         <div class="-m-1.5 overflow-x-auto">
                             <div class="p-1.5 min-w-full inline-block align-middle">
-                                <form class="card" method="POST" action="{{ route($routePath . '.update', ['staff' => $item]) }}">
-                                <div class="card-heading">
-                                        @csrf
-                                        <input type="hidden" name="id" value="{{ $item->id }}">
-                                        @method('PUT')
+                                <div class="card">
+                                    <div class="card-heading">
                                         <div>
                                             <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
                                                 {{ __($translatePrefix . '.show.title', ['name' => $item->username]) }}
@@ -46,12 +43,16 @@
                                             </p>
                                         </div>
                                         <div class="mt-4 flex items-center space-x-4 sm:mt-0">
-                                            <button class="btn btn-primary">
+                                            <button class="btn btn-primary" type="submit" form="staff-profile-form">
                                                 {{ __('admin.updatedetails') }}
                                             </button>
                                         </div>
                                     </div>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <form id="staff-profile-form" class="contents" method="POST" action="{{ route($routePath . '.update', ['staff' => $item]) }}">
+                                        @csrf
+                                        <input type="hidden" name="id" value="{{ $item->id }}">
+                                        @method('PUT')
                                         <div>
                                             @include('admin/shared/input', ['name' => 'username', 'label' => __('global.username'), 'value' => old('username', $item->username)])
                                         </div>
@@ -89,8 +90,16 @@
                                         <div>
                                             @include('admin/shared/select', ['name' => 'role_id', 'label' => __('admin.roles.role'), 'options' => $roles, 'value' => old('role', $item->role_id)])
                                         </div>
+                                    </form>
+                                    <x-avatar-editor
+                                        :user="$item"
+                                        :upload-route="route('admin.staffs.avatar.upload', $item)"
+                                        :delete-route="route('admin.staffs.avatar.delete', $item)"
+                                        input-id="staff-avatar"
+                                        variant="field"
+                                    />
                                     </div>
-                                </form>
+                                </div>
 
                                 @if (staff_has_permission('admin.show_logs'))
                                     <div class="card">

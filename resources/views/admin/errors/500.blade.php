@@ -17,8 +17,14 @@
  */
 ?>
 
-@extends('admin/layouts/admin')
+@extends('admin.layouts.admin')
+
 @section('title', __('errors.500.title'))
+
 @section('content')
-    @include('shared/errors/500')
+    @include('shared.errors.panel', [
+        'statusCode' => 500,
+        'homeUrl' => route('admin.dashboard'),
+        'homeLabel' => __('errors.common.dashboard'),
+    ])
 @endsection

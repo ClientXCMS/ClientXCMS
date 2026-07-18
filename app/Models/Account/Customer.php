@@ -281,6 +281,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'locale',
         'billing_details',
         'company_name',
+        'avatar_path',
         'gdpr_compliment',
         'security_question_id',
         'security_answer',
@@ -291,6 +292,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         static::deleting(function (self $customer) {
             $customer->tokens()->delete();
         });
+        static::forceDeleted(fn (self $customer) => app(\App\Services\Account\AvatarService::class)->purge($customer));
     }
 
     protected $attributes = [

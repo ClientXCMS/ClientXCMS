@@ -23,10 +23,13 @@ use App\Events\Resources\ResourceUpdatedEvent;
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Http\Requests\Admin\Staff\StoreStaffRequest;
 use App\Http\Requests\Admin\Staff\UpdateStaffRequest;
+use App\Http\Requests\Profile\AvatarUploadRequest;
 use App\Models\ActionLog;
 use App\Models\Admin\Admin;
 use App\Models\Admin\Role;
 use App\Models\Admin\SecurityQuestion;
+use App\Services\Account\AvatarService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
@@ -280,5 +283,35 @@ class AdminController extends AbstractCrudController
         );
 
         return back()->with('success', __('client.profile.security_question_saved'));
+    }
+
+    public function uploadOwnAvatar(AvatarUploadRequest $request, AvatarService $avatars): RedirectResponse
+    {
+        $avatars->upload($request->user('admin'), $request->file('avatar'));
+
+        return back()->with('success', __('client.profile.avatar.updated'));
+    }
+
+    public function deleteOwnAvatar(Request $request, AvatarService $avatars): RedirectResponse
+    {
+        $avatars->delete($request->user('admin'));
+
+        return back()->with('success', __('client.profile.avatar.removed'));
+    }
+
+    public function uploadStaffAvatar(AvatarUploadRequest $request, Admin $staff, AvatarService $avatars): RedirectResponse
+    {
+        $this->checkPermission('update', $staff);
+        $avatars->upload($staff, $request->file('avatar'));
+
+        return back()->with('success', __('client.profile.avatar.updated'));
+    }
+
+    public function deleteStaffAvatar(Request $request, Admin $staff, AvatarService $avatars): RedirectResponse
+    {
+        $this->checkPermission('update', $staff);
+        $avatars->delete($staff);
+
+        return back()->with('success', __('client.profile.avatar.removed'));
     }
 }

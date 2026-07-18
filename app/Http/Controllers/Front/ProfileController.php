@@ -20,12 +20,15 @@
 namespace App\Http\Controllers\Front;
 
 use App\Helpers\Countries;
+use App\Http\Requests\Profile\AvatarUploadRequest;
 use App\Http\Requests\Profile\DeleteAccountRequest;
 use App\Http\Requests\Profile\ProfilePasswordRequest;
 use App\Http\Requests\Profile\ProfileUpdateRequest;
 use App\Models\Account\Customer;
+use App\Models\Account\CustomerAccountAccess;
 use App\Models\ActionLog;
 use App\Services\Account\AccountDeletionService;
+use App\Services\Account\AvatarService;
 use App\Services\Account\GdprExportService;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\RedirectResponse;
@@ -62,15 +65,23 @@ class ProfileController extends \App\Http\Controllers\Controller
             $qrcode = null;
         }
 
+        $user = $request->user('web');
+
         return view('front.profile.edit', [
-            'user' => $request->user('web'),
+            'user' => $user,
             'countries' => Countries::names(),
             'locales' => \App\Services\Core\LocaleService::getLocalesNames(),
             'providers' => $providers,
             'qrcode' => $qrcode,
             'code' => $request->session()->get('2fa_secret'),
-            'ownedAccountAccesses' => $request->user('web')->ownedAccountAccesses()->with(['subCustomer', 'services'])->orderBy('created_at', 'desc')->get(),
-            'receivedAccountAccesses' => $request->user('web')->receivedAccountAccesses()->with(['owner', 'services'])->orderBy('created_at', 'desc')->get(),
+            'ownedAccountAccesses' => $user->ownedAccountAccesses()->with(['subCustomer', 'services'])->orderBy('created_at', 'desc')->get(),
+            'receivedAccountAccesses' => $user->receivedAccountAccesses()->with(['owner', 'services'])->orderBy('created_at', 'desc')->get(),
+            'accountInvitations' => $user->pendingAccountInvitations()->with('services')->orderBy('created_at', 'desc')->get(),
+            'subuserServices' => $user->services()->where('status', 'active')->orderBy('name')->get(),
+            'subuserPermissions' => [
+                'services' => CustomerAccountAccess::SERVICE_PERMISSIONS,
+                'invoices' => CustomerAccountAccess::INVOICE_PERMISSIONS,
+            ],
         ]);
     }
 
@@ -204,6 +215,20 @@ class ProfileController extends \App\Http\Controllers\Controller
         return redirect()->to(route('front.profile.index').'#pane-export')
             ->with('success', __('client.gdpr.export.ready'))
             ->with('gdpr_export_url', $service->signedUrl($relativePath));
+    }
+
+    public function uploadAvatar(AvatarUploadRequest $request, AvatarService $avatars): RedirectResponse
+    {
+        $avatars->upload($request->user('web'), $request->file('avatar'));
+
+        return back()->with('success', __('client.profile.avatar.updated'));
+    }
+
+    public function deleteAvatar(Request $request, AvatarService $avatars): RedirectResponse
+    {
+        $avatars->delete($request->user('web'));
+
+        return back()->with('success', __('client.profile.avatar.removed'));
     }
 
     public function downloadExport(Request $request, string $path): \Symfony\Component\HttpFoundation\BinaryFileResponse|RedirectResponse

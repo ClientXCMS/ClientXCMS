@@ -18,14 +18,7 @@ class SubUserController extends Controller
 {
     public function index()
     {
-        $customer = auth()->user();
-        $accesses = $customer->ownedAccountAccesses()->with(['subCustomer', 'services'])->orderBy('created_at', 'desc')->get();
-        $invitations = $customer->pendingAccountInvitations()->with('services')->orderBy('created_at', 'desc')->get();
-        $receivedAccesses = $customer->receivedAccountAccesses()->with(['owner', 'services'])->orderBy('created_at', 'desc')->get();
-        $services = $customer->services()->where('status', 'active')->orderBy('name')->get();
-        $permissions = $this->permissions();
-
-        return view('front.subusers.index', compact('accesses', 'invitations', 'receivedAccesses', 'services', 'permissions'));
+        return redirect()->to(route('front.profile.index').'#pane-subusers');
     }
 
     public function store(Request $request)
@@ -35,15 +28,15 @@ class SubUserController extends Controller
         $email = strtolower($validated['email']);
 
         if ($email === strtolower($owner->email)) {
-            return back()->with('error', __('client.subusers.alerts.self_invite'));
+            return $this->profileRedirect()->with('error', __('client.subusers.alerts.self_invite'));
         }
         if ($owner->pendingAccountInvitations()->where('email', $email)->exists()) {
-            return back()->with('error', __('client.subusers.alerts.pending_exists'));
+            return $this->profileRedirect()->with('error', __('client.subusers.alerts.pending_exists'));
         }
 
         $existingCustomer = Customer::where('email', $email)->first();
         if ($existingCustomer && $owner->ownedAccountAccesses()->where('sub_customer_id', $existingCustomer->id)->exists()) {
-            return back()->with('error', __('client.subusers.alerts.access_exists'));
+            return $this->profileRedirect()->with('error', __('client.subusers.alerts.access_exists'));
         }
 
         $invitation = CustomerAccountInvitation::create([
@@ -56,7 +49,7 @@ class SubUserController extends Controller
         $this->sendInvitation($invitation);
         $this->log(ActionLog::SUBUSER_INVITATION_CREATED, $invitation->id, $owner->id, $email);
 
-        return back()->with('success', __('client.subusers.alerts.invitation_sent'));
+        return $this->profileRedirect()->with('success', __('client.subusers.alerts.invitation_sent'));
     }
 
     public function service(Service $service)
@@ -137,7 +130,7 @@ class SubUserController extends Controller
         $this->syncServices($access, $validated);
         $this->log(ActionLog::SUBUSER_ACCESS_UPDATED, $access->id, auth()->id(), $access->subCustomer->email);
 
-        return back()->with('success', __('client.subusers.alerts.access_updated'));
+        return $this->profileRedirect()->with('success', __('client.subusers.alerts.access_updated'));
     }
 
     public function destroy(CustomerAccountAccess $access)
@@ -147,7 +140,7 @@ class SubUserController extends Controller
         $access->delete();
         $this->log(ActionLog::SUBUSER_ACCESS_REVOKED, $access->id, auth()->id(), $email);
 
-        return back()->with('success', __('client.subusers.alerts.access_revoked'));
+        return $this->profileRedirect()->with('success', __('client.subusers.alerts.access_revoked'));
     }
 
     public function resend(CustomerAccountInvitation $invitation)
@@ -163,7 +156,7 @@ class SubUserController extends Controller
         $this->sendInvitation($invitation);
         $this->log(ActionLog::SUBUSER_INVITATION_RESENT, $invitation->id, auth()->id(), $invitation->email);
 
-        return back()->with('success', __('client.subusers.alerts.invitation_resent'));
+        return $this->profileRedirect()->with('success', __('client.subusers.alerts.invitation_resent'));
     }
 
     public function revoke(CustomerAccountInvitation $invitation)
@@ -172,7 +165,7 @@ class SubUserController extends Controller
         $invitation->forceFill(['revoked_at' => now()])->save();
         $this->log(ActionLog::SUBUSER_INVITATION_REVOKED, $invitation->id, auth()->id(), $invitation->email);
 
-        return back()->with('success', __('client.subusers.alerts.invitation_revoked'));
+        return $this->profileRedirect()->with('success', __('client.subusers.alerts.invitation_revoked'));
     }
 
     // Read-only: shows what's about to be granted + POST form. NEVER writes,
@@ -361,12 +354,9 @@ class SubUserController extends Controller
         }
     }
 
-    private function permissions(): array
+    private function profileRedirect(): RedirectResponse
     {
-        return [
-            'services' => CustomerAccountAccess::SERVICE_PERMISSIONS,
-            'invoices' => CustomerAccountAccess::INVOICE_PERMISSIONS,
-        ];
+        return redirect()->to(route('front.profile.index').'#pane-subusers');
     }
 
     private function applyPermissionDependencies(array $permissions): array

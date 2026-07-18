@@ -1,134 +1,259 @@
-.iti {
+.phone-intl-wrap {
     width: 100%;
-    display: block;
 }
 
-/* Match the height and radius of .input-text everywhere else. */
-.iti input[type='tel'],
-.iti input[type='text'] {
+.phone-intl-wrap .iti {
+    --iti-border-color: #e5e7eb;
+    --iti-dialcode-color: #64748b;
+    --iti-dropdown-bg: #fff;
+    --iti-hover-color: #f1f5f9;
+    --iti-search-icon-color: #94a3b8;
+    display: block;
     width: 100%;
-    height: 2.625rem;          /* same vertical rhythm as the rest of the form */
-    padding-left: 5.5rem !important;  /* room for the flag + dial code */
-    padding-right: 0.875rem;
-    background-color: #fff;
+}
+
+/* Main phone input. Keep this selector specific so it never styles the
+   search input rendered inside the country dropdown. */
+.phone-intl-wrap .iti input.iti__tel-input {
+    display: block;
+    width: 100%;
+    height: 2.875rem;
+    padding-right: 1rem;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
-    font-size: 0.9rem;
+    background: #fff;
     color: #0f172a;
-    line-height: 1.25;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-.iti input[type='tel']:focus,
-.iti input[type='text']:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
-/* Country picker button (flag + arrow + dial code) */
-.iti__country-container .iti__selected-country {
-    height: 2.625rem;
+.phone-intl-wrap .iti input.iti__tel-input:hover {
+    border-color: #d1d5db;
+}
+
+.phone-intl-wrap .iti input.iti__tel-input:focus {
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgb(99 102 241 / 15%);
+}
+
+.phone-intl-wrap .iti input.iti__tel-input::placeholder {
+    color: #9ca3af;
+}
+
+/* Flag, arrow and separate dial code. intl-tel-input calculates the input
+   padding from this element, so do not add horizontal padding to its shell. */
+.phone-intl-wrap .iti__country-container {
+    padding: 1px;
+}
+
+.phone-intl-wrap .iti__selected-country {
+    height: 100%;
+    padding: 0;
     border-right: 1px solid #e5e7eb;
-    padding: 0 0.5rem 0 0.6rem;
-    border-top-left-radius: 0.5rem;
-    border-bottom-left-radius: 0.5rem;
+    border-radius: 0.45rem 0 0 0.45rem;
     background: #f8fafc;
 }
-.iti__country-container .iti__selected-country:hover {
+
+
+.phone-intl-wrap .iti__selected-country-primary:hover,
+.phone-intl-wrap .iti__selected-country:has(+ .iti__dropdown-content:hover) .iti__selected-country-primary {
     background: #f1f5f9;
 }
-.iti__country-container .iti__selected-dial-code {
-    font-weight: 600;
+
+.phone-intl-wrap .iti__selected-dial-code {
     color: #0f172a;
-    margin-left: 0.25rem;
+    font-variant-numeric: tabular-nums;
 }
 
-/* Dropdown panel */
-.iti__dropdown-content {
-    border-radius: 0.65rem;
-    border: 1px solid rgba(15, 23, 42, 0.1);
-    box-shadow: 0 16px 40px -12px rgba(15, 23, 42, 0.25);
+.phone-intl-wrap .iti__arrow {
+    border-top-color: #64748b;
+}
+
+/* Dropdown */
+.phone-intl-wrap .iti--inline-dropdown .iti__dropdown-content {
+    z-index: 50;
+    margin-top: 0.375rem;
     overflow: hidden;
-    margin-top: 4px;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
     background: #fff;
+    box-shadow: 0 18px 45px -12px rgb(15 23 42 / 28%);
 }
-.iti__search-input {
-    width: 100%;
-    padding: 0.55rem 0.75rem;
-    border: 0;
+
+/* Search */
+.phone-intl-wrap .iti__search-input-wrapper {
+    padding: 0.5rem;
     border-bottom: 1px solid #e5e7eb;
-    font-size: 0.9rem;
-    outline: none;
-    background: #fafafa;
-}
-.iti__search-input:focus {
     background: #fff;
-    box-shadow: inset 0 -2px 0 #2563eb;
 }
-.iti__country-list {
-    max-height: 260px;
+
+.phone-intl-wrap .iti__search-input {
+    width: 100%;
+    height: 2.5rem;
+    margin: 0;
+    padding: 0 2.25rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    outline: none;
+    appearance: none;
+}
+
+.phone-intl-wrap .iti__search-input:focus {
+    border-color: #6366f1;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgb(99 102 241 / 12%);
+}
+
+.phone-intl-wrap .iti__search-input::placeholder {
+    color: #9ca3af;
+}
+
+.phone-intl-wrap .iti__search-icon {
+    left: 1.25rem;
+    z-index: 1;
+}
+
+.phone-intl-wrap .iti__search-clear {
+    right: 1rem;
+}
+
+/* Country list */
+.phone-intl-wrap .iti__country-list {
+    max-height: 15rem;
+    padding: 0.375rem;
     overflow-y: auto;
-    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
 }
-.iti__country {
-    padding: 0.45rem 0.75rem;
+
+.phone-intl-wrap .iti__country {
+    min-height: 2.5rem;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.5rem;
+    color: #334155;
+    font-size: 0.875rem;
 }
-.iti__country:hover,
-.iti__country.iti__active,
-.iti__country.iti__highlight {
-    background: rgba(37, 99, 235, 0.08);
+
+.phone-intl-wrap .iti__country:hover,
+.phone-intl-wrap .iti__country.iti__active,
+.phone-intl-wrap .iti__country.iti__highlight {
+    background: #eef2ff;
+    color: #312e81;
 }
-.iti__country .iti__dial-code {
+
+.phone-intl-wrap .iti__country-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.phone-intl-wrap .iti__country .iti__dial-code {
+    margin-left: auto;
+    padding-left: 0.75rem;
     color: #64748b;
     font-variant-numeric: tabular-nums;
 }
 
-/* ────────── Dark mode ──────────
-   Tailwind toggles .dark on <html>. Override iti colours when active. */
-.dark .iti input[type='tel'],
-.dark .iti input[type='text'] {
-    background-color: rgba(15, 23, 42, 0.7);
-    border-color: rgba(148, 163, 184, 0.25);
-    color: #e2e8f0;
+.phone-intl-wrap .iti__no-results {
+    padding: 2rem 1rem;
+    color: #64748b;
+    font-size: 0.875rem;
 }
-.dark .iti input[type='tel']:focus,
-.dark .iti input[type='text']:focus {
-    border-color: #60a5fa;
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+
+/* Validation */
+.phone-intl-wrap .iti input.iti__tel-input.border-red-500 {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgb(239 68 68 / 15%);
 }
-.dark .iti__country-container .iti__selected-country {
-    background: rgba(148, 163, 184, 0.12);
-    border-right-color: rgba(148, 163, 184, 0.2);
+
+/* Dark mode */
+.dark .phone-intl-wrap .iti {
+    --iti-border-color: #374151;
+    --iti-dialcode-color: #94a3b8;
+    --iti-dropdown-bg: #111827;
+    --iti-hover-color: #1f2937;
+    --iti-search-icon-color: #94a3b8;
 }
-.dark .iti__country-container .iti__selected-country:hover {
-    background: rgba(148, 163, 184, 0.18);
+
+.dark .phone-intl-wrap .iti input.iti__tel-input {
+    border-color: #374151;
+    background: #1f2937;
+    color: #e5e7eb;
 }
-.dark .iti__country-container .iti__selected-dial-code {
-    color: #e2e8f0;
+
+.dark .phone-intl-wrap .iti input.iti__tel-input:hover {
+    border-color: #4b5563;
 }
-.dark .iti__dropdown-content {
-    background: #0f172a;
-    border-color: rgba(148, 163, 184, 0.18);
-    color: #e2e8f0;
+
+.dark .phone-intl-wrap .iti input.iti__tel-input:focus {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 3px rgb(129 140 248 / 18%);
 }
-.dark .iti__search-input {
-    background: rgba(148, 163, 184, 0.08);
-    color: #e2e8f0;
-    border-bottom-color: rgba(148, 163, 184, 0.18);
+
+.dark .phone-intl-wrap .iti__selected-country {
+    border-right-color: #374151;
+    background: #111827;
 }
-.dark .iti__country:hover,
-.dark .iti__country.iti__active,
-.dark .iti__country.iti__highlight {
-    background: rgba(96, 165, 250, 0.15);
+
+.dark .phone-intl-wrap .iti__selected-country-primary:hover,
+.dark .phone-intl-wrap .iti__selected-country:has(+ .iti__dropdown-content:hover) .iti__selected-country-primary {
+    background: #273449;
 }
-.dark .iti__country .iti__dial-code {
+
+.dark .phone-intl-wrap .iti__selected-dial-code {
+    color: #e5e7eb;
+}
+
+.dark .phone-intl-wrap .iti--inline-dropdown .iti__dropdown-content {
+    border-color: #374151;
+    background: #111827;
+    box-shadow: 0 18px 45px -12px rgb(0 0 0 / 55%);
+}
+
+.dark .phone-intl-wrap .iti__search-input-wrapper {
+    border-bottom-color: #374151;
+    background: #111827;
+}
+
+.dark .phone-intl-wrap .iti__search-input {
+    border-color: #374151;
+    background: #1f2937;
+    color: #e5e7eb;
+}
+
+.dark .phone-intl-wrap .iti__search-input:focus {
+    border-color: #818cf8;
+    background: #1f2937;
+}
+
+.dark .phone-intl-wrap .iti__country-list {
+    scrollbar-color: #475569 transparent;
+}
+
+.dark .phone-intl-wrap .iti__country {
+    color: #d1d5db;
+}
+
+.dark .phone-intl-wrap .iti__country:hover,
+.dark .phone-intl-wrap .iti__country.iti__active,
+.dark .phone-intl-wrap .iti__country.iti__highlight {
+    background: rgb(79 70 229 / 22%);
+    color: #e0e7ff;
+}
+
+.dark .phone-intl-wrap .iti__country .iti__dial-code,
+.dark .phone-intl-wrap .iti__no-results {
     color: #94a3b8;
 }
 
-/* Validation state — the partial echoes @error on the input, we
-   forward that into a red border on the iti shell so the user can
-   actually see the error visual. */
-.phone-intl-wrap .iti input.border-red-500 {
-    border-color: #ef4444 !important;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+@media (max-width: 640px) {
+    .phone-intl-wrap .iti--inline-dropdown .iti__dropdown-content {
+        width: min(22rem, calc(100vw - 2rem));
+        max-width: calc(100vw - 2rem);
+    }
 }

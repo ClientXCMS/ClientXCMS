@@ -16,8 +16,10 @@
  * Year: 2025
  */
 ?>
-@extends('layouts/front')
+@extends('layouts.front')
+
 @section('title', __('errors.500.title'))
+
 @section('content')
-    @include('shared/errors/500')
+    @include('shared.errors.panel', ['statusCode' => 500])
 @endsection

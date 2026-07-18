@@ -34,28 +34,3 @@
         @endforeach
     </div>
 </div>
-<script >
-    document.addEventListener('DOMContentLoaded', function () {
-        const allServicesCheckbox = document.querySelectorAll('.permissions-form input[name="all_services"]');
-        const serviceCheckboxes = document.querySelectorAll('.permissions-form input[name="services[]"]');
-
-        function toggleServiceCheckboxes(e) {
-            const isChecked = e.target.checked;
-            serviceCheckboxes.forEach(checkbox => {
-                // hidden input will still submit value, so we disable them instead of hiding
-                checkbox.disabled = isChecked;
-                if (isChecked) {
-                    checkbox.checked = false;
-                    checkbox.parentElement.classList.add('hidden');
-                } else {
-                    checkbox.parentElement.classList.remove('hidden');
-                }
-            });
-        }
-    
-        allServicesCheckbox.forEach(checkbox => {
-            checkbox.addEventListener('change', toggleServiceCheckboxes);
-            toggleServiceCheckboxes({ target: checkbox });
-        });
-    });
-</script>

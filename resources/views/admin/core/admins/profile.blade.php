@@ -30,10 +30,8 @@
             <div class="flex flex-col">
                 <div class="-m-1.5 overflow-x-auto">
                     <div class="p-1.5 min-w-full inline-block align-middle">
-                        <form class="card" method="POST" action="{{ route($routePath . '.profile') }}">
+                        <div class="card">
                             <div class="card-heading">
-                                @csrf
-                                @method('PUT')
                                 <div>
                                     <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
                                         {{ __($translatePrefix . '.show.title', ['name' => $item->username]) }}
@@ -43,12 +41,15 @@
                                     </p>
                                 </div>
                                 <div class="mt-4 flex items-center space-x-4 sm:mt-0">
-                                    <button class="btn btn-primary">
+                                    <button class="btn btn-primary" type="submit" form="admin-profile-form">
                                         {{ __('admin.updatedetails') }}
                                     </button>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <form id="admin-profile-form" class="contents" method="POST" action="{{ route($routePath . '.profile') }}">
+                                @csrf
+                                @method('PUT')
                                 <div>
                                     @include('admin/shared/input', [
                                         'name' => 'username',
@@ -94,8 +95,16 @@
                                         'value' => old('signature', $item->signature),
                                     ])
                                 </div>
+                            </form>
+                            <x-avatar-editor
+                                :user="$item"
+                                :upload-route="route('admin.profile.avatar.upload')"
+                                :delete-route="route('admin.profile.avatar.delete')"
+                                input-id="admin-avatar"
+                                variant="field"
+                            />
                             </div>
-                        </form>
+                        </div>
                         <div class="card mt-4">
                             <div class="card-heading">
                                 <div>

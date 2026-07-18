@@ -21,12 +21,15 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Support\Facades\File;
 use Illuminate\View\ViewException;
 use Symfony\Component\Mailer\Exception\TransportException;
 use Throwable;
 
 class Handler extends ExceptionHandler
 {
+    private const RENDERED_STATUSES = [401, 403, 404, 419, 422, 429, 500, 503];
+
     /**
      * The list of the inputs that are never flashed to the session on validation exceptions.
      *
@@ -68,16 +71,70 @@ class Handler extends ExceptionHandler
         if ($exception instanceof ViewException && \Str::contains($exception->getMessage(), 'Vite manifest not found at')) {
             return response("Vite manifest not found. Please execute 'npm install && npm run build'", 404);
         }
-        if ($this->isHttpException($exception)) {
-            if ($exception->getStatusCode() == 404) {
-                return response()->view('errors.404', [], 404);
-            }
-            if ($exception->getStatusCode() == 500) {
-                return response()->view('errors.500', [], 500);
+        $status = $this->isHttpException($exception) ? $exception->getStatusCode() : 500;
+        $canRenderBrandedPage = in_array($status, self::RENDERED_STATUSES, true)
+            && ! $request->expectsJson()
+            && ($this->isHttpException($exception) || ! config('app.debug'));
+
+        if ($canRenderBrandedPage) {
+            try {
+                $data = [
+                    'exception' => $exception,
+                    'statusCode' => $status,
+                ];
+
+                if ($view = $this->errorView($request, $status, $data)) {
+                    return response($view, $status);
+                }
+
+                return response()->view('errors.'.$status, $data, $status);
+            } catch (\Throwable $renderError) {
+                logger()->warning('Unable to render the branded error page.', [
+                    'status' => $status,
+                    'error' => $renderError->getMessage(),
+                ]);
             }
         }
 
         return parent::render($request, $exception);
+    }
+
+    private function errorView($request, int $status, array $data): mixed
+    {
+        if ($this->isAdminRequest($request) && view()->exists('admin.errors.'.$status)) {
+            return view('admin.errors.'.$status, $data);
+        }
+
+        if ($this->isAdminRequest($request)) {
+            return null;
+        }
+
+        if ($status === 404) {
+            $defaultThemeView = resource_path('themes/default/views/errors/404.blade.php');
+
+            if (File::isFile($defaultThemeView)) {
+                return view()->file($defaultThemeView, $data);
+            }
+        }
+
+        $themeView = app('theme')->themePath("views/errors/{$status}.blade.php");
+
+        return $themeView && File::isFile($themeView)
+            ? view()->file($themeView, $data)
+            : null;
+    }
+
+    private function isAdminRequest($request): bool
+    {
+        if ($request->routeIs('admin.*')) {
+            return true;
+        }
+
+        try {
+            return $request->is(admin_prefix('*'));
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public function report(Throwable $exception)

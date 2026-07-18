@@ -29,10 +29,7 @@
         <div class="card mb-4">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div class="flex items-center gap-4">
-                    <div
-                        class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-indigo-600 to-indigo-600-dark flex items-center justify-center text-white text-2xl font-bold">
-                        {{ $item->initials() }}
-                    </div>
+                    <x-avatar :user="$item" size="xl" />
                     <div>
                         <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
                             {{ $item->fullname }}

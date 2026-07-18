@@ -38,7 +38,7 @@ class Validate2FAMiddleware
         }
         if (auth('web')->user() && ! Session::has('autologin')) {
             $user = auth('web')->user();
-            if (($user->twoFactorEnabled() || $user->shouldForceTwoFactor('web') || $user->requiresEmailTwoFactorForIp($request->ip())) && ! $user->twoFactorVerified() && ($request->is('client/*') || $request->is('client'))) {
+            if ($this->requiresTwoFactorValidation($user, 'web', $request->ip()) && ($request->is('client/*') || $request->is('client'))) {
                 if ($request->route()->uri() !== '2fa' && $request->route()->uri() !== '2fa/verify' && $request->route()->uri() !== '2fa/email') {
                     return redirect()->route('auth.2fa');
                 }
@@ -46,7 +46,7 @@ class Validate2FAMiddleware
         }
         if (auth('admin')->user() && ! Session::has('autologin')) {
             $user = auth('admin')->user();
-            if (($user->twoFactorEnabled() || $user->shouldForceTwoFactor('admin') || $user->requiresEmailTwoFactorForIp($request->ip())) && ! $user->twoFactorVerified() && $request->is(admin_prefix('*'))) {
+            if ($this->requiresTwoFactorValidation($user, 'admin', $request->ip()) && $request->is(admin_prefix('*'))) {
                 if ($request->route()->uri() !== admin_prefix('2fa') && $request->route()->uri() !== admin_prefix('2fa/verify') && $request->route()->uri() !== admin_prefix('2fa/email')) {
                     return redirect()->route('admin.auth.2fa');
                 }
@@ -54,5 +54,19 @@ class Validate2FAMiddleware
         }
 
         return $next($request);
+    }
+
+    private function requiresTwoFactorValidation(object $user, string $guard, ?string $ip): bool
+    {
+        $trustedIps = array_column($user->twoFactorTrustedIps(), 'ip');
+
+        if ($ip !== null && in_array($ip, $trustedIps, true)) {
+            return false;
+        }
+
+        return ! $user->twoFactorVerified()
+            && ($user->twoFactorEnabled()
+                || $user->shouldForceTwoFactor($guard)
+                || $user->requiresEmailTwoFactorForIp($ip));
     }
 }

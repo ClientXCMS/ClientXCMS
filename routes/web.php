@@ -55,7 +55,7 @@ Route::get('/robots.txt', function () {
 })->name('robots.txt');
 
 Route::fallback(function () {
-    return response()->view('errors.404', [], 404);
+    abort(404);
 });
 Route::get('/licensing/return', [LicenseController::class, 'return'])->name('licensing.return');
 Route::get('/locale/{locale}', [LocaleController::class, 'setLocale'])->name('locale');

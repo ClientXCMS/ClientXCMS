@@ -199,17 +199,16 @@
                                             <span class="block px-6 py-2">
                                                 <span class="text-sm text-gray-600 dark:text-gray-400">
                                                     @if ($item->customer)
-                                                        <a
-                                                            href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
+                                                        <a class="inline-flex items-center gap-2" href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
+                                                            <x-avatar :user="$item->customer" size="sm" class="!ring-0" />
                                                             {{ $item->customer->excerptFullName() }}
+                                                        </a>
+                                                    @else
+                                                        <span class="italic text-gray-400 dark:text-gray-600">({{ __('global.deleted') }})</span>
+                                                    @endif
                                                 </span>
-                                                </a>
-                                            @else
-                                                <span
-                                                    class="italic text-gray-400 dark:text-gray-600">({{ __('global.deleted') }})</span>
-                                @endif
-                                </span>
-                                </td>
+                                            </span>
+                                        </td>
                                 <td class="h-px w-px whitespace-nowrap">
                                     <x-badge-state state="{{ $item->status }}"></x-badge-state>
                                 </td>

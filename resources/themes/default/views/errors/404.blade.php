@@ -16,8 +16,10 @@
  * Year: 2025
  */
 ?>
-@extends('layouts/front')
+@extends('layouts.front')
+
 @section('title', __('errors.404.title'))
+
 @section('content')
-    @include('shared/errors/404', ['link' => route('home'), 'label' => __('errors.404.home')])
+    @include('shared.errors.panel', ['statusCode' => 404])
 @endsection
