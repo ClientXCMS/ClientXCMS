@@ -17,7 +17,7 @@
     },
     "dependencies": {
         "@grafikart/drop-files-element": "^1.0.9",
-        "@preline/accordion": "^2.0.1",
+        "@preline/accordion": "^4.2.0",
         "@preline/collapse": "2.0.2",
         "@preline/combobox": "^3.0.0",
         "@preline/select": "^3.0.0",
