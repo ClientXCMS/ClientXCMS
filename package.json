@@ -33,7 +33,7 @@
         "easymde": "^2.20.0",
         "fastbootstrap": "^2.2.0",
         "flatpickr": "^4.6.13",
-        "glob": "^10.3.10",
+        "glob": "^13.0.6",
         "intl-tel-input": "^25.3.1",
         "kutty": "^0.6.0",
         "monaco-editor": "^0.52.2",
