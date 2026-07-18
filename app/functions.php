@@ -179,6 +179,10 @@ if (! function_exists('currency')) {
         $currency = $currency ?? currency();
         $locale = $currency == 'USD' ? 'en_US' : 'fr_FR';
 
+        if (! class_exists('NumberFormatter')) {
+            return $price.' '.$currency;
+        }
+
         return (new NumberFormatter($locale, NumberFormatter::CURRENCY))->formatCurrency($price, $currency);
     }
 }
