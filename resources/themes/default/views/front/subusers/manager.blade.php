@@ -126,10 +126,11 @@
         const sectionButtons = document.querySelectorAll('[data-subuser-section-target]');
         if (!sectionButtons.length) return;
 
-        const showSection = (section) => {
-            document.querySelectorAll('[data-subuser-section]').forEach((panel) => panel.classList.toggle('hidden', panel.dataset.subuserSection !== section));
+        let currentSection = 'accesses';
+
+        const updateSectionButtons = (highlightActiveSection) => {
             sectionButtons.forEach((button) => {
-                const active = button.dataset.subuserSectionTarget === section;
+                const active = highlightActiveSection && button.dataset.subuserSectionTarget === currentSection;
                 button.classList.toggle('bg-white', active);
                 button.classList.toggle('text-indigo-600', active);
                 button.classList.toggle('shadow-sm', active);
@@ -138,11 +139,25 @@
             });
         };
 
+        const showSection = (section, highlightActiveSection = true) => {
+            currentSection = section;
+            document.querySelectorAll('[data-subuser-section]').forEach((panel) => panel.classList.toggle('hidden', panel.dataset.subuserSection !== section));
+            updateSectionButtons(highlightActiveSection);
+        };
+
         let initialSection = 'accesses';
         @if (old('_subuser_form') && $errors->any())
             initialSection = 'invite';
         @endif
-        showSection(initialSection);
+        const subusersPane = document.querySelector('#pane-subusers');
+        showSection(initialSection, subusersPane && !subusersPane.classList.contains('hidden'));
+
+        document.querySelectorAll('[data-hs-tab]').forEach((tabButton) => {
+            tabButton.addEventListener('click', () => {
+                updateSectionButtons(tabButton.dataset.hsTab === '#pane-subusers');
+            });
+        });
+
         sectionButtons.forEach((button) => {
             button.addEventListener('click', () => {
                 document.querySelector('[data-hs-tab="#pane-subusers"]')?.click();

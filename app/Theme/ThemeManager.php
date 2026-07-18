@@ -406,6 +406,20 @@ class ThemeManager
 
     public static function getContrastColor($hexColor): string
     {
+        if (!is_string($hexColor) || empty($hexColor)) {
+            return 'black';
+        }
+        if (str_starts_with($hexColor, 'rgb')) {
+            preg_match('/rgb\((\d+),\s*(\d+),\s*(\d+)\)/', $hexColor, $matches);
+            if (count($matches) === 4) {
+                $r = $matches[1];
+                $g = $matches[2];
+                $b = $matches[3];
+                $luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
+
+                return $luminance > 0.5 ? 'black' : 'white';
+            }
+        }
         $hexColor = ltrim($hexColor, '#');
         $r = hexdec(substr($hexColor, 0, 2));
         $g = hexdec(substr($hexColor, 2, 2));

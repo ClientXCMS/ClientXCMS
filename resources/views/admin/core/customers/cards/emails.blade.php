@@ -18,9 +18,11 @@
 ?>
 
 <div class="card">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
-
-        {{ __($translatePrefix . '.show.emails') }}</h2>
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+            {{ __($translatePrefix . '.show.emails') }}
+        </h2>
+    </div>
 <div class="border rounded-lg overflow-hidden dark:border-gray-700">
 
     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

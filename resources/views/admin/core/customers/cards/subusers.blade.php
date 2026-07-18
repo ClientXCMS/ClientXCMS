@@ -1,6 +1,8 @@
 <div class="card">
-    <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('client.subusers.index') }}</h3>
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+            {{ __('client.subusers.index') }}
+        </h2>
     </div>
 
     <div class="space-y-4">

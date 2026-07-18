@@ -21,12 +21,18 @@ $services_filters = collect(\App\Models\Provisioning\Service::FILTERS)->mapWithK
 })->toArray();
 ?>
 <div class="card">
-    <div class="flex justify-between">
-    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
-
-        {{ __($translatePrefix . '.show.services') }}</h2>
-
-        @if (!empty($services_filters))
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+            {{ __($translatePrefix . '.show.services') }}
+        </h2>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+            @if (staff_has_permission('admin.manage_services'))
+                <a href="{{ route('admin.services.create') }}?customer_id={{ $item->id }}" class="btn btn-primary inline-flex items-center gap-2">
+                    <i class="bi bi-plus-lg"></i>
+                    {{ __($translatePrefix . '.show.create_service') }}
+                </a>
+            @endif
+            @if (!empty($services_filters))
             <div class="mr-1 hs-dropdown relative inline-block md:[--placement:bottom-right]" data-hs-dropdown-auto-close="inside">
                 <button type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
                     <svg class="flex-shrink-0 w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
@@ -49,7 +55,8 @@ $services_filters = collect(\App\Models\Provisioning\Service::FILTERS)->mapWithK
                     </div>
                 </div>
             </div>
-        @endif
+            @endif
+        </div>
     </div>
 
     <div class="border rounded-lg overflow-hidden dark:border-gray-700">

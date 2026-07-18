@@ -103,11 +103,9 @@
     <div class="{{ theme_metadata('layout_classes', 'max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto') }}">
         @include('shared/alerts')
 
-        <!-- Main Card container for all Profile Sections -->
         <div class="card p-0 overflow-hidden" style="padding: 0 !important;">
             <div class="flex flex-col md:flex-row min-h-[500px]">
                 
-                <!-- Vertical Sidebar Navigation (1/4 width on desktop) -->
                 <div class="w-full md:w-1/4 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 p-4">
                     <nav class="flex flex-col space-y-1.5" aria-label="Tabs" role="tablist" aria-orientation="vertical">
                         <button type="button"

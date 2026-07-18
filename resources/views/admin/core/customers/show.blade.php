@@ -554,16 +554,16 @@
 
                 <div id="tabs-notes" class="hidden" role="tabpanel" aria-labelledby="tabs-notes-item">
                     <div class="card">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">
-                                {{ __($translatePrefix . '.show.notes') }}</h3>
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                                {{ __($translatePrefix . '.show.notes') }}
+                            </h2>
                         </div>
-
                         <div class="mb-6">
                             <div class="flex gap-3">
                                 <textarea form="addNoteForm" name="content" rows="2" class="input-text flex-1"
                                     placeholder="{{ __($translatePrefix . '.show.notes_placeholder') }}"></textarea>
-                                <button type="submit" form="addNoteForm" class="btn btn-indigo-600 h-fit self-end">
+                                <button type="submit" form="addNoteForm" class="btn btn-primary h-fit self-end">
                                     <i class="bi bi-plus-lg mr-1"></i>{{ __('global.add') }}
                                 </button>
                             </div>

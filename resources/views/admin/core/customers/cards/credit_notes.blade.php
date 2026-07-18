@@ -1,9 +1,21 @@
 <div class="card">
-    <div class="flex justify-between">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
             {{ __('admin.credit_notes.title') }}
         </h2>
+        @if (staff_has_permission('admin.manage_invoices'))
+            <button type="button" class="btn btn-primary inline-flex items-center gap-2" data-hs-overlay="#credit-note-overlay">
+                <i class="bi bi-plus-lg"></i>
+                {{ __('admin.credit_notes.issue_credit_note') }}
+            </button>
+        @endif
     </div>
+    @if (staff_has_permission('admin.manage_invoices'))
+        <div class="mb-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-300">
+            <i class="bi bi-info-circle mt-0.5 shrink-0"></i>
+            <span>{{ __('admin.credit_notes.delete_balance_warning') }}</span>
+        </div>
+    @endif
     <div class="border rounded-lg overflow-hidden dark:border-gray-700">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead>
@@ -83,18 +95,21 @@
                         </td>
                         <td class="h-px w-px whitespace-nowrap text-end px-6 py-2">
                             <div class="flex items-center justify-end gap-x-2">
-                                <a href="{{ route('admin.credit_notes.pdf', $creditNote) }}" target="_blank" class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800">
-                                    <i class="bi bi-eye"></i> {{ __('global.view') }}
+                                <a href="{{ route('admin.credit_notes.pdf', $creditNote) }}" target="_blank" class="py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-gray-700 dark:text-gray-400 dark:hover:text-white dark:focus:ring-offset-gray-800">
+                                    <i class="bi bi-eye-fill"></i>
+                                    {{ __('global.show') }}
                                 </a>
-                                <a href="{{ route('admin.credit_notes.download', $creditNote) }}" class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800">
-                                    <i class="bi bi-download"></i> {{ __('global.download') }}
+                                <a href="{{ route('admin.credit_notes.download', $creditNote) }}" class="py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-gray-700 dark:text-gray-400 dark:hover:text-white dark:focus:ring-offset-gray-800">
+                                    <i class="bi bi-download"></i>
+                                    {{ __('global.download') }}
                                 </a>
                                 @if (staff_has_permission('admin.manage_invoices'))
-                                    <form action="{{ route('admin.credit_notes.destroy', $creditNote) }}" method="POST" onsubmit="return confirm('{{ __('global.confirm_delete') }}')" class="inline-block">
+                                    <form action="{{ route('admin.credit_notes.destroy', $creditNote) }}" method="POST" class="inline confirmation-popup">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="py-1 px-2 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg border border-red-200 bg-red-50 text-red-800 shadow-sm hover:bg-red-100 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-950/50">
-                                            <i class="bi bi-trash"></i> {{ __('global.delete') }}
+                                        <button type="submit" class="py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-red text-red-700 shadow-sm align-middle hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-red-900 dark:hover:bg-red-800 dark:border-red-700 dark:text-white dark:hover:text-white dark:focus:ring-offset-gray-800">
+                                            <i class="bi bi-trash"></i>
+                                            {{ __('global.delete') }}
                                         </button>
                                     </form>
                                 @endif

@@ -67,10 +67,10 @@
     <form id="searchForm" method="GET" action="{{ request()->url() }}" class="typed-search-form">
         <label for="search" class="sr-only">{{ __('global.search') }}</label>
         <div class="relative">
-            <div class="block sm:flex">
+            <div class="block sm:flex sm:items-start">
                 <div class="typed-search-controls flex flex-col sm:flex-row gap-1">
                     @foreach ($normalizedSearchDefinitions as $key => $definition)
-                        <div class="{{ $selectedSearchField === $key ? 'flex' : 'hidden' }} gap-1" data-search-control="{{ $key }}" data-search-type="{{ $definition['type'] }}">
+                        <div class="{{ $selectedSearchField === $key ? 'flex' : 'hidden' }} flex-row flex-nowrap gap-1" data-search-control="{{ $key }}" data-search-type="{{ $definition['type'] }}">
                             @if ($definition['type'] === 'select')
                                 <select class="py-2 px-3 block border-gray-200 rounded-lg text-sm dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 min-w-48"
                                     data-filter-key="{{ $definition['fields'][0] }}" @disabled($selectedSearchField !== $key)>
@@ -84,11 +84,11 @@
                                     class="flatpickr input-text min-w-44">
                             @elseif ($definition['type'] === 'date_range')
                                 <input type="date" value="{{ $currentSearchValues[$definition['fields'][0]] ?? '' }}"
-                                    data-filter-key="{{ $definition['fields'][0] }}" placeholder="{{ __('global.from') }}"
-                                    @disabled($selectedSearchField !== $key) class="flatpickr input-text min-w-40">
+                                    data-filter-key="{{ $definition['fields'][0] }}" placeholder="{{ __('global.of') }}"
+                                    @disabled($selectedSearchField !== $key) class="flatpickr input-text min-w-0 !w-32 flex-none">
                                 <input type="date" value="{{ $currentSearchValues[$definition['fields'][1]] ?? '' }}"
                                     data-filter-key="{{ $definition['fields'][1] }}" placeholder="{{ __('global.to') }}"
-                                    @disabled($selectedSearchField !== $key) class="flatpickr input-text min-w-40">
+                                    @disabled($selectedSearchField !== $key) class="flatpickr input-text min-w-0 !w-32 flex-none">
                             @else
                                 <input type="text" value="{{ $currentSearchValues[$definition['fields'][0]] ?? ($selectedSearchField === $key ? ($search ?? '') : '') }}"
                                     id="{{ $selectedSearchField === $key ? 'search' : 'search-'.$loop->index }}"
@@ -99,12 +99,12 @@
                         </div>
                     @endforeach
                 </div>
-                <select class="ml-1 py-2 px-3 block border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 max-w-md mt-2 sm:mt-0" name="field" data-search-field-select>
+                <select class="self-start ml-1 py-2 px-3 block border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 max-w-md mt-2 sm:mt-0" name="field" data-search-field-select>
                     @foreach ($normalizedSearchDefinitions as $key => $definition)
                         <option value="{{ $key }}" {{ $selectedSearchField == $key ? 'selected' : '' }}>{{ $definition['label'] }}</option>
                     @endforeach
                 </select>
-                <button type="submit" class="btn btn-secondary md:ml-1 mt-2 sm:mt-0 w-full max-w-md md:w-auto ml-1 mr-1">
+                <button type="submit" class="btn btn-secondary self-start md:ml-1 mt-2 sm:mt-0 w-full max-w-md md:w-auto ml-1 mr-1">
                     {{ __('global.search') }}
                 </button>
             </div>

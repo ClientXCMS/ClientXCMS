@@ -20,11 +20,17 @@
  })->toArray();
 ?>
 <div class="card">
-    <div class="flex justify-between">
-    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
-        {{ __($translatePrefix . '.show.tickets') }}</h2>
-        <div>
-
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+            {{ __($translatePrefix . '.show.tickets') }}
+        </h2>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+            @if (staff_has_permission('admin.manage_tickets'))
+                <a href="{{ route('admin.helpdesk.tickets.create') }}?customer_id={{ $item->id }}" class="btn btn-primary inline-flex items-center gap-2">
+                    <i class="bi bi-plus-lg"></i>
+                    {{ __($translatePrefix . '.show.create_ticket') }}
+                </a>
+            @endif
             @if (!empty($tickets_filters))
                 <div class="mr-1 hs-dropdown relative inline-block md:[--placement:bottom-right]" data-hs-dropdown-auto-close="inside">
                     <button type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
@@ -49,7 +55,6 @@
                     </div>
                 </div>
             @endif
-
         </div>
     </div>
     <div class="border rounded-lg overflow-hidden dark:border-gray-700">

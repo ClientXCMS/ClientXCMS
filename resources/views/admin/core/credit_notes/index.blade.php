@@ -151,6 +151,12 @@
                                 </a>
                             </div>
                         </div>
+                        @if (staff_has_permission('admin.manage_invoices'))
+                            <div class="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-300">
+                                <i class="bi bi-info-circle mt-0.5 shrink-0"></i>
+                                <span>{{ __('admin.credit_notes.delete_balance_warning') }}</span>
+                            </div>
+                        @endif
                         </div>
                         <div class="border rounded-lg overflow-hidden dark:border-gray-700 mt-4">
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

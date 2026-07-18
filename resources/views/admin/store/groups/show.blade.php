@@ -49,60 +49,101 @@
                                     {{ __('admin.updatedetails') }}
                                 </button>
                                 @if (staff_has_permission('admin.manage_metadata'))
-
-                                <button class="btn btn-secondary text-left" type="button" data-hs-overlay="#metadata-overlay">
-                                    <i class="bi bi-database mr-2"></i>
-                                    {{ __('admin.metadata.title') }}
-                                </button>
+                                    <button class="btn btn-secondary text-left" type="button" data-hs-overlay="#metadata-overlay">
+                                        <i class="bi bi-database mr-2"></i>
+                                        {{ __('admin.metadata.title') }}
+                                    </button>
                                 @endif
                                 <a href="{{ $group->route() }}" target="_blank" class="btn btn-dark text-sm dark:bg-white dark:text-gray-800 dark:hover:bg-gray-200">
                                     {{ __($translatePrefix . '.see_group') }}
                                 </a>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                @include('admin/shared/input', ['name' => 'name', 'label' => __('global.name'), 'value' => old('name', $item->name), 'translatable' => true])
+                        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                            <div class="space-y-7 lg:col-span-2">
+                                <section>
+                                    <h3 class="mb-4 border-b border-gray-200 pb-2 font-semibold text-gray-800 dark:border-gray-700 dark:text-gray-200">
+                                        {{ __('global.details') }}
+                                    </h3>
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div>
+                                            @include('admin/shared/input', ['name' => 'name', 'label' => __('global.name'), 'value' => old('name', $item->name), 'translatable' => true])
+                                        </div>
+                                        <div>
+                                            @include('admin/shared/input', ['name' => 'slug', 'label' => __('global.slug'), 'value' => old('slug', $item->slug), 'translatable' => true])
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            @include('admin/shared/textarea', ['name' => 'description', 'label' => __('global.description'), 'value' => old('description', $item->description), 'translatable' => true])
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                        <div>
+                                            @include('admin/shared/select', ['name' => 'parent_id', 'label' => __($translatePrefix . '.parent_id'), 'value' => old('parent_id', $item->parent_id == null ? 'none' : $item->parent_id), 'options' => $groups])
+                                        </div>
+                                        <div>
+                                            @include('admin/shared/status-select', ['name' => 'status', 'label' => __('global.status'), 'value' => old('status', $item->status)])
+                                        </div>
+                                        <div>
+                                            @include('admin/shared/input', ['name' => 'sort_order', 'label' => __('global.sort_order'), 'value' => old('sort_order', $item->sort_order)])
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+                                        @include('admin/shared/checkbox', ['name' => 'pinned', 'label' => __('global.pinned'), 'checked' => old('pinned', $item->pinned)])
+                                        @include('admin/shared/checkbox', ['name' => 'use_image_as_background', 'label' => __($translatePrefix . '.use_image_as_background'), 'checked' => old('use_image_as_background', $item->hasMetadata('use_image_as_background'))])
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <h3 class="mb-4 border-b border-gray-200 pb-2 font-semibold text-gray-800 dark:border-gray-700 dark:text-gray-200">
+                                        {{ __($translatePrefix . '.badge_title') }}
+                                    </h3>
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                        <div>
+                                            @include('admin/shared/input', ['name' => 'badge_title', 'label' => __($translatePrefix . '.badge_title'), 'value' => old('badge_title', $item->badge_title), 'translatable' => true, 'optional' => true])
+                                        </div>
+                                        <div>
+                                            @include('admin/shared/input', ['type' => 'color', 'name' => 'badge_color', 'label' => __($translatePrefix . '.badge_color'), 'value' => old('badge_color', $item->badge_color ?? '#6366f1'), 'placeholder' => '#6366f1', 'optional' => true])
+                                        </div>
+                                        <div>
+                                            @include('admin/shared/input', ['name' => 'badge_icon', 'label' => __($translatePrefix . '.badge_icon'), 'value' => old('badge_icon', $item->badge_icon ?? 'bi bi-stars'), 'placeholder' => 'bi bi-stars', 'optional' => true])
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <h3 class="mb-4 border-b border-gray-200 pb-2 font-semibold text-gray-800 dark:border-gray-700 dark:text-gray-200">
+                                        {{ __('global.url') }}
+                                    </h3>
+                                    <div class="flex">
+                                        <input type="text" readonly class="input-text rounded-e-none" id="group_url" value="{{ $group->route() }}">
+                                        <button type="button" data-clipboard-target="#group_url" data-clipboard-action="copy" data-clipboard-success-text="Copied" class="js-clipboard w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-e-md border border-transparent bg-blue-600 text-white hover:bg-blue-700 dark:focus:ring-1 dark:focus:ring-gray-600">
+                                            <svg class="js-clipboard-default w-4 h-4 group-hover:rotate-6 transition" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+                                            <svg class="js-clipboard-success hidden w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                        </button>
+                                    </div>
+                                </section>
                             </div>
 
-                            <div>
-                                @include('admin/shared/input', ['name' => 'slug', 'label' => __('global.slug'), 'value' => old('slug', $item->slug), 'translatable' => true])
-                            </div>
-                                <div>
-                                @include('admin/shared/select', ['name' => 'parent_id', 'label' => __($translatePrefix . '.parent_id'), 'value' => old('parent_id', $item->parent_id == null ? 'none' : $item->parent_id), 'options' => $groups])
+                            <aside class="lg:border-l lg:border-gray-200 lg:pl-6 dark:lg:border-gray-700">
+                                <h3 class="mb-4 border-b border-gray-200 pb-2 font-semibold text-gray-800 dark:border-gray-700 dark:text-gray-200">
+                                    {{ __($translatePrefix . '.image') }}
+                                </h3>
+                                @include('admin/shared/file', ['name' => 'image', 'help' => __('admin.blanktochange'), 'canremove' => true, 'canRemove' => true])
 
-                                </div>
-                            <div>
-                                @include('admin/shared/status-select', ['name' => 'status', 'label' => __('global.status'), 'value' => old('status', $item->status)])
-                                @include('admin/shared/input', ['name' => 'sort_order', 'label' => __('global.sort_order'), 'value' => old('sort_order', $item->sort_order)])
-
-                                <div class="mt-2 flex">
-                                    <input type="text" readonly class="input-text" id="group_url" value="{{ $group->route()  }}">
-                                    <button type="button" data-clipboard-target="#group_url" data-clipboard-action="copy" data-clipboard-success-text="Copied" class=" js-clipboard w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-e-md border border-transparent bg-blue-600 text-white hover:bg-blue-700  dark:focus:ring-1 dark:focus:ring-gray-600">
-                                        <svg class="js-clipboard-default w-4 h-4 group-hover:rotate-6 transition" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-
-                                        <svg class="js-clipboard-success hidden w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-
-                                    </button>
-                                </div>
-                            </div>
-                            <div>
-                                @include('admin/shared/textarea', ['name' => 'description', 'label' => __('global.description'), 'value' => old('description', $item->description), 'translatable' => true])
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-                                    @include('admin/shared/input', ['name' => 'badge_title', 'label' => __($translatePrefix . '.badge_title'), 'value' => old('badge_title', $item->badge_title), 'translatable' => true, 'optional' => true])
-                                    @include('admin/shared/input', ['name' => 'badge_color', 'label' => __($translatePrefix . '.badge_color'), 'value' => old('badge_color', $item->badge_color), 'placeholder' => '#6366f1', 'optional' => true])
-                                    @include('admin/shared/input', ['name' => 'badge_icon', 'label' => __($translatePrefix . '.badge_icon'), 'value' => old('badge_icon', $item->badge_icon), 'placeholder' => 'bi bi-stars', 'optional' => true])
-                                </div>
-                                <div class="mt-2">
-                                    @include('admin/shared/checkbox', ['name' => 'pinned', 'label' => __('global.pinned'), 'checked' => old('pinned', $item->pinned)])
-                                    @include('admin/shared/checkbox', ['name' => 'use_image_as_background', 'label' => __($translatePrefix . '.use_image_as_background'), 'checked' => old('use_image_as_background', $item->hasMetadata('use_image_as_background'))])
-
-                                </div>
-                            </div>
-
-                            <div>
-                                @include('admin/shared/file', ['name' => 'image', 'label' => __($translatePrefix . '.image'), 'help' => __('admin.blanktochange'), 'canremove' => true, 'canRemove' => true])
-                            </div>
+                                @if ($item->badge_title)
+                                    <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-slate-800">
+                                        <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium" style="background-color: {{ $item->badge_color ?: '#e0e7ff' }}; color: #111827;">
+                                            @if ($item->badge_icon)
+                                                <i class="{{ $item->badge_icon }}"></i>
+                                            @endif
+                                            {{ $item->trans('badge_title', $item->badge_title) }}
+                                        </span>
+                                    </div>
+                                @endif
+                            </aside>
                         </div>
                     </form>
                     @if(staff_has_permission('manage_products') && $products->count() > 0)

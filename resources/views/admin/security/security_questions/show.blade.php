@@ -41,17 +41,7 @@
             @method('PUT')
             @include('admin.security.security_questions.form')
         </form>
-        @if ($item->canDelete())
-            <div class="flex justify-between mt-4 pt-4 border-t dark:border-gray-700">
-                <form method="POST" action="{{ route($routePath . '.destroy', $item) }}" class="confirmation-popup">
-                    @method('DELETE')
-                    @csrf
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash mr-2"></i>{{ __('global.delete') }}
-                    </button>
-                </form>
-            </div>
-        @endif
     </div>
+    
     @include('admin/translations/overlay', ['item' => $item])
 @endsection

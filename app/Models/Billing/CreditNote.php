@@ -92,7 +92,7 @@ class CreditNote extends Model
      */
     public static function generateNumber(?string $date = null): string
     {
-        $prefix = setting('billing_credit_note_prefix', 'AVOIR');
+        $prefix = setting('billing_invoice_prefix', 'CTX') . '-AVOIR';
         $yearMonth = $date ?? now()->format('Y-m');
 
         // Atomic pre-create, cf. InvoiceSequenceService::nextNumber.

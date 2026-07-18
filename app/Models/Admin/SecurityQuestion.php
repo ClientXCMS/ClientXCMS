@@ -36,7 +36,7 @@ class SecurityQuestion extends Model
     use Translatable;
 
     protected array $translatableKeys = [
-        'question',
+        'question' => 'text',
     ];
 
     protected $fillable = [

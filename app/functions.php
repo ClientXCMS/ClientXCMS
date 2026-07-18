@@ -49,8 +49,8 @@ if (! function_exists('translated_setting')) {
         return \App\Models\Admin\Setting::getTranslationsForKey($key, $default, $locale);
     }
 }
-if (! function_exists('ClientX\varExport')) {
-    function varExport($expression, $return = false)
+if (! function_exists('varExport')) {
+    function varExport(string $expression, bool $return = false)
     {
         $export = var_export($expression, true);
         $patterns = [
