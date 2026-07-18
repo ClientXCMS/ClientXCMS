@@ -14,12 +14,19 @@ class ExtensionSandboxTest extends TestCase
 
     public function test_successful_autoload_returns_true(): void
     {
-        $manager = new class implements \App\Extensions\ExtensionInterface {
+        $manager = new class implements \App\Extensions\ExtensionInterface
+        {
             public bool $called = false;
-            public function autoload(ExtensionDTO $DTO, \Illuminate\Foundation\Application $app, ClassLoader $composer): void {
+
+            public function autoload(ExtensionDTO $DTO, \Illuminate\Foundation\Application $app, ClassLoader $composer): void
+            {
                 $this->called = true;
             }
-            public function getExtensions(bool $enabledOnly = false): array { return []; }
+
+            public function getExtensions(bool $enabledOnly = false): array
+            {
+                return [];
+            }
         };
 
         $dto = ExtensionDTO::fromArray([
@@ -43,11 +50,17 @@ class ExtensionSandboxTest extends TestCase
 
     public function test_throwing_extension_is_caught_and_disabled(): void
     {
-        $manager = new class implements \App\Extensions\ExtensionInterface {
-            public function autoload(ExtensionDTO $DTO, \Illuminate\Foundation\Application $app, ClassLoader $composer): void {
+        $manager = new class implements \App\Extensions\ExtensionInterface
+        {
+            public function autoload(ExtensionDTO $DTO, \Illuminate\Foundation\Application $app, ClassLoader $composer): void
+            {
                 throw new \RuntimeException('boom from extension');
             }
-            public function getExtensions(bool $enabledOnly = false): array { return []; }
+
+            public function getExtensions(bool $enabledOnly = false): array
+            {
+                return [];
+            }
         };
 
         // Seed an entry in extensions.json so the sandbox has something to flip.
@@ -87,12 +100,19 @@ class ExtensionSandboxTest extends TestCase
 
     public function test_safe_boot_mode_skips_all_extensions(): void
     {
-        $manager = new class implements \App\Extensions\ExtensionInterface {
+        $manager = new class implements \App\Extensions\ExtensionInterface
+        {
             public bool $called = false;
-            public function autoload(ExtensionDTO $DTO, \Illuminate\Foundation\Application $app, ClassLoader $composer): void {
+
+            public function autoload(ExtensionDTO $DTO, \Illuminate\Foundation\Application $app, ClassLoader $composer): void
+            {
                 $this->called = true;
             }
-            public function getExtensions(bool $enabledOnly = false): array { return []; }
+
+            public function getExtensions(bool $enabledOnly = false): array
+            {
+                return [];
+            }
         };
         $dto = ExtensionDTO::fromArray(['uuid' => 'x', 'type' => 'module', 'enabled' => true, 'installed' => true, 'version' => '1.0.0']);
 
@@ -108,7 +128,7 @@ class ExtensionSandboxTest extends TestCase
                 putenv('APP_SAFE_BOOT');
                 unset($_ENV['APP_SAFE_BOOT']);
             } else {
-                putenv('APP_SAFE_BOOT=' . $originalSafeBoot);
+                putenv('APP_SAFE_BOOT='.$originalSafeBoot);
                 $_ENV['APP_SAFE_BOOT'] = $originalSafeBoot;
             }
         }

@@ -47,10 +47,10 @@ class AccountEditService
             'city' => ['required', 'string', 'max:250', 'regex:/^[^<>]*$/'],
             'phone' => ['nullable', 'max:30', $phoneRule, Rule::unique('customers', 'phone')->ignore($except)],
             'zipcode' => ['required', 'string', 'max:255', new ZipCode($country)],
-            'region' => ['required', 'string', 'max:250' ,'regex:/^[^<>]*$/'],
+            'region' => ['required', 'string', 'max:250', 'regex:/^[^<>]*$/'],
             'country' => ['required', 'string', 'max:255', Rule::in(array_keys(Countries::names()))],
-            'company_name' => ['nullable', 'string', 'max:255' ,'regex:/^[^<>]*$/'],
-            'billing_details' => ['nullable', 'string', 'max:255' ,'regex:/^[^<>]*$/'],
+            'company_name' => ['nullable', 'string', 'max:255', 'regex:/^[^<>]*$/'],
+            'billing_details' => ['nullable', 'string', 'max:255', 'regex:/^[^<>]*$/'],
             'locale' => ['nullable', 'string', 'max:255', Rule::in(array_keys(LocaleService::getLocalesNames()))],
         ];
         if ($email) {

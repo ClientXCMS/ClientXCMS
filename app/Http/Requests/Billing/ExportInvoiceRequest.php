@@ -73,10 +73,10 @@ class ExportInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'format' => 'required|string|in:' . implode(',', array_keys(InvoiceExporterService::getAvailableFormats())),
+            'format' => 'required|string|in:'.implode(',', array_keys(InvoiceExporterService::getAvailableFormats())),
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date',
-            'status' => 'nullable|array|in:' . implode(',', array_keys($this->getIndexFilters())),
+            'status' => 'nullable|array|in:'.implode(',', array_keys($this->getIndexFilters())),
             'customer_id' => 'nullable|integer|exists:customers,id',
         ];
     }

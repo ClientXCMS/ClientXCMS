@@ -10,12 +10,14 @@ use Illuminate\Support\Collection;
 class DomainPricingService
 {
     public const ACTION_REGISTER = 'register';
+
     public const ACTION_RENEW = 'renew';
+
     public const ACTION_TRANSFER = 'transfer';
 
     public static function normalizeExtension(string $extension): string
     {
-        return '.' . ltrim(strtolower(trim($extension)), '.');
+        return '.'.ltrim(strtolower(trim($extension)), '.');
     }
 
     public function findTld(string $extension): ?DomainTld

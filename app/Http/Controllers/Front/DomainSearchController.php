@@ -35,7 +35,7 @@ class DomainSearchController extends Controller
         $pricing = app(DomainPricingService::class);
 
         $results = DomainTld::where('status', 'active')->orderBy('extension')->get()->map(function (DomainTld $tld) use ($base, $registrars, $pricing) {
-            $domain = $base . $tld->extension;
+            $domain = $base.$tld->extension;
             $registrar = $registrars->fromServer($tld->server);
             $availability = $registrar->checkAvailability($domain);
             $prices = $pricing->availableForTld($tld->extension, currency());

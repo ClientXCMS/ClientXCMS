@@ -21,7 +21,6 @@ namespace App\Core\Gateway;
 
 use App\Abstracts\AbstractGatewayType;
 use App\Abstracts\PaymentMethodSourceDTO;
-use App\Contracts\Store\GatewayTypeInterface;
 use App\DTO\Core\Gateway\GatewayPayInvoiceResultDTO;
 use App\DTO\Core\Gateway\GatewayUriDTO;
 use App\Exceptions\WrongPaymentException;
@@ -31,8 +30,8 @@ use Illuminate\Http\Request;
 
 class PaymentTypeNotFoundType extends AbstractGatewayType
 {
-
     protected string $icon = 'bi bi-question-circle';
+
     protected string $image = 'none.png';
 
     public function __construct(string $uuid)

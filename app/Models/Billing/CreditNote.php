@@ -21,14 +21,14 @@ namespace App\Models\Billing;
 
 use App\Models\Account\Customer;
 use App\Models\Admin\Admin;
+use App\Theme\ThemeManager;
+use Barryvdh\DomPDF\PDF;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
-use App\Theme\ThemeManager;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
-use Barryvdh\DomPDF\PDF;
 
 /**
  * Credit note (a.k.a. "avoir") emitted against an existing
@@ -123,78 +123,79 @@ class CreditNote extends Model
 
             return sprintf('%s-%s-%04d', $prefix, $yearMonth, $next);
         });
-     }
+    }
 
-     public function download(): Response
-     {
-         if (Storage::disk('local')->exists($this->getPdfPath())) {
-             return Storage::disk('local')->download($this->getPdfPath(), $this->credit_note_number.'.pdf');
-         }
+    public function download(): Response
+    {
+        if (Storage::disk('local')->exists($this->getPdfPath())) {
+            return Storage::disk('local')->download($this->getPdfPath(), $this->credit_note_number.'.pdf');
+        }
 
-         $pdf = $this->generatePdf();
+        $pdf = $this->generatePdf();
 
-         return $pdf->download($this->credit_note_number.'.pdf');
-     }
+        return $pdf->download($this->credit_note_number.'.pdf');
+    }
 
-     public function pdf(): Response
-     {
-         if (Storage::disk('local')->exists($this->getPdfPath())) {
-             $fullPath = Storage::disk('local')->path($this->getPdfPath());
+    public function pdf(): Response
+    {
+        if (Storage::disk('local')->exists($this->getPdfPath())) {
+            $fullPath = Storage::disk('local')->path($this->getPdfPath());
 
-             return response()->file($fullPath, [
-                 'Content-Type' => 'application/pdf',
-                 'Content-Disposition' => 'inline; filename="'.$this->credit_note_number.'.pdf"',
-             ]);
-         }
-         $pdf = $this->generatePdf(false);
+            return response()->file($fullPath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$this->credit_note_number.'.pdf"',
+            ]);
+        }
+        $pdf = $this->generatePdf(false);
 
-         return $pdf->stream($this->credit_note_number.'.pdf');
-     }
+        return $pdf->stream($this->credit_note_number.'.pdf');
+    }
 
-     public function getPdfPath(): string
-     {
-         return 'credit_notes/'.$this->getPdfName();
-     }
+    public function getPdfPath(): string
+    {
+        return 'credit_notes/'.$this->getPdfName();
+    }
 
-     public function getPdfName(): string
-     {
-         $date = $this->created_at ? $this->created_at : now();
-         return $date->format('Y').'/'.$date->format('m').'/'.$this->credit_note_number.'.pdf';
-     }
+    public function getPdfName(): string
+    {
+        $date = $this->created_at ? $this->created_at : now();
 
-     public function generatePdf(bool $save = true): PDF
-     {
-         $filename = 'credit_notes/'.$this->getPdfName();
-         $domain = rtrim(config('app.url'), '/');
-         if (str_contains($domain, 'localhost')) {
-             $logoSrc = '/'.setting('app_logo_text');
-         } else {
-             $logoSrc = $domain.setting('app_logo_text');
-         }
+        return $date->format('Y').'/'.$date->format('m').'/'.$this->credit_note_number.'.pdf';
+    }
 
-         $primaryColor = ThemeManager::getColorsArray()['600'];
-         $color = ThemeManager::getContrastColor($primaryColor);
-         $pdf = \PDF::loadView('front.billing.credit_notes.pdf', [
-             'creditNote' => $this,
-             'customer' => $this->customer,
-             'color' => $color,
-             'address' => $this->invoice->billing_address,
-             'logoSrc' => $logoSrc,
-             'primaryColor' => $primaryColor,
-         ]);
-         if ($save) {
-             $bytes = $pdf->output();
-             Storage::put($filename, $bytes);
-             try {
-                 $this->forceFill(['pdf_sha256' => hash('sha256', $bytes)])->saveQuietly();
-             } catch (\Throwable $e) {
-                 logger()->warning('billing.credit_note.pdf_hash_failed', [
-                     'credit_note_id' => $this->id,
-                     'error' => $e->getMessage(),
-                 ]);
-             }
-         }
+    public function generatePdf(bool $save = true): PDF
+    {
+        $filename = 'credit_notes/'.$this->getPdfName();
+        $domain = rtrim(config('app.url'), '/');
+        if (str_contains($domain, 'localhost')) {
+            $logoSrc = '/'.setting('app_logo_text');
+        } else {
+            $logoSrc = $domain.setting('app_logo_text');
+        }
 
-         return $pdf;
-     }
+        $primaryColor = ThemeManager::getColorsArray()['600'];
+        $color = ThemeManager::getContrastColor($primaryColor);
+        $pdf = \PDF::loadView('front.billing.credit_notes.pdf', [
+            'creditNote' => $this,
+            'customer' => $this->customer,
+            'color' => $color,
+            'address' => $this->invoice->billing_address,
+            'logoSrc' => $logoSrc,
+            'primaryColor' => $primaryColor,
+        ]);
+        if ($save) {
+            $bytes = $pdf->output();
+            Storage::put($filename, $bytes);
+            try {
+                $this->forceFill(['pdf_sha256' => hash('sha256', $bytes)])->saveQuietly();
+            } catch (\Throwable $e) {
+                logger()->warning('billing.credit_note.pdf_hash_failed', [
+                    'credit_note_id' => $this->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $pdf;
+    }
 }

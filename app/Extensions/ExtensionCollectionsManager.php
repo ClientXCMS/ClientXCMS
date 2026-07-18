@@ -93,7 +93,7 @@ class ExtensionCollectionsManager
 
     public function getAdminMenuItems(): Collection
     {
-        return collect(\Cache::get('adminMenuItems', $this->adminMenuItems))->sortBy((fn($item) => $item->position));
+        return collect(\Cache::get('adminMenuItems', $this->adminMenuItems))->sortBy((fn ($item) => $item->position));
     }
 
     public function addFrontMenuItem(FrontMenuItem $frontMenuItem): void
@@ -103,7 +103,7 @@ class ExtensionCollectionsManager
 
     public function getFrontMenuItems(): Collection
     {
-        return collect(\Cache::get('frontMenuItems', $this->frontMenuItems))->sortBy((fn($item) => $item->position));
+        return collect(\Cache::get('frontMenuItems', $this->frontMenuItems))->sortBy((fn ($item) => $item->position));
     }
 
     public function addClientMenuItem(ClientMenuItem $clientMenuItem): void
@@ -138,7 +138,7 @@ class ExtensionCollectionsManager
 
     public function addSectionContext(string $uuid, callable $function): void
     {
-        $params = \Cache::get('section_context_' . $uuid, call_user_func($function));
+        $params = \Cache::get('section_context_'.$uuid, call_user_func($function));
         $this->sectionsContexts = $this->sectionsContexts->merge([$uuid => $params]);
     }
 

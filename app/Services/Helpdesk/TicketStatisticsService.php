@@ -67,7 +67,7 @@ class TicketStatisticsService
             ->allowedFilters(['department_id', 'priority', 'id', 'customer.email', 'subject', 'uuid'])
             ->allowedSorts(['updated_at'])
             ->get()
-            ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()));
+            ->filter(fn ($ticket) => $ticket->staffCanView(auth('admin')->user()));
     }
 
     public function getActiveTickets()
@@ -79,17 +79,18 @@ class TicketStatisticsService
             ->allowedFilters(['department_id', 'priority', 'id', 'customer.email', 'uuid'])
             ->allowedSorts(['updated_at'])
             ->get()
-            ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()));
+            ->filter(fn ($ticket) => $ticket->staffCanView(auth('admin')->user()));
     }
 
     public function getPriorityTickets()
     {
         $now = now();
+
         return QueryBuilder::for(SupportTicket::class)
             ->where('status', SupportTicket::STATUS_OPEN)
             ->with('customer:id,firstname,lastname', 'department:id,name')
             ->get()
-            ->filter(fn($ticket) => $ticket->staffCanView(auth('admin')->user()))
+            ->filter(fn ($ticket) => $ticket->staffCanView(auth('admin')->user()))
             ->map(function ($ticket) use ($now) {
                 $slaBreached = false;
                 $slaDueSeconds = null;
@@ -169,7 +170,7 @@ class TicketStatisticsService
         $labels = [];
         for ($i = 0; $i < 52; $i++) {
             $date = now()->subWeeks($i);
-            $labels[] = $date->startOfWeek()->format('d/m') . ' - ' .
+            $labels[] = $date->startOfWeek()->format('d/m').' - '.
                 $date->endOfWeek()->format('d/m');
         }
 
@@ -186,16 +187,16 @@ class TicketStatisticsService
             ->whereBetween('created_at', [$startDate, $endDate])
             ->groupBy('date')
             ->get()
-            ->groupBy(fn($item) => Carbon::parse($item->date)->startOfWeek()->format('Y-m-d'))
-            ->map(fn($group) => $group->sum('aggregate'));
+            ->groupBy(fn ($item) => Carbon::parse($item->date)->startOfWeek()->format('Y-m-d'))
+            ->map(fn ($group) => $group->sum('aggregate'));
 
         $messagesData = SupportMessage::query()
             ->select(DB::raw('count(id) as aggregate'), DB::raw('DATE(created_at) as date'))
             ->whereBetween('created_at', [$startDate, $endDate])
             ->groupBy('date')
             ->get()
-            ->groupBy(fn($item) => Carbon::parse($item->date)->startOfWeek()->format('Y-m-d'))
-            ->map(fn($group) => $group->sum('aggregate'));
+            ->groupBy(fn ($item) => Carbon::parse($item->date)->startOfWeek()->format('Y-m-d'))
+            ->map(fn ($group) => $group->sum('aggregate'));
 
         $data = [];
         $messages = [];

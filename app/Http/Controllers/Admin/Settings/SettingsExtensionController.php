@@ -20,12 +20,8 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
-use App\Extensions\ExtensionManager;
 use App\Models\ActionLog;
 use App\Models\Admin\Permission;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\File;
 
 class SettingsExtensionController
 {

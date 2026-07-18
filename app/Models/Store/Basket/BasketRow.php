@@ -20,9 +20,9 @@
 namespace App\Models\Store\Basket;
 
 use App\Casts\OptionCast;
+use App\Contracts\Store\ProductTypeInterface;
 use App\DTO\Store\ProductDataDTO;
 use App\DTO\Store\ProductPriceDTO;
-use App\Contracts\Store\ProductTypeInterface;
 use App\Models\Store\Coupon;
 use App\Models\Store\Product;
 use App\Services\Domain\DomainPricingService;

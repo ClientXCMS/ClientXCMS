@@ -96,14 +96,12 @@ class Gateway extends Model
         return $this->hasMany(Invoice::class);
     }
 
-    /**
-     * @return GatewayTypeInterface
-     */
     public function paymentType(): GatewayTypeInterface
     {
         if (app(PaymentTypeService::class)->has($this->uuid)) {
             return app(PaymentTypeService::class)->get($this->uuid);
         }
+
         return new PaymentTypeNotFoundType($this->uuid);
     }
 

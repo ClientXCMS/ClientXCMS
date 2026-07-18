@@ -53,7 +53,8 @@ class SettingsSecurityController
         try {
             $gateway = \App\Services\Auth\SmsService::make($smsDriver);
             $smsRules = $gateway->rules($request->all());
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         $rules = [
             'hash_driver' => 'required|string',

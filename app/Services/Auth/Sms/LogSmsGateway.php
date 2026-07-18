@@ -48,6 +48,6 @@ class LogSmsGateway implements SmsGatewayContract
             return str_repeat('*', $len);
         }
 
-        return substr($to, 0, 2) . str_repeat('*', max(0, $len - 4)) . substr($to, -2);
+        return substr($to, 0, 2).str_repeat('*', max(0, $len - 4)).substr($to, -2);
     }
 }

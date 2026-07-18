@@ -55,6 +55,7 @@ class EmailController extends Controller
     public function readAll()
     {
         EmailMessage::where('recipient_id', auth()->user()->id)->whereNull('read_at')->update(['read_at' => now()]);
+
         return redirect()->back();
     }
 }

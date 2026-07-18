@@ -36,17 +36,17 @@ class BillingServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(PaymentTypeService::class);
-        $this->app->booted(function() {
+        $this->app->booted(function () {
             $extension = $this->app['extension'];
-            $extension->addInvoiceItem(new \App\Billing\Items\ProductInvoiceItem());
-            $extension->addInvoiceItem(new \App\Billing\Items\RenewalInvoiceItem());
-            $extension->addInvoiceItem(new \App\Billing\Items\CustomInvoiceItem());
-            $extension->addInvoiceItem(new \App\Billing\Items\ConfigOptionInvoiceItem());
-            $extension->addInvoiceItem(new \App\Billing\Items\ConfigOptionServiceInvoiceItem());
-            $extension->addInvoiceItem(new \App\Billing\Items\UpgradeInvoiceItem());
-            $extension->addInvoiceItem(new \App\Billing\Items\AddFundInvoiceItem());
-            $extension->addInvoiceItem(new \App\Billing\Items\FreeTrialInvoiceItem());
-            $extension->addInvoiceItem(new \App\Billing\Items\GiftCardInvoiceItem());
+            $extension->addInvoiceItem(new \App\Billing\Items\ProductInvoiceItem);
+            $extension->addInvoiceItem(new \App\Billing\Items\RenewalInvoiceItem);
+            $extension->addInvoiceItem(new \App\Billing\Items\CustomInvoiceItem);
+            $extension->addInvoiceItem(new \App\Billing\Items\ConfigOptionInvoiceItem);
+            $extension->addInvoiceItem(new \App\Billing\Items\ConfigOptionServiceInvoiceItem);
+            $extension->addInvoiceItem(new \App\Billing\Items\UpgradeInvoiceItem);
+            $extension->addInvoiceItem(new \App\Billing\Items\AddFundInvoiceItem);
+            $extension->addInvoiceItem(new \App\Billing\Items\FreeTrialInvoiceItem);
+            $extension->addInvoiceItem(new \App\Billing\Items\GiftCardInvoiceItem);
         });
     }
 
@@ -80,15 +80,15 @@ class BillingServiceProvider extends ServiceProvider
         }, 'admin.manage_customers', true);
         $extension->addAdminCountWidget($balanceWidgets);
 
-        $extension->addInvoiceItem(new \App\Billing\Items\ProductInvoiceItem());
-        $extension->addInvoiceItem(new \App\Billing\Items\RenewalInvoiceItem());
-        $extension->addInvoiceItem(new \App\Billing\Items\CustomInvoiceItem());
-        $extension->addInvoiceItem(new \App\Billing\Items\ConfigOptionInvoiceItem());
-        $extension->addInvoiceItem(new \App\Billing\Items\ConfigOptionServiceInvoiceItem());
-        $extension->addInvoiceItem(new \App\Billing\Items\UpgradeInvoiceItem());
-        $extension->addInvoiceItem(new \App\Billing\Items\AddFundInvoiceItem());
-        $extension->addInvoiceItem(new \App\Billing\Items\FreeTrialInvoiceItem());
-        $extension->addInvoiceItem(new \App\Billing\Items\GiftCardInvoiceItem());
+        $extension->addInvoiceItem(new \App\Billing\Items\ProductInvoiceItem);
+        $extension->addInvoiceItem(new \App\Billing\Items\RenewalInvoiceItem);
+        $extension->addInvoiceItem(new \App\Billing\Items\CustomInvoiceItem);
+        $extension->addInvoiceItem(new \App\Billing\Items\ConfigOptionInvoiceItem);
+        $extension->addInvoiceItem(new \App\Billing\Items\ConfigOptionServiceInvoiceItem);
+        $extension->addInvoiceItem(new \App\Billing\Items\UpgradeInvoiceItem);
+        $extension->addInvoiceItem(new \App\Billing\Items\AddFundInvoiceItem);
+        $extension->addInvoiceItem(new \App\Billing\Items\FreeTrialInvoiceItem);
+        $extension->addInvoiceItem(new \App\Billing\Items\GiftCardInvoiceItem);
         $this->app['settings']->addCard('billing', 'billing.admin.title', 'billing.admin.subheading', 4, null, true, 2, 'bi bi-credit-card-2-front');
         $this->app['settings']->addCardItem('billing', 'subscriptions', 'billing.admin.subscriptions.title', 'billing.admin.subscriptions.description', 'bi bi-credit-card-2-front', action([SubscriptionController::class, 'index']), 'admin.manage_invoices');
         $this->app['settings']->addCardItem('billing', 'billing', 'billing.admin.settings.title', 'billing.admin.settings.description', 'bi bi-basket2-fill', [SettingsBillingController::class, 'showBilling'], Permission::MANAGE_SETTINGS);

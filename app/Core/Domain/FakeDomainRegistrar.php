@@ -48,7 +48,7 @@ class FakeDomainRegistrar implements DomainRegistrarInterface
     public function register(Service $service): ServiceStateChangeDTO
     {
         $data = $service->data ?? [];
-        $data['registrar_id'] = $data['registrar_id'] ?? 'fake-' . sha1($data['domain'] ?? $service->uuid);
+        $data['registrar_id'] = $data['registrar_id'] ?? 'fake-'.sha1($data['domain'] ?? $service->uuid);
         $data['registrar_status'] = 'active';
         $data['created_at'] = $data['created_at'] ?? now()->toDateString();
         $data['expires_at'] = optional($service->expires_at)->toDateString();

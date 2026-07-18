@@ -22,8 +22,8 @@ namespace App\Http\Requests\Store\Basket;
 use App\Contracts\Store\ProductTypeInterface;
 use App\Services\Domain\DomainPricingService;
 use App\Services\Store\CurrencyService;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class BasketConfigRequest extends FormRequest
@@ -44,7 +44,7 @@ class BasketConfigRequest extends FormRequest
             $authorizedBilling = app(DomainPricingService::class)->billingsFor($this->input('tld'))->toArray();
         } else {
             $authorizedBilling = collect($this->product->pricingAvailable())->map(function ($price) {
-            return $price->recurring;
+                return $price->recurring;
             })->unique()->toArray();
         }
         /** @var ProductTypeInterface $productType */
@@ -69,7 +69,7 @@ class BasketConfigRequest extends FormRequest
         }
         $configOptions = $this->product->configoptions()->orderBy('sort_order')->get();
         foreach ($configOptions as $configOption) {
-            $rules['options.' . $configOption->key] = $configOption->validate();
+            $rules['options.'.$configOption->key] = $configOption->validate();
         }
 
         return $rules;

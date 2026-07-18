@@ -3,11 +3,11 @@
 namespace App\Billing\Items;
 
 use App\Contracts\Billing\InvoiceItemInterface;
-use App\Models\Billing\InvoiceItem;
-use App\Models\Store\Product;
 use App\Contracts\Store\ProductTypeInterface;
-use App\Services\Billing\InvoiceService;
+use App\Models\Billing\InvoiceItem;
 use App\Models\Provisioning\Service;
+use App\Models\Store\Product;
+use App\Services\Billing\InvoiceService;
 
 class ProductInvoiceItem implements InvoiceItemInterface
 {
@@ -36,7 +36,7 @@ class ProductInvoiceItem implements InvoiceItemInterface
                     InvoiceService::createServicesFromInvoiceItem($item->invoice, $item);
                     $services = $item->getMetadata('services');
                 } catch (\Exception $e) {
-                    throw new \Exception("Error creating services for invoice item {$item->id} : " . $e->getMessage());
+                    throw new \Exception("Error creating services for invoice item {$item->id} : ".$e->getMessage());
                 }
             }
             $delivered = [];
@@ -44,7 +44,7 @@ class ProductInvoiceItem implements InvoiceItemInterface
             foreach ($servicesArray as $serviceId) {
                 $service = Service::find($serviceId);
                 if ($service == null) {
-                    $filteredServices = collect($servicesArray)->filter(fn($id) => $id != $serviceId)->implode(',');
+                    $filteredServices = collect($servicesArray)->filter(fn ($id) => $id != $serviceId)->implode(',');
                     if (empty($filteredServices)) {
                         $item->detachMetadata('services');
                     } else {
@@ -54,13 +54,14 @@ class ProductInvoiceItem implements InvoiceItemInterface
                 }
                 if ($service->status == 'active') {
                     $delivered[] = $service->id;
+
                     continue;
                 }
                 $result = $service->deliver();
                 if ($result->success) {
                     $delivered[] = $service->id;
                 } else {
-                    throw new \Exception("Service {$service->id} delivery failed Error : " . $service->delivery_errors);
+                    throw new \Exception("Service {$service->id} delivery failed Error : ".$service->delivery_errors);
                 }
             }
             if (count($delivered) == count($servicesArray)) {
@@ -70,6 +71,7 @@ class ProductInvoiceItem implements InvoiceItemInterface
                 return true;
             }
         }
+
         return false;
     }
 }

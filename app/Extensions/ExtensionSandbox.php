@@ -47,6 +47,7 @@ class ExtensionSandbox
             logger()->info('extensions.safe_boot.skip', [
                 'uuid' => $extension->uuid,
             ]);
+
             return false;
         }
 
@@ -54,9 +55,11 @@ class ExtensionSandbox
             $manager->autoload($extension, $application, $composer);
             // Successful boot — clear any previous failure flag.
             self::clearBootError($extension);
+
             return true;
         } catch (\Throwable $e) {
             self::markFailed($extension, $e);
+
             return false;
         }
     }

@@ -19,8 +19,8 @@
 
 namespace App\Models\Admin;
 
-use App\Models\Traits\Translatable;
 use App\Models\Account\Customer;
+use App\Models\Traits\Translatable;
 use Illuminate\Database\Eloquent\Model;
 
 /**

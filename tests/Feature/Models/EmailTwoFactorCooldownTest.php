@@ -16,6 +16,7 @@ class EmailTwoFactorCooldownTest extends TestCase
     use RefreshDatabase;
 
     private const MAX_ATTEMPTS = 5;
+
     private const MAX_CYCLES = 3;
 
     public function test_burning_three_full_cycles_blocks_further_sends(): void

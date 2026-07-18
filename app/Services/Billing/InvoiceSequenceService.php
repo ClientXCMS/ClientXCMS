@@ -28,7 +28,7 @@ class InvoiceSequenceService
     {
         $prefix = setting('billing_invoice_prefix', 'CTX');
         if ($creation && InvoiceService::getBillingType() === InvoiceService::PRO_FORMA) {
-            $prefix = $prefix . '-PROFORMA';
+            $prefix = $prefix.'-PROFORMA';
         }
 
         $yearMonth = $date ?? now()->format('Y-m');
@@ -66,16 +66,17 @@ class InvoiceSequenceService
     {
         // Escape LIKE wildcards (prefix is admin-controlled setting).
         $likePrefix = addcslashes($prefix, '\\%_');
-        $like = $likePrefix . '-' . $yearMonth . '-%';
+        $like = $likePrefix.'-'.$yearMonth.'-%';
         $max = Invoice::withTrashed()
             ->where('invoice_number', 'like', $like)
             ->pluck('invoice_number')
             ->map(function ($num) use ($prefix, $yearMonth) {
-                $needle = $prefix . '-' . $yearMonth . '-';
+                $needle = $prefix.'-'.$yearMonth.'-';
                 if (! str_starts_with((string) $num, $needle)) {
                     return 0;
                 }
                 $tail = substr((string) $num, strlen($needle));
+
                 return is_numeric($tail) ? (int) $tail : 0;
             })
             ->max();

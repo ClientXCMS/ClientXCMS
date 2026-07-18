@@ -27,7 +27,6 @@ use App\Models\Store\CouponUsage;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
-
 class GdprExportService
 {
     public const STORAGE_DIR = 'gdpr';

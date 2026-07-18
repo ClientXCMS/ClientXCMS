@@ -22,16 +22,11 @@ namespace App\Models\Billing;
 use App\Addons\Freetrial\DTO\FreetrialDTO;
 use App\Addons\Fund\DTO\AddFundDTO;
 use App\Addons\Giftcard\Models\Giftcard;
-use App\Addons\Giftcard\Notifications\RedeemGiftcardMail;
 use App\Casts\JsonToObject;
-use App\Contracts\Store\ProductTypeInterface;
 use App\DTO\Store\ProductDataDTO;
-use App\Models\Provisioning\ConfigOptionService;
 use App\Models\Provisioning\Service;
-use App\Models\Provisioning\ServiceRenewals;
 use App\Models\Store\Product;
 use App\Models\Traits\HasMetadata;
-use App\Services\Billing\InvoiceService;
 use Database\Factories\Core\InvoiceItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -231,9 +226,7 @@ class InvoiceItem extends Model
             return $itemType->relatedType($this);
         }
 
-
-
-        throw new \Exception('InvoiceItem : Unknown type ' . $this->type);
+        throw new \Exception('InvoiceItem : Unknown type '.$this->type);
     }
 
     public function billing()
@@ -333,10 +326,10 @@ class InvoiceItem extends Model
             return null;
         }
         if ($discount->type == 'fixed') {
-            return __('coupon.coupon_label', ['code' => $code, 'discount' => '-' . formatted_price($discount->value_price, $this->invoice->currency)]);
+            return __('coupon.coupon_label', ['code' => $code, 'discount' => '-'.formatted_price($discount->value_price, $this->invoice->currency)]);
         }
 
-        return __('coupon.coupon_label', ['code' => $code, 'discount' => '-' . $discount->value_price . '%']);
+        return __('coupon.coupon_label', ['code' => $code, 'discount' => '-'.$discount->value_price.'%']);
     }
 
     public function discountTotal()
@@ -374,6 +367,7 @@ class InvoiceItem extends Model
         if ($itemType) {
             return $itemType->tryDeliver($this);
         }
+
         return false;
     }
 

@@ -2,10 +2,10 @@
 
 namespace App\Billing\Items;
 
-use App\Contracts\Billing\InvoiceItemInterface;
-use App\Models\Billing\InvoiceItem;
 use App\Addons\Giftcard\Models\Giftcard;
 use App\Addons\Giftcard\Notifications\RedeemGiftcardMail;
+use App\Contracts\Billing\InvoiceItemInterface;
+use App\Models\Billing\InvoiceItem;
 
 class GiftCardInvoiceItem implements InvoiceItemInterface
 {

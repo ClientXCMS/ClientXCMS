@@ -25,9 +25,6 @@ interface InvoiceItemInterface
 {
     public function uuid(): string;
 
-    /**
-     * @return string|array
-     */
     public function type(): string|array;
 
     /**

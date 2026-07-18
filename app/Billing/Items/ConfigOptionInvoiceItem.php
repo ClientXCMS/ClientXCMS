@@ -3,8 +3,8 @@
 namespace App\Billing\Items;
 
 use App\Contracts\Billing\InvoiceItemInterface;
-use App\Models\Billing\InvoiceItem;
 use App\Models\Billing\ConfigOption;
+use App\Models\Billing\InvoiceItem;
 
 class ConfigOptionInvoiceItem implements InvoiceItemInterface
 {

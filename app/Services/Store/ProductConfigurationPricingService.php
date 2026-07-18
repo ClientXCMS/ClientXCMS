@@ -2,8 +2,8 @@
 
 namespace App\Services\Store;
 
-use App\DTO\Store\ConfigOptionDTO;
 use App\Contracts\Store\ProductTypeInterface;
+use App\DTO\Store\ConfigOptionDTO;
 use App\Models\Billing\ConfigOption;
 use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Coupon;
@@ -49,7 +49,7 @@ class ProductConfigurationPricingService
                 'code' => $coupon->code,
                 'type' => $coupon->type,
                 'discount_ht' => $this->store_round($discountHt),
-                'formatted_discount' => '-' . formatted_price($discountHt, $currency),
+                'formatted_discount' => '-'.formatted_price($discountHt, $currency),
             ];
         }
 
@@ -79,7 +79,7 @@ class ProductConfigurationPricingService
                 'subtotal' => $this->formatMoney($firstPaymentHt, $currency),
                 'taxes' => formatted_price($taxAmount, $currency),
                 'total' => formatted_price($totalTtc, $currency),
-                'discount' => $discountHt > 0 ? '-' . $this->formatMoney($discountHt, $currency) : '',
+                'discount' => $discountHt > 0 ? '-'.$this->formatMoney($discountHt, $currency) : '',
             ],
             'coupon' => $couponMeta,
         ];

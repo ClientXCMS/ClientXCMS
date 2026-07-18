@@ -21,6 +21,7 @@ namespace App\Services\Billing;
 
 use App\Addons\Freetrial\DTO\FreetrialDTO;
 use App\Addons\Freetrial\Models\FreetrialConfig;
+use App\Contracts\Store\ProductTypeInterface;
 use App\DTO\Admin\Invoice\AddProductToInvoiceDTO;
 use App\DTO\Store\ConfigOptionDTO;
 use App\DTO\Store\ProductPriceDTO;
@@ -37,7 +38,6 @@ use App\Models\Provisioning\ServiceRenewals;
 use App\Models\Store\Basket\Basket;
 use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Product;
-use App\Contracts\Store\ProductTypeInterface;
 use App\Services\Store\PricingService;
 use App\Services\Store\RecurringService;
 use App\Services\Store\TaxesService;

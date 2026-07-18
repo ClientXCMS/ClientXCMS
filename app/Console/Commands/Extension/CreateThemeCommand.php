@@ -28,8 +28,7 @@ class CreateThemeCommand extends Command
      * The name and signature of the console command.
      *
      * @var string
-     *
-    */
+     */
     protected $signature = 'clientxcms:create-theme {--name=: Theme name}
     {--uuid= : Theme UUID}
     {--parent=default : Parent theme: default or bootstrap}
@@ -60,6 +59,7 @@ class CreateThemeCommand extends Command
 
         if (! $name || ! $uuid) {
             $this->error('Options required: --name and --uuid');
+
             return self::FAILURE;
         }
 

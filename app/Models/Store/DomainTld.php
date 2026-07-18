@@ -43,6 +43,6 @@ class DomainTld extends Model
 
     public function normalizeExtension(): void
     {
-        $this->extension = '.' . ltrim(strtolower(trim($this->extension)), '.');
+        $this->extension = '.'.ltrim(strtolower(trim($this->extension)), '.');
     }
 }

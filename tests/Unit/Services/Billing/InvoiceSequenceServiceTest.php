@@ -56,7 +56,7 @@ class InvoiceSequenceServiceTest extends TestCase
                 'notes' => '',
                 'paymethod' => 'none',
                 'billing_address' => '{}',
-                'uuid' => 'fixture-' . $i,
+                'uuid' => 'fixture-'.$i,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

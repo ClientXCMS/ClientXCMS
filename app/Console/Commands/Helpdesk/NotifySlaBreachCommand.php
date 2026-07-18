@@ -24,7 +24,6 @@ use App\Services\Helpdesk\SlaService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
-
 class NotifySlaBreachCommand extends Command
 {
     protected $signature = 'helpdesk:notify-sla-breach
@@ -38,6 +37,7 @@ class NotifySlaBreachCommand extends Command
 
         if ($breaches->isEmpty()) {
             $this->info('No fresh SLA breach detected.');
+
             return self::SUCCESS;
         }
 
@@ -59,6 +59,7 @@ class NotifySlaBreachCommand extends Command
         }
 
         $this->info(sprintf('Flagged %d ticket(s).', $breaches->count()));
+
         return self::SUCCESS;
     }
 }

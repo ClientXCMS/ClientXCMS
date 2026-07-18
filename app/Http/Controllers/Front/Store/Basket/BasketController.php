@@ -19,6 +19,7 @@
 
 namespace App\Http\Controllers\Front\Store\Basket;
 
+use App\Contracts\Store\ProductTypeInterface;
 use App\DTO\Store\ProductDataDTO;
 use App\Exceptions\WrongPaymentException;
 use App\Helpers\Countries;
@@ -28,10 +29,9 @@ use App\Models\Billing\Gateway;
 use App\Models\Store\Basket\Basket;
 use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Product;
-use App\Contracts\Store\ProductTypeInterface;
-use App\Services\Domain\DomainPricingService;
 use App\Services\Account\AccountEditService;
 use App\Services\Billing\InvoiceService;
+use App\Services\Domain\DomainPricingService;
 use App\Services\Store\ProductConfigurationPricingService;
 use Illuminate\Http\Request;
 
@@ -54,7 +54,7 @@ class BasketController extends \App\Http\Controllers\Controller
             'completed_at' => null,
         ]);
 
-        return redirect()->to(route('front.store.basket.config', ['product' => $product]) . ($request->getQueryString() != null ? '?' . $request->getQueryString() : ''));
+        return redirect()->to(route('front.store.basket.config', ['product' => $product]).($request->getQueryString() != null ? '?'.$request->getQueryString() : ''));
     }
 
     public function show(Request $request)
@@ -83,7 +83,7 @@ class BasketController extends \App\Http\Controllers\Controller
             ? app(DomainPricingService::class)->availableForTld($request->query('tld'), currency())
             : $product->pricingAvailable(currency());
         $validated = $request->validate([
-            'billing' => 'nullable|string|in:' . implode(',', collect($available)->pluck('recurring')->toArray()),
+            'billing' => 'nullable|string|in:'.implode(',', collect($available)->pluck('recurring')->toArray()),
         ]);
         $billing = $validated['billing'] ?? $row->billing;
         if ($product->getPriceByCurrency(currency(), $billing)->price == 0 && count($available) > 0) {
@@ -269,7 +269,7 @@ class BasketController extends \App\Http\Controllers\Controller
             logger()->error($e->getMessage());
             $message = __('store.checkout.wrong_payment');
             if (auth('admin')->check()) {
-                $message .= ' Debug admin : ' . $e->getMessage();
+                $message .= ' Debug admin : '.$e->getMessage();
             }
 
             return redirect()->route('front.store.basket.checkout')->with('error', $message);
@@ -323,6 +323,7 @@ class BasketController extends \App\Http\Controllers\Controller
         if (! str_starts_with($path, '/store/basket') && ! str_starts_with($path, '/basket')) {
             return $default;
         }
+
         return $redirectTo;
     }
 

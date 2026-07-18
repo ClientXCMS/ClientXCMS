@@ -318,11 +318,13 @@ class Basket extends Model
         foreach ($this->rows as $row) {
             if ($row->product == null) {
                 $row->delete();
+
                 continue;
             }
             if (! $row->product->canAddToBasket()) {
                 $row->delete();
                 Session::flash('error', __('store.basket.already_ordered', ['product' => $row->product->name]));
+
                 continue;
             }
         }

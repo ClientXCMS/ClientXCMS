@@ -86,7 +86,7 @@ class AdminServiceProvider extends ServiceProvider
                 'lastname' => __('global.lastname'),
                 'phone' => __('global.phone'),
             ];
-            
+
             if (app('extension')->extensionIsEnabled('supportid') && \Schema::hasColumn('customers', 'support_id')) {
                 $fields['support_id'] = __('supportid::lang.admin.search.label');
             }
@@ -112,32 +112,32 @@ class AdminServiceProvider extends ServiceProvider
     protected function versionData()
     {
         try {
-        return Cache::remember('git-version', 5, function () {
-            if (file_exists(base_path('.git/HEAD'))) {
-                $head = explode(' ', file_get_contents(base_path('.git/HEAD')));
+            return Cache::remember('git-version', 5, function () {
+                if (file_exists(base_path('.git/HEAD'))) {
+                    $head = explode(' ', file_get_contents(base_path('.git/HEAD')));
 
-                if (array_key_exists(1, $head)) {
-                    $path = base_path('.git/'.trim($head[1]));
+                    if (array_key_exists(1, $head)) {
+                        $path = base_path('.git/'.trim($head[1]));
+                    }
                 }
-            }
 
-            if (isset($path) && file_exists($path)) {
+                if (isset($path) && file_exists($path)) {
+                    return [
+                        'version' => substr(file_get_contents($path), 0, 8),
+                        'is_git' => true,
+                    ];
+                }
+
                 return [
-                    'version' => substr(file_get_contents($path), 0, 8),
-                    'is_git' => true,
+                    'version' => AppServiceProvider::VERSION,
+                    'is_git' => false,
                 ];
-            }
-
+            });
+        } catch (\Exception $e) {
             return [
                 'version' => AppServiceProvider::VERSION,
                 'is_git' => false,
             ];
-        });
-    } catch (\Exception $e) {
-        return [
-            'version' => AppServiceProvider::VERSION,
-            'is_git' => false,
-        ];
-    }
+        }
     }
 }

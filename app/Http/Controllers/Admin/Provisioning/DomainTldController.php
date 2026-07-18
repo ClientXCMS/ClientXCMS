@@ -23,17 +23,18 @@ class DomainTldController extends AbstractCrudController
 
     protected ?string $managedPermission = 'admin.manage_domain_tlds';
 
-
     public function index(Request $request)
     {
         $this->checkPermission('showAny');
         $this->shareSettingsCard();
+
         return parent::index($request);
     }
+
     public function create(Request $request)
     {
         $this->checkPermission('create');
-        
+
         return $this->createView($this->formParams(new DomainTld));
     }
 
@@ -79,7 +80,7 @@ class DomainTldController extends AbstractCrudController
     private function validated(Request $request, ?DomainTld $tld = null): array
     {
         $data = $request->validate([
-            'extension' => 'required|string|max:32|unique:domain_tlds,extension,' . ($tld?->id ?? 'NULL'),
+            'extension' => 'required|string|max:32|unique:domain_tlds,extension,'.($tld?->id ?? 'NULL'),
             'status' => 'required|string|in:active,hidden,unreferenced',
             'server_id' => 'nullable|exists:servers,id',
             'dns_management' => 'nullable',
@@ -96,6 +97,7 @@ class DomainTldController extends AbstractCrudController
     private function formParams(DomainTld $item): array
     {
         $this->shareSettingsCard();
+
         return [
             'item' => $item,
             'servers' => ['' => 'None'] + Server::where('type', 'domain')->pluck('name', 'id')->toArray(),
@@ -148,7 +150,6 @@ class DomainTldController extends AbstractCrudController
             }
         }
     }
-
 
     private function shareSettingsCard(): void
     {

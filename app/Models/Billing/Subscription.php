@@ -29,10 +29,9 @@ use App\Services\Core\PaymentTypeService;
 use App\Services\Store\RecurringService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
@@ -206,7 +205,6 @@ class Subscription extends Model
 
         return $result;
     }
-
 
     public function toggle()
     {

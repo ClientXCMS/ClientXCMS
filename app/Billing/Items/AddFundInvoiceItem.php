@@ -2,9 +2,9 @@
 
 namespace App\Billing\Items;
 
+use App\Addons\Fund\DTO\AddFundDTO;
 use App\Contracts\Billing\InvoiceItemInterface;
 use App\Models\Billing\InvoiceItem;
-use App\Addons\Fund\DTO\AddFundDTO;
 
 class AddFundInvoiceItem implements InvoiceItemInterface
 {
@@ -29,7 +29,7 @@ class AddFundInvoiceItem implements InvoiceItemInterface
 
     public function tryDeliver(InvoiceItem $item): bool
     {
-        $item->invoice->customer->addFund($item->unit_price_ht, 'Add funds from invoice #' . $item->invoice->id);
+        $item->invoice->customer->addFund($item->unit_price_ht, 'Add funds from invoice #'.$item->invoice->id);
         $item->delivered_at = now();
         $item->save();
 

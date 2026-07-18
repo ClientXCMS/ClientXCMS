@@ -34,7 +34,7 @@ class UpgradeInvoiceItem implements InvoiceItemInterface
             $item->delivered_at = now();
             $item->save();
         } else {
-            throw new \Exception("Upgrade {$upgrade->id} delivery failed Error : " . $result->message);
+            throw new \Exception("Upgrade {$upgrade->id} delivery failed Error : ".$result->message);
         }
 
         return true;

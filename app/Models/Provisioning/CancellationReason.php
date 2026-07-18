@@ -49,7 +49,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class CancellationReason extends Model
 {
-
     public const MODE_IMMEDIATE = 'immediate';
 
     public const MODE_SUPPORT_TICKET = 'support_ticket';
@@ -64,6 +63,7 @@ class CancellationReason extends Model
             self::MODE_AFTER_EXPIRATION => __('provisioning.cancellation.mode_after_expiration'),
         ];
     }
+
     use HasFactory, ModelStatutTrait, SoftDeletes;
 
     protected $fillable = [

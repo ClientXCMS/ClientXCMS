@@ -19,7 +19,6 @@
 
 namespace App\Services\Helpdesk;
 
-use App\Models\Helpdesk\SupportDepartment;
 use App\Models\Helpdesk\SupportMessage;
 use App\Models\Helpdesk\SupportTicket;
 use Illuminate\Support\Carbon;
@@ -104,6 +103,7 @@ class SlaService
     public function freshBreaches()
     {
         $now = Carbon::now();
+
         return SupportTicket::query()
             ->whereNull('sla_breached_notified_at')
             ->where('status', SupportTicket::STATUS_OPEN)

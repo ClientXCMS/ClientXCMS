@@ -40,10 +40,19 @@ class SmsServiceTest extends TestCase
 
     public function test_extension_registers_custom_driver(): void
     {
-        $fake = new class implements SmsGatewayContract {
+        $fake = new class implements SmsGatewayContract
+        {
             public function send(string $to, string $message): void {}
-            public function name(): string { return 'fake'; }
-            public function rules(array $data): array { return []; }
+
+            public function name(): string
+            {
+                return 'fake';
+            }
+
+            public function rules(array $data): array
+            {
+                return [];
+            }
         };
         SmsService::extend('fake', fn () => $fake);
         Setting::updateSettings(['mfa_sms_driver' => 'fake']);

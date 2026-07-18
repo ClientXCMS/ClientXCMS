@@ -28,8 +28,6 @@ use App\Helpers\EnvEditor;
 use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
-use App\Models\Billing\Subscription;
-use App\Models\Provisioning\Service;
 use Illuminate\Http\Request;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\InvalidRequestException;
@@ -345,7 +343,6 @@ class StripeType extends AbstractGatewayType
 
         return new GatewayPayInvoiceResultDTO($intent->status == 'succeeded', $intent->status, $invoice, $sourceDTO);
     }
-
 
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
     {

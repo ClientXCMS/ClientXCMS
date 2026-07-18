@@ -295,5 +295,4 @@ class RegistrationTest extends TestCase
             'value' => 'https://example.com',
         ]);
     }
-
 }

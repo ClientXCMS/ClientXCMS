@@ -44,7 +44,7 @@ class TwilioSmsGateway implements SmsGatewayContract
             ]);
 
         if (! $response->successful()) {
-            throw new \RuntimeException('Twilio SMS send failed: HTTP ' . $response->status());
+            throw new \RuntimeException('Twilio SMS send failed: HTTP '.$response->status());
         }
     }
 

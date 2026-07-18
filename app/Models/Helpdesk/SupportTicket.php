@@ -35,7 +35,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
@@ -221,7 +220,7 @@ class SupportTicket extends Model
 
     public function staffCanView(Admin $admin)
     {
-        return $admin->can('admin.manage_tickets') || $admin->can('admin.manage_tickets_department.' . $this->department_id);
+        return $admin->can('admin.manage_tickets') || $admin->can('admin.manage_tickets_department.'.$this->department_id);
     }
 
     public function comments()
@@ -232,13 +231,13 @@ class SupportTicket extends Model
     public static function getPriorities()
     {
         return collect(self::PRIORITIES)->mapWithKeys(function ($value, $key) {
-            return [$key => __('helpdesk.priorities.' . $key)];
+            return [$key => __('helpdesk.priorities.'.$key)];
         });
     }
 
     public function priorityLabel()
     {
-        return __('helpdesk.priorities.' . $this->priority);
+        return __('helpdesk.priorities.'.$this->priority);
     }
 
     public function assignedTo()
@@ -378,11 +377,11 @@ class SupportTicket extends Model
         $users = [];
         foreach ($this->messages as $message) {
             if ($message->customer != null) {
-                $initial = $message->customer->firstname[0] . $message->customer->lastname[0];
+                $initial = $message->customer->firstname[0].$message->customer->lastname[0];
                 $users[$initial] = $message->customer->excerptFullName();
             }
             if ($message->admin != null) {
-                $initial = $message->admin->firstname[0] . $message->admin->lastname[0];
+                $initial = $message->admin->firstname[0].$message->admin->lastname[0];
                 $users[$initial] = $message->admin->username;
             }
         }
@@ -438,12 +437,12 @@ class SupportTicket extends Model
         $lastMessage = $this->messages()->latest()->first();
         $folder = "helpdesk/attachments/{$this->id}/";
         $extension = $attachment->getExtension();
-        $attachmentName = Str::random(16) . '.' . $extension;
+        $attachmentName = Str::random(16).'.'.$extension;
         $attachment->storeAs($folder, $attachmentName);
         $file = new SupportAttachment;
         $file->fill([
             'filename' => $attachment->getClientOriginalName(),
-            'path' => 'helpdesk/attachments/' . $this->id . '/' . $attachmentName,
+            'path' => 'helpdesk/attachments/'.$this->id.'/'.$attachmentName,
             'mime' => $attachment->getClientMimeType(),
             'size' => $attachment->getSize(),
             'ticket_id' => $this->id,
