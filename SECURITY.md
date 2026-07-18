@@ -6,10 +6,10 @@ Security is a top priority for ClientXCMS. We take all security vulnerabilities 
 
 We provide security updates for the following versions:
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 2.x     | :white_check_mark: |
-| 1.x     | :x:                |
+| Version | Supported |
+| ------- | --------- |
+| 2.x     | ✅        |
+| 1.x     | ❌        |
 
 ## Reporting a Vulnerability
 
@@ -17,7 +17,7 @@ If you discover a security vulnerability within ClientXCMS, please follow these 
 
 ### How to Report
 
-1. **Email**: Send a detailed report to [security@clientxcms.com](mailto:security@clientxcms.com)
+1. **Email**: Send a detailed report to [martin@clientxcms.com](mailto:martin@clientxcms.com)
 2. **GitHub**: Use the "Report a vulnerability" button in the Security tab
 
 ### What to Include
@@ -58,10 +58,10 @@ La sécurité est une priorité absolue pour ClientXCMS. Nous prenons toutes les
 
 Nous fournissons des mises à jour de sécurité pour les versions suivantes :
 
-| Version | Supportée          |
-| ------- | ------------------ |
-| 2.x     | :white_check_mark: |
-| 1.x     | :x:                |
+| Version | Supportée |
+| ------- | ---------- |
+| 2.x     | ✅         |
+| 1.x     | ❌         |
 
 ## Signalement d'une Vulnérabilité
 
@@ -69,7 +69,7 @@ Si vous découvrez une vulnérabilité de sécurité dans ClientXCMS, veuillez s
 
 ### Comment Signaler
 
-1. **Email** : Envoyez un rapport détaillé à [security@clientxcms.com](mailto:security@clientxcms.com)
+1. **Email** : Envoyez un rapport détaillé à [martin@clientxcms.com](mailto:martin@clientxcms.com)
 2. **GitHub** : Utilisez le bouton "Report a vulnerability" dans l'onglet Security
 
 ### Informations à Fournir

@@ -88,6 +88,23 @@ class Basket extends Model
     }
 
     /**
+     * Remove rows whose product no longer exists or has been soft deleted.
+     */
+    public function cleanupMissingProducts(): int
+    {
+        $deletedRows = $this->rows()
+            ->whereDoesntHave('product')
+            ->delete();
+
+        if ($deletedRows > 0) {
+            $this->unsetRelation('rows');
+            $this->load('rows');
+        }
+
+        return $deletedRows;
+    }
+
+    /**
      * Renvoie le pourcentage de taxes de la commande
      *
      * @return float
@@ -231,6 +248,8 @@ class Basket extends Model
 
         if ($force) {
             if (self::$basket != null && ! app()->environment('testing')) {
+                self::$basket->cleanupMissingProducts();
+
                 return self::$basket;
             }
 
@@ -240,6 +259,8 @@ class Basket extends Model
                     ->first();
 
                 if ($basket) {
+                    $basket->cleanupMissingProducts();
+
                     return $basket;
                 }
             }
@@ -258,6 +279,8 @@ class Basket extends Model
                 ->whereNull('completed_at')
                 ->first();
         }
+
+        self::$basket?->cleanupMissingProducts();
 
         return self::$basket;
     }

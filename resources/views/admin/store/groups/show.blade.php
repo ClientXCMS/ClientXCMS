@@ -55,7 +55,7 @@
                                     {{ __('admin.metadata.title') }}
                                 </button>
                                 @endif
-                                <a href="{{ $group->route() }}" target="_blank" class="btn btn-dark dark:btn-white text-sm">
+                                <a href="{{ $group->route() }}" target="_blank" class="btn btn-dark text-sm dark:bg-white dark:text-gray-800 dark:hover:bg-gray-200">
                                     {{ __($translatePrefix . '.see_group') }}
                                 </a>
                             </div>
@@ -89,9 +89,9 @@
                             <div>
                                 @include('admin/shared/textarea', ['name' => 'description', 'label' => __('global.description'), 'value' => old('description', $item->description), 'translatable' => true])
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-                                    @include('admin/shared/input', ['name' => 'badge_title', 'label' => __('store.group.badge_title'), 'value' => old('badge_title', $item->badge_title), 'translatable' => true, 'optional' => true])
-                                    @include('admin/shared/input', ['name' => 'badge_color', 'label' => __('store.group.badge_color'), 'value' => old('badge_color', $item->badge_color), 'placeholder' => '#6366f1', 'optional' => true])
-                                    @include('admin/shared/input', ['name' => 'badge_icon', 'label' => __('store.group.badge_icon'), 'value' => old('badge_icon', $item->badge_icon), 'placeholder' => 'bi bi-stars', 'optional' => true])
+                                    @include('admin/shared/input', ['name' => 'badge_title', 'label' => __($translatePrefix . '.badge_title'), 'value' => old('badge_title', $item->badge_title), 'translatable' => true, 'optional' => true])
+                                    @include('admin/shared/input', ['name' => 'badge_color', 'label' => __($translatePrefix . '.badge_color'), 'value' => old('badge_color', $item->badge_color), 'placeholder' => '#6366f1', 'optional' => true])
+                                    @include('admin/shared/input', ['name' => 'badge_icon', 'label' => __($translatePrefix . '.badge_icon'), 'value' => old('badge_icon', $item->badge_icon), 'placeholder' => 'bi bi-stars', 'optional' => true])
                                 </div>
                                 <div class="mt-2">
                                     @include('admin/shared/checkbox', ['name' => 'pinned', 'label' => __('global.pinned'), 'checked' => old('pinned', $item->pinned)])

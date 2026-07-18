@@ -48,9 +48,6 @@
                     <form method="POST" class="card" action="{{ route($routePath . '.update', ['service' => $item]) }}">
                         <div class="card-heading">
                             <div class="flex items-center gap-3">
-                                @if ($item->customer)
-                                    <x-avatar :user="$item->customer" size="lg" />
-                                @endif
                                 <div>
 
                                 <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">

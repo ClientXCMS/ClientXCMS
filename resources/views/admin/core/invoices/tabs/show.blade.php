@@ -15,7 +15,6 @@
 <div class="mt-4 grid sm:grid-cols-2 gap-3">
     @if ($customer)
     <a href="{{ route('admin.customers.show', ['customer' => $customer]) }}" target="_blank">
-        <x-avatar :user="$customer" size="md" class="mb-1 !ring-0" />
     @endif
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ __('client.invoices.billto', ['name' => $address[0]]) }}</h3>
         <address class="mt-2 not-italic text-gray-500">

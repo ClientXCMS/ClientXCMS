@@ -2,10 +2,12 @@ import EasyMDE from 'easymde'
 import 'easymde/dist/easymde.min.css'
 import '../css/simplemde.min.css'
 
+console.log('Initializing EasyMDE for all editors on the page')
 document.addEventListener('DOMContentLoaded', function () {
     const editors = document.querySelectorAll('.editor')
 
     editors.forEach((editor, index) => {
+        console.log('Initializing EasyMDE for editor:', editor, 'Index:', index)
         const uniqueId = `helpdesk-editor-${editor.name || index}`
         const simpleMDE = new EasyMDE({
             element: editor,

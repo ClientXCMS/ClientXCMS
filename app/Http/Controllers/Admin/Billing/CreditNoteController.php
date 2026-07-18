@@ -95,7 +95,7 @@ class CreditNoteController extends AbstractCrudController
     protected function getSearchFields(): array
     {
         return [
-            'credit_note_number' => __('admin.credit_notes.credit_note_number'),
+            'credit_note_number' => __('client.invoices.credit_note_number'),
             'customer.email' => __('global.customer'),
             'invoice.invoice_number' => __('admin.credit_notes.original_invoice'),
             'currency_filter' => [

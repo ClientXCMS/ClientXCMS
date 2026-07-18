@@ -176,6 +176,27 @@ class BasketTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_loading_basket_removes_rows_with_a_deleted_product()
+    {
+        $product = $this->createProductModel();
+        Basket::getBasket()->rows()->create([
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'billing' => 'monthly',
+            'currency' => 'USD',
+        ]);
+
+        $product->delete();
+
+        $basket = Basket::getBasket();
+
+        $this->assertCount(0, $basket->rows);
+        $this->assertDatabaseMissing('baskets_rows', [
+            'basket_id' => $basket->id,
+            'product_id' => $product->id,
+        ]);
+    }
+
     public function test_user_can_see_basket_with_product()
     {
         $customer = $this->createCustomerModel();

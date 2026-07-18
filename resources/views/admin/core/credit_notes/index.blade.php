@@ -144,7 +144,7 @@
                                 'checkedFilters' => $checkedFilters,
                                 'filterField' => $filterField,
                             ])    
-                            <a class="btn btn-secondary text-sm rounded-r-none w-1/2 sm:w-auto"
+                            <a class="btn btn-secondary text-sm w-1/2 sm:w-auto"
                                     href="{{ route('admin.invoices.index') }}">
                                     <i class="bi bi-receipt"></i>
                                     {{ __('admin.invoices.title') }}
@@ -158,7 +158,7 @@
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-start">
                                         <div class="flex items-center gap-x-2">
-                                            <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">{{ __('admin.credit_notes.credit_note_number') }}</span>
+                                            <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">{{ __('client.invoices.credit_note_number') }}</span>
                                         </div>
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-start">
@@ -193,7 +193,7 @@
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-start">
                                         <div class="flex items-center gap-x-2">
-                                            <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">{{ __('admin.credit_notes.date') }}</span>
+                                            <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">{{ __('global.date') }}</span>
                                         </div>
                                     </th>
                                     <th scope="col" class="px-6 py-3 text-start">

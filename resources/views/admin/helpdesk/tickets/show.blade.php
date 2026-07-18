@@ -175,7 +175,7 @@
                                         <div class="col-span-2 mt-2">
                                             @include('admin/shared/file2', [
                                                 'name' => 'attachments',
-                                                'label' => __('helpdesk.support.attachments'),
+                                                'label' => __('helpdesk.attachments'),
                                                 'help' => __('helpdesk.support.attachments_help', [
                                                     'size' => setting('helpdesk_attachments_max_size'),
                                                     'types' => formatted_extension_list(

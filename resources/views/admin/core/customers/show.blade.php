@@ -249,7 +249,7 @@
                                 aria-controls="tabs-credit-notes" role="tab">
                                 <span class="inline-flex items-center gap-x-3">
                                     <i class="bi bi-file-earmark-diff text-lg"></i>
-                                    {{ __('admin.credit_notes.credit_notes') }}
+                                    {{ __('admin.credit_notes.title') }}
                                 </span>
                                 @if ($creditNotes->total() > 0)
                                     <span
@@ -523,7 +523,7 @@
 
                         @if (staff_has_permission('admin.manage_customers'))
                             <div class="mt-4">
-                                <button class="btn btn-indigo-600">
+                                <button class="btn btn-primary" type="submit">
                                     <i class="bi bi-save2 mr-2"></i>{{ __('admin.updatedetails') }}
                                 </button>
                             </div>
@@ -816,7 +816,7 @@
                 tabindex="-1">
                 <div class="flex justify-between items-center py-3 px-4 border-b dark:border-gray-700">
                     <h3 class="font-bold text-gray-800 dark:text-white">
-                        {{ __('admin.credit_notes.issue_credit_note') }}
+                        {{ __('admin.credit_notes.title') }}
                     </h3>
                     <button type="button"
                         class="flex justify-center items-center w-7 h-7 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
@@ -847,7 +847,7 @@
                         <div class="mb-4">
                             @include('admin/shared/input', [
                                 'name' => 'amount',
-                                'label' => __('admin.credit_notes.amount'),
+                                'label' => __('global.amount'),
                                 'type' => 'number',
                                 'value' => old('amount'),
                                 'step' => '0.01',

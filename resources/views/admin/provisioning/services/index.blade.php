@@ -162,7 +162,6 @@
                               <span class="italic text-gray-400 dark:text-gray-600">({{ __('global.deleted') }})</span>
                             @else
                           <a class="inline-flex items-center gap-2" href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
-                              <x-avatar :user="$item->customer" size="sm" class="!ring-0" />
                               {{ $item->customer->excerptFullName() }}
                           </a>
                             @endif

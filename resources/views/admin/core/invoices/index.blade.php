@@ -61,7 +61,7 @@
                                 @endif
                                 @if (staff_has_permission('admin.show_invoices'))
                                     <a class="btn btn-secondary text-sm w-1/2 sm:w-auto ml-1" href="{{ route('admin.credit_notes.index') }}">
-                                        <i class="bi bi-file-earmark-diff"></i> {{ __('admin.credit_notes.credit_notes') }}
+                                        <i class="bi bi-file-earmark-diff"></i> {{ __('admin.credit_notes.title') }}
                                     </a>
                                 @endif
 
@@ -200,7 +200,6 @@
                                                 <span class="text-sm text-gray-600 dark:text-gray-400">
                                                     @if ($item->customer)
                                                         <a class="inline-flex items-center gap-2" href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
-                                                            <x-avatar :user="$item->customer" size="sm" class="!ring-0" />
                                                             {{ $item->customer->excerptFullName() }}
                                                         </a>
                                                     @else

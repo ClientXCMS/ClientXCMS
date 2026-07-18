@@ -1,7 +1,7 @@
 <div class="card">
     <div class="flex justify-between">
         <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
-            {{ __('admin.credit_notes.credit_notes') }}
+            {{ __('admin.credit_notes.title') }}
         </h2>
     </div>
     <div class="border rounded-lg overflow-hidden dark:border-gray-700">
@@ -10,7 +10,7 @@
                 <tr>
                     <th scope="col" class="px-6 py-3 text-start">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
-                            {{ __('admin.credit_notes.credit_note_number') }}
+                            {{ __('client.invoices.credit_note_number') }}
                         </span>
                     </th>
                     <th scope="col" class="px-6 py-3 text-start">
@@ -25,12 +25,12 @@
                     </th>
                     <th scope="col" class="px-6 py-3 text-start">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
-                            {{ __('admin.credit_notes.date') }}
+                            {{ __('global.date') }}
                         </span>
                     </th>
                     <th scope="col" class="px-6 py-3 text-end">
                         <span class="text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">
-                            {{ __('admin.credit_notes.actions') }}
+                            {{ __('global.actions') }}
                         </span>
                     </th>
                 </tr>
