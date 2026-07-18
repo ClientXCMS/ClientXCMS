@@ -329,7 +329,7 @@ class Basket extends Model
         }
     }
 
-    public function applyCoupon(string $couponName)
+    public function applyCoupon(string $couponName, bool $force = false): bool
     {
         /** @var Coupon $coupon */
         $coupon = Coupon::where('code', $couponName)->first();
@@ -341,7 +341,7 @@ class Basket extends Model
         if (! $coupon->isValid($this, true)) {
             return false;
         }
-        if (! $coupon->canBeAppliedToBasket($this)) {
+        if (! $coupon->canBeAppliedToBasket($this) && ! $force) {
             Session::flash('error', __('coupon.coupon_not_applicable'));
 
             return false;

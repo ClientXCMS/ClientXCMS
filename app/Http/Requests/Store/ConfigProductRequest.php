@@ -29,6 +29,10 @@ class ConfigProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        if (auth('admin')->check()) {
+            return staff_has_permission(\App\Models\Admin\Permission::MANAGE_PRODUCTS);
+        }
+
         return true;
     }
 

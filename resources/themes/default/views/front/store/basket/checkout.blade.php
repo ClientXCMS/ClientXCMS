@@ -147,7 +147,12 @@
 
 
                                     <div class="sm:col-span-3">
-                                        @include("shared.input", ["name" => "phone", "label" => __('global.phone'), "value" => auth('web')->user()->phone ?? old("phone")])
+                                        @include('shared.phone-intl', [
+                                            'name' => 'phone',
+                                            'label' => __('global.phone'),
+                                            'value' => auth('web')->user()->phone ?? old('phone'),
+                                            'country' => auth('web')->user()->country ?? old('country', 'FR'),
+                                        ])
                                     </div>
 
                                     <div class="sm:col-span-2">
@@ -319,7 +324,7 @@
                                 <span class="font-semibold" id="total">{{ formatted_price($basket->total(), $basket->currency()) }}</span>
                             </div>
                         </div>
-                        <button type="submit"  @guest disabled @endguest class="btn-primary mt-4 w-full" id="btnCheckout">Checkout</button>
+                        <button type="submit"  @guest disabled @endguest class="btn-primary mt-4 w-full" id="btnCheckout">{{ __('store.basket.finish') }}</button>
 
                     </div>
             </div>

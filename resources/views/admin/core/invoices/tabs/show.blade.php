@@ -7,14 +7,15 @@
         <span class="mt-1 block text-gray-500">{{ $invoice->identifier() }}</span>
 
         <address class="mt-4 not-italic text-gray-800 dark:text-gray-200">
-            {!! nl2br(setting('app_address')) !!}
+            {!! nl2br(e(setting('app_address'))) !!}
         </address>
     </div>
 </div>
 
-<div class="mt-8 grid sm:grid-cols-2 gap-3">
+<div class="mt-4 grid sm:grid-cols-2 gap-3">
     @if ($customer)
     <a href="{{ route('admin.customers.show', ['customer' => $customer]) }}" target="_blank">
+        <x-avatar :user="$customer" size="md" class="mb-1 !ring-0" />
     @endif
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ __('client.invoices.billto', ['name' => $address[0]]) }}</h3>
         <address class="mt-2 not-italic text-gray-500">
@@ -96,7 +97,7 @@
                 <div>
                     <p class="font-medium text-gray-800 dark:text-gray-200">{{ $item->name }}</p>
                     @if ($item->canDisplayDescription())
-                    <span class="font-medium text-gray-500 dark:text-gray-400">{!! nl2br($item->description) !!}</span>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">{!! nl2br(e($item->description)) !!}</span>
                     @endif
                     @if ($item->getDiscount(false) != null)
                     <span class="font-medium text-gray-400 text-start">{{ $item->getDiscountLabel() }}</span>

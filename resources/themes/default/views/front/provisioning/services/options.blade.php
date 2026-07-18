@@ -120,7 +120,7 @@
             <div class="md:w-1/4">
                 <div class="grid grid-col-1">
 
-                    @if ($service->canRenew())
+                    @if ($service->canRenew() && auth('web')->user()->hasServicePermission($service, 'service.renew'))
                         @if ($service->isFree())
                             <a class="btn-action-with-icon mb-2 p-3" href="{{ route('front.services.renew', ['service' => $service, 'gateway' => 'balance']) }}">
                                 <i class="bi bi-credit-card-2-front-fill"></i>
@@ -157,10 +157,12 @@
                         {{ __('client.services.managebtn') }}
                     </a>
 
-                    <a class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3" href="{{ route('front.services.options', ['service' => $service]) }}">
-                        <i class="bi bi-boxes"></i>
-                        {{ __('client.services.manageoptions') }}
-                    </a>
+                    @if ($service->customer_id === auth()->id())
+                        <a href="{{ route('front.services.subusers', ['service' => $service]) }}" class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3">
+                            <i class="bi bi-people"></i>
+                            {{ __('client.services.subusers.manage') }}
+                        </a>
+                    @endif
                     @if (auth('admin')->check())
 
                         <a href="{{ route('admin.services.show', ['service' => $service]) }}" class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3 text-primary">
@@ -194,9 +196,6 @@
 
                             </div>
                         </div>
-                        @if ($service->canRenew())
-
-                        @endif
                     </div>
                     @if ($service->server_id != null)
                         <div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-800 mt-2">

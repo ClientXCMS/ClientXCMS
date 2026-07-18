@@ -63,9 +63,9 @@ class ExtensionDTO implements Arrayable
         return new self(
             $module['uuid'],
             $module['type'],
-            $module['enabled'],
+            (bool) ($module['enabled'] ?? false),
             $module['api'] ?? [],
-            $module['version'],
+            $module['version'] ?? null,
         );
     }
 
@@ -152,6 +152,16 @@ class ExtensionDTO implements Arrayable
         }
 
         return false;
+    }
+
+    public function hasBootError(): bool
+    {
+        return isset($this->api['boot_error']['message']);
+    }
+
+    public function bootError(): ?array
+    {
+        return $this->hasBootError() ? $this->api['boot_error'] : null;
     }
 
     public function thumbnail()

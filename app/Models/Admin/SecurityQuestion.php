@@ -19,6 +19,7 @@
 
 namespace App\Models\Admin;
 
+use App\Models\Traits\Translatable;
 use App\Models\Account\Customer;
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,6 +33,12 @@ use Illuminate\Database\Eloquent\Model;
  */
 class SecurityQuestion extends Model
 {
+    use Translatable;
+
+    protected array $translatableKeys = [
+        'question',
+    ];
+
     protected $fillable = [
         'question',
         'is_active',
@@ -81,8 +88,26 @@ class SecurityQuestion extends Model
     {
         return self::active()
             ->ordered()
-            ->pluck('question', 'id')
+            ->get()
+            ->mapWithKeys(fn (self $question) => [$question->id => $question->getTranslatedQuestion()])
             ->toArray();
+    }
+
+    public function getTranslatedQuestion(): string
+    {
+        $translated = $this->getTranslation('question', '');
+        if ($translated !== '') {
+            return $translated;
+        }
+
+        if (is_string($this->question) && str_contains($this->question, '.')) {
+            $translated = __($this->question);
+            if ($translated !== $this->question) {
+                return $translated;
+            }
+        }
+
+        return $this->question;
     }
 
     /**
@@ -90,7 +115,7 @@ class SecurityQuestion extends Model
      */
     public static function isFeatureEnabled(): bool
     {
-        return \Cache::remember('security_questions_enabled', 3600, function () {
+        return (bool) \Cache::remember('security_questions_enabled', 3600, function () {
             return self::active()->exists();
         });
     }

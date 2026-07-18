@@ -22,6 +22,7 @@ namespace App\Observers;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceLog;
 use App\Models\Provisioning\Service;
+use App\Models\Provisioning\ServiceRenewals;
 
 class InvoiceObserver
 {
@@ -46,6 +47,10 @@ class InvoiceObserver
             }
             if ($status == Invoice::STATUS_PENDING) {
                 InvoiceLog::log($invoice, InvoiceLog::PENDING_INVOICE);
+            }
+
+            if (in_array($status, [Invoice::STATUS_CANCELLED, Invoice::STATUS_REFUNDED, Invoice::STATUS_FAILED], true)) {
+                ServiceRenewals::cancelPendingForInvoice($invoice->id);
             }
         }
     }

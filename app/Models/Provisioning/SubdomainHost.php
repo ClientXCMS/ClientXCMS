@@ -19,8 +19,10 @@
 
 namespace App\Models\Provisioning;
 
+use App\Models\Store\Product;
 use App\Models\Traits\HasMetadata;
 use App\Models\Traits\Loggable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -28,6 +30,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * @property int $id
  * @property string $domain
+ * @property array|null $products
+ * @property array|null $groups
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -50,9 +54,56 @@ class SubdomainHost extends Model
 {
     use HasFactory, HasMetadata, Loggable, softDeletes;
 
-    protected $fillable = ['domain'];
+    protected $fillable = ['domain', 'products', 'groups'];
+
+    protected $casts = [
+        'products' => 'array',
+        'groups' => 'array',
+    ];
 
     protected $table = 'subdomains_hosts';
+
+    public function scopeAvailableForProduct(Builder $query, ?Product $product): Builder
+    {
+        return $query->where(function (Builder $query) use ($product) {
+            $query->where(function (Builder $query) {
+                $query->where(function (Builder $query) {
+                    $query->whereNull('products')
+                        ->orWhereJsonLength('products', 0);
+                })->where(function (Builder $query) {
+                    $query->whereNull('groups')
+                        ->orWhereJsonLength('groups', 0);
+                });
+            });
+
+            if ($product == null || $product->id == null) {
+                return;
+            }
+
+            $query->orWhereJsonContains('products', (int) $product->id);
+
+            if ($product->group_id != null) {
+                $query->orWhereJsonContains('groups', (int) $product->group_id);
+            }
+        });
+    }
+
+    public function isAvailableForProduct(?Product $product): bool
+    {
+        $products = $this->products ?? [];
+        $groups = $this->groups ?? [];
+
+        if (empty($products) && empty($groups)) {
+            return true;
+        }
+
+        if ($product == null || $product->id == null) {
+            return false;
+        }
+
+        return in_array((int) $product->id, array_map('intval', $products), true)
+            || ($product->group_id != null && in_array((int) $product->group_id, array_map('intval', $groups), true));
+    }
 
     public function getDomainAttribute($value)
     {

@@ -204,7 +204,7 @@ class Section extends Model
         $path = $theme->path.'/views/sections_copy/'.$this->id.'-'.$this->uuid.'.blade.php';
         $this->path = 'sections_copy/'.$this->id.'-'.$this->uuid;
         if (! file_exists($theme->path.'/views/sections_copy')) {
-            mkdir($theme->path.'/views/sections_copy', 0777, true);
+            mkdir($theme->path.'/views/sections_copy', 0755, true);
         }
         $content = sanitize_content($content);
         file_put_contents($path, $content);
@@ -363,7 +363,7 @@ class Section extends Model
 
         $theme = app('theme')->getTheme();
         if (! file_exists($theme->path.'/views/sections_copy')) {
-            mkdir($theme->path.'/views/sections_copy', 0777, true);
+            mkdir($theme->path.'/views/sections_copy', 0755, true);
         }
         $path = $theme->path.'/views/sections_copy/'.$clone->id.'-'.$clone->uuid.'.blade.php';
         $clone->path = 'sections_copy/'.$clone->id.'-'.$clone->uuid;

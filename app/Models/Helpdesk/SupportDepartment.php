@@ -97,6 +97,8 @@ class SupportDepartment extends Model
         'description',
         'icon',
         'staff_subscribers',
+        'sla_first_response_minutes',
+        'sla_resolution_minutes',
     ];
 
     protected $casts = [

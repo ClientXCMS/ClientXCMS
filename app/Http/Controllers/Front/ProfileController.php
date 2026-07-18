@@ -20,15 +20,20 @@
 namespace App\Http\Controllers\Front;
 
 use App\Helpers\Countries;
+use App\Http\Requests\Profile\AvatarUploadRequest;
 use App\Http\Requests\Profile\DeleteAccountRequest;
 use App\Http\Requests\Profile\ProfilePasswordRequest;
 use App\Http\Requests\Profile\ProfileUpdateRequest;
 use App\Models\Account\Customer;
+use App\Models\Account\CustomerAccountAccess;
 use App\Models\ActionLog;
 use App\Services\Account\AccountDeletionService;
+use App\Services\Account\AvatarService;
+use App\Services\Account\GdprExportService;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use PragmaRX\Google2FAQRCode\Google2FA;
 
 class ProfileController extends \App\Http\Controllers\Controller
@@ -60,13 +65,23 @@ class ProfileController extends \App\Http\Controllers\Controller
             $qrcode = null;
         }
 
+        $user = $request->user('web');
+
         return view('front.profile.edit', [
-            'user' => $request->user('web'),
+            'user' => $user,
             'countries' => Countries::names(),
             'locales' => \App\Services\Core\LocaleService::getLocalesNames(),
             'providers' => $providers,
             'qrcode' => $qrcode,
             'code' => $request->session()->get('2fa_secret'),
+            'ownedAccountAccesses' => $user->ownedAccountAccesses()->with(['subCustomer', 'services'])->orderBy('created_at', 'desc')->get(),
+            'receivedAccountAccesses' => $user->receivedAccountAccesses()->with(['owner', 'services'])->orderBy('created_at', 'desc')->get(),
+            'accountInvitations' => $user->pendingAccountInvitations()->with('services')->orderBy('created_at', 'desc')->get(),
+            'subuserServices' => $user->services()->where('status', 'active')->orderBy('name')->get(),
+            'subuserPermissions' => [
+                'services' => CustomerAccountAccess::SERVICE_PERMISSIONS,
+                'invoices' => CustomerAccountAccess::INVOICE_PERMISSIONS,
+            ],
         ]);
     }
 
@@ -86,6 +101,7 @@ class ProfileController extends \App\Http\Controllers\Controller
     public function password(ProfilePasswordRequest $request)
     {
         $request->user('web')->update(['password' => $request->password]);
+        $request->user('web')->revokeAllTwoFactorTrust();
         try {
             \Auth::logoutOtherDevices($request->password);
         } catch (AuthenticationException $e) {
@@ -108,8 +124,35 @@ class ProfileController extends \App\Http\Controllers\Controller
         }
         ActionLog::log(ActionLog::TWO_FACTOR_ENABLED, Customer::class, $request->user()->id, null, $request->user()->id);
         $request->user('web')->twoFactorEnable($request->session()->get('2fa_secret'));
+        $request->user('web')->trustTwoFactorIp($request->ip(), $request->userAgent());
 
         return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.enabled'));
+    }
+
+    public function save2faOptions(Request $request): RedirectResponse
+    {
+        $request->user('web')->setTwoFactorEmailOnNewIp($request->has('2fa_email_new_ip'));
+        $request->user('web')->trustTwoFactorIp($request->ip(), $request->userAgent());
+
+        return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.options_saved'));
+    }
+
+    public function revokeTrustedDevice(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'ip' => ['required', 'string', 'ip'],
+        ]);
+
+        $request->user('web')->revokeTwoFactorTrust($request->input('ip'));
+
+        return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.trusted_device_revoked'));
+    }
+
+    public function revokeAllTrustedDevices(Request $request): RedirectResponse
+    {
+        $request->user('web')->revokeAllTwoFactorTrust();
+
+        return redirect()->route('front.profile.index')->with('success', __('client.profile.2fa.trusted_devices_revoked_all'));
     }
 
     public function downloadCodes(Request $request)
@@ -122,7 +165,7 @@ class ProfileController extends \App\Http\Controllers\Controller
                 return $code;
             });
             echo $codes->join("\n");
-        }, '2fa_recovery_codes_' . \Str::slug(config('app.name')) . '.txt');
+        }, '2fa_recovery_codes_'.\Str::slug(config('app.name')).'.txt');
     }
 
     public function deleteAccount(DeleteAccountRequest $request): RedirectResponse
@@ -162,5 +205,49 @@ class ProfileController extends \App\Http\Controllers\Controller
 
         return redirect()->route('front.profile.index')
             ->with('success', __('client.profile.security_question_saved'));
+    }
+
+    public function export(Request $request, GdprExportService $service): RedirectResponse
+    {
+        $customer = $request->user('web');
+        $relativePath = $service->buildArchive($customer);
+
+        return redirect()->to(route('front.profile.index').'#pane-export')
+            ->with('success', __('client.gdpr.export.ready'))
+            ->with('gdpr_export_url', $service->signedUrl($relativePath));
+    }
+
+    public function uploadAvatar(AvatarUploadRequest $request, AvatarService $avatars): RedirectResponse
+    {
+        $avatars->upload($request->user('web'), $request->file('avatar'));
+
+        return back()->with('success', __('client.profile.avatar.updated'));
+    }
+
+    public function deleteAvatar(Request $request, AvatarService $avatars): RedirectResponse
+    {
+        $avatars->delete($request->user('web'));
+
+        return back()->with('success', __('client.profile.avatar.removed'));
+    }
+
+    public function downloadExport(Request $request, string $path): \Symfony\Component\HttpFoundation\BinaryFileResponse|RedirectResponse
+    {
+        // Path must live under gdpr/{customer_id}/...
+        $customer = $request->user('web');
+        $prefix = GdprExportService::STORAGE_DIR.'/'.$customer->id.'/';
+        if (! str_starts_with($path, $prefix) || str_contains($path, '..')) {
+            abort(403);
+        }
+        if (! Storage::disk('local')->exists($path)) {
+            return redirect()->route('front.profile.index')
+                ->with('error', __('client.gdpr.export.expired'));
+        }
+
+        return response()->download(
+            Storage::disk('local')->path($path),
+            'data-export.zip',
+            ['Content-Type' => 'application/zip']
+        );
     }
 }

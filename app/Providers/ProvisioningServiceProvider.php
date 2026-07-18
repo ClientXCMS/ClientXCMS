@@ -24,6 +24,7 @@ use App\Core\Admin\Dashboard\AdminCountWidget;
 use App\Http\Controllers\Admin\Settings\SettingsProvisioningController;
 use App\Models\Admin\Permission;
 use App\Models\Provisioning\Service;
+use App\Services\Domain\DomainRegistrarManager;
 use App\Services\SettingsService;
 use Illuminate\Support\ServiceProvider;
 
@@ -32,7 +33,15 @@ class ProvisioningServiceProvider extends ServiceProvider
     /**
      * Register services.
      */
-    public function register(): void {}
+    public function register(): void
+    {
+        $this->app->singleton(DomainRegistrarManager::class);
+
+        $this->app->booted(function () {
+            app(DomainRegistrarManager::class)->register(new \App\Core\Domain\FakeDomainRegistrar);
+            $this->app['extension']->addProductType(new \App\Core\Domain\DomainProductType);
+        });
+    }
 
     /**
      * Bootstrap services.
@@ -73,6 +82,9 @@ class ProvisioningServiceProvider extends ServiceProvider
         $setting->addCard('provisioning', 'provisioning.admin.title', 'provisioning.admin.subheading', 2, null, true, 2, 'bi bi-boxes');
         $setting->addCardItem('provisioning', 'services', 'provisioning.admin.settings.services.title', 'provisioning.admin.settings.services.description', 'bi bi-box2', [SettingsProvisioningController::class, 'showServicesSettings'], Permission::MANAGE_SETTINGS);
         $setting->addCardItem('provisioning', 'servers', 'provisioning.admin.servers.title', 'provisioning.admin.servers.subheading', 'bi bi-hdd-rack', route('admin.servers.index'), 'admin.manage_servers');
+        if (config('features.domain_management')) {
+            $setting->addCardItem('provisioning', 'domain_tlds', 'provisioning.admin.domain_tlds.title', 'provisioning.admin.domain_tlds.subheading', 'bi bi-globe2', route('admin.domain_tlds.index'), 'admin.manage_domain_tlds');
+        }
         $setting->addCardItem('provisioning', 'subdomains_hosts', 'provisioning.admin.subdomains_hosts.title', 'provisioning.admin.subdomains_hosts.subheading', 'bi bi-list-stars', route('admin.subdomains_hosts.index'), 'admin.manage_subdomains_hosts');
         $setting->addCardItem('provisioning', 'configoptions_services', 'provisioning.admin.configoptions_services.title', 'provisioning.admin.configoptions_services.subheading', 'bi bi-boxes', route('admin.configoptions_services.index'), true);
         $setting->addCardItem('provisioning', 'configoptions', 'provisioning.admin.configoptions.title', 'provisioning.admin.configoptions.subheading', 'bi bi-cart-plus', route('admin.configoptions.index'), true);

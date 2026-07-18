@@ -32,16 +32,17 @@
     @endif
 </label>
 @endif
+@php $__color = old($name, $value ?? '#3b82f6'); @endphp
 <div class="mt-2 flex items-center gap-2">
     <input type="color"
            id="{{ $name }}_picker{{ $rand }}"
-           value="{{ $value ?? old($name) ?? '#3b82f6' }}"
+           value="{{ $__color }}"
            class="w-12 h-10 rounded border border-gray-200 dark:border-gray-700 cursor-pointer p-1"
            oninput="document.getElementById('{{ $name }}{{ $rand }}').value = this.value">
     <input type="text"
            name="{{ $name }}"
            id="{{ $name }}{{ $rand }}"
-           value="{{ $value ?? old($name) ?? '#3b82f6' }}"
+           value="{{ $__color }}"
            placeholder="#3b82f6"
            class="input-text flex-1 @error($name) border-red-500 @enderror"
            oninput="document.getElementById('{{ $name }}_picker{{ $rand }}').value = this.value"

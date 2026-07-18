@@ -25,12 +25,14 @@
     @yield('styles')
     @vite('resources/themes/default/css/app.scss')
     @vite('resources/themes/default/js/app.js')
+    @vite('resources/global/css/a11y.css')
     {!! app('seo')->head('front', $meta_append ?? null) !!}
     {!! app('seo')->favicon('front') !!}
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body class="{{is_darkmode() ? 'dark' : '' }} flex flex-col h-full">
+    <a href="#content" class="a11y-skip-link">{{ __('a11y.skip_to_content') }}</a>
     {!! app('seo')->header() !!}
 
 <div class="dark:bg-gray-900 h-full">

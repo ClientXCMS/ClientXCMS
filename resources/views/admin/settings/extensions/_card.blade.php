@@ -31,7 +31,11 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
         </div>
 
         <div class="absolute top-2.5 right-2.5">
-            @if($extension->isEnabled())
+            @if($extension->hasBootError())
+            <span class="extension-status-badge inline-flex items-center py-1 px-2 rounded-lg text-xs font-medium bg-red-600 text-white shadow-lg">
+                <i class="bi bi-exclamation-triangle-fill mr-1"></i>{{ __('extensions.settings.boot_error') }}
+            </span>
+            @elseif($extension->isEnabled())
             <span class="extension-status-badge inline-flex items-center py-1 px-2 rounded-lg text-xs font-medium bg-green-500 text-white shadow-lg">
                 <i class="bi bi-check-circle-fill mr-1"></i>{{ __('extensions.settings.enabled') }}
             </span>
@@ -68,6 +72,18 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
     </div>
     @endif
 </div>
+
+@if ($extension->hasBootError())
+<div class="mx-4 mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+    <div class="flex items-start gap-2">
+        <i class="bi bi-exclamation-octagon-fill mt-0.5"></i>
+        <div class="min-w-0">
+            <p class="text-xs font-semibold">{{ __('extensions.settings.boot_error_description') }}</p>
+            <p class="mt-1 break-words text-xs" title="{{ $extension->bootError()['class'] ?? '' }}">{{ $extension->bootError()['message'] }}</p>
+        </div>
+    </div>
+</div>
+@endif
 
 <div class="p-4">
     <div class="flex items-start justify-between gap-2 mb-1.5">

@@ -30,6 +30,7 @@ use App\Models\Traits\HasMetadata;
 use App\Models\Traits\Loggable;
 use App\Models\Traits\ModelStatutTrait;
 use App\Models\Traits\Translatable;
+use App\Services\Domain\DomainPricingService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -95,7 +96,11 @@ class Product extends Model
     use HasMetadata;
     use Loggable;
     use ModelStatutTrait;
-    use PricingInteractTrait;
+    use PricingInteractTrait {
+        getPriceByCurrency as traitGetPriceByCurrency;
+        hasPricesForCurrency as traitHasPricesForCurrency;
+        pricingAvailable as traitPricingAvailable;
+    }
     use SoftDeletes;
     use Translatable;
 
@@ -322,6 +327,45 @@ class Product extends Model
     public function productType(): ProductTypeInterface
     {
         return app('extension')->getProductTypes()->get($this->type, new NoneProductType);
+    }
+
+    public function pricingAvailable(?string $currency = null): array
+    {
+        if ($this->type === ProductTypeInterface::DOMAIN) {
+            $tld = request('tld');
+            if ($tld === null) {
+                $tld = DomainTld::where('status', 'active')->orderBy('extension')->value('extension');
+            }
+
+            return $tld ? app(DomainPricingService::class)->availableForTld($tld, $currency) : [];
+        }
+
+        return $this->traitPricingAvailable($currency);
+    }
+
+    public function hasPricesForCurrency(?string $currency = null): bool
+    {
+        if ($this->type === ProductTypeInterface::DOMAIN) {
+            return DomainTld::where('status', 'active')->whereHas('prices', function ($query) use ($currency) {
+                if ($currency !== null) {
+                    $query->where('currency', $currency);
+                }
+            })->exists();
+        }
+
+        return $this->traitHasPricesForCurrency($currency);
+    }
+
+    public function getPriceByCurrency(string $currency, ?string $recurring = null): \App\DTO\Store\ProductPriceDTO
+    {
+        if ($this->type === ProductTypeInterface::DOMAIN) {
+            $tld = request('tld') ?? DomainTld::where('status', 'active')->orderBy('extension')->value('extension');
+            $price = $tld ? app(DomainPricingService::class)->priceFor($tld, $currency, $recurring ?? 'annually') : null;
+
+            return $price ?? new \App\DTO\Store\ProductPriceDTO(0, 0, $currency, $recurring ?? 'annually');
+        }
+
+        return $this->traitGetPriceByCurrency($currency, $recurring);
     }
 
     public function canAddToBasket(): bool

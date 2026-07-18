@@ -24,6 +24,7 @@
             'label' => __($translatePrefix . '.fields.question'),
             'value' => old('question', $item?->question),
             'required' => true,
+            'translatable' => true,
         ])
     </div>
 

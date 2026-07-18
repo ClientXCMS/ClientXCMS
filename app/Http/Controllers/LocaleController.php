@@ -25,7 +25,7 @@ class LocaleController extends Controller
 {
     public function setLocale(string $locale)
     {
-        if (in_array($locale, array_keys(LocaleService::getLocales()))) {
+        if (LocaleService::isValideLocale($locale)) {
             return LocaleService::saveLocale($locale);
         }
 

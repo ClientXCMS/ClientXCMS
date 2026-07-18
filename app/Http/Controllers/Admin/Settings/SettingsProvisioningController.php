@@ -35,13 +35,22 @@ class SettingsProvisioningController extends \App\Http\Controllers\Controller
     public function storeServicesSettings(Request $request)
     {
         staff_aborts_permission(Permission::MANAGE_SETTINGS);
-        $data = $this->validate($request, [
+        $rules = [
             'days_before_creation_invoice_renewal' => 'required|integer|min:1',
             'days_before_expiration' => 'required|integer|min:1',
-            'webhook_renewal_url' => 'nullable|url',
+            'webhook_renewal_url' => ['nullable', 'url', new \App\Rules\PublicHttpUrl],
+            'services_suspend_after_unpaid_days' => 'required|integer|min:0|max:365',
+            'services_renewal_grace_days' => 'required|integer|min:0|max:365',
             'notifications_expiration_days' => 'nullable|string',
             'max_subscription_tries' => 'required|integer|min:0',
-        ]);
+        ];
+        if (config('features.domain_management')) {
+            $rules['domain_search_enabled'] = 'nullable';
+        }
+        $data = $this->validate($request, $rules);
+        if (config('features.domain_management')) {
+            $data['domain_search_enabled'] = $request->boolean('domain_search_enabled');
+        }
         Setting::updateSettings($data);
 
         return redirect()->back()->with('success', __('provisioning.admin.settings.services.success'));

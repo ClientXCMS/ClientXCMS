@@ -24,9 +24,12 @@ use App\Events\Resources\ResourceDeletedEvent;
 use App\Events\Resources\ResourceUpdatedEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Permission;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 abstract class AbstractCrudController extends Controller
@@ -96,8 +99,13 @@ abstract class AbstractCrudController extends Controller
 
     protected function queryIndex(): LengthAwarePaginator
     {
+        $allowedFilters = $this->getAllowedSearchFilters();
+        if (! in_array($this->filterField, $allowedFilters, true)) {
+            $allowedFilters[] = $this->filterField;
+        }
+
         return QueryBuilder::for($this->model)
-            ->allowedFilters(array_merge(array_keys($this->getSearchFields()), [$this->filterField]))
+            ->allowedFilters($allowedFilters)
             ->allowedSorts($this->sorts)
             ->with($this->relations)
             ->orderBy('created_at', 'desc')
@@ -127,20 +135,121 @@ abstract class AbstractCrudController extends Controller
 
     private function getSearchValue()
     {
-        $filters = \request()->query('filter', [$this->filterField => '']);
+        $values = $this->getSearchValues();
 
-        return collect($filters)->filter(function ($item, $key) {
-            return in_array($key, array_keys($this->getSearchFields()));
-        })->first();
+        return collect($values)->first(fn ($value) => ! blank($value));
     }
 
     private function getSearchField()
     {
-        $filters = \request()->query('filter', ['status' => '']);
+        $filters = \request()->query('filter', []);
+        if (! is_array($filters)) {
+            return array_key_first($this->getSearchFields());
+        }
 
-        return collect($filters)->filter(function ($item, $key) {
-            return in_array($key, array_keys($this->getSearchFields()));
-        })->keys()->first();
+        foreach ($this->getNormalizedSearchFields() as $key => $definition) {
+            foreach ($definition['fields'] as $field) {
+                if (! blank($filters[$field] ?? null)) {
+                    return $key;
+                }
+            }
+        }
+
+        return array_key_first($this->getSearchFields());
+    }
+
+    protected function getNormalizedSearchFields(): array
+    {
+        $definitions = array_merge($this->getSearchFields(), $this->getDateRangeSearchFields());
+
+        return collect($definitions)->mapWithKeys(function ($definition, $key) {
+            if (! is_array($definition)) {
+                $definition = ['label' => $definition, 'type' => 'text'];
+            }
+
+            $type = $definition['type'] ?? 'text';
+            $fields = $definition['fields'] ?? [$key];
+
+            return [$key => [
+                'label' => $definition['label'] ?? $key,
+                'type' => in_array($type, ['text', 'select', 'date', 'date_range'], true) ? $type : 'text',
+                'fields' => array_values((array) $fields),
+                'options' => $definition['options'] ?? [],
+                'column' => $definition['column'] ?? $key,
+            ]];
+        })->all();
+    }
+
+    protected function getDateRangeSearchFields(): array
+    {
+        return [
+            'created_at_range' => [
+                'label' => __('global.created'),
+                'type' => 'date_range',
+                'column' => 'created_at',
+                'fields' => ['date_from', 'date_to'],
+            ],
+        ];
+    }
+
+    protected function getAllowedSearchFilters(): array
+    {
+        return collect($this->getNormalizedSearchFields())->flatMap(function ($definition) {
+            if ($definition['type'] === 'date_range') {
+                return [
+                    AllowedFilter::callback($definition['fields'][0], function (Builder $query, mixed $value) use ($definition) {
+                        if ($date = $this->parseSearchDate($value)) {
+                            $query->where($definition['column'], '>=', $date->startOfDay());
+                        }
+                    }),
+                    AllowedFilter::callback($definition['fields'][1], function (Builder $query, mixed $value) use ($definition) {
+                        if ($date = $this->parseSearchDate($value)) {
+                            $query->where($definition['column'], '<=', $date->endOfDay());
+                        }
+                    }),
+                ];
+            }
+
+            if ($definition['type'] === 'date') {
+                return [AllowedFilter::callback($definition['fields'][0], function (Builder $query, mixed $value) use ($definition) {
+                    if ($date = $this->parseSearchDate($value)) {
+                        $query->whereBetween($definition['column'], [$date->startOfDay(), $date->endOfDay()]);
+                    }
+                })];
+            }
+
+            return $definition['fields'];
+        })->unique(fn ($filter) => is_string($filter) ? $filter : spl_object_id($filter))->values()->all();
+    }
+
+    private function parseSearchDate(mixed $value): ?Carbon
+    {
+        if (! is_string($value) || blank($value)) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    protected function getSearchFilterFields(): array
+    {
+        return collect($this->getNormalizedSearchFields())->pluck('fields')->flatten()->unique()->values()->all();
+    }
+
+    private function getSearchValues(): array
+    {
+        $filters = \request()->query('filter', []);
+        if (! is_array($filters)) {
+            return [];
+        }
+
+        return collect($this->getSearchFilterFields())
+            ->mapWithKeys(fn ($field) => [$field => $filters[$field] ?? null])
+            ->all();
     }
 
     protected function getMassActions()
@@ -172,6 +281,8 @@ abstract class AbstractCrudController extends Controller
         $data['routePath'] = $this->routePath;
         $data['checkedFilters'] = $this->getCheckedFilters();
         $data['searchFields'] = $this->getSearchFields();
+        $data['searchDefinitions'] = $this->getNormalizedSearchFields();
+        $data['searchValues'] = $this->getSearchValues();
         $data['filterField'] = $this->filterField;
         $data['filters'] = $this->getIndexFilters();
         $data['search'] = $this->getSearchValue();

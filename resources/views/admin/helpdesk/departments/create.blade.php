@@ -53,8 +53,32 @@
                         <div class="flex flex-col">
                             @include('admin/shared/textarea', ['name' => 'description', 'label' => __('global.description'), 'value' => old('description', $item->description)])
                         </div>
-                        <input type="hidden" name="id" value="{{ $item->id }}">
                     </div>
+
+                    <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400 mt-6 mb-2">{{ __($translatePrefix . '.sla_settings') }}</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex flex-col">
+                            @include('admin/shared/input', [
+                                'name' => 'sla_first_response_minutes',
+                                'label' => __($translatePrefix . '.sla_first_response_minutes'),
+                                'value' => old('sla_first_response_minutes', $item->sla_first_response_minutes),
+                                'type' => 'number',
+                                'min' => 0,
+                                'help' => __($translatePrefix . '.sla_first_response_minutes_help')
+                            ])
+                        </div>
+                        <div class="flex flex-col">
+                            @include('admin/shared/input', [
+                                'name' => 'sla_resolution_minutes',
+                                'label' => __($translatePrefix . '.sla_resolution_minutes'),
+                                'value' => old('sla_resolution_minutes', $item->sla_resolution_minutes),
+                                'type' => 'number',
+                                'min' => 0,
+                                'help' => __($translatePrefix . '.sla_resolution_minutes_help')
+                            ])
+                        </div>
+                    </div>
+                    <input type="hidden" name="id" value="{{ $item->id }}">
                 </form>
     </div>
 

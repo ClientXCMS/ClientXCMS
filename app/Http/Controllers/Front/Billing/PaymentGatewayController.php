@@ -43,7 +43,7 @@ class PaymentGatewayController extends Controller
 
     public function cancel(Invoice $invoice)
     {
-        abort_unless($invoice->customer_id === auth('web')->id(), 403);
+        abort_unless(auth('web')->user()->hasInvoicePermission($invoice, 'invoice.pay'), 403);
 
         $invoice->cancel();
 
@@ -53,7 +53,7 @@ class PaymentGatewayController extends Controller
     public function return(Request $request, Invoice $invoice, string $gateway)
     {
         try {
-            abort_unless($invoice->customer_id === auth('web')->id(), 403);
+            abort_unless(auth('web')->user()->hasInvoicePermission($invoice, 'invoice.pay'), 403);
             if ($invoice->status !== Invoice::STATUS_PENDING) {
                 return redirect()->route('front.invoices.show', $invoice);
             }

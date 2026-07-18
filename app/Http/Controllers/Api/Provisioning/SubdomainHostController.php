@@ -22,6 +22,7 @@ namespace App\Http\Controllers\Api\Provisioning;
 use App\Http\Controllers\Api\AbstractApiController;
 use App\Models\Provisioning\SubdomainHost;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SubdomainHostController extends AbstractApiController
 {
@@ -30,6 +31,8 @@ class SubdomainHostController extends AbstractApiController
     protected array $sorts = [
         'id',
         'domain',
+        'products',
+        'groups',
         'created_at',
         'updated_at',
     ];
@@ -113,7 +116,13 @@ class SubdomainHostController extends AbstractApiController
     {
         $validated = $request->validate([
             'domain' => 'required|string|max:255|unique:subdomains_hosts,domain',
+            'products' => ['nullable', 'array'],
+            'products.*' => ['integer', Rule::exists('products', 'id')],
+            'groups' => ['nullable', 'array'],
+            'groups.*' => ['integer', Rule::exists('groups', 'id')],
         ]);
+        $validated['products'] = array_values(array_map('intval', $validated['products'] ?? []));
+        $validated['groups'] = array_values(array_map('intval', $validated['groups'] ?? []));
 
         $subdomain = SubdomainHost::create($validated);
 
@@ -181,7 +190,13 @@ class SubdomainHostController extends AbstractApiController
     {
         $validated = $request->validate([
             'domain' => 'required|string|max:255|unique:subdomains_hosts,domain,'.$subdomain->id,
+            'products' => ['nullable', 'array'],
+            'products.*' => ['integer', Rule::exists('products', 'id')],
+            'groups' => ['nullable', 'array'],
+            'groups.*' => ['integer', Rule::exists('groups', 'id')],
         ]);
+        $validated['products'] = array_values(array_map('intval', $validated['products'] ?? []));
+        $validated['groups'] = array_values(array_map('intval', $validated['groups'] ?? []));
 
         $subdomain->update($validated);
 

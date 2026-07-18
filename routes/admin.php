@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', admin_prefix('dashboard'));
 Route::fallback(function () {
-    return response()->view('admin.errors.404', [], 404);
+    abort(404);
 });
 Route::get('/darkmode', [\App\Http\Controllers\DarkModeController::class, 'darkmodeAdmin'])->name('darkmode.switch');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

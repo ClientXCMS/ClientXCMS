@@ -94,13 +94,19 @@ class EmailTemplate extends Model
             ->greeting(self::replacePlaceholders(self::bladeRender(setting('mail_greeting'), $context), $notifiable))
             ->subject(self::replacePlaceholders(self::bladeRender($template->subject, $context), $notifiable))
             ->lines($parts)
-            ->salutation(self::replacePlaceholders(self::bladeRender(setting('mail_salutation'), $context), $notifiable))
-            ->action($template->button_text, $url);
-        $mail->viewData = [
-            'button_url' => $url,
-            'button_text' => $template->button_text,
+            ->salutation(self::replacePlaceholders(self::bladeRender(setting('mail_salutation'), $context), $notifiable));
+
+        $hasCta = ! empty($url) && ! empty($template->button_text);
+        if ($hasCta) {
+            $mail->action($template->button_text, $url);
+        }
+
+        $mail->viewData = array_filter([
+            'button_url' => $hasCta ? $url : null,
+            'button_text' => $hasCta ? $template->button_text : null,
             'template' => $template->id,
-        ];
+        ], static fn ($value) => $value !== null);
+
         if (setting('email_template_name') != null) {
             $colors = ThemeManager::getColorsArray();
             $mail->view('notifications::' . str_replace('.blade', '', setting('email_template_name')), array_merge($mail->viewData, ['primaryColor' => $colors['600'], 'secondaryColor' => $colors['400']]));

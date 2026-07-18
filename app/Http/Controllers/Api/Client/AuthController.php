@@ -165,7 +165,7 @@ class AuthController extends Controller
     public function verify2fa(Request $request): JsonResponse
     {
         $request->validate([
-            'code' => ['required', 'string', 'size:6'],
+            'code' => ['required', 'string', 'max:64', new \App\Rules\Valid2FACodeInput],
         ]);
 
         $customer = $request->user();
@@ -174,24 +174,16 @@ class AuthController extends Controller
             return response()->json(['error' => __('auth.unauthenticated')], 401);
         }
 
-        $google2fa = new \PragmaRX\Google2FA\Google2FA;
-        $valid = $google2fa->verifyKey($customer->two_factor_secret, $request->code);
-
-        // Also check recovery codes
-        if (! $valid) {
-            $recoveryCodes = $customer->twoFactorRecoveryCodes();
-            if (in_array($request->code, $recoveryCodes)) {
-                $valid = true;
-                // Remove used recovery code
-                $customer->update([
-                    'two_factor_recovery_codes' => encrypt(
-                        json_encode(array_values(array_filter($recoveryCodes, fn ($code) => $code !== $request->code)))
-                    ),
-                ]);
-            }
-        }
-
-        if (! $valid) {
+        // Unify with the web flow. Pre-fix:
+        //   - validate size:6 rejected every recovery code (26-char shape),
+        //     locking out anyone who lost their authenticator device
+        //   - verifyKey read $customer->two_factor_secret, a column that does
+        //     not exist in the schema, so even valid TOTPs threw
+        //   - in_array compare on recovery codes was not constant-time
+        // verifyDeviceFactor() consumes the metadata-stored secret + recovery
+        // codes with hash_equals and is the same code path the web /2fa POST
+        // already exercises.
+        if (! $customer->verifyDeviceFactor($request->code)) {
             throw ValidationException::withMessages([
                 'code' => [__('auth.2fa.invalid')],
             ]);
@@ -422,6 +414,7 @@ class AuthController extends Controller
                     'password' => Hash::make($request->password),
                     'remember_token' => Str::random(60),
                 ])->save();
+                $user->tokens()->delete();
 
                 event(new PasswordReset($user));
             }

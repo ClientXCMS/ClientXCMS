@@ -281,10 +281,19 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'locale',
         'billing_details',
         'company_name',
+        'avatar_path',
         'gdpr_compliment',
         'security_question_id',
         'security_answer',
     ];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (self $customer) {
+            $customer->tokens()->delete();
+        });
+        static::forceDeleted(fn (self $customer) => app(\App\Services\Account\AvatarService::class)->purge($customer));
+    }
 
     protected $attributes = [
         'dark_mode' => false,
@@ -368,6 +377,11 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         return $this->hasMany(Invoice::class, 'customer_id');
     }
 
+    public function creditNotes()
+    {
+        return $this->hasMany(\App\Models\Billing\CreditNote::class, 'customer_id');
+    }
+
     public function tickets()
     {
         return $this->hasMany(SupportTicket::class, 'customer_id');
@@ -376,6 +390,26 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public function customerNotes()
     {
         return $this->hasMany(CustomerNote::class, 'customer_id');
+    }
+
+    public function ownedAccountAccesses()
+    {
+        return $this->hasMany(CustomerAccountAccess::class, 'owner_customer_id');
+    }
+
+    public function receivedAccountAccesses()
+    {
+        return $this->hasMany(CustomerAccountAccess::class, 'sub_customer_id');
+    }
+
+    public function pendingAccountInvitations()
+    {
+        return $this->hasMany(CustomerAccountInvitation::class, 'owner_customer_id')
+            ->whereNull('accepted_at')
+            ->whereNull('revoked_at')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            });
     }
 
     protected static function newFactory()
@@ -395,7 +429,32 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
 
     public function hasServicePermission(Service $service, string $permission)
     {
-        return $service->customer_id == $this->id;
+        if ($service->customer_id == $this->id) {
+            return true;
+        }
+
+        return $this->receivedAccountAccesses()
+            ->where('owner_customer_id', $service->customer_id)
+            ->whereJsonContains('permissions', $permission)
+            ->where(function ($query) use ($service) {
+                $query->where('all_services', true)
+                    ->orWhereHas('services', function ($services) use ($service) {
+                        $services->whereKey($service->id);
+                    });
+            })
+            ->exists();
+    }
+
+    public function hasInvoicePermission(Invoice $invoice, string $permission)
+    {
+        if ($invoice->customer_id == $this->id) {
+            return true;
+        }
+
+        return $this->receivedAccountAccesses()
+            ->where('owner_customer_id', $invoice->customer_id)
+            ->whereJsonContains('permissions', $permission)
+            ->exists();
     }
 
     public function getConfirmationUrl()
@@ -435,8 +494,14 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public function addFund(float $amount, ?string $reason = null)
     {
         $old = $this->balance;
-        $this->balance += $amount;
-        $this->save();
+        // Atomic balance update: a single SQL UPDATE prevents lost-update races
+        // where two parallel requests both read the same starting balance and
+        // overwrite each other. We still wrap in a transaction so the audit log
+        // is consistent with the actual write.
+        \DB::transaction(function () use ($amount) {
+            static::where('id', $this->id)->update(['balance' => \DB::raw('balance + '.(float) $amount)]);
+            $this->refresh();
+        });
         if ($reason !== null) {
             $reason = ' '.strtolower(__('global.for')).' '.$reason;
             if (auth('admin')->check()) {
@@ -446,6 +511,35 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
             }
             ActionLog::log(ActionLog::BALANCE_CHANGED, self::class, $this->id, $adminId, $this->id, ['old' => formatted_price($old), 'new' => formatted_price($this->balance), 'reason' => $reason], ['balance' => $old], ['balance' => $this->balance]);
         }
+    }
+
+    /**
+     * Atomically debit the customer's balance. Returns true if the debit
+     * succeeded, false if there are not enough funds (or another concurrent
+     * request drained the balance first). Used by the Balance gateway and
+     * the addBalance() flow to defeat lost-update races between two parallel
+     * invoice payments.
+     */
+    public function tryDeductBalance(float $amount, ?string $reason = null): bool
+    {
+        if ($amount <= 0) {
+            return false;
+        }
+        $affected = static::where('id', $this->id)
+            ->where('balance', '>=', $amount)
+            ->update(['balance' => \DB::raw('balance - '.(float) $amount)]);
+        if ($affected === 0) {
+            return false;
+        }
+        $old = $this->balance;
+        $this->refresh();
+        if ($reason !== null) {
+            $reason = ' '.strtolower(__('global.for')).' '.$reason;
+            $adminId = auth('admin')->check() ? auth('admin')->id() : null;
+            ActionLog::log(ActionLog::BALANCE_CHANGED, self::class, $this->id, $adminId, $this->id, ['old' => formatted_price($old), 'new' => formatted_price($this->balance), 'reason' => $reason], ['balance' => $old], ['balance' => $this->balance]);
+        }
+
+        return true;
     }
 
     public function getBadgeColor()

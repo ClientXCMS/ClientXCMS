@@ -41,6 +41,8 @@
                 </div>
                 @csrf
                         @include('admin/shared/input', ['name' => 'domain', 'label' => __($translatePrefix . '.subdomain'), 'value' => $item->domain])
+                        @include('admin/shared/search-select-multiple', ['name' => 'products[]', 'label' => __($translatePrefix . '.products'), 'value' => old('products', $item->products ?? []), 'options' => $products, 'help' => __($translatePrefix . '.restrictions_help')])
+                        @include('admin/shared/search-select-multiple', ['name' => 'groups[]', 'label' => __($translatePrefix . '.groups'), 'value' => old('groups', $item->groups ?? []), 'options' => $groups, 'help' => __($translatePrefix . '.restrictions_help')])
             </form>
         </div>
 

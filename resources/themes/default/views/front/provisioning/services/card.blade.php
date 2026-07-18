@@ -50,7 +50,7 @@
                         @foreach ($filters as $current => $value)
                             <label for="filter-service-{{ $current }}" class="flex py-2.5 px-3">
                                 <input id="filter-service-{{ $current }}" value="{{ $current }}" type="checkbox" data-redirect="{{ route('front.services.index') }}" class="filter-checkbox shrink-0 mt-0.5 border-gray-300 rounded text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-600 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800" @if ($current == $filter) checked @endif>
-                                <span class="ms-3 text-sm text-gray-800 dark:text-gray-200">{{ in_array($value,array_keys( __('global.states'))) ? (__('global.states.' . $value)) : $value }}</span>
+                                <span class="ms-3 text-sm text-gray-800 dark:text-gray-200">{{ is_array(__('global.states')) && array_key_exists($value, __('global.states')) ? __('global.states.' . $value) : $value }}</span>
                             </label>
                         @endforeach
                     </div>
@@ -113,7 +113,9 @@
                 </tr>
             @endif
             @foreach($services as $i => $service)
-                <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800">
+                <tr class="bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800"
+                    data-service-live
+                    data-status-url="{{ route('front.services.status', ['service' => $service]) }}">
                     <td class="h-px w-px whitespace-nowrap">
 
                     <span class="block px-6 py-2">
@@ -125,15 +127,15 @@
                       <span class="text-sm text-gray-600 dark:text-gray-400">{{ formatted_price($service->getBillingPrice()->displayPrice(), $service->currency) }}</span>
                     </span>
                     </td>
-                    <td class="h-px w-px whitespace-nowrap">
+                    <td class="h-px w-px whitespace-nowrap" data-service-field="status_badge_html">
                         <x-badge-state state="{{ $service->status }}"></x-badge-state>
                     </td>
-                    <td class="h-px w-px whitespace-nowrap">
+                    <td class="h-px w-px whitespace-nowrap" data-service-field="days_remaining_html">
                         <x-service-days-remaining expires_at="{{ $service->expires_at }}" state="{{ $service->status }}"></x-service-days-remaining>
                     </td>
                     <td class="h-px w-px whitespace-nowrap">
                         <div class="inline-flex rounded-lg shadow-sm">
-                            @if ($service->canManage())
+                            @if ($service->canManage() && auth()->user()->hasServicePermission($service, 'service.show'))
 
                                 <a href="{{ route('front.services.show', ['service' => $service]) }}">
                                           <span class="btn-action-with-icon mr-2">
@@ -142,7 +144,7 @@
                                         </span>
                                 </a>
                             @endif
-                            @if ($service->canRenew() && !isset($count))
+                            @if ($service->canRenew() && !isset($count) && auth()->user()->hasServicePermission($service, 'service.renew'))
                                 <div class="hs-dropdown relative inline-flex">
 
                                     <button class="hs-dropdown-toggle btn-action-with-icon" >

@@ -32,7 +32,7 @@ class UpdateController
     {
         staff_aborts_permission(Permission::MANAGE_UPDATE);
         $changelogUrl = LicenseGateway::getDomain().'/changelogs';
-        $changelog = \Cache::rememberForever('changelogs', function () use ($changelogUrl) {
+        $changelog = \Cache::remember('changelogs', 3600, function () use ($changelogUrl) {
             try {
                 $response = \Illuminate\Support\Facades\Http::withHeaders(['Accept' => 'application/json'])->get($changelogUrl)->throw();
 
@@ -71,6 +71,7 @@ class UpdateController
             } catch (LicenseInvalidException $e) {
                 \Session::flash('error', 'Error in restart NPM : '.$e->getMessage());
             }
+
             return back()->with('success', __('admin.update.updated_success'));
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());

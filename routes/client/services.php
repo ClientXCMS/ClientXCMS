@@ -17,11 +17,15 @@
  * Year: 2025
  */
 use App\Http\Controllers\Front\Provisioning\ServiceController;
+use App\Http\Controllers\Front\SubUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('/client')->name('front.')->group(function () {
     Route::prefix('/services')->name('services')->middleware(['auth'])->group(function () {
         Route::get('/', [ServiceController::class, 'index'])->name('.index');
+        Route::get('/{service}/subusers', [SubUserController::class, 'service'])->name('.subusers');
+        Route::post('/{service}/subusers/invite', [SubUserController::class, 'storeService'])->middleware('throttle:10,1')->name('.subusers.store');
+        Route::post('/{service}/subusers', [SubUserController::class, 'updateService'])->name('.subusers.update');
         Route::get('/{service}', [ServiceController::class, 'show'])->name('.show');
         Route::get('/{service}/upgrade', [ServiceController::class, 'upgrade'])->name('.upgrade');
         Route::get('/{service}/options', [ServiceController::class, 'options'])->name('.options');
@@ -31,7 +35,15 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::post('/name/{service}', [ServiceController::class, 'name'])->name('.name');
         Route::post('/cancel/{service}', [ServiceController::class, 'cancel'])->name('.cancel');
         Route::get('/tab/{service}/{tab}', [ServiceController::class, 'tab'])->name('.tab');
+        if (config('features.domain_management')) {
+            Route::post('/domains/{service}/nameservers', [\App\Http\Controllers\Front\DomainManagementController::class, 'nameservers'])->middleware('throttle:20,1')->name('.domains.nameservers');
+            Route::post('/domains/{service}/dns', [\App\Http\Controllers\Front\DomainManagementController::class, 'storeDns'])->middleware('throttle:20,1')->name('.domains.dns.store');
+            Route::delete('/domains/{service}/dns/{record}', [\App\Http\Controllers\Front\DomainManagementController::class, 'destroyDns'])->middleware('throttle:20,1')->name('.domains.dns.destroy');
+        }
         Route::get('/{service}/renew/{gateway}', [ServiceController::class, 'renew'])->name('.renew');
         Route::post('/subscription/{service}', [ServiceController::class, 'subscription'])->name('.subscription');
+        Route::get('/{service}/status', [ServiceController::class, 'status'])
+            ->name('.status')
+            ->middleware('throttle:60,1');
     });
 });

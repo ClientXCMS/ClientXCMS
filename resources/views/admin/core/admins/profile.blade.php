@@ -30,10 +30,8 @@
             <div class="flex flex-col">
                 <div class="-m-1.5 overflow-x-auto">
                     <div class="p-1.5 min-w-full inline-block align-middle">
-                        <form class="card" method="POST" action="{{ route($routePath . '.profile') }}">
+                        <div class="card">
                             <div class="card-heading">
-                                @csrf
-                                @method('PUT')
                                 <div>
                                     <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
                                         {{ __($translatePrefix . '.show.title', ['name' => $item->username]) }}
@@ -43,12 +41,15 @@
                                     </p>
                                 </div>
                                 <div class="mt-4 flex items-center space-x-4 sm:mt-0">
-                                    <button class="btn btn-primary">
+                                    <button class="btn btn-primary" type="submit" form="admin-profile-form">
                                         {{ __('admin.updatedetails') }}
                                     </button>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <form id="admin-profile-form" class="contents" method="POST" action="{{ route($routePath . '.profile') }}">
+                                @csrf
+                                @method('PUT')
                                 <div>
                                     @include('admin/shared/input', [
                                         'name' => 'username',
@@ -94,8 +95,16 @@
                                         'value' => old('signature', $item->signature),
                                     ])
                                 </div>
+                            </form>
+                            <x-avatar-editor
+                                :user="$item"
+                                :upload-route="route('admin.profile.avatar.upload')"
+                                :delete-route="route('admin.profile.avatar.delete')"
+                                input-id="admin-avatar"
+                                variant="field"
+                            />
                             </div>
-                        </form>
+                        </div>
                         <div class="card mt-4">
                             <div class="card-heading">
                                 <div>
@@ -137,7 +146,7 @@
                                         <div class="md:col-span-2">
                                             @include('admin/shared/input', [
                                                 'name' => 'security_answer',
-                                                'label' => $item->securityQuestion->question,
+                                                'label' => $item->securityQuestion->getTranslatedQuestion(),
                                                 'help' => __('client.profile.security_question.answer_help'),
                                                 'required' => true,
                                             ])
@@ -215,6 +224,89 @@
                         class="btn {{ auth('admin')->user()->twoFactorEnabled() ? 'bg-red-600 text-white' : 'bg-primary text-gray-200' }} mt-4">{{ __(auth('admin')->user()->twoFactorEnabled() ? 'global.delete' : 'global.save') }}</button>
                 </form>
 
+                <form method="POST" action="{{ route('admin.profile.2fa_options') }}" class="mt-4">
+                    @csrf
+                    @include('shared/checkbox', [
+                        'name' => '2fa_email_new_ip',
+                        'label' => __('client.profile.2fa.email_new_ip'),
+                        'checked' => auth('admin')->user()->twoFactorEmailOnNewIpEnabled(),
+                    ])
+                    <button class="btn btn-secondary mt-3">{{ __('global.save') }}</button>
+                </form>
+
+                @php
+                    $trustedDevices = auth('admin')->user()->twoFactorTrustedIps();
+                    $currentIp = request()->ip();
+                @endphp
+                <section class="mt-6 border-t border-gray-200 pt-5 dark:border-gray-700"
+                         aria-labelledby="admin-trusted-devices-heading">
+                    <header class="flex items-baseline justify-between gap-3">
+                        <h3 id="admin-trusted-devices-heading"
+                            class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                            {{ __('client.profile.2fa.trusted_devices_heading') }}
+                        </h3>
+                        @if (count($trustedDevices) > 0)
+                            <form method="POST"
+                                  action="{{ route('admin.profile.2fa_trusted_revoke_all') }}"
+                                  onsubmit="return confirm('{{ __('client.profile.2fa.trusted_devices_revoke_all') }} ?');">
+                                @csrf
+                                <button type="submit"
+                                        class="text-sm text-red-600 underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none dark:text-red-400">
+                                    {{ __('client.profile.2fa.trusted_devices_revoke_all') }}
+                                </button>
+                            </form>
+                        @endif
+                    </header>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        {{ __('client.profile.2fa.trusted_devices_description') }}
+                    </p>
+
+                    @if (count($trustedDevices) === 0)
+                        <p class="mt-4 text-sm italic text-gray-500 dark:text-gray-500">
+                            {{ __('client.profile.2fa.trusted_devices_empty') }}
+                        </p>
+                    @else
+                        <ul class="mt-4 space-y-2" role="list">
+                            @foreach ($trustedDevices as $device)
+                                <li class="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
+                                    <div class="min-w-0 flex-1">
+                                        <p class="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                                            <span>{{ \App\Support\UserAgentLabel::summarize($device['user_agent']) }}</span>
+                                            @if ($device['ip'] === $currentIp)
+                                                <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/40 dark:text-green-300">
+                                                    <i class="bi bi-check-circle-fill mr-1" aria-hidden="true"></i>
+                                                    {{ __('client.profile.2fa.current_device') }}
+                                                </span>
+                                            @endif
+                                        </p>
+                                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                            <span class="font-mono">{{ $device['ip'] }}</span>
+                                            &middot;
+                                            @if ($device['until'])
+                                                {{ __('client.profile.2fa.trusted_device_expires_at', ['date' => $device['until']]) }}
+                                            @else
+                                                {{ __('client.profile.2fa.trusted_device_expires_never') }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <form method="POST"
+                                          action="{{ route('admin.profile.2fa_trusted_revoke') }}"
+                                          class="flex-shrink-0">
+                                        @csrf
+                                        <input type="hidden" name="ip" value="{{ $device['ip'] }}">
+                                        <button type="submit"
+                                                class="inline-flex min-h-[36px] items-center gap-1.5 rounded-md border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20"
+                                                aria-label="{{ __('client.profile.2fa.trusted_device_revoke') }} {{ $device['ip'] }}">
+                                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                                            <span>{{ __('client.profile.2fa.trusted_device_revoke') }}</span>
+                                        </button>
+                                    </form>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </section>
+
                 @if ($securityQuestionsEnabled)
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-4">
                         {{ __('client.profile.security_question.title') }}
@@ -222,7 +314,7 @@
                     @if ($item->hasSecurityQuestion())
                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {{ __('client.profile.security_question.current') }}:
-                            <strong>{{ $item->securityQuestion?->question }}</strong>
+                            <strong>{{ $item->securityQuestion?->getTranslatedQuestion() }}</strong>
                         </p>
                     @else
                         <form method="POST" action="{{ route('admin.profile.security_question') }}" class="mt-2">

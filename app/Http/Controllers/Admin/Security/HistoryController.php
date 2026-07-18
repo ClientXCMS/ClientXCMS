@@ -69,7 +69,11 @@ class HistoryController extends Controller
         if (! $request->input('dl')) {
             return back()->with('error', 'Invalid download link');
         }
-        $file = Crypt::decrypt($request->input('dl'));
+        try {
+            $file = Crypt::decrypt($request->input('dl'));
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            abort(400, 'Invalid download link');
+        }
 
         return response()->download((new LogsReaderService)->pathToLogFile($file));
     }

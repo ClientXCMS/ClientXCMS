@@ -70,5 +70,11 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 Route::get('/2fa', [TwoFactorAuthenticationController::class, 'show'])
     ->middleware('auth')
     ->name('auth.2fa');
+Route::post('/2fa/email', [TwoFactorAuthenticationController::class, 'sendEmailCode'])
+    ->middleware(['auth', 'throttle:3,1'])
+    ->name('auth.2fa.email');
+Route::post('/2fa/reset', [TwoFactorAuthenticationController::class, 'reset'])
+    ->middleware(['auth', 'throttle:6,1'])
+    ->name('auth.2fa.reset');
 Route::post('/2fa', [TwoFactorAuthenticationController::class, 'verify'])
-    ->middleware('auth');
+    ->middleware(['auth', 'throttle:6,1']);

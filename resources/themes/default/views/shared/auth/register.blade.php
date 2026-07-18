@@ -17,7 +17,6 @@
  */
 ?>
 
-
 <form method="POST" action="{{ route('register') }}">
     @csrf
     <div class="space-y-12">
@@ -33,26 +32,27 @@
                     </div>
 
                     <div class="sm:col-span-3">
-                        @include("shared.input", ["name" => "email", "label" => __('global.email'), "type" => "email"])
+                        @include("shared.input", ["name" => "email", "label" => __('global.email'), "type" => "email", "value" => old('email', $email ?? null)])
                     </div>
-
-
                     <div class="sm:col-span-3">
-                        @include("shared.input", ["name" => "phone", "label" => __('global.phone')])
+                        @include('shared.phone-intl', [
+                            'name' => 'phone',
+                            'label' => __('global.phone'),
+                            'optional' => true,
+                            'country' => old('country', 'FR'),
+                        ])
                     </div>
 
                     <div class="sm:col-span-3">
                         @include("shared.input", ["name" => "address", "label" => __('global.address')])
                     </div>
                     <div class="sm:col-span-2">
-                        @include("shared.input", ["name" => "address2", "label" => __('global.address2')])
+                        @include("shared.input", ["name" => "address2", "label" => __('global.address2'), "optional" => true])
                     </div>
 
                     <div class="sm:col-span-1">
                         @include("shared.input", ["name" => "zipcode", "label" => __('global.zip')])
                     </div>
-
-
 
                     <div class="sm:col-span-2">
                         @include("shared.select", ["name" => "country", "label" => __('global.country'), "options" => $countries, "value" => old("country", "FR")])

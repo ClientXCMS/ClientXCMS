@@ -18,20 +18,22 @@
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <title>@yield('title') - CLIENTXCMS</title>
 
     @vite('resources/themes/default/js/app.js')
     @vite('resources/themes/default/css/app.scss')
+    @vite('resources/global/css/a11y.css')
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/png" href="{{ Vite::asset("resources/global/favicon.png") }}">
     @yield('styles')
 </head>
 
 <body class="bg-gray-50 dark:bg-slate-900 {{ is_darkmode(true) ? 'dark' : '' }} h-full">
+<a href="#content" class="a11y-skip-link">{{ __('a11y.skip_to_content') }}</a>
 <header class="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full bg-white border-b text-sm py-2.5 sm:py-4 dark:bg-slate-900 dark:border-gray-700">
     <nav class="max-w-7xl flex basis-full items-center w-full mx-auto px-4 sm:px-6 lg:px-8" aria-label="Global">
 
@@ -136,9 +138,7 @@
                 </div>
                 <div class="hs-dropdown relative inline-flex searchIcons" data-hs-dropdown-placement="bottom-right">
                     <button id="hs-dropdown-with-header" type="button" class="w-[2.375rem] h-[2.375rem] inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-white hover:bg-white/20 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-1 focus:ring-gray-600">
-                        <span class="inline-flex items-center justify-center h-[2.375rem] w-[2.375rem] rounded-full bg-gray-500 font-semibold text-white leading-none">
-  {{ auth('admin')->user()->firstname[0] . auth('admin')->user()->lastname[0] }}
-</span>
+                        <x-avatar :user="auth('admin')->user()" size="md" class="!ring-0" />
                     </button>
 
                     <div class="hs-dropdown-menu z-50 transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-[15rem] bg-white shadow-md rounded-lg p-2 dark:bg-gray-800 dark:border dark:border-gray-700" aria-labelledby="hs-dropdown-with-header">

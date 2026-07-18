@@ -43,6 +43,88 @@
         </div>
         @include('admin/shared/alerts')
         <div class="container mx-auto">
+            @if (count($priority_tickets) > 0)
+                <div class="mb-6">
+                    <div class="card">
+                        <div class="card-heading">
+                            <div class="!border-b-0">
+                                <h3 class="text-lg font-semibold text-red-600 dark:text-red-400 flex items-center gap-x-2">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    {{ __($translatePrefix . '.priority_tickets') }}
+                                </h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    {{ __($translatePrefix . '.priority_tickets_description') }}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-slate-800">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">#</th>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">{{ __('helpdesk.subject') }}</th>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">{{ __('global.customer') }}</th>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">{{ __('helpdesk.priority') }}</th>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">{{ __('helpdesk.admin.tickets.sla.title') }}</th>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-800 dark:text-gray-200">{{ __('global.actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    @foreach ($priority_tickets as $item)
+                                        <tr class="bg-red-50/30 hover:bg-red-50/50 dark:bg-red-950/10 dark:hover:bg-red-950/20">
+                                            <td class="h-px w-px whitespace-nowrap px-6 py-2 text-sm text-gray-600 dark:text-gray-400">
+                                                {{ $item->id }}
+                                            </td>
+                                            <td class="h-px w-px whitespace-nowrap px-6 py-2 text-sm">
+                                                <a href="{{ route($routePath . '.show', ['ticket' => $item]) }}" class="font-medium text-gray-800 dark:text-gray-200 hover:underline">
+                                                    {{ $item->excerptSubject() }}
+                                                </a>
+                                            </td>
+                                            <td class="h-px w-px whitespace-nowrap px-6 py-2 text-sm text-gray-600 dark:text-gray-400">
+                                                @if ($item->customer)
+                                                    <a href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}" class="inline-flex items-center gap-2 hover:underline">
+                                                        <x-avatar :user="$item->customer" size="sm" class="!ring-0" />
+                                                        {{ $item->customer->excerptFullName() }}
+                                                    </a>
+                                                @else
+                                                    {{ __('global.deleted') }}
+                                                @endif
+                                            </td>
+                                            <td class="h-px w-px whitespace-nowrap px-6 py-2 text-sm text-gray-600 dark:text-gray-400">
+                                                <x-badge-state state="{{ $item->priority }}"></x-badge-state>
+                                            </td>
+                                            <td class="h-px w-px whitespace-nowrap px-6 py-2 text-sm text-gray-600 dark:text-gray-400">
+                                                @if ($item->sla_due_seconds !== null)
+                                                    @if ($item->sla_breached)
+                                                        <span class="inline-flex items-center gap-x-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-500">
+                                                            <i class="bi bi-exclamation-octagon-fill"></i>
+                                                            {{ __('helpdesk.admin.tickets.sla.breached') }} ({{ __('helpdesk.admin.tickets.sla.breached_by', ['mins' => abs(round($item->sla_due_seconds / 60))]) }})
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center gap-x-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500">
+                                                            {{ __('helpdesk.admin.tickets.sla.due_in', ['mins' => round($item->sla_due_seconds / 60)]) }}
+                                                        </span>
+                                                    @endif
+                                                @else
+                                                    <span class="text-xs text-gray-400 dark:text-gray-500">--</span>
+                                                @endif
+                                            </td>
+                                            <td class="h-px w-px whitespace-nowrap px-6 py-2">
+                                                <a href="{{ route($routePath . '.show', ['ticket' => $item]) }}" class="py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 text-sm dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-gray-700 dark:text-gray-400 dark:hover:text-white">
+                                                    <i class="bi bi-eye-fill"></i>
+                                                    {{ __('global.show') }}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div id="helpdesk-tickets">
                 <div class="-m-1.5 overflow-x-auto">
 
@@ -175,8 +257,8 @@
                                                 <span class="block px-6 py-2">
                                                     <span class="text-sm text-gray-600 dark:text-gray-400">
                                                         @if ($item->customer)
-                                                            <a
-                                                                href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
+                                                            <a class="inline-flex items-center gap-2" href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
+                                                                <x-avatar :user="$item->customer" size="sm" class="!ring-0" />
                                                                 {{ $item->customer->excerptFullName() }}
                                                             </a>
                                                         @else

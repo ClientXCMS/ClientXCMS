@@ -23,7 +23,13 @@
         $checked = $value == 'true';
     @endphp
 @endif
-@php $rand = rand(1, 999); @endphp
+@php
+    $rand = rand(1, 999);
+    if (session()->hasOldInput()) {
+        $__old = session()->getOldInput($name);
+        $checked = $__old !== null && in_array((string) $__old, ['true', '1', 'on'], true);
+    }
+@endphp
 
     <div class="flex">
         <input type="checkbox" value="{{ $value ?? 'true' }}"

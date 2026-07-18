@@ -118,6 +118,14 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
 {
     use CanUse2FA, HasApiTokens, HasFactory, HasMetadata, Loggable, Notifiable, softDeletes;
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $admin) {
+            $admin->tokens()->delete();
+        });
+        static::forceDeleted(fn (self $admin) => app(\App\Services\Account\AvatarService::class)->purge($admin));
+    }
+
     protected $fillable = [
         'email',
         'password',
@@ -134,6 +142,7 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
         'locale',
         'security_question_id',
         'security_answer',
+        'avatar_path',
     ];
 
     protected $hidden = [

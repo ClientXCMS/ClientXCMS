@@ -1,4 +1,5 @@
 import {HSOverlay} from "preline";
+import "../flatpickr.js";
 
 function getUrlParams() {
     let params = {};
@@ -71,22 +72,81 @@ document.querySelectorAll('.filter-checkbox').forEach(function(el) {
 
 const searchForm = document.querySelector("#searchForm");
 if (searchForm) {
+    const fieldSelect = searchForm.querySelector('[data-search-field-select]');
+    const controls = searchForm.querySelectorAll('[data-search-control]');
+    const previousSearchField = fieldSelect ? fieldSelect.value : null;
+
+    const activateSearchControl = function (field) {
+        controls.forEach(function (control) {
+            const active = control.dataset.searchControl === field;
+            control.classList.toggle('hidden', !active);
+            control.classList.toggle('flex', active);
+            control.querySelectorAll('[data-filter-key]').forEach(function (input) {
+                input.disabled = !active;
+            });
+        });
+    };
+
+    if (fieldSelect) {
+        activateSearchControl(fieldSelect.value);
+        fieldSelect.addEventListener('change', function () {
+            activateSearchControl(this.value);
+        });
+    }
+
     searchForm.addEventListener('submit', function (e) {
         e.preventDefault();
         let params = getUrlParams();
-        let queryString = this.querySelector('input[type="text"]').value;
-        let type = this.querySelector('select').value;
-        Object.keys(params).forEach(function (key) {
-            if (key.startsWith('filter[') && key.includes(localStorage.getItem('type'))) {
-                delete params[key];
-            }
-        });
-        localStorage.setItem('type', type);
-        params['filter[' + type + ']'] = [queryString];
+        const activeControl = this.querySelector('[data-search-control]:not(.hidden)');
+
+        const previousControl = previousSearchField
+            ? searchForm.querySelector('[data-search-control="' + CSS.escape(previousSearchField) + '"]')
+            : null;
+        if (previousControl) {
+            previousControl.querySelectorAll('[data-filter-key]').forEach(function (input) {
+                delete params['filter[' + input.dataset.filterKey + ']'];
+            });
+        }
+
+        if (activeControl) {
+            activeControl.querySelectorAll('[data-filter-key]').forEach(function (input) {
+                const value = input.value.trim();
+                if (value !== '') {
+                    params['filter[' + input.dataset.filterKey + ']'] = [value];
+                }
+            });
+        }
+
+        delete params.page;
         let updatedQueryString = buildQueryString(params);
-        location.href = location.pathname + '?' + updatedQueryString;
+        location.href = location.pathname + (updatedQueryString ? '?' + updatedQueryString : '');
     })
 }
+function updateMassActionFloatingBar() {
+    const floatingBar = document.querySelector('#mass-action-floating-bar');
+    if (!floatingBar) return;
+    const checkboxes = document.querySelector('#mass_action_table').querySelectorAll('input[type="checkbox"]:checked');
+    let totalCount = 0;
+    checkboxes.forEach(function(checkbox) {
+        if (checkbox.dataset.id) {
+            totalCount++;
+        }
+    });
+    const selectedCountEl = document.querySelector('#mass-action-selected-count');
+    if (selectedCountEl) {
+        selectedCountEl.innerText = totalCount;
+    }
+    if (totalCount > 0) {
+        floatingBar.classList.remove('hidden');
+    } else {
+        floatingBar.classList.add('hidden');
+        const massActionSelect = document.querySelector('#mass_action_select');
+        if (massActionSelect) {
+            massActionSelect.value = 'action';
+        }
+    }
+}
+
 const checkboxAll = document.querySelector('#checkbox-all');
 if (checkboxAll) {
     document.querySelector('#checkbox-all').addEventListener('change', function () {
@@ -95,8 +155,22 @@ if (checkboxAll) {
         checkboxes.forEach(function (checkbox) {
             checkbox.checked = self.checked;
         });
+        updateMassActionFloatingBar();
     });
 }
+
+const massActionTable = document.querySelector('#mass_action_table');
+if (massActionTable) {
+    massActionTable.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
+        if (checkbox !== checkboxAll) {
+            checkbox.addEventListener('change', function() {
+                updateMassActionFloatingBar();
+            });
+        }
+    });
+    updateMassActionFloatingBar();
+}
+
 const massActionSelect = document.querySelector('#mass_action_select');
 const massActionForm = document.querySelector('#mass_action_form');
 if (massActionSelect) {
@@ -134,5 +208,6 @@ if (massActionSelect) {
             console.log('hidden');
         }
         HSOverlay.open(document.querySelector('#mass_action_btn'));
+        this.value = 'action';
     });
 }

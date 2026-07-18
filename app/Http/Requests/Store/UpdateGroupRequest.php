@@ -55,6 +55,9 @@ class UpdateGroupRequest extends FormRequest
             'status' => [new RequiredIf(! $this->hasHeader('Authorization')), 'string', 'in:active,hidden,unreferenced'],
             'slug' => [new RequiredIf(! $this->hasHeader('Authorization')), 'string', 'max:255', Rule::unique('groups', 'slug')->ignore($this->route('group')->id)],
             'sort_order' => [new RequiredIf(! $this->hasHeader('Authorization')), 'integer'],
+            'badge_title' => ['nullable', 'string', 'max:255'],
+            'badge_color' => ['nullable', 'string', 'max:32'],
+            'badge_icon' => ['nullable', 'string', 'max:64'],
             'parent_id' => ['nullable', 'integer', Rule::exists('groups', 'id')],
             'pinned' => 'nullable|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
@@ -79,7 +82,7 @@ class UpdateGroupRequest extends FormRequest
             if ($this->group->image != null) {
                 \Storage::delete($this->group->image);
             }
-            $filename = $this->group->slug.'.'.$this->file('image')->getClientOriginalExtension();
+            $filename = $this->group->slug.'.'.$this->file('image')->guessExtension();
             $this->file('image')->storeAs('public'.DIRECTORY_SEPARATOR.'groups', $filename);
             $validated['image'] = 'groups/'.$filename;
         }

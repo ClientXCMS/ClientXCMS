@@ -36,8 +36,6 @@ Recurring tasks are automated to handle email reminders, service life cycles, an
 For detailed installation instructions and usage guides, visit the official documentation:  
 [📖 CLIENTXCMS Documentation](https://docs.clientxcms.com/)
 
----
-
 ## Need a VPS or hosting?
 
 If you require VPS hosting, check out **CTXHosting**, our VPS website:  

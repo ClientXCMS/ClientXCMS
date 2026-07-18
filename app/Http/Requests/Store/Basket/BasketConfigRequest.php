@@ -20,6 +20,7 @@
 namespace App\Http\Requests\Store\Basket;
 
 use App\Contracts\Store\ProductTypeInterface;
+use App\Services\Domain\DomainPricingService;
 use App\Services\Store\CurrencyService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
@@ -39,15 +40,30 @@ class BasketConfigRequest extends FormRequest
      */
     public function rules(): array
     {
-        $authorizedBilling = collect($this->product->pricingAvailable())->map(function ($price) {
+        if ($this->product->type === ProductTypeInterface::DOMAIN && $this->input('tld')) {
+            $authorizedBilling = app(DomainPricingService::class)->billingsFor($this->input('tld'))->toArray();
+        } else {
+            $authorizedBilling = collect($this->product->pricingAvailable())->map(function ($price) {
             return $price->recurring;
-        })->unique()->toArray();
+            })->unique()->toArray();
+        }
         /** @var ProductTypeInterface $productType */
         $productType = $this->product->productType();
         $rules = [
             'billing' => ['required', 'string', Rule::in($authorizedBilling)],
             'currency' => ['required', 'string', Rule::in(app(CurrencyService::class)->getCurrenciesKeys())],
         ];
+        if ($this->product->type === ProductTypeInterface::DOMAIN) {
+            // D1 - pin the tld to the active catalog. Without it, the
+            // basket row stores whatever label the user posted and
+            // priceFor() falls back to the product default, opening a
+            // pricing-manipulation window for any unknown tld.
+            $rules['tld'] = ['required', 'string', function ($attribute, $value, $fail) {
+                if (app(DomainPricingService::class)->findTld($value) === null) {
+                    $fail(__('validation.exists', ['attribute' => $attribute]));
+                }
+            }];
+        }
         if ($productType->data($this->product) !== null) {
             $rules = array_merge($rules, $productType->data($this->product)->validate());
         }

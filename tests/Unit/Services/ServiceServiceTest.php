@@ -194,6 +194,82 @@ class ServiceServiceTest extends TestCase
         $this->assertEquals($invoice->subtotal, 10);
     }
 
+    public function test_create_renewal_invoice_is_idempotent_for_same_billing()
+    {
+        $service = $this->createServiceModel(Customer::first()->id, 'active', ['monthly' => 10]);
+
+        $first = ServiceService::createRenewalInvoice($service, 'monthly', InvoiceService::CREATE_INVOICE);
+        $service->refresh();
+        $second = ServiceService::createRenewalInvoice($service, 'monthly', InvoiceService::CREATE_INVOICE);
+
+        $this->assertEquals($first->id, $second->id, 'Same billing cycle must reuse the pending invoice');
+        $this->assertEquals(1, Invoice::where('customer_id', Customer::first()->id)->count(), 'Only one invoice must exist');
+        $this->assertDatabaseCount('invoice_items', 1);
+        $this->assertDatabaseCount('service_renewals', 1);
+    }
+
+    public function test_create_renewal_invoice_cancels_old_when_billing_changes()
+    {
+        $service = $this->createServiceModel(Customer::first()->id, 'active', ['monthly' => 10, 'quarterly' => 12]);
+
+        $first = ServiceService::createRenewalInvoice($service, 'monthly', InvoiceService::CREATE_INVOICE);
+        $service->refresh();
+        $second = ServiceService::createRenewalInvoice($service, 'quarterly', InvoiceService::CREATE_INVOICE);
+
+        $this->assertNotEquals($first->id, $second->id);
+        $this->assertEquals(Invoice::STATUS_CANCELLED, Invoice::find($first->id)->status);
+        $this->assertEquals(Invoice::STATUS_PENDING, $second->status);
+        $this->assertEquals(12, $second->subtotal);
+
+        // Exactly one pending renewal row remains for this service.
+        $this->assertEquals(
+            1,
+            ServiceRenewals::where('service_id', $service->id)
+                ->where('status', ServiceRenewals::STATUS_PENDING)
+                ->whereNull('deleted_at')
+                ->count()
+        );
+    }
+
+    public function test_pending_renewal_lock_is_released_when_invoice_is_cancelled()
+    {
+        $service = $this->createServiceModel(Customer::first()->id, 'active', ['monthly' => 10]);
+
+        $first = ServiceService::createRenewalInvoice($service, 'monthly', InvoiceService::CREATE_INVOICE);
+        $first->cancel();
+        $service->refresh();
+
+        $second = ServiceService::createRenewalInvoice($service, 'monthly', InvoiceService::CREATE_INVOICE);
+        $this->assertNotEquals($first->id, $second->id, 'A fresh invoice must be issued after cancellation');
+        $this->assertEquals(Invoice::STATUS_PENDING, $second->status);
+    }
+
+    public function test_database_unique_index_blocks_concurrent_pending_renewals()
+    {
+        $service = $this->createServiceModel(Customer::first()->id, 'active', ['monthly' => 10]);
+        $invoice = Invoice::factory()->create(['customer_id' => Customer::first()->id, 'total' => 0]);
+
+        ServiceRenewals::create([
+            'service_id' => $service->id,
+            'invoice_id' => $invoice->id,
+            'start_date' => now(),
+            'end_date' => now()->addMonth(),
+            'period' => 1,
+            'status' => ServiceRenewals::STATUS_PENDING,
+        ]);
+
+        $this->expectException(\Illuminate\Database\QueryException::class);
+
+        ServiceRenewals::create([
+            'service_id' => $service->id,
+            'invoice_id' => $invoice->id,
+            'start_date' => now(),
+            'end_date' => now()->addMonth(),
+            'period' => 2,
+            'status' => ServiceRenewals::STATUS_PENDING,
+        ]);
+    }
+
     public function beforeRefreshingDatabase()
     {
         \DB::statement('SET FOREIGN_KEY_CHECKS=0;');

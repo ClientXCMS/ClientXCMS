@@ -37,6 +37,7 @@ use App\Models\Provisioning\ServiceRenewals;
 use App\Models\Store\Basket\Basket;
 use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Product;
+use App\Contracts\Store\ProductTypeInterface;
 use App\Services\Store\PricingService;
 use App\Services\Store\RecurringService;
 use App\Services\Store\TaxesService;
@@ -54,6 +55,21 @@ class InvoiceService
 
     public static function createInvoiceFromBasket(Basket $basket, Gateway $gateway): Invoice
     {
+        // Re-validate the coupon at checkout time. The customer applied the
+        // coupon at basket-time (Coupon::isValid), but between that moment
+        // and the actual invoice creation the coupon may have expired,
+        // reached its global cap, lost its first-order eligibility, or had
+        // its product allowlist tightened. Without this guard the invoice
+        // is created with the discount even though the coupon is no longer
+        // valid; a customer who notices the latency window can pin a stale
+        // 'first month free' coupon long after the campaign ended.
+        if ($basket->coupon_id !== null) {
+            $coupon = \App\Models\Store\Coupon::find($basket->coupon_id);
+            if ($coupon === null || ! $coupon->isValid($basket, false)) {
+                $basket->coupon_id = null;
+                $basket->save();
+            }
+        }
         // On sauvegarde tout les champs de la table invoice sans les codes promotionnelle.
         $currency = $basket->items->first()->currency;
         // Si une facture est déjà liée au panier, on la met à jour
@@ -102,7 +118,7 @@ class InvoiceService
 
     public static function createServicesFromInvoiceItem(Invoice $invoice, InvoiceItem $item): array
     {
-        if (! in_array($item->type, ['service', 'free_trial'])) {
+        if (! in_array($item->type, ['service', 'free_trial', ProductTypeInterface::DOMAIN])) {
             return [];
         }
         $product = $item->relatedType();
@@ -140,6 +156,12 @@ class InvoiceService
         }
         if ($product->productType()->server() != null) {
             $server = $product->productType()->server()->findServer($product);
+            if ($item->type === ProductTypeInterface::DOMAIN && ! empty($item->data['tld'])) {
+                $tldServer = \App\Models\Store\DomainTld::where('extension', $item->data['tld'])->first()?->server;
+                if ($tldServer !== null) {
+                    $server = $tldServer;
+                }
+            }
             if ($item->configoptions()->where('key', 'server_id')->first() != null) {
                 $server = Server::find($item->configoptions()->where('key', 'server_id')->first()->value);
             }
@@ -158,7 +180,7 @@ class InvoiceService
                 'customer_id' => $invoice->customer_id,
                 'type' => $product->productType()->uuid(),
                 'status' => 'pending',
-                'name' => $product->trans('name'),
+                'name' => $item->data['domain'] ?? $product->trans('name'),
                 'billing' => $item->billing(),
                 'product_id' => $product->id,
                 'server_id' => $server,
@@ -211,6 +233,7 @@ class InvoiceService
                 'next_billing_on' => $next,
                 'created_at' => Carbon::now(),
                 'period' => 1,
+                'status' => ServiceRenewals::STATUS_PENDING,
             ]);
         }
 
@@ -369,6 +392,7 @@ class InvoiceService
             'period' => $service->getAttribute('renewals') + 1,
             'next_billing_on' => $nextBilling,
             'created_at' => Carbon::now(),
+            'status' => ServiceRenewals::STATUS_PENDING,
         ]);
         $invoice->unsetRelation('items');
         $invoice->recalculate();

@@ -98,7 +98,7 @@ class InstallController extends Controller
         if ($data['send_telemetry']) {
             app(TelemetryService::class)->sendTelemetry();
         }
-        EnvEditor::updateEnv(['TELEMETRY_DISABLED' => $data['send_telemetry'] ? 'false' : 'true']);
+        EnvEditor::updateEnv(['TELEMETRY_ENABLED' => $data['send_telemetry'] ? 'true' : 'false']);
 
         return redirect()->to(route('install.summary'));
     }

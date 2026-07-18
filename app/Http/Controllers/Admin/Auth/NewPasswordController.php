@@ -65,6 +65,7 @@ class NewPasswordController extends Controller
                     'password' => $hash->make($request->password),
                     'remember_token' => Str::random(60),
                 ])->save();
+                $user->revokeAllTwoFactorTrust();
 
                 event(new PasswordReset($user));
             }

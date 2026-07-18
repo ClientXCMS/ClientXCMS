@@ -19,11 +19,18 @@
 
 @extends('layouts/client')
 @section('title', __('client.services.show'))
+@section('styles')
+<script src="{{ Vite::asset('resources/global/js/service-live.js') }}"></script>
+<link rel="stylesheet" href="{{ Vite::asset('resources/global/css/service-live.css') }}">
+@endsection
 @section('content')
-    <div class="max-w-[85rem] py-5 lg:py-7 mx-auto">
+    <div class="max-w-[85rem] py-5 lg:py-7 mx-auto"
+         data-service-live
+         data-status-url="{{ route('front.services.status', ['service' => $service, 'panel' => 1]) }}">
         <div class="flex flex-col md:flex-row gap-4">
         <div class="md:w-3/4">
             @include('shared/alerts')
+
             @if ($service->pack_id !== null)
                 <div class="alert text-blue-800 bg-blue-100 mt-2" role="alert">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -35,7 +42,9 @@
                     </span>
                 </div>
             @endif
-            {!! $panel_html !!}
+            <div data-service-field="panel_html">
+                {!! $panel_html !!}
+            </div>
 
             @if (app('extension')->extensionIsEnabled('free_trial'))
                 @include('free_trial::service_card', ['service' => $service])
@@ -44,17 +53,19 @@
         <div class="md:w-1/4">
             <div class="grid grid-col-1">
 
-                @if ($service->canRenew())
+                @if ($service->canRenew() && auth('web')->user()->hasServicePermission($service, 'service.renew'))
                     @if ($service->isFree())
                         <a class="btn-action-with-icon mb-2 p-3" href="{{ route('front.services.renew', ['service' => $service, 'gateway' => 'balance']) }}">
                             <i class="bi bi-credit-card-2-front-fill"></i>
                             {{ __('client.services.renewbtn') }}
                         </a>
                     @else
+                    @if (auth('web')->user()->hasServicePermission($service, 'service.billing') && $gateways->isNotEmpty())
                     <a class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3" href="{{ route('front.services.renewal', ['service' => $service]) }}">
                         <i class="bi bi-credit-card-2-front-fill"></i>
                         {{ __('client.services.managerenew') }}
                     </a>
+                    @endif
 
 
                         <div class="hs-dropdown">
@@ -76,17 +87,24 @@
                         @endif
                 @endif
 
-                    @if ($service->canUpgrade())
+                    @if ($service->canUpgrade() && auth('web')->user()->hasServicePermission($service, 'service.upgrade'))
                         <a href="{{ route('front.services.upgrade', ['service' => $service]) }}" class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3">
                             <i class="bi bi-arrows-angle-expand"></i>
                             {{ __('client.services.upgradeservice') }}
                         </a>
                     @endif
 
-                    @if ($service->configoptions->isNotEmpty())
+                    @if ($service->configoptions->isNotEmpty() && auth('web')->user()->hasServicePermission($service, 'service.options'))
                         <a class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3" href="{{ route('front.services.options', ['service' => $service]) }}">
                             <i class="bi bi-boxes"></i>
                             {{ __('client.services.manageoptions') }}
+                        </a>
+                    @endif
+
+                    @if ($service->customer_id === auth()->id())
+                        <a href="{{ route('front.services.subusers', ['service' => $service]) }}" class="hs-dropdown-toggle btn-action-with-icon mb-2 p-3">
+                            <i class="bi bi-people"></i>
+                            {{ __('client.services.subusers.manage') }}
                         </a>
                     @endif
 
@@ -125,24 +143,103 @@
                                 </p>
                                 <form action="{{ route('front.services.cancel', ['service' => $service]) }}" method="post" class="w-full">
                                     @csrf
+                                    @php
+                                        $cancellationReasons = \App\Models\Provisioning\CancellationReason::getAvailable(false)->get(['id', 'cancellation_mode']);
+                                        $reasonModes = $cancellationReasons->mapWithKeys(fn ($item) => [$item->id => $item->cancellation_mode])->toArray();
+                                        $expirationOptions = \App\Models\Provisioning\CancellationReason::getCancellationMode($service);
+                                    @endphp
 
                                     <p class="text-gray-800 dark:text-gray-400">
                                         {{ __('client.services.cancel.index_description') }}
                                     </p>
                                     @include('shared/select', ['name' => 'reason', 'label' => __('client.services.cancel.reason'), 'options' => \App\Models\Provisioning\CancellationReason::getReasons(), 'value' => old('reason')])
                                     @include('shared/textarea', ['name' => 'message', 'label' => __('client.services.cancel.message'), 'value' => old('message')])
-                                    @if (!$service->isOnetime())
-                                        @include('shared/select', ['name' => 'expiration', 'label' => __('client.services.cancel.expiration'), 'options' => \App\Models\Provisioning\CancellationReason::getCancellationMode($service), 'value' => old('expiration')])
-                                    @endif
+                                    <div id="cancel-expiration-wrapper" class="{{ $service->isOnetime() ? 'hidden' : '' }}">
+                                        @if (!$service->isOnetime())
+                                            @include('shared/select', ['name' => 'expiration', 'label' => __('client.services.cancel.expiration'), 'options' => $expirationOptions, 'value' => old('expiration')])
+                                        @endif
+                                    </div>
+                                    <div id="cancel-warning" class="hidden text-sm text-amber-600 dark:text-amber-400 mt-2"></div>
                                     <div class="flex">
                                         <button type="button" data-hs-overlay="#hs-cancel" class="mt-2 mr-3 py-3 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-green-500 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
                                             {{ __('client.services.cancel.back') }}
                                         </button>
-                                        <button type="submit" class="mt-2 py-2 px-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-red-500 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
+                                        <button id="cancel-submit-btn" type="submit" class="mt-2 py-2 px-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-red-500 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
                                             {{ __('client.services.cancel.index') }}
                                         </button>
+                                        <a id="cancel-open-support-btn" href="{{ route('front.support.create') }}" class="hidden mt-2 py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-amber-600 shadow-sm hover:bg-gray-50 dark:bg-slate-900 dark:border-gray-700 dark:hover:bg-gray-800">
+                                            {{ __('provisioning.cancellation.requires_ticket') }}
+                                        </a>
                                     </div>
                                 </form>
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function () {
+                                        const reasonModes = @json($reasonModes);
+                                        const reasonSelect = document.getElementById('reason');
+                                        const expirationWrapper = document.getElementById('cancel-expiration-wrapper');
+                                        const expirationSelect = document.getElementById('expiration');
+                                        const warning = document.getElementById('cancel-warning');
+                                        const submitBtn = document.getElementById('cancel-submit-btn');
+                                        const supportBtn = document.getElementById('cancel-open-support-btn');
+                                        const isOneTime = @json($service->isOnetime());
+                                        const isExpired = @json($service->expires_at !== null && $service->expires_at->isPast());
+
+                                        if (!reasonSelect) return;
+
+                                        const baseOptions = expirationSelect ? Array.from(expirationSelect.options).map((opt) => ({ value: opt.value, label: opt.text })) : [];
+
+                                        const setExpirationOptions = (mode) => {
+                                            if (!expirationSelect) return;
+
+                                            let allowed = baseOptions;
+                                            if (mode === 'immediate') {
+                                                allowed = baseOptions.filter((item) => item.value === 'now');
+                                            }
+                                            if (mode === 'after_expiration') {
+                                                allowed = baseOptions.filter((item) => item.value === 'end_of_period');
+                                            }
+
+                                            expirationSelect.innerHTML = '';
+                                            allowed.forEach((item) => {
+                                                const option = document.createElement('option');
+                                                option.value = item.value;
+                                                option.textContent = item.label;
+                                                expirationSelect.appendChild(option);
+                                            });
+                                        };
+
+                                        const applyModeUi = () => {
+                                            const mode = reasonModes[reasonSelect.value] || 'immediate';
+
+                                            warning.classList.add('hidden');
+                                            warning.textContent = '';
+                                            submitBtn.classList.remove('hidden');
+                                            submitBtn.disabled = false;
+                                            supportBtn.classList.add('hidden');
+
+                                            if (!isOneTime) {
+                                                expirationWrapper.classList.remove('hidden');
+                                                setExpirationOptions(mode);
+                                            }
+
+                                            if (mode === 'support_ticket') {
+                                                submitBtn.classList.add('hidden');
+                                                supportBtn.classList.remove('hidden');
+                                                expirationWrapper.classList.add('hidden');
+                                            }
+
+                                            if (mode === 'after_expiration' && !isExpired) {
+                                                submitBtn.classList.add('hidden');
+                                                expirationWrapper.classList.add('hidden');
+                                                warning.textContent = @json(__('provisioning.cancellation.after_expiration_only'));
+                                                warning.classList.remove('hidden');
+                                            }
+                                        };
+
+                                        reasonSelect.addEventListener('change', applyModeUi);
+                                        applyModeUi();
+                                    });
+                                </script>
                             </div>
                         </div>
                     @endif
@@ -171,7 +268,7 @@
 
                                 <p class="text-xs uppercase tracking-wide text-gray-500">
                                     {{ $service->name }}
-
+@if (auth('web')->user()->hasServicePermission($service, 'service.name'))
                                 <div class="hs-tooltip inline-block">
                                     <a  data-hs-overlay="#changename-modal" href="#" class="hs-tooltip-toggle w-8 h-8 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
                                         <i class="bi bi-pen"></i>
@@ -180,8 +277,11 @@
           </span>
                                     </a>
                                 </div>
+                                @endif
                                 </p>
-                                <x-badge-state state="{{ $service->status }}" class="mt-1"></x-badge-state>
+                                <span data-service-field="status_badge_html">
+                                    <x-badge-state state="{{ $service->status }}" class="mt-1"></x-badge-state>
+                                </span>
                             </div>
 
                         </div>
@@ -275,7 +375,7 @@
             </div>
         </div>
     </div>
-
+    @if (auth('web')->user()->hasServicePermission($service, 'service.name'))
         <div id="changename-modal" class="hs-overlay hs-overlay-open:translate-x-0 hidden translate-x-full fixed top-0 end-0 transition-all duration-300 transform h-full max-w-xs w-full z-[80] bg-white border-s dark:bg-neutral-800 dark:border-neutral-700" tabindex="-1">
             <div class="flex justify-between items-center py-3 px-4 border-b dark:border-neutral-700">
                 <h3 class="font-bold text-gray-800 dark:text-white">
@@ -297,4 +397,5 @@
                 </form>
             </div>
         </div>
+    @endif
 @endsection

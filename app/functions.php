@@ -179,9 +179,28 @@ if (! function_exists('currency')) {
         $currency = $currency ?? currency();
         $locale = $currency == 'USD' ? 'en_US' : 'fr_FR';
 
+        if (! class_exists('NumberFormatter')) {
+            return $price.' '.$currency;
+        }
+
         return (new NumberFormatter($locale, NumberFormatter::CURRENCY))->formatCurrency($price, $currency);
     }
 }
+
+if (! function_exists('store_price_precision')) {
+    function store_price_precision(): int
+    {
+        return max(2, (int) setting('store_price_precision', 6));
+    }
+}
+
+if (! function_exists('store_round')) {
+    function store_round(float $value, ?int $precision = null): float
+    {
+        return round($value, $precision ?? store_price_precision());
+    }
+}
+
 if (! function_exists('module_path')) {
     function module_path(string $uuid, string $path = ''): string
     {
@@ -437,6 +456,11 @@ if (! function_exists('dangerous_content_patterns')) {
             '/@(include|extends|component|each|includeIf|includeWhen|includeFirst)\s*\(/i',
             '/@(yield|section|stack|push|prepend)\s*\(/i',
             '/\b(?:env|exec|shell_exec|system|passthru|proc_open|popen|pcntl_exec|eval|assert|preg_replace|create_function|require|unlink|fopen|file_get_contents|file_put_contents|file|readfile|base64_decode|gzinflate|gzuncompress|gzdecode|gzcompress|gzdeflate|gzencode|ini_set|set_time_limit|error_reporting|ini_get|ini_restore|ini_alter|unserialize|serialize|var_dump|print_r|debug_backtrace|debug_print_backtrace|dump|die|exit|phpinfo|php_uname|getenv|get_current_user|getmyuid|getmygid|getmypid|getmyinode|getlastmod|getprotobyname|getprotobynumber|getservbyname|getservbyport)\s*\(/i',
+            '/\b(?:call_user_func|call_user_func_array|array_map|array_filter|array_walk|array_walk_recursive|array_reduce|forward_static_call|forward_static_call_array|iterator_apply)\s*\(/i',
+            '/Closure::fromCallable/i',
+            '/\bReflection(?:Function|Method|Class)\b/i',
+            '/\)\s*\(/s',
+            '/\$\w+\s*\(/s',
             '/\$(?:_ENV|_SERVER|_GET|_POST|_REQUEST|_SESSION|_COOKIE)\b/i',
             '/\.env\b/i',
         ];

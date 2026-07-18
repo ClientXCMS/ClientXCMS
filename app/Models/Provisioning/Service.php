@@ -315,6 +315,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         'suspended_at',
         'cancelled_at',
         'cancelled_reason',
+        'cancellation_reason_id',
         'notes',
         'delivery_errors',
         'delivery_attempts',
@@ -334,6 +335,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         'cancelled_at' => 'datetime',
         'trial_ends_at' => 'datetime',
         'data' => 'array',
+        'cancellation_reason_id' => 'integer',
     ];
 
     protected $attributes = [
@@ -408,13 +410,15 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public static function getShouldSuspend()
     {
+        $suspendAfterDays = (int) setting('services_suspend_after_unpaid_days', 0);
+
         return self::whereIn('status', [self::STATUS_ACTIVE, self::STATUS_CANCELLED])
             ->where(function ($query) {
                 $query->whereNull('cancelled_at')
                     ->orWhere('cancelled_at', '<=', now());
             })
             ->whereNotNull('expires_at')
-            ->where('expires_at', '<=', now())
+            ->where('expires_at', '<=', now()->subDays($suspendAfterDays))
             ->get();
     }
 
@@ -429,8 +433,10 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public static function getShouldHidden()
     {
+        $retentionDays = (int) setting('services_expire_and_delete_after_days', 90);
+
         return self::where('status', self::STATUS_EXPIRED)
-            ->whereRaw('NOW() >= DATE_ADD(expires_at, INTERVAL 15 DAY)')
+            ->whereRaw('NOW() >= DATE_ADD(expires_at, INTERVAL ? DAY)', [$retentionDays])
             ->get();
     }
 
@@ -446,6 +452,29 @@ class Service extends Model implements HasNotifiableVariablesInterface
             })->get();
     }
 
+    public function scopeAccessibleBy($query, Customer $customer, string $permission = 'service.show')
+    {
+        return $query->where(function ($query) use ($customer, $permission) {
+            $query->where('customer_id', $customer->id)
+                ->orWhereExists(function ($subQuery) use ($customer, $permission) {
+                    $subQuery->selectRaw('1')
+                        ->from('customer_account_accesses')
+                        ->whereColumn('customer_account_accesses.owner_customer_id', 'services.customer_id')
+                        ->where('customer_account_accesses.sub_customer_id', $customer->id)
+                        ->whereJsonContains('customer_account_accesses.permissions', $permission)
+                        ->where(function ($accessQuery) {
+                            $accessQuery->where('customer_account_accesses.all_services', true)
+                                ->orWhereExists(function ($serviceQuery) {
+                                    $serviceQuery->selectRaw('1')
+                                        ->from('customer_account_access_service')
+                                        ->whereColumn('customer_account_access_service.customer_account_access_id', 'customer_account_accesses.id')
+                                        ->whereColumn('customer_account_access_service.service_id', 'services.id');
+                                });
+                        });
+                });
+        });
+    }
+
     public function getBillingPrice(?string $billing = null): ProductPriceDTO
     {
         if ($billing == null) {
@@ -458,7 +487,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
             if ($pricing) {
                 return new ProductPriceDTO(
                     $pricing[$billing] ?? 0,
-                    $pricing['setup_'.$billing] ?? 0,
+                    $pricing['setup_' . $billing] ?? 0,
                     $this->currency,
                     $billing
                 );
@@ -512,7 +541,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         if ($this->product_id != null) {
             return $this->product->getAllPricing($this->product_id);
         }
-        throw new \Exception('Service Pricing not found for #'.$this->id);
+        throw new \Exception('Service Pricing not found for #' . $this->id);
     }
 
     private function getAllPricingCurrency(int $related_id, string $currency)
@@ -524,7 +553,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         if ($this->product_id != null) {
             return $this->product->getAllPricingCurrency($related_id, $this->pricing_key, $currency);
         }
-        throw new \Exception('Service Pricing not found for #'.$this->id);
+        throw new \Exception('Service Pricing not found for #' . $this->id);
     }
 
     public function invoice()
@@ -632,6 +661,12 @@ class Service extends Model implements HasNotifiableVariablesInterface
         return $this->hasMany(Upgrade::class);
     }
 
+
+    public function cancellationReason()
+    {
+        return $this->belongsTo(CancellationReason::class, 'cancellation_reason_id');
+    }
+
     public function canRenew()
     {
         if ($this->pack_id !== null) {
@@ -656,6 +691,13 @@ class Service extends Model implements HasNotifiableVariablesInterface
         }
 
         if (! is_null($this->max_renewals) && $this->renewals >= $this->max_renewals) {
+            return false;
+        }
+
+        $renewalGraceDays = (int) setting('services_renewal_grace_days', 7);
+        $renewalWindowDays = max(0, $renewalGraceDays);
+
+        if ($this->expires_at->copy()->addDays($renewalWindowDays)->isPast()) {
             return false;
         }
 
@@ -763,7 +805,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public function relatedName(): string
     {
-        return __('global.service').' #'.Str::limit($this->uuid, 5).' - '.$this->excerptName().' - '.$this->status.' - '.($this->expires_at ? $this->expires_at->format('d/m/y') : 'None');
+        return __('global.service') . ' #' . Str::limit($this->uuid, 5) . ' - ' . $this->excerptName() . ' - ' . $this->status . ' - ' . ($this->expires_at ? $this->expires_at->format('d/m/y') : 'None');
     }
 
     public function notifyExpiration(): bool
@@ -840,7 +882,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
                 PricingService::forgot();
             }
 
-            $description .= $_item->getBillingDescription().' | ';
+            $description .= $_item->getBillingDescription() . ' | ';
         }
         $this->description = $description;
         $this->save();

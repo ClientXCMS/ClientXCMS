@@ -34,6 +34,8 @@ class UpdateDepartmentRequest extends FormRequest
             'name' => 'required|string|max:255',
             'description' => 'required|string|max:1000',
             'icon' => 'required|string|max:255',
+            'sla_first_response_minutes' => 'nullable|integer|min:0',
+            'sla_resolution_minutes' => 'nullable|integer|min:0',
         ];
     }
 

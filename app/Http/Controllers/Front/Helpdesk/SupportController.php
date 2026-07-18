@@ -25,6 +25,8 @@ use App\Http\Requests\Helpdesk\SubmitTicketRequest;
 use App\Models\Helpdesk\SupportDepartment;
 use App\Models\Helpdesk\SupportMessage;
 use App\Models\Helpdesk\SupportTicket;
+use App\Models\Provisioning\CancellationReason;
+use App\Models\Provisioning\Service;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -58,6 +60,44 @@ class SupportController extends Controller
         $priority = $request->query('priority') ?? null;
         $related_id = $request->query('related_id') ?? 'none';
 
+        if ($request->filled('cancellation_service')) {
+            $serviceUuid = $request->query('cancellation_service');
+            $expiration = $request->query('cancellation_expiration');
+            $queryDetails = $request->query('cancellation_details');
+
+            $service = is_string($serviceUuid) ? Service::where('uuid', $serviceUuid)
+                ->where('customer_id', auth('web')->id())
+                ->first() : null;
+            $reason = CancellationReason::whereKey($request->integer('cancellation_reason'))
+                ->where('cancellation_mode', CancellationReason::MODE_SUPPORT_TICKET)
+                ->first();
+
+            if ($service && $reason && is_string($expiration) && in_array($expiration, ['now', 'end_of_period'], true)) {
+                $details = is_string($queryDetails) ? trim($queryDetails) : '';
+                $expirationLabel = $expiration === 'now'
+                    ? __('client.services.cancel.expiration_now')
+                    : __('client.services.cancel.expiration_end');
+
+                $subject = __('provisioning.cancellation.ticket_subject', [
+                    'service' => $service->name,
+                ]);
+                $content = __('provisioning.cancellation.ticket_message', [
+                    'service' => $service->name,
+                    'identifier' => $service->uuid,
+                    'reason' => $reason->reason,
+                    'expiration' => $expirationLabel,
+                    'details' => $details !== '' ? $details : __('provisioning.cancellation.ticket_no_details'),
+                ]);
+                $priority = 'medium';
+                $related_id = 'service-'.$service->id;
+            }
+        }
+
+        if ($currentdepartment) {
+            if (! $departments->contains('id', $currentdepartment)) {
+                return redirect()->route('front.support.create');
+            }
+        }
         if (app('extension')->extensionIsEnabled('support-access-rules')) {
             $policy = app(\App\Addons\SupportAccessRules\Services\TicketAccessPolicy::class);
             $departments = $policy->filterDepartments($departments, auth()->user());
@@ -97,6 +137,8 @@ class SupportController extends Controller
         foreach ($request->file('attachments', []) as $attachment) {
             $ticket->addAttachment($attachment, auth('web')->id());
         }
+
+        app(\App\Services\Helpdesk\SlaService::class)->applyOnCreate($ticket);
 
         return redirect()->route('front.support.index');
     }
@@ -179,6 +221,7 @@ class SupportController extends Controller
     {
         abort_if($ticket->customer_id != auth()->id(), 404);
         abort_if($message->customer_id != auth('web')->id(), 404);
+        abort_if($message->ticket_id !== $ticket->id, 404);
         $message->delete();
 
         return back()->with('success', __('helpdesk.support.ticket_message_deleted'));

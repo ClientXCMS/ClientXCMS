@@ -85,7 +85,12 @@
                                     @include("admin/shared/input", ["name" => "zipcode", "label" => __('global.zip'), 'value' => old('zipcode', $item->zipcode)])
                                 </div>
                                 <div>
-                                    @include("admin/shared/input", ["name" => "phone", "label" => __('global.phone'), 'value' => old('phone', $item->phone)])
+                                    @include('shared.phone-intl', [
+                                        'name' => 'phone',
+                                        'label' => __('global.phone'),
+                                        'value' => old('phone', $item->phone),
+                                        'country' => old('country', $item->country ?? 'FR'),
+                                    ])
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

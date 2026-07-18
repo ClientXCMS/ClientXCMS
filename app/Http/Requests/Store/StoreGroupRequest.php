@@ -54,6 +54,9 @@ class StoreGroupRequest extends FormRequest
             'status' => 'required|string|in:active,hidden,unreferenced',
             'slug' => 'required|string|max:255|unique:groups,slug',
             'sort_order' => 'required|integer',
+            'badge_title' => 'nullable|string|max:255',
+            'badge_color' => 'nullable|string|max:32',
+            'badge_icon' => 'nullable|string|max:64',
             'pinned' => 'nullable|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'parent_id' => 'nullable|integer|exists:groups,id',
@@ -74,7 +77,7 @@ class StoreGroupRequest extends FormRequest
     {
         $validated = $this->validated();
         if ($this->file('image') != null) {
-            $filename = Str::slug($this->name).'.'.$this->file('image')->getClientOriginalExtension();
+            $filename = Str::slug($this->name).'.'.$this->file('image')->guessExtension();
             $this->file('image')->storeAs('public'.DIRECTORY_SEPARATOR.'groups', $filename);
             $validated['image'] = 'groups/'.$filename;
         }

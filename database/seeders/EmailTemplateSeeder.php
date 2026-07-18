@@ -36,6 +36,7 @@ class EmailTemplateSeeder extends Seeder
                     'button_text' => $template['button'] ?? null,
                     'locale' => $locale,
                 ]);
+                $this->command->info("Created email template: {$name} ({$locale})");
             }
         }
     }

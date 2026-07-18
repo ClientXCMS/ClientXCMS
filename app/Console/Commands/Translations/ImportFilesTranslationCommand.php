@@ -42,6 +42,13 @@ class ImportFilesTranslationCommand extends Command
         if (! File::exists($extractedPath)) {
             File::makeDirectory($extractedPath, 0755, true);
         }
+        try {
+            \App\Extensions\UpdaterManager::rejectZipSlip($zipFilePath);
+        } catch (\RuntimeException $e) {
+            $this->error($e->getMessage());
+
+            return;
+        }
         $zip = new ZipArchive;
         if ($zip->open($zipFilePath) === true) {
             $zip->extractTo($extractedPath);

@@ -85,9 +85,17 @@ class AdminServiceProvider extends ServiceProvider
                 'firstname' => __('global.firstname'),
                 'lastname' => __('global.lastname'),
                 'phone' => __('global.phone'),
-                'service_id' => 'Service ID',
-                'invoice_id' => 'Invoice ID',
             ];
+            
+            if (app('extension')->extensionIsEnabled('supportid') && \Schema::hasColumn('customers', 'support_id')) {
+                $fields['support_id'] = __('supportid::lang.admin.search.label');
+            }
+            if (staff_has_permission('admin.manage_customers')) {
+                $fields['service_id'] = __('global.service');
+            }
+            if (staff_has_permission('admin.manage_invoices')) {
+                $fields['invoice_id'] = __('global.invoice');
+            }
 
             return view('admin.dashboard.cards.customer-search', ['fields' => $fields]);
         }, 'admin.manage_customers', 1, 'services_canvas'));

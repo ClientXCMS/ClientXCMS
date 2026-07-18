@@ -28,6 +28,8 @@ use App\Models\Billing\Gateway;
 use App\Models\Store\Basket\Basket;
 use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Product;
+use App\Contracts\Store\ProductTypeInterface;
+use App\Services\Domain\DomainPricingService;
 use App\Services\Account\AccountEditService;
 use App\Services\Billing\InvoiceService;
 use App\Services\Store\ProductConfigurationPricingService;
@@ -77,7 +79,9 @@ class BasketController extends \App\Http\Controllers\Controller
             return back()->with('error', __('store.basket.not_valid'));
         }
         $row = BasketRow::findByProductOnSession($product, false);
-        $available = $product->pricingAvailable(currency());
+        $available = $product->type === ProductTypeInterface::DOMAIN && $request->query('tld')
+            ? app(DomainPricingService::class)->availableForTld($request->query('tld'), currency())
+            : $product->pricingAvailable(currency());
         $validated = $request->validate([
             'billing' => 'nullable|string|in:' . implode(',', collect($available)->pluck('recurring')->toArray()),
         ]);
@@ -88,6 +92,10 @@ class BasketController extends \App\Http\Controllers\Controller
 
         if (! $product->canAddToBasket()) {
             return back()->with('error', __('store.basket.already_ordered', ['product' => $product->name]));
+        }
+        if ($request->has('coupon')) {
+            $row->basket->applyCoupon($request->coupon, true);
+            $row->refresh();
         }
         $context = ['product' => $product, 'options' => [], 'billing' => $billing, 'row' => $row];
         if ($product->productType()->data($product) !== null) {
@@ -103,6 +111,7 @@ class BasketController extends \App\Http\Controllers\Controller
             return [$product->key => ['pricing' => $product->getPricingArray(), 'key' => $product->key, 'type' => $product->type, 'step' => $product->step, 'unit' => $product->unit, 'title' => $product->name]];
         });
         $context['options'] = $configoptions;
+        $context['pricings'] = $product->pricingAvailable(currency());
 
         return view('front.store.basket.config', $context);
     }
@@ -112,6 +121,7 @@ class BasketController extends \App\Http\Controllers\Controller
         if (! $request->passes()) {
             return back()->with('error', collect($request->errors())->flatten()->values()->implode('<br>'));
         }
+        $row = BasketRow::findByProductOnSession($product);
         if ($product->productType()->data($product) != null) {
             $data = $product->productType()->data($product)->parameters(new ProductDataDTO($product, $row->data ?? [], $request->validated())) + $request->validated();
         } else {
@@ -121,7 +131,6 @@ class BasketController extends \App\Http\Controllers\Controller
         if (array_key_exists('error', $data)) {
             return back()->with('error', $data['error']);
         }
-        $row = BasketRow::findByProductOnSession($product);
         $row->billing = $request->billing;
         $row->currency = $request->currency;
         if ($product->isNotValid(true)) {
@@ -158,12 +167,19 @@ class BasketController extends \App\Http\Controllers\Controller
         if (! $product->hasPricesForCurrency($validated['currency'])) {
             return response()->json(['message' => __('store.basket.no_prices')], 422);
         }
+        $coupon = null;
+        $basket = Basket::getBasket();
+        if ($basket->coupon_id !== null) {
+            $coupon = \App\Models\Store\Coupon::find($basket->coupon_id);
+        }
 
         $preview = $pricingService->preview(
             $product,
             $validated['billing'],
             $validated['currency'],
             $validated['options'] ?? [],
+            $validated,
+            $coupon,
         );
 
         return response()->json($preview + ['errors' => $errors]);
@@ -264,22 +280,50 @@ class BasketController extends \App\Http\Controllers\Controller
     {
         $this->validate($request, [
             'coupon' => 'required|string|max:255',
+            'redirect_to' => 'nullable|string|max:1000',
         ]);
         $basket = Basket::getBasket();
         $apply = $basket->applyCoupon($request->coupon);
+
+        $target = $this->resolveCouponRedirect($request->input('redirect_to'));
+
         if ($apply === true) {
-            return redirect()->route('front.store.basket.show')->with('success', __('coupon.coupon_applied'));
+            return redirect($target)->with('success', __('coupon.coupon_applied'));
         }
 
-        return redirect()->route('front.store.basket.show');
+        return redirect($target);
     }
 
-    public function removeCoupon()
+    public function removeCoupon(Request $request)
     {
         $basket = Basket::getBasket();
         $basket->update(['coupon_id' => null]);
 
-        return redirect()->route('front.store.basket.show')->with('success', __('coupon.coupon_removed'));
+        $target = $this->resolveCouponRedirect($request->input('redirect_to'));
+
+        return redirect($target)->with('success', __('coupon.coupon_removed'));
+    }
+
+    private function resolveCouponRedirect(?string $redirectTo): string
+    {
+        $default = route('front.store.basket.show');
+        if ($redirectTo === null || $redirectTo === '') {
+            return $default;
+        }
+        $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+        $parsed = parse_url($redirectTo);
+        $host = $parsed['host'] ?? null;
+        if ($host !== null && $host !== $appHost) {
+            return $default;
+        }
+        $path = $parsed['path'] ?? '';
+        if (str_contains($path, '..')) {
+            return $default;
+        }
+        if (! str_starts_with($path, '/store/basket') && ! str_starts_with($path, '/basket')) {
+            return $default;
+        }
+        return $redirectTo;
     }
 
     private function checkPrerequisites(bool $flash, Basket $basket, string $route)

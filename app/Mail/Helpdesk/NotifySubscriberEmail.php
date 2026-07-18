@@ -21,8 +21,8 @@ namespace App\Mail\Helpdesk;
 
 use App\Models\Admin\EmailTemplate;
 use App\Models\Helpdesk\SupportTicket;
-use DragonCode\Contracts\Queue\ShouldQueue;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\SerializesModels;
@@ -64,6 +64,7 @@ class NotifySubscriberEmail extends Notification implements ShouldQueue
             'ticket' => $this->ticket,
             'message' => $this->message,
         ], $notifiable);
+
     }
 
     public function replyMessageMail($notifiable): MailMessage

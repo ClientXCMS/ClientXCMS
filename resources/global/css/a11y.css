@@ -1,0 +1,81 @@
+:where(a, button, [role='button'], input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 2px !important;
+}
+
+.dark :where(a, button, [role='button'], input, select, textarea, summary, [tabindex]):focus-visible {
+    outline-color: #60a5fa !important;
+}
+
+@media (pointer: coarse) {
+    .a11y-tap,
+    nav a,
+    nav button,
+    .hs-dropdown > button,
+    .btn,
+    .btn-primary,
+    .btn-secondary {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+.a11y-skip-link {
+    position: fixed;
+    top: -100px;
+    left: 1rem;
+    z-index: 1000;
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.4rem;
+    background: #111827;
+    color: #f9fafb;
+    font-weight: 600;
+}
+
+.a11y-skip-link:focus-visible {
+    top: 1rem;
+}
+
+@media (max-width: 767px) {
+    .table-responsive-card thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+    }
+
+    .table-responsive-card tr {
+        display: block;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.6rem;
+    }
+
+    .table-responsive-card td {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.35rem 0;
+        text-align: right;
+    }
+
+    .table-responsive-card td::before {
+        content: attr(data-label);
+        color: #64748b;
+        font-weight: 600;
+        text-align: left;
+    }
+}

@@ -17,13 +17,13 @@ class SettingsCoreControllerTest extends \Tests\TestCase
 
     public function test_show_email_settings_without_permission(): void
     {
-        $response = $this->performAdminAction('get', route('admin.settings.show', ['card' => 'core', 'uuid' => 'mail']), [], ['admin.manage_settings']);
+        $response = $this->performAdminAction('get', route('admin.settings.show', ['card' => 'core', 'uuid' => 'mail']), [], ['admin.show_invoices']);
         $response->assertStatus(403);
     }
 
     public function test_save_email_settings_without_permission(): void
     {
-        $response = $this->performAdminAction('put', route('admin.settings.core.email'), [], ['admin.manage_settings']);
+        $response = $this->performAdminAction('put', route('admin.settings.core.email'), [], ['admin.show_invoices']);
         $response->assertStatus(403);
     }
 
@@ -36,7 +36,7 @@ class SettingsCoreControllerTest extends \Tests\TestCase
             'mail_salutation' => 'test',
             'mail_domain' => 'test',
             'mail_smtp_enable' => true,
-            'mail_smtp_host' => 'test',
+            'mail_smtp_host' => 'example.com',
             'mail_smtp_port' => 465,
             'mail_smtp_username' => 'test',
             'mail_smtp_password' => 'test',
@@ -54,7 +54,7 @@ class SettingsCoreControllerTest extends \Tests\TestCase
 
     public function test_show_core_settings_without_permission(): void
     {
-        $response = $this->performAdminAction('get', route('admin.settings.show', ['card' => 'core', 'uuid' => 'app']), [], ['admin.manage_settings']);
+        $response = $this->performAdminAction('get', route('admin.settings.show', ['card' => 'core', 'uuid' => 'app']), [], ['admin.show_invoices']);
         $response->assertStatus(403);
     }
 
@@ -67,7 +67,7 @@ class SettingsCoreControllerTest extends \Tests\TestCase
             'app_timezone' => 'test',
             'app_default_locale' => 'fr_FR',
             'app_logo' => UploadedFile::fake()->image('logo.png'),
-        ], ['admin.manage_settings']);
+        ], ['admin.show_invoices']);
         $response->assertStatus(403);
     }
 

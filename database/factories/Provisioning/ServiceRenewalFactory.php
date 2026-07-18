@@ -34,6 +34,7 @@ class ServiceRenewalFactory extends Factory
             'renewed_at' => Carbon::now(),
             'first_period' => true,
             'next_billing_on' => Carbon::now()->addMonths(6),
+            'status' => ServiceRenewals::STATUS_PAID,
         ];
     }
 }

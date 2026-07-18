@@ -56,9 +56,17 @@ class CustomerObserver
             'email_verified_at' => null,
             'is_confirmed' => false,
             'dark_mode' => false,
-            'last_login_at' => null,
-            'last_login_ip' => null,
+            'last_login' => null,
+            'last_ip' => null,
             'balance' => 0,
+            'billing_details' => null,
+            'company_name' => null,
+            'gdpr_compliment' => false,
+            'security_question_id' => null,
+            'security_question_answer' => null,
         ]);
+        if ($customer->support_id) {
+            $customer->update(['support_id' => null]);
+        }
     }
 }

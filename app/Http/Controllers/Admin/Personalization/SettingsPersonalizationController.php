@@ -53,6 +53,7 @@ class SettingsPersonalizationController extends Controller
 
     public function showCustomMenu(string $type)
     {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $menus = MenuLink::where('type', $type)->whereNull('parent_id')->orderBy('position')->get();
 
         $card = app('settings')->getCards()->firstWhere('uuid', 'personalization');
@@ -144,7 +145,7 @@ class SettingsPersonalizationController extends Controller
             'seo_site_title' => 'required|string|max:1000',
             'seo_og_title' => 'nullable|string|max:200',
             'seo_og_description' => 'nullable|string|max:300',
-            'seo_og_image' => 'nullable|image|max:2048',
+            'seo_og_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'seo_twitter_handle' => 'nullable|string|max:50',
         ]);
         $data['seo_disablereferencement'] = $data['seo_disablereferencement'] ?? 'false';
@@ -152,7 +153,7 @@ class SettingsPersonalizationController extends Controller
         if ($request->hasFile('seo_og_image')) {
             $currentFile = setting('seo_og_image');
             $this->deleteSettingUpload($currentFile);
-            $file = 'og-image.'.$request->file('seo_og_image')->getClientOriginalExtension();
+            $file = 'og-image.'.$request->file('seo_og_image')->guessExtension();
             $data['seo_og_image'] = $request->file('seo_og_image')->storeAs('public'.DIRECTORY_SEPARATOR.'uploads', $file);
         } else {
             unset($data['seo_og_image']);
@@ -195,7 +196,7 @@ class SettingsPersonalizationController extends Controller
         if ($request->hasFile('theme_home_image')) {
             $currentFile = \setting('theme_home_image');
             $this->deleteSettingUpload($currentFile);
-            $file = 'home.'.$request->file('theme_home_image')->getClientOriginalExtension();
+            $file = 'home.'.$request->file('theme_home_image')->guessExtension();
             $file = $request->file('theme_home_image')->storeAs('public'.DIRECTORY_SEPARATOR.'uploads', $file);
             $data['theme_home_image'] = $file;
         }

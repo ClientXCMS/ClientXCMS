@@ -21,6 +21,23 @@
 
 <div class="sm:flex block">
 
+    @php
+        $normalizedSearchDefinitions = $searchDefinitions ?? collect($searchFields ?? [])->mapWithKeys(function ($definition, $key) {
+            if (! is_array($definition)) {
+                $definition = ['label' => $definition, 'type' => 'text'];
+            }
+
+            return [$key => [
+                'label' => $definition['label'] ?? $key,
+                'type' => $definition['type'] ?? 'text',
+                'fields' => array_values((array) ($definition['fields'] ?? [$key])),
+                'options' => $definition['options'] ?? [],
+            ]];
+        })->all();
+        $selectedSearchField = $searchField ?: array_key_first($normalizedSearchDefinitions);
+        $currentSearchValues = $searchValues ?? [];
+    @endphp
+
     @if (!empty($filters))
         <div class="mr-1 hs-dropdown relative inline-block md:[--placement:bottom-right]" data-hs-dropdown-auto-close="inside">
             <button type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
@@ -46,15 +63,45 @@
             </div>
         </div>
     @endif
-    @if (!empty($searchFields))
-    <form id="searchForm" method="GET" action="{{ request()->url() }}">
+    @if (!empty($normalizedSearchDefinitions))
+    <form id="searchForm" method="GET" action="{{ request()->url() }}" class="typed-search-form">
         <label for="search" class="sr-only">{{ __('global.search') }}</label>
         <div class="relative">
             <div class="block sm:flex">
-                <input type="text" value="{{ $search ?? '' }}" id="search" name="q" class="py-2 px-3 block border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600 max-w-md mt-2 sm:mt-0" placeholder="{{ __('global.search') }}">
-                <select class="ml-1 py-2 px-3 block border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600 max-w-md mt-2 sm:mt-0" name="field">
-                    @foreach ($searchFields as $key => $translate)
-                        <option value="{{ $key }}" {{ $searchField == $key ? 'selected' : '' }}>{{ $translate }}</option>
+                <div class="typed-search-controls flex flex-col sm:flex-row gap-1">
+                    @foreach ($normalizedSearchDefinitions as $key => $definition)
+                        <div class="{{ $selectedSearchField === $key ? 'flex' : 'hidden' }} gap-1" data-search-control="{{ $key }}" data-search-type="{{ $definition['type'] }}">
+                            @if ($definition['type'] === 'select')
+                                <select class="py-2 px-3 block border-gray-200 rounded-lg text-sm dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 min-w-48"
+                                    data-filter-key="{{ $definition['fields'][0] }}" @disabled($selectedSearchField !== $key)>
+                                    @foreach ($definition['options'] as $optionValue => $optionLabel)
+                                        <option value="{{ $optionValue }}" @selected(($currentSearchValues[$definition['fields'][0]] ?? null) == $optionValue)>{{ $optionLabel }}</option>
+                                    @endforeach
+                                </select>
+                            @elseif ($definition['type'] === 'date')
+                                <input type="date" value="{{ $currentSearchValues[$definition['fields'][0]] ?? '' }}"
+                                    data-filter-key="{{ $definition['fields'][0] }}" @disabled($selectedSearchField !== $key)
+                                    class="flatpickr input-text min-w-44">
+                            @elseif ($definition['type'] === 'date_range')
+                                <input type="date" value="{{ $currentSearchValues[$definition['fields'][0]] ?? '' }}"
+                                    data-filter-key="{{ $definition['fields'][0] }}" placeholder="{{ __('global.from') }}"
+                                    @disabled($selectedSearchField !== $key) class="flatpickr input-text min-w-40">
+                                <input type="date" value="{{ $currentSearchValues[$definition['fields'][1]] ?? '' }}"
+                                    data-filter-key="{{ $definition['fields'][1] }}" placeholder="{{ __('global.to') }}"
+                                    @disabled($selectedSearchField !== $key) class="flatpickr input-text min-w-40">
+                            @else
+                                <input type="text" value="{{ $currentSearchValues[$definition['fields'][0]] ?? ($selectedSearchField === $key ? ($search ?? '') : '') }}"
+                                    id="{{ $selectedSearchField === $key ? 'search' : 'search-'.$loop->index }}"
+                                    data-filter-key="{{ $definition['fields'][0] }}" @disabled($selectedSearchField !== $key)
+                                    class="py-2 px-3 block border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 max-w-md"
+                                    placeholder="{{ __('global.search') }}">
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+                <select class="ml-1 py-2 px-3 block border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 max-w-md mt-2 sm:mt-0" name="field" data-search-field-select>
+                    @foreach ($normalizedSearchDefinitions as $key => $definition)
+                        <option value="{{ $key }}" {{ $selectedSearchField == $key ? 'selected' : '' }}>{{ $definition['label'] }}</option>
                     @endforeach
                 </select>
                 <button type="submit" class="btn btn-secondary md:ml-1 mt-2 sm:mt-0 w-full max-w-md md:w-auto ml-1 mr-1">

@@ -63,8 +63,8 @@
         </span>
         @else
     <span class="mt-5 font-bold text-5xl text-gray-800 dark:text-gray-200">
-        {{ $pricing->price }}
-        <span class="font-bold text-2xl -me-2">{{ $pricing->getSymbol() }}{{ is_tax_included() ? __('store.ttc') : '' }}</span>
+        {{ formatted_price((float) $pricing->price, $pricing->currency ?? currency()) }}
+        <span class="font-bold text-2xl -me-2">{{ is_tax_included() ? __('store.ttc') : '' }}</span>
 
       </span>
 

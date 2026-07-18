@@ -124,7 +124,7 @@ class ConfigOptionDTO
             }
         }
         if ($this->option->type == ConfigOption::TYPE_SLIDER) {
-            return (round($this->option->getPriceByCurrency($currency, $recurring)->recurringPayment(), 2) / $this->option->step) * $quantity;
+            return (store_round($this->option->getPriceByCurrency($currency, $recurring)->recurringPayment(), 2) / $this->option->step) * $quantity;
         }
 
         return $this->option->getPriceByCurrency($currency, $recurring)->recurringPayment() * $quantity;

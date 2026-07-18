@@ -34,6 +34,8 @@ class UpgradeController extends AbstractCrudController
 
     protected string $routePath = 'admin.billing.upgrades';
 
+    protected ?string $managedPermission = 'admin.manage_services';
+
     public function getSearchFields()
     {
         return [

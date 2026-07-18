@@ -32,6 +32,7 @@ use App\Services\Billing\InvoiceService;
 use App\Services\Provisioning\ServiceService;
 use App\Services\Store\GatewayService;
 use App\Traits\Controllers\ServiceControllerTrait;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -40,7 +41,7 @@ class ServiceController extends Controller
 
     public function index(Request $request)
     {
-        $userId = auth('web')->id();
+        $user = auth('web')->user();
         $filter = $request->get('filter');
 
         if ($filter) {
@@ -48,8 +49,10 @@ class ServiceController extends Controller
                 return redirect()->route('front.services.index');
             }
             if (in_array($filter, Service::FILTERS)) {
-                $services = Service::where('customer_id', $userId)
-                    ->where('status', $filter)
+                $services = Service::accessibleBy($user)
+                    ->when($filter !== 'all', function ($query) use ($filter) {
+                        $query->where('status', $filter);
+                    })
                     ->orderBy('created_at', 'desc')
                     ->paginate(10);
             } else {
@@ -63,7 +66,7 @@ class ServiceController extends Controller
                         $products = $products->merge($subgroup->products->pluck('id'));
                     }
                 }
-                $services = Service::where('customer_id', $userId)
+                $services = Service::accessibleBy($user)
                     ->whereIn('product_id', $products)
                     ->where('status', '!=', 'hidden')
                     ->orderBy('created_at', 'desc')
@@ -71,7 +74,7 @@ class ServiceController extends Controller
             }
         } else {
             $filter = null;
-            $services = Service::where('customer_id', $userId)
+            $services = Service::accessibleBy($user)
                 ->where('status', '!=', 'hidden')
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
@@ -156,8 +159,34 @@ class ServiceController extends Controller
         if ($service->trial_ends_at != null && $service->trial_ends_at->isFuture()) {
             \Session::flash('info', __('client.alerts.service_trial_ends_at', ['date' => $service->trial_ends_at->format('d/m')]));
         }
+        $subUserAccesses = collect();
+        $serviceSubUserPermissions = [];
+        if ($service->customer_id === auth('web')->id()) {
+            $subUserAccesses = auth('web')->user()->ownedAccountAccesses()->with(['subCustomer', 'services'])->orderBy('created_at', 'desc')->get();
+            $serviceSubUserPermissions = \App\Models\Account\CustomerAccountAccess::SERVICE_PERMISSIONS;
+        }
 
-        return view('front.provisioning.services.show', compact('service', 'customer', 'gateways', 'panel_html'));
+        return view('front.provisioning.services.show', compact('service', 'customer', 'gateways', 'panel_html', 'subUserAccesses', 'serviceSubUserPermissions'));
+    }
+
+    public function status(Request $request, Service $service): JsonResponse
+    {
+        $user = $request->user('web');
+        if ($user === null || ! $user->hasServicePermission($service, 'service.show')) {
+            abort(404);
+        }
+
+        $data = [
+            'status_badge_html' => view('components.badge-state-componant', [
+                'state' => $service->status,
+            ])->render(),
+        ];
+
+        if ($request->boolean('panel')) {
+            $data['panel_html'] = (string) ProvisioningTabDTO::renderPanel($service);
+        }
+
+        return response()->json($data);
     }
 
     public function renew(Request $request, Service $service, string $gateway)
@@ -183,7 +212,6 @@ class ServiceController extends Controller
 
             return back()->with('error', $message);
         }
-
     }
 
     public function tab(Service $service, string $tab)
@@ -289,16 +317,42 @@ class ServiceController extends Controller
         }
         $request->validate([
             'reason' => ['required', 'string', 'exists:cancellation_reasons,id'],
-            'details' => 'nullable|string',
+            'details' => 'nullable|string|max:2000',
             'expiration' => ['required', 'string', 'in:end_of_period,now'],
         ]);
         if (! $service->canCancel()) {
             return redirect()->route('front.services.show', ['service' => $service->uuid])->with('error', __('client.alerts.cannot_cancel'));
         }
-        $reason = \App\Models\Provisioning\CancellationReason::find($request->reason)->reason;
-        $reason = $reason.(! empty($request->details) ? ' - '.$request->details : '');
+        $cancellationReason = \App\Models\Provisioning\CancellationReason::findOrFail($request->reason);
+
+        if ($cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_SUPPORT_TICKET) {
+            return redirect()->route('front.support.create', [
+                'cancellation_service' => $service->uuid,
+                'cancellation_reason' => $cancellationReason->id,
+                'cancellation_expiration' => $request->expiration,
+                'cancellation_details' => $request->details,
+            ])
+                ->with('info', __('provisioning.cancellation.requires_ticket'));
+        }
+
+        if (
+            $cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_AFTER_EXPIRATION
+            && $service->expires_at !== null
+            && $service->expires_at->isFuture()
+        ) {
+            return redirect()->route('front.services.show', ['service' => $service->uuid])
+                ->with('error', __('provisioning.cancellation.after_expiration_only'));
+        }
+
+        $reason = $cancellationReason->reason.(! empty($request->details) ? ' - '.$request->details : '');
+
+        if ($cancellationReason->cancellation_mode === \App\Models\Provisioning\CancellationReason::MODE_IMMEDIATE) {
+            $request->request->set('expiration', 'now');
+        }
+
         $date = $request->expiration == 'end_of_period' ? $service->expires_at : new \DateTime;
         $service->cancel($reason, $date, $request->expiration == 'now');
+        $service->update(['cancellation_reason_id' => $cancellationReason->id]);
 
         return redirect()->route('front.services.show', ['service' => $service->uuid])->with('success', __('client.alerts.service_cancelled'));
     }

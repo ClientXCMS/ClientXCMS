@@ -16,6 +16,7 @@
  * Year: 2025
  */
 ?>
+@inject('slaService', 'App\Services\Helpdesk\SlaService')
 @extends('admin/layouts/admin')
 @section('title', __($ticket->subject, ['name' => $item->username]))
 @section('styles')
@@ -116,8 +117,8 @@
                                                                 {{ $message->staffUsername() }}
                                                             </span>
                                                         @elseif($message->isCustomer())
-                                                            <span class="inline-flex items-center gap-x-1">
-                                                                <i class="bi bi-person"></i>
+                                                            <span class="inline-flex items-center gap-x-1.5">
+                                                                <x-avatar :user="$message->customer" size="sm" class="!ring-0" />
                                                                 {{ $message->customer->excerptFullName() }}
                                                             </span>
                                                         @endif
@@ -243,7 +244,7 @@
                                     @endif
                                     <a href="{{ route('admin.customers.show', $ticket->customer) }}"
                                         class="inline-flex items-center gap-x-3.5 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg dark:bg-neutral-900 dark:border-neutral-700 dark:text-white">
-                                        <i class="bi bi-person"></i>
+                                        <x-avatar :user="$ticket->customer" size="sm" class="!ring-0" />
                                         {{ $ticket->customer->excerptFullName() }}
                                         <i class="bi bi-box-arrow-up-right"></i>
 
@@ -276,8 +277,75 @@
                                         </li>
                                     @endif
 
-
+                                    @if ($ticket->first_response_due_at || $ticket->resolution_due_at)
+                                        @php
+                                            $slaStatus = $slaService->statusFor($ticket);
+                                        @endphp
+                                        @if ($ticket->first_response_due_at)
+                                            <li class="inline-flex flex-col gap-y-1 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px dark:bg-neutral-900 dark:border-neutral-700 dark:text-white">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="flex items-center gap-x-2">
+                                                        <i class="bi bi-alarm"></i>
+                                                        {{ __('helpdesk.admin.tickets.sla.first_response') }}
+                                                    </span>
+                                                    @if ($ticket->first_response_at)
+                                                        @if ($ticket->first_response_at->greaterThan($ticket->first_response_due_at))
+                                                            <span class="inline-flex items-center gap-x-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-500">
+                                                                {{ __('helpdesk.admin.tickets.sla.breached') }}
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center gap-x-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-500">
+                                                                {{ __('helpdesk.admin.tickets.sla.met') }}
+                                                            </span>
+                                                        @endif
+                                                    @else
+                                                        @if ($slaStatus['first_response_breached'])
+                                                            <span class="inline-flex items-center gap-x-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-500">
+                                                                {{ __('helpdesk.admin.tickets.sla.breached') }} ({{ __('helpdesk.admin.tickets.sla.breached_by', ['mins' => abs($slaStatus['first_response_due_in'])]) }})
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center gap-x-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500">
+                                                                {{ __('helpdesk.admin.tickets.sla.due_in', ['mins' => $slaStatus['first_response_due_in']]) }}
+                                                            </span>
+                                                        @endif
+                                                    @endif
+                                                </div>
+                                            </li>
+                                        @endif
+                                        @if ($ticket->resolution_due_at)
+                                            <li class="inline-flex flex-col gap-y-1 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px dark:bg-neutral-900 dark:border-neutral-700 dark:text-white">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="flex items-center gap-x-2">
+                                                        <i class="bi bi-check-circle"></i>
+                                                        {{ __('helpdesk.admin.tickets.sla.resolution') }}
+                                                    </span>
+                                                    @if (!$ticket->isOpen())
+                                                        @if ($ticket->closed_at && $ticket->closed_at->greaterThan($ticket->resolution_due_at))
+                                                            <span class="inline-flex items-center gap-x-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-500">
+                                                                {{ __('helpdesk.admin.tickets.sla.breached') }}
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center gap-x-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-500">
+                                                                {{ __('helpdesk.admin.tickets.sla.met') }}
+                                                            </span>
+                                                        @endif
+                                                    @else
+                                                        @if ($slaStatus['resolution_breached'])
+                                                            <span class="inline-flex items-center gap-x-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-500">
+                                                                {{ __('helpdesk.admin.tickets.sla.breached') }} ({{ __('helpdesk.admin.tickets.sla.breached_by', ['mins' => abs($slaStatus['resolution_due_in'])]) }})
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center gap-x-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500">
+                                                                {{ __('helpdesk.admin.tickets.sla.due_in', ['mins' => $slaStatus['resolution_due_in']]) }}
+                                                            </span>
+                                                        @endif
+                                                    @endif
+                                                </div>
+                                            </li>
+                                        @endif
+                                    @endif
                                 </ul>
+
                                 <ul class="flex flex-col justify-end text-start -space-y-px mt-3">
                                     @foreach ($ticket->attachments as $attachment)
                                         <li

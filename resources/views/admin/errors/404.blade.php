@@ -17,8 +17,14 @@
  */
 ?>
 
-@extends('admin/layouts/admin')
+@extends('admin.layouts.admin')
+
 @section('title', __('errors.404.title'))
+
 @section('content')
-    @include('shared/errors/404', ['link' => route('admin.dashboard'), 'label' => __('errors.404.dashboard')])
+    @include('shared.errors.panel', [
+        'statusCode' => 404,
+        'homeUrl' => route('admin.dashboard'),
+        'homeLabel' => __('errors.common.dashboard'),
+    ])
 @endsection

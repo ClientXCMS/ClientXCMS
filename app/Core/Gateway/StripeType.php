@@ -28,6 +28,8 @@ use App\Helpers\EnvEditor;
 use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
+use App\Models\Billing\Subscription;
+use App\Models\Provisioning\Service;
 use Illuminate\Http\Request;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\InvalidRequestException;
@@ -111,6 +113,13 @@ class StripeType extends AbstractGatewayType
                 $invoice = Invoice::find($id);
                 if ($invoice == null) {
                     return response()->json(['error' => 'Invoice not found'], 400);
+                }
+                // Webhook idempotency: Stripe retries delivery on 5xx and on
+                // network drops. Combined with the atomic state transition in
+                // Invoice::complete(), an early return here also avoids the
+                // wasteful PaymentIntent API call on every replay.
+                if ($invoice->status === Invoice::STATUS_PAID) {
+                    return response()->json(['success' => 'Invoice already paid']);
                 }
                 $intent = \Stripe\PaymentIntent::retrieve($object->payment_intent);
 
@@ -336,6 +345,7 @@ class StripeType extends AbstractGatewayType
 
         return new GatewayPayInvoiceResultDTO($intent->status == 'succeeded', $intent->status, $invoice, $sourceDTO);
     }
+
 
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
     {

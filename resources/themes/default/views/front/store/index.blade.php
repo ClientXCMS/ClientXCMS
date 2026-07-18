@@ -32,16 +32,41 @@
         @foreach ($groups->chunk(3) as $row)
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
 
-                @foreach ($row as $group)
-                    @php($startPrice = $group->startPrice())
-                    <div
-                        class="group flex flex-col h-full bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-700 dark:shadow-slate-700/[.7]">
-                        @if ($group->image)
-                            <div class="h-52 flex flex-col justify-center items-center bg-indigo-600 rounded-t-xl">
-                                <img src="{{ Storage::url($group->image) }}"
-                                    class="{{ $group->useImageAsBackground() ? 'h-full w-full' : 'h-32 w-32' }}"
-                                    alt="{{ $group->trans('name') }}">
-                            </div>
+            @foreach($row as $group)
+                @php($startPrice = $group->startPrice())
+            <div class="group flex flex-col h-full bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-700 dark:shadow-slate-700/[.7]">
+                @if ($group->image)
+                <div class="h-52 flex flex-col justify-center items-center bg-indigo-600 rounded-t-xl">
+                    <img src="{{ Storage::url($group->image) }}" class="{{ $group->useImageAsBackground() ? 'h-full w-full' : 'h-32 w-32' }}" alt="{{ $group->trans('name') }}">
+                </div>
+                @endif
+                <div class="p-4 md:p-6">
+                    @if ($group->pinned)
+                    <span class="block mb-1 text-xs font-semibold uppercase text-blue-600 dark:text-blue-500">
+                      {{ $group->getMetadata('pinned_label', __('store.pinned')) }}
+                    </span>
+                    @endif
+                    <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 dark:hover:text-white">
+                        @if ($group->badge_title)
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium mb-1" style="background-color: {{ $group->badge_color ?: '#e0e7ff' }}; color: #111827;">
+                                @if($group->badge_icon)
+                                    <i class="{{ $group->badge_icon }}"></i>
+                                @endif
+                                {{ $group->trans('badge_title', $group->badge_title) }}
+                            </span><br>
+                        @endif
+                        {{ $group->trans('name') }}
+                    </h3>
+                    <p class="mt-3 text-gray-500">
+                        {{ $group->trans('description') }}
+                    </p>
+                </div>
+                <div class="mt-auto flex border-t border-gray-200 divide-x divide-gray-200 dark:border-gray-700 dark:divide-gray-700">
+                    <a href="{{ $group->route() }}" class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-es-xl bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
+                        @if ($startPrice->isFree())
+                            {{ __('global.free') }}
+                        @else
+                        {{ __('store.from_price', ['price' => $startPrice->price, 'currency' => $startPrice->currency]) }}
                         @endif
                         <div class="p-4 md:p-6">
                             @if ($group->pinned)

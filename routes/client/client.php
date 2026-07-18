@@ -20,21 +20,44 @@
 use App\Http\Controllers\Front\Billing\PaymentMethodController;
 use App\Http\Controllers\Front\ClientController;
 use App\Http\Controllers\Front\EmailController;
+use App\Http\Controllers\Front\SubUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('/client')->name('front.')->group(function () {
     Route::get('/', [ClientController::class, 'index'])->middleware(['auth'])->name('client.index');
     Route::get('/onboarding', [ClientController::class, 'onboarding'])->middleware(['auth'])->name('client.onboarding');
 
+    Route::prefix('/profile/subusers')->name('subusers.')->middleware(['auth'])->group(function () {
+        Route::get('/', [SubUserController::class, 'index'])->name('index');
+        Route::post('/', [SubUserController::class, 'store'])->middleware('throttle:10,1')->name('store');
+        Route::get('/invitations/{token}', [SubUserController::class, 'showAccept'])->name('accept')->withoutMiddleware('auth');
+        Route::post('/invitations/{token}', [SubUserController::class, 'accept'])->middleware('throttle:6,1')->name('accept.confirm')->withoutMiddleware('auth');
+        Route::put('/accesses/{access}', [SubUserController::class, 'update'])->name('accesses.update');
+        Route::delete('/accesses/{access}', [SubUserController::class, 'destroy'])->name('accesses.destroy');
+        Route::post('/invitations/{invitation}/resend', [SubUserController::class, 'resend'])->middleware('throttle:5,1')->name('invitations.resend');
+        Route::delete('/invitations/{invitation}', [SubUserController::class, 'revoke'])->name('invitations.revoke');
+    });
+
     Route::prefix('/profile')->name('profile')->middleware(['auth'])->group(function () {
         Route::get('/', [\App\Http\Controllers\Front\ProfileController::class, 'show'])->name('.index');
         Route::post('/', [\App\Http\Controllers\Front\ProfileController::class, 'update'])->name('.update');
         Route::post('/password', [\App\Http\Controllers\Front\ProfileController::class, 'password'])->name('.password');
-        Route::post('/export', [\App\Http\Controllers\Front\ProfileController::class, 'export'])->name('.export');
+        Route::post('/export', [\App\Http\Controllers\Front\ProfileController::class, 'export'])
+            ->middleware('throttle:3,1440')
+            ->name('.export');
+        Route::get('/export/download/{path}', [\App\Http\Controllers\Front\ProfileController::class, 'downloadExport'])
+            ->where('path', '.*')
+            ->name('.export.download')
+            ->middleware('signed');
         Route::post('/2fa', [\App\Http\Controllers\Front\ProfileController::class, 'save2fa'])->name('.2fa');
+        Route::post('/2fa/options', [\App\Http\Controllers\Front\ProfileController::class, 'save2faOptions'])->name('.2fa_options');
+        Route::post('/2fa/trusted/revoke', [\App\Http\Controllers\Front\ProfileController::class, 'revokeTrustedDevice'])->name('.2fa_trusted_revoke');
+        Route::post('/2fa/trusted/revoke-all', [\App\Http\Controllers\Front\ProfileController::class, 'revokeAllTrustedDevices'])->name('.2fa_trusted_revoke_all');
         Route::get('/download_codes', [\App\Http\Controllers\Front\ProfileController::class, 'downloadCodes'])->name('.2fa_codes');
         Route::delete('/delete', [\App\Http\Controllers\Front\ProfileController::class, 'deleteAccount'])->name('.delete.confirm');
         Route::post('/security-question', [\App\Http\Controllers\Front\ProfileController::class, 'saveSecurityQuestion'])->name('.security_question');
+        Route::post('/avatar', [\App\Http\Controllers\Front\ProfileController::class, 'uploadAvatar'])->name('.avatar.upload');
+        Route::delete('/avatar', [\App\Http\Controllers\Front\ProfileController::class, 'deleteAvatar'])->name('.avatar.delete');
     });
     Route::prefix('/emails')->name('emails.')->group(function () {
         Route::get('/', [EmailController::class, 'index'])->middleware(['auth', 'verified'])->name('index');

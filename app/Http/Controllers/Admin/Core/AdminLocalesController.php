@@ -19,14 +19,21 @@
 
 namespace App\Http\Controllers\Admin\Core;
 
+use App\Helpers\Countries;
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Permission;
 use App\Services\Core\LocaleService;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AdminLocalesController extends Controller
 {
     public function index()
     {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $locales = LocaleService::getLocales(false);
+        $countries = Countries::allNames();
+        $enabledCountries = Countries::enabledCodes();
         $card = app('settings')->getCards()->firstWhere('uuid', 'core');
         if (! $card) {
             abort(404);
@@ -35,11 +42,12 @@ class AdminLocalesController extends Controller
         \View::share('current_card', $card);
         \View::share('current_item', $item);
 
-        return view('admin.locales.index', compact('locales'));
+        return view('admin.locales.index', compact('locales', 'countries', 'enabledCountries'));
     }
 
     public function download(string $locale)
     {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $existing = LocaleService::getLocales(false)[$locale] ?? null;
         if (! $existing) {
             abort(404);
@@ -55,6 +63,7 @@ class AdminLocalesController extends Controller
 
     public function toggle(string $locale)
     {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $existing = LocaleService::getLocales(false)[$locale] ?? null;
         if (! $existing) {
             abort(404);
@@ -62,5 +71,18 @@ class AdminLocalesController extends Controller
         LocaleService::toggleLocale($locale);
 
         return back();
+    }
+
+    public function countries(Request $request)
+    {
+        staff_aborts_permission(Permission::MANAGE_SETTINGS);
+        $validated = $request->validate([
+            'countries' => ['required', 'array', 'min:1'],
+            'countries.*' => ['required', 'string', Rule::in(array_keys(Countries::allNames()))],
+        ]);
+
+        Countries::setEnabledCodes($validated['countries']);
+
+        return back()->with('success', __('admin.locales.countries_saved'));
     }
 }

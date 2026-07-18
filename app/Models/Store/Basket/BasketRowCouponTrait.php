@@ -52,9 +52,9 @@ trait BasketRowCouponTrait
             return 0;
         }
         if (! $withQuantity) {
-            $recurringPayment = $this->product->getPriceByCurrency($this->currency, $billing ?? $this->billing)->recurringPayment();
+            $recurringPayment = $this->getUnitPrice($billing)->recurringPayment();
         } else {
-            $recurringPayment = $this->product->getPriceByCurrency($this->currency, $billing ?? $this->billing)->recurringPayment() * $this->quantity;
+            $recurringPayment = $this->getUnitPrice($billing)->recurringPayment() * $this->quantity;
         }
 
         return $this->applyCoupon($recurringPayment, self::PRICE) + $this->applyCoupon($this->optionRecurringPayment(), self::OPTION);
@@ -68,9 +68,9 @@ trait BasketRowCouponTrait
             return 0;
         }
         if (! $withQuantity) {
-            $onetimePayment = $this->product->getPriceByCurrency($this->currency, $billing ?? $this->billing)->onetimePayment();
+            $onetimePayment = $this->getUnitPrice($billing)->onetimePayment();
         } else {
-            $onetimePayment = $this->product->getPriceByCurrency($this->currency, $billing ?? $this->billing)->onetimePayment() * $this->quantity;
+            $onetimePayment = $this->getUnitPrice($billing)->onetimePayment() * $this->quantity;
         }
 
         return $this->applyCoupon($onetimePayment, self::PRICE) + $this->applyCoupon($this->optionOnetimePayment(), self::OPTION);
@@ -80,9 +80,9 @@ trait BasketRowCouponTrait
     {
         $this->enableCoupon(false);
         if (! $withQuantity) {
-            $setup = $this->product->getPriceByCurrency($this->currency, $billing ?? $this->billing)->setup;
+            $setup = $this->getUnitPrice($billing)->setup;
         } else {
-            $setup = $this->product->getPriceByCurrency($this->currency, $billing ?? $this->billing)->setup * $this->quantity;
+            $setup = $this->getUnitPrice($billing)->setup * $this->quantity;
         }
 
         return $this->applyCoupon($setup, self::SETUP_FEES) + $this->applyCoupon($this->optionSetup(), self::OPTION);

@@ -29,10 +29,7 @@
         <div class="card mb-4">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div class="flex items-center gap-4">
-                    <div
-                        class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-indigo-600 to-indigo-600-dark flex items-center justify-center text-white text-2xl font-bold">
-                        {{ $item->initials() }}
-                    </div>
+                    <x-avatar :user="$item" size="xl" />
                     <div>
                         <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
                             {{ $item->fullname }}
@@ -99,22 +96,26 @@
                                         </a>
                                     @endif
                                     @if (staff_has_permission('admin.autologin_customer'))
-                                        <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700"
-                                            href="{{ route($routePath . '.autologin', ['customer' => $item]) }}">
-                                            <i
-                                                class="bi bi-person-circle"></i>{{ __($translatePrefix . '.autologin.btn') }}
-                                        </a>
+                                        <form method="POST" action="{{ route($routePath . '.autologin', ['customer' => $item]) }}" class="contents">
+                                            @csrf
+                                            <button type="submit" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 text-left">
+                                                <i class="bi bi-person-circle"></i>{{ __($translatePrefix . '.autologin.btn') }}
+                                            </button>
+                                        </form>
                                     @endif
                                     @if ($item->email_verified_at == null)
-                                        <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700"
-                                            href="{{ route($routePath . '.resend_confirmation', ['customer' => $item]) }}">
-                                            <i class="bi bi-send"></i>{{ __($translatePrefix . '.show.resend_confirm') }}
-                                        </a>
-                                        <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700"
-                                            href="{{ route($routePath . '.confirm', ['customer' => $item]) }}">
-                                            <i
-                                                class="bi bi-person-check-fill"></i>{{ __($translatePrefix . '.show.confirm') }}
-                                        </a>
+                                        <form method="POST" action="{{ route($routePath . '.resend_confirmation', ['customer' => $item]) }}" class="contents">
+                                            @csrf
+                                            <button type="submit" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 text-left">
+                                                <i class="bi bi-send"></i>{{ __($translatePrefix . '.show.resend_confirm') }}
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ route($routePath . '.confirm', ['customer' => $item]) }}" class="contents">
+                                            @csrf
+                                            <button type="submit" class="w-full flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 text-left">
+                                                <i class="bi bi-person-check-fill"></i>{{ __($translatePrefix . '.show.confirm') }}
+                                            </button>
+                                        </form>
                                     @endif
                                     <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700"
                                         href="{{ route($routePath . '.send_password', ['customer' => $item]) }}">
@@ -135,6 +136,10 @@
                                             href="{{ route('admin.invoices.create') }}?customer_id={{ $item->id }}">
                                             <i
                                                 class="bi bi-file-earmark-text"></i>{{ __($translatePrefix . '.show.create_invoice') }}
+                                        </a>
+                                        <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 dark:text-neutral-400 dark:hover:bg-gray-700 cursor-pointer"
+                                            data-hs-overlay="#credit-note-overlay">
+                                            <i class="bi bi-file-earmark-diff"></i>{{ __('admin.credit_notes.issue_credit_note') }}
                                         </a>
                                     @endif
                                     @if (staff_has_permission('admin.manage_tickets'))
@@ -238,6 +243,19 @@
                                         class="inline-flex items-center py-0.5 px-2 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">{{ $invoices->total() }}</span>
                                 @endif
                             </button>
+                            <button type="button"
+                                class="hs-tab-active:bg-indigo-600/10 hs-tab-active:text-indigo-600 hs-tab-active:border-l-indigo-600 py-3 px-4 inline-flex items-center justify-between gap-x-3 border-l-2 border-transparent text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700/50 focus:outline-none rounded-r-lg"
+                                id="tabs-credit-notes-item" aria-selected="false" data-hs-tab="#tabs-credit-notes"
+                                aria-controls="tabs-credit-notes" role="tab">
+                                <span class="inline-flex items-center gap-x-3">
+                                    <i class="bi bi-file-earmark-diff text-lg"></i>
+                                    {{ __('admin.credit_notes.credit_notes') }}
+                                </span>
+                                @if ($creditNotes->total() > 0)
+                                    <span
+                                        class="inline-flex items-center py-0.5 px-2 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">{{ $creditNotes->total() }}</span>
+                                @endif
+                            </button>
                         @endif
                         @if (staff_has_permission('admin.manage_tickets'))
                             <button type="button"
@@ -265,6 +283,19 @@
                             @if ($customerNotes->count() > 0)
                                 <span
                                     class="inline-flex items-center py-0.5 px-2 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">{{ $customerNotes->count() }}</span>
+                            @endif
+                        </button>
+                        <button type="button"
+                            class="hs-tab-active:bg-indigo-600/10 hs-tab-active:text-indigo-600 hs-tab-active:border-l-indigo-600 py-3 px-4 inline-flex items-center justify-between gap-x-3 border-l-2 border-transparent text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700/50 focus:outline-none rounded-r-lg"
+                            id="tabs-subusers-item" aria-selected="false" data-hs-tab="#tabs-subusers"
+                            aria-controls="tabs-subusers" role="tab">
+                            <span class="inline-flex items-center gap-x-3">
+                                <i class="bi bi-people text-lg"></i>
+                                {{ __('client.subusers.index') }}
+                            </span>
+                            @if ($accountAccesses->count() + $accountInvitations->count() > 0)
+                                <span
+                                    class="inline-flex items-center py-0.5 px-2 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">{{ $accountAccesses->count() + $accountInvitations->count() }}</span>
                             @endif
                         </button>
                         @if (staff_has_permission('admin.show_emails'))
@@ -510,6 +541,9 @@
                     <div id="tabs-invoices" class="hidden" role="tabpanel" aria-labelledby="tabs-invoices-item">
                         @include('admin/core/customers/cards/invoices', ['invoices' => $invoices])
                     </div>
+                    <div id="tabs-credit-notes" class="hidden" role="tabpanel" aria-labelledby="tabs-credit-notes-item">
+                        @include('admin/core/customers/cards/credit_notes', ['creditNotes' => $creditNotes])
+                    </div>
                 @endif
 
                 @if (staff_has_permission('admin.manage_tickets'))
@@ -565,6 +599,10 @@
                             @endforelse
                         </div>
                     </div>
+                </div>
+
+                <div id="tabs-subusers" class="hidden" role="tabpanel" aria-labelledby="tabs-subusers-item">
+                    @include('admin/core/customers/cards/subusers')
                 </div>
 
                 @if (staff_has_permission('admin.show_emails'))
@@ -770,6 +808,68 @@
                     }
                 });
             </script>
+        @endif
+
+        @if (staff_has_permission('admin.manage_invoices'))
+            <div id="credit-note-overlay"
+                class="hs-overlay hs-overlay-open:translate-x-0 hidden translate-x-full fixed top-0 end-0 transition-all duration-300 transform h-full max-w-sm w-full z-[80] bg-white border-s dark:bg-gray-800 dark:border-gray-700"
+                tabindex="-1">
+                <div class="flex justify-between items-center py-3 px-4 border-b dark:border-gray-700">
+                    <h3 class="font-bold text-gray-800 dark:text-white">
+                        {{ __('admin.credit_notes.issue_credit_note') }}
+                    </h3>
+                    <button type="button"
+                        class="flex justify-center items-center w-7 h-7 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                        data-hs-overlay="#credit-note-overlay">
+                        <span class="sr-only">{{ __('global.closemodal') }}</span>
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <form method="POST" action="{{ route('admin.customers.credit_notes.store', ['customer' => $item]) }}">
+                        @csrf
+                        <div class="mb-4">
+                            <label for="invoice_id" class="block text-sm font-medium mb-2 dark:text-white">{{ __('admin.credit_notes.select_invoice') }}</label>
+                            <select name="invoice_id" id="invoice_id" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600" required>
+                                @if ($invoices_list->isEmpty())
+                                    <option value="" disabled selected>{{ __('admin.credit_notes.no_invoices') }}</option>
+                                @else
+                                    <option value="" disabled selected>{{ __('admin.credit_notes.choose_invoice') }}</option>
+                                    @foreach ($invoices_list as $invoice)
+                                        <option value="{{ $invoice->id }}">
+                                            #{{ $invoice->invoice_number }} ({{ formatted_price($invoice->total, $invoice->currency) }})
+                                        </option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            @include('admin/shared/input', [
+                                'name' => 'amount',
+                                'label' => __('admin.credit_notes.amount'),
+                                'type' => 'number',
+                                'value' => old('amount'),
+                                'step' => '0.01',
+                                'required' => true,
+                            ])
+                        </div>
+
+                        <div class="mb-4">
+                            @include('admin/shared/textarea', [
+                                'name' => 'reason',
+                                'label' => __('admin.credit_notes.reason'),
+                                'value' => old('reason'),
+                                'required' => false,
+                            ])
+                        </div>
+
+                        <button type="submit" class="w-full btn btn-primary">
+                            {{ __('global.apply') }}
+                        </button>
+                    </form>
+                </div>
+            </div>
         @endif
 
         <script>

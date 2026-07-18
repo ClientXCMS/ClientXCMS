@@ -86,7 +86,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         try {
             $path = base_path('bootstrap/cache');
             if (! file_exists($path)) {
-                mkdir($path, 0777, true);
+                mkdir($path, 0755, true);
             }
         } catch (\Exception $e) {
             throw new ExtensionException('Unable to create bootstrap/cache directory');
@@ -172,6 +172,9 @@ class ExtensionManager extends ExtensionCollectionsManager
         $installed = $this->fetchInstalledExtensions();
         $versions = collect($installed)->pluck('version')->toArray();
         $uuids = collect($installed)->pluck('uuid')->toArray();
+        $bootErrors = collect($installed)
+            ->filter(fn (array $extension) => isset($extension['boot_error']))
+            ->mapWithKeys(fn (array $extension) => [($extension['type'] ?? '').'/'.$extension['uuid'] => $extension['boot_error']]);
         $enabled = $this->fetchEnabledExtensions();
         $theme = app('theme')->getTheme();
         $enabled = array_merge($enabled, [$theme->uuid]);
@@ -186,9 +189,13 @@ class ExtensionManager extends ExtensionCollectionsManager
             }
 
             return in_array($extensionDTO['type'], $allowedTypes);
-        })->map(function ($extension) use ($uuids, $enabled, $versions) {
+        })->map(function ($extension) use ($uuids, $enabled, $versions, $bootErrors) {
             $extension['enabled'] = in_array($extension['uuid'], $enabled);
             $extension['api'] = $extension;
+            $bootErrorKey = $extension['type'].'s/'.$extension['uuid'];
+            if ($bootErrors->has($bootErrorKey)) {
+                $extension['api']['boot_error'] = $bootErrors->get($bootErrorKey);
+            }
             $extension['version'] = $versions[array_search($extension['uuid'], $uuids)] ?? null;
 
             return ExtensionDTO::fromArray($extension);
@@ -196,7 +203,15 @@ class ExtensionManager extends ExtensionCollectionsManager
         if (! $withUnofficial) {
             return $return;
         }
-        $unofficial = $this->fetchUnofficialExtensions($return->pluck('uuid')->toArray(), $enabled);
+        $unofficial = collect($this->fetchUnofficialExtensions($return->pluck('uuid')->toArray(), $enabled))
+            ->map(function (ExtensionDTO $extension) use ($bootErrors) {
+                $bootErrorKey = $extension->type().'/'.$extension->uuid;
+                if ($bootErrors->has($bootErrorKey)) {
+                    $extension->api['boot_error'] = $bootErrors->get($bootErrorKey);
+                }
+
+                return $extension;
+            });
 
         return $return->merge($unofficial);
     }
@@ -454,7 +469,7 @@ class ExtensionManager extends ExtensionCollectionsManager
     {
         $modules = app('module')->getExtensions($enabledOnly);
         foreach ($modules as $module) {
-            app('module')->autoload($module, app(), $composer);
+            ExtensionSandbox::autoload(app('module'), $module, app(), $composer);
         }
     }
 
@@ -462,7 +477,7 @@ class ExtensionManager extends ExtensionCollectionsManager
     {
         $addons = app('addon')->getExtensions($enabledOnly);
         foreach ($addons as $addon) {
-            app('addon')->autoload($addon, app(), $composer);
+            ExtensionSandbox::autoload(app('addon'), $addon, app(), $composer);
         }
     }
 

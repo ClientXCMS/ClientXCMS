@@ -132,6 +132,18 @@ class ActionLog extends Model
 
     const BASKET_COMPLETED = 'basket_completed';
 
+    const SUBUSER_INVITATION_CREATED = 'subuser_invitation_created';
+
+    const SUBUSER_INVITATION_RESENT = 'subuser_invitation_resent';
+
+    const SUBUSER_INVITATION_REVOKED = 'subuser_invitation_revoked';
+
+    const SUBUSER_ACCESS_ACCEPTED = 'subuser_access_accepted';
+
+    const SUBUSER_ACCESS_UPDATED = 'subuser_access_updated';
+
+    const SUBUSER_ACCESS_REVOKED = 'subuser_access_revoked';
+
     const ALL_ACTIONS = [
         self::SETTINGS_UPDATED,
         self::RESOURCE_CREATED,
@@ -168,6 +180,12 @@ class ActionLog extends Model
         self::TICKET_REPLIED,
         self::TICKET_REOPENED,
         self::BASKET_COMPLETED,
+        self::SUBUSER_INVITATION_CREATED,
+        self::SUBUSER_INVITATION_RESENT,
+        self::SUBUSER_INVITATION_REVOKED,
+        self::SUBUSER_ACCESS_ACCEPTED,
+        self::SUBUSER_ACCESS_UPDATED,
+        self::SUBUSER_ACCESS_REVOKED,
     ];
 
     protected static array $ignoreKeys = [];
@@ -277,6 +295,16 @@ class ActionLog extends Model
             case self::TICKET_REPLIED:
             case self::TICKET_REOPENED:
                 return 'bi bi-ticket-perforated';
+            case self::SUBUSER_INVITATION_CREATED:
+            case self::SUBUSER_INVITATION_RESENT:
+                return 'bi bi-person-plus';
+            case self::SUBUSER_INVITATION_REVOKED:
+            case self::SUBUSER_ACCESS_REVOKED:
+                return 'bi bi-person-x';
+            case self::SUBUSER_ACCESS_ACCEPTED:
+                return 'bi bi-person-check';
+            case self::SUBUSER_ACCESS_UPDATED:
+                return 'bi bi-people';
             default:
                 if (isset(self::$extensionIcons[$this->action])) {
                     return self::$extensionIcons[$this->action];

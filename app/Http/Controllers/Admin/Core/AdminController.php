@@ -23,10 +23,13 @@ use App\Events\Resources\ResourceUpdatedEvent;
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Http\Requests\Admin\Staff\StoreStaffRequest;
 use App\Http\Requests\Admin\Staff\UpdateStaffRequest;
+use App\Http\Requests\Profile\AvatarUploadRequest;
 use App\Models\ActionLog;
 use App\Models\Admin\Admin;
 use App\Models\Admin\Role;
 use App\Models\Admin\SecurityQuestion;
+use App\Services\Account\AvatarService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
@@ -70,7 +73,7 @@ class AdminController extends AbstractCrudController
 
     public function update(UpdateStaffRequest $request, Admin $staff)
     {
-        $this->checkPermission('create', $staff);
+        $this->checkPermission('update', $staff);
         $validated = $request->validated();
         if ($request->password != null) {
             $validated['password'] = bcrypt($request->password);
@@ -134,7 +137,7 @@ class AdminController extends AbstractCrudController
 
             $qrcode = $google->getQRCodeInline(
                 config('app.name'),
-                $request->user('admin')->email . ' (Admin)',
+                $request->user('admin')->email.' (Admin)',
                 $secret
             );
             $request->session()->put('2fa_secret_admin', $secret);
@@ -152,7 +155,7 @@ class AdminController extends AbstractCrudController
         $params['securityQuestions'] = SecurityQuestion::getActiveQuestionsForSelect();
         $params['securityQuestionsEnabled'] = SecurityQuestion::isFeatureEnabled();
 
-        return view($this->viewPath . '.profile', $params);
+        return view($this->viewPath.'.profile', $params);
     }
 
     public function save2fa(Request $request)
@@ -166,8 +169,35 @@ class AdminController extends AbstractCrudController
             return back()->with('success', __('client.profile.2fa.disabled'));
         }
         $request->user('admin')->twoFactorEnable($request->session()->get('2fa_secret_admin'));
+        $request->user('admin')->trustTwoFactorIp($request->ip(), $request->userAgent());
 
         return back()->with('success', __('client.profile.2fa.enabled'));
+    }
+
+    public function save2faOptions(Request $request)
+    {
+        $request->user('admin')->setTwoFactorEmailOnNewIp($request->has('2fa_email_new_ip'));
+        $request->user('admin')->trustTwoFactorIp($request->ip(), $request->userAgent());
+
+        return back()->with('success', __('client.profile.2fa.options_saved'));
+    }
+
+    public function revokeTrustedDevice(Request $request)
+    {
+        $request->validate([
+            'ip' => ['required', 'string', 'ip'],
+        ]);
+
+        $request->user('admin')->revokeTwoFactorTrust($request->input('ip'));
+
+        return back()->with('success', __('client.profile.2fa.trusted_device_revoked'));
+    }
+
+    public function revokeAllTrustedDevices(Request $request)
+    {
+        $request->user('admin')->revokeAllTwoFactorTrust();
+
+        return back()->with('success', __('client.profile.2fa.trusted_devices_revoked_all'));
     }
 
     public function downloadCodes()
@@ -179,7 +209,7 @@ class AdminController extends AbstractCrudController
                 return $code;
             });
             echo $codes->join("\n");
-        }, '2fa_recovery_codes_' . \Str::slug(config('app.name')) . '.txt');
+        }, '2fa_recovery_codes_'.\Str::slug(config('app.name')).'.txt');
     }
 
     public function updateProfile(Request $request)
@@ -208,7 +238,7 @@ class AdminController extends AbstractCrudController
 
         if ($admin->hasSecurityQuestion()) {
             $rules['security_answer'] = ['required', 'string', function ($attribute, $value, $fail) use ($admin) {
-                if (!$admin->verifySecurityAnswer($value)) {
+                if (! $admin->verifySecurityAnswer($value)) {
                     $fail(__('client.profile.security_question.wrong_answer'));
                 }
             }];
@@ -218,7 +248,14 @@ class AdminController extends AbstractCrudController
 
         $admin->update([
             'password' => bcrypt($request->password),
+            'remember_token' => \Str::random(60),
         ]);
+        $admin->revokeAllTwoFactorTrust();
+        try {
+            \Auth::guard('admin')->logoutOtherDevices($request->password);
+        } catch (\Illuminate\Auth\AuthenticationException $e) {
+        }
+        $admin->tokens()->delete();
 
         return back()->with('success', __('client.profile.password_updated'));
     }
@@ -246,5 +283,35 @@ class AdminController extends AbstractCrudController
         );
 
         return back()->with('success', __('client.profile.security_question_saved'));
+    }
+
+    public function uploadOwnAvatar(AvatarUploadRequest $request, AvatarService $avatars): RedirectResponse
+    {
+        $avatars->upload($request->user('admin'), $request->file('avatar'));
+
+        return back()->with('success', __('client.profile.avatar.updated'));
+    }
+
+    public function deleteOwnAvatar(Request $request, AvatarService $avatars): RedirectResponse
+    {
+        $avatars->delete($request->user('admin'));
+
+        return back()->with('success', __('client.profile.avatar.removed'));
+    }
+
+    public function uploadStaffAvatar(AvatarUploadRequest $request, Admin $staff, AvatarService $avatars): RedirectResponse
+    {
+        $this->checkPermission('update', $staff);
+        $avatars->upload($staff, $request->file('avatar'));
+
+        return back()->with('success', __('client.profile.avatar.updated'));
+    }
+
+    public function deleteStaffAvatar(Request $request, Admin $staff, AvatarService $avatars): RedirectResponse
+    {
+        $this->checkPermission('update', $staff);
+        $avatars->delete($staff);
+
+        return back()->with('success', __('client.profile.avatar.removed'));
     }
 }

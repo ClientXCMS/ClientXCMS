@@ -27,9 +27,9 @@
     <div class="container mx-auto">
         <div class="justify-between flex mb-4">
             <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 my-auto">
-                <a href="{{ route('admin.helpdesk.tickets.index') }}"
-                    class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 me-2">
-                    <i class="bi bi-arrow-left text-sm"></i>
+                <a href="{{ route('admin.helpdesk.tickets.index') }}" class="btn btn-secondary me-2">
+                    <i class="bi bi-arrow-left"></i>
+                    {{ __('global.back') }}
                 </a>
                 {{ __($translatePrefix . '.analytics') }}
             </h3>

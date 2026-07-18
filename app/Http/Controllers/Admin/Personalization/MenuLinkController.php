@@ -48,6 +48,7 @@ class MenuLinkController extends AbstractCrudController
 
     public function create(Request $request)
     {
+        $this->checkPermission('create');
         $type = $request->type;
         $data = $this->getArray($type, null, $request->get('parent_id'));
         $data['type'] = $type;

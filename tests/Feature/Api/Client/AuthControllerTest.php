@@ -240,6 +240,56 @@ class AuthControllerTest extends TestCase
         ]);
     }
 
+    public function test_verify2fa_accepts_a_recovery_code(): void
+    {
+        // A1 of the API client 2fa audit. validate size:6 used to reject
+        // every recovery code outright (recovery format is 26 chars), so
+        // any user who lost their authenticator device was permanently
+        // locked out of the API. Fix: route through verifyDeviceFactor()
+        // which handles TOTP + recovery uniformly.
+        $customer = Customer::factory()->create();
+        $customer->twoFactorEnable('JBSWY3DPEHPK3PXP');
+        $recovery = $customer->fresh()->twoFactorRecoveryCodes()[0];
+        $pendingToken = $customer->createToken('2fa-pending', ['2fa:pending']);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '.$pendingToken->plainTextToken,
+            'Accept' => 'application/json',
+        ])->postJson('/api/client/auth/2fa/verify', ['code' => $recovery]);
+
+        $response->assertOk();
+        $response->assertJsonStructure(['token', 'token_type']);
+    }
+
+    public function test_verify2fa_accepts_current_totp_code(): void
+    {
+        $customer = Customer::factory()->create();
+        $customer->twoFactorEnable('JBSWY3DPEHPK3PXP');
+        $code = (new \PragmaRX\Google2FA\Google2FA)->getCurrentOtp('JBSWY3DPEHPK3PXP');
+        $pendingToken = $customer->createToken('2fa-pending', ['2fa:pending']);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '.$pendingToken->plainTextToken,
+            'Accept' => 'application/json',
+        ])->postJson('/api/client/auth/2fa/verify', ['code' => $code]);
+
+        $response->assertOk();
+    }
+
+    public function test_verify2fa_rejects_an_invalid_code(): void
+    {
+        $customer = Customer::factory()->create();
+        $customer->twoFactorEnable('JBSWY3DPEHPK3PXP');
+        $pendingToken = $customer->createToken('2fa-pending', ['2fa:pending']);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '.$pendingToken->plainTextToken,
+            'Accept' => 'application/json',
+        ])->postJson('/api/client/auth/2fa/verify', ['code' => '999999']);
+
+        $response->assertStatus(422);
+    }
+
     public function test_pending_2fa_token_cannot_access_protected_client_resources(): void
     {
         $customer = Customer::factory()->create();

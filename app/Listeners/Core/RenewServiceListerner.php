@@ -35,7 +35,10 @@ class RenewServiceListerner
                 }
                 $item->delivered_at = now();
                 $item->save();
-                ServiceRenewals::where('invoice_id', $invoice->id)->update(['renewed_at' => now()]);
+                ServiceRenewals::where('invoice_id', $invoice->id)->update([
+                    'renewed_at' => now(),
+                    'status' => ServiceRenewals::STATUS_PAID,
+                ]);
             }
         }
     }

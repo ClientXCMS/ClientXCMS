@@ -51,6 +51,57 @@
             "body": "Su cuenta ha sido reactivada. Puede iniciar sesión en su cuenta haciendo clic en el botón de abajo."
         }
     },
+    "account_purge_reminder": {
+        "fr_FR": {
+            "subject": "Compte inactif - suppression dans {{ $days }} jour(s)",
+            "button": "Se connecter",
+            "body": "Votre compte {{ $app }} est inactif et sa suppression est planifiée dans {{ $days }} jour(s) afin de respecter notre politique de conservation des données.\nConnectez-vous avant cette date pour confirmer votre activité et annuler cette suppression."
+        },
+        "en_GB": {
+            "subject": "Inactive account - deletion in {{ $days }} day(s)",
+            "button": "Log in",
+            "body": "Your {{ $app }} account has been inactive and is scheduled to be deleted in {{ $days }} day(s) to comply with our data-retention policy.\nLog in before this date to confirm your activity and cancel this deletion."
+        },
+        "es_ES": {
+            "subject": "Cuenta inactiva - eliminación en {{ $days }} día(s)",
+            "button": "Iniciar sesión",
+            "body": "Su cuenta {{ $app }} ha estado inactiva y está programada para eliminarse en {{ $days }} día(s) para cumplir con nuestra política de conservación de datos.\nInicie sesión antes de esta fecha para confirmar su actividad y cancelar esta eliminación."
+        }
+    },
+    "customer_account_invitation": {
+        "fr_FR": {
+            "subject": "Invitation à accéder à un compte client",
+            "button": "Accepter l'invitation",
+            "body": "Vous avez été invité à accéder au compte de {{ $owner->fullName }}. Si vous avez déjà un compte, cliquez sur le bouton ci-dessous pour vous connecter et accepter l'invitation. Sinon, créez votre compte ici : {{ $register_url }}"
+        },
+        "en_GB": {
+            "subject": "Customer account access invitation",
+            "button": "Accept invitation",
+            "body": "You have been invited to access {{ $owner->fullName }}'s account. If you already have an account, click the button below to sign in and accept the invitation. Otherwise, create your account here: {{ $register_url }}"
+        },
+        "es_ES": {
+            "subject": "Invitación de acceso a una cuenta de cliente",
+            "button": "Aceptar invitación",
+            "body": "Ha sido invitado a acceder a la cuenta de {{ $owner->fullName }}. Si ya tiene una cuenta, haga clic en el botón de abajo para iniciar sesión y aceptar la invitación. Si no, cree su cuenta aquí: {{ $register_url }}"
+        }
+    },
+    "customer_account_access_granted": {
+        "fr_FR": {
+            "subject": "Accès à un compte client accordé",
+            "button": "Accéder à l'espace client",
+            "body": "Vous avez maintenant accès au compte de {{ $owner->fullName }}. Cliquez sur le bouton ci-dessous pour accéder à l'espace client."
+        },
+        "en_GB": {
+            "subject": "Customer account access granted",
+            "button": "Open client area",
+            "body": "You now have access to {{ $owner->fullName }}'s account. Click the button below to open the client area."
+        },
+        "es_ES": {
+            "subject": "Acceso a una cuenta de cliente concedido",
+            "button": "Abrir área de cliente",
+            "body": "Ahora tiene acceso a la cuenta de {{ $owner->fullName }}. Haga clic en el botón de abajo para abrir el área de cliente."
+        }
+    },
     "invoice_paid": {
         "fr_FR": {
             "subject": "Votre facture a été payée",
@@ -186,6 +237,23 @@
             "subject": "Verificación de la dirección de correo electrónico",
             "button": "Verificar dirección de correo electrónico",
             "body": "Está recibiendo este correo electrónico porque hemos recibido una solicitud para verificar su dirección de correo electrónico.\nSi no solicitó verificar su dirección de correo electrónico, no es necesario realizar ninguna otra acción."
+        }
+    },
+    "two_factor_code": {
+        "fr_FR": {
+            "subject": "Code de double authentification",
+            "button": "Continuer la connexion",
+            "body": "Votre code de double authentification est : <strong>{{ $code }}</strong><br/>\nCe code est valide pendant {{ $expires_in }} minutes.<br/>\n@if($ip)<strong>Adresse IP</strong> : {{ $ip }}@endif"
+        },
+        "en_GB": {
+            "subject": "Two-factor authentication code",
+            "button": "Continue login",
+            "body": "Your two-factor authentication code is: <strong>{{ $code }}</strong><br/>\nThis code is valid for {{ $expires_in }} minutes.<br/>\n@if($ip)<strong>IP address</strong>: {{ $ip }}@endif"
+        },
+        "es_ES": {
+            "subject": "Código de autenticación en dos factores",
+            "button": "Continuar inicio de sesión",
+            "body": "Su código de autenticación en dos factores es: <strong>{{ $code }}</strong><br/>\nEste código es válido durante {{ $expires_in }} minutos.<br/>\n@if($ip)<strong>Dirección IP</strong>: {{ $ip }}@endif"
         }
     },
     "support_admin_ticket_created": {

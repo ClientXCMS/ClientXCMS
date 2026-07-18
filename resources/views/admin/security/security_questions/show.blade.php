@@ -53,4 +53,5 @@
             </div>
         @endif
     </div>
+    @include('admin/translations/overlay', ['item' => $item])
 @endsection

@@ -84,6 +84,12 @@ class ServiceRenewals extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const STATUS_PENDING = 'pending';
+
+    public const STATUS_PAID = 'paid';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
     protected $fillable = [
         'service_id',
         'invoice_id',
@@ -93,6 +99,11 @@ class ServiceRenewals extends Model
         'next_billing_on',
         'period',
         'first_period',
+        'status',
+    ];
+
+    protected $attributes = [
+        'status' => self::STATUS_PENDING,
     ];
 
     protected $casts = [
@@ -101,6 +112,27 @@ class ServiceRenewals extends Model
         'renewed_at' => 'datetime',
         'next_billing_on' => 'datetime',
     ];
+
+    /**
+     * Soft-cancel any pending renewal row attached to the given invoice.
+     * Invoked from InvoiceObserver when an invoice is cancelled/refunded/failed
+     * so the partial unique index never blocks a brand new renewal attempt.
+     */
+    public static function cancelPendingForInvoice(int $invoiceId): int
+    {
+        $rows = self::where('invoice_id', $invoiceId)
+            ->whereNull('renewed_at')
+            ->where('status', self::STATUS_PENDING)
+            ->get();
+
+        foreach ($rows as $row) {
+            $row->status = self::STATUS_CANCELLED;
+            $row->save();
+            $row->delete(); // soft delete — releases the pending_lock_key
+        }
+
+        return $rows->count();
+    }
 
     public function service()
     {

@@ -159,6 +159,7 @@ class ProductController extends AbstractCrudController
 
     public function destroy(Product $product)
     {
+        $this->checkPermission('delete');
         Pricing::where('related_id', $product->id)->where('related_type', 'product')->delete();
         $product->delete();
 
