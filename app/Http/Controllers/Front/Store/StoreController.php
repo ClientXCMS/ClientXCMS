@@ -42,7 +42,6 @@ class StoreController extends Controller
 
     public function index()
     {
-        aa
         $groups = Group::getAvailable()->whereNull('parent_id')->orderBy('sort_order')->with('products')->get();
         $subtitle = trans('store.subtitle');
         $title = trans('store.title');
