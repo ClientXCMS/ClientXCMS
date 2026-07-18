@@ -133,7 +133,7 @@
         <div class="flex justify-between">
             <div>
                 <h4 class="font-semibold uppercase text-gray-600 dark:text-gray-400">
-                    {{ __('admin.locales.countries.title') }}
+                    {{ __('admin.locales.countries.field') }}
                 </h4>
                 <p class="mb-2 font-semibold text-gray-600 dark:text-gray-400">
                     {{ __('admin.locales.countries.description') }}

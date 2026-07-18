@@ -81,8 +81,7 @@
                                     </div>
 
                                     <div class="col-span-2">
-
-                                        <label for="editor" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">{{ __('global.content') }} <span class="text-xs text-gray-500">(Markdown + aperçu WYSIWYG)</span></label>
+                                        <label for="editor" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">{{ __('global.content') }}</label>
                                         <textarea class="editor" data-autofocus="true" name="content">{{ old('content', $content) }}</textarea>
 
                                     @if ($errors->has('content'))
@@ -95,7 +94,7 @@
                                     </div>
                                     @if (setting('helpdesk_allow_attachments'))
                                     <div class="col-span-2">
-                                        @include('shared/file2', ['name' => 'attachments','multiple' => true, 'label' => __('helpdesk.support.attachments'), 'help' => __('helpdesk.support.attachments_help', ['size' => setting('helpdesk_attachments_max_size'), 'types' => formatted_extension_list(setting('helpdesk_attachments_allowed_types'))])])
+                                        @include('shared/file2', ['name' => 'attachments','multiple' => true, 'label' => __('helpdesk.attachments'), 'help' => __('helpdesk.support.attachments_help', ['size' => setting('helpdesk_attachments_max_size'), 'types' => formatted_extension_list(setting('helpdesk_attachments_allowed_types'))])])
                                     </div>
                                         @endif
                                 </div>

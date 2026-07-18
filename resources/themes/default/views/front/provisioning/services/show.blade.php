@@ -153,13 +153,12 @@
                                         {{ __('client.services.cancel.index_description') }}
                                     </p>
                                     @include('shared/select', ['name' => 'reason', 'label' => __('client.services.cancel.reason'), 'options' => \App\Models\Provisioning\CancellationReason::getReasons(), 'value' => old('reason')])
-                                    @include('shared/textarea', ['name' => 'message', 'label' => __('client.services.cancel.message'), 'value' => old('message')])
+                                    @include('shared/textarea', ['name' => 'details', 'label' => __('client.services.cancel.message'), 'value' => old('details')])
                                     <div id="cancel-expiration-wrapper" class="{{ $service->isOnetime() ? 'hidden' : '' }}">
                                         @if (!$service->isOnetime())
                                             @include('shared/select', ['name' => 'expiration', 'label' => __('client.services.cancel.expiration'), 'options' => $expirationOptions, 'value' => old('expiration')])
                                         @endif
                                     </div>
-                                    <div id="cancel-warning" class="hidden text-sm text-amber-600 dark:text-amber-400 mt-2"></div>
                                     <div class="flex">
                                         <button type="button" data-hs-overlay="#hs-cancel" class="mt-2 mr-3 py-3 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-green-500 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
                                             {{ __('client.services.cancel.back') }}
@@ -167,10 +166,8 @@
                                         <button id="cancel-submit-btn" type="submit" class="mt-2 py-2 px-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-red-500 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
                                             {{ __('client.services.cancel.index') }}
                                         </button>
-                                        <a id="cancel-open-support-btn" href="{{ route('front.support.create') }}" class="hidden mt-2 py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-amber-600 shadow-sm hover:bg-gray-50 dark:bg-slate-900 dark:border-gray-700 dark:hover:bg-gray-800">
-                                            {{ __('provisioning.cancellation.requires_ticket') }}
-                                        </a>
                                     </div>
+                                    <div id="cancel-warning" class="hidden mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400"></div>
                                 </form>
                                 <script>
                                     document.addEventListener('DOMContentLoaded', function () {
@@ -180,7 +177,6 @@
                                         const expirationSelect = document.getElementById('expiration');
                                         const warning = document.getElementById('cancel-warning');
                                         const submitBtn = document.getElementById('cancel-submit-btn');
-                                        const supportBtn = document.getElementById('cancel-open-support-btn');
                                         const isOneTime = @json($service->isOnetime());
                                         const isExpired = @json($service->expires_at !== null && $service->expires_at->isPast());
 
@@ -215,7 +211,6 @@
                                             warning.textContent = '';
                                             submitBtn.classList.remove('hidden');
                                             submitBtn.disabled = false;
-                                            supportBtn.classList.add('hidden');
 
                                             if (!isOneTime) {
                                                 expirationWrapper.classList.remove('hidden');
@@ -223,9 +218,9 @@
                                             }
 
                                             if (mode === 'support_ticket') {
-                                                submitBtn.classList.add('hidden');
-                                                supportBtn.classList.remove('hidden');
                                                 expirationWrapper.classList.add('hidden');
+                                                warning.textContent = @json(__('provisioning.cancellation.requires_ticket'));
+                                                warning.classList.remove('hidden');
                                             }
 
                                             if (mode === 'after_expiration' && !isExpired) {

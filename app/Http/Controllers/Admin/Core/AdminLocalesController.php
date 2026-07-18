@@ -32,8 +32,17 @@ class AdminLocalesController extends Controller
     {
         staff_aborts_permission(Permission::MANAGE_SETTINGS);
         $locales = LocaleService::getLocales(false);
-        $countries = Countries::allNames();
         $enabledCountries = Countries::enabledCodes();
+        $countries = Countries::allNames();
+        $enabledCountryNames = [];
+
+        foreach ($enabledCountries as $code) {
+            if (isset($countries[$code])) {
+                $enabledCountryNames[$code] = $countries[$code];
+            }
+        }
+
+        $countries = $enabledCountryNames + $countries;
         $card = app('settings')->getCards()->firstWhere('uuid', 'core');
         if (! $card) {
             abort(404);

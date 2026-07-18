@@ -20,6 +20,22 @@ class AdminLocaleControllerTest extends \Tests\TestCase
         $response->assertStatus(200);
     }
 
+    public function test_enabled_countries_are_displayed_first(): void
+    {
+        Storage::fake('local');
+        Storage::put('enabled_countries.json', json_encode(['FR', 'BE']));
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+        $admin = \App\Models\Admin\Admin::first();
+
+        $response = $this->actingAs($admin, 'admin')->get(route('admin.locales.index'));
+
+        $response->assertOk();
+        $this->assertSame(
+            ['FR', 'BE'],
+            array_slice(array_keys($response->viewData('countries')), 0, 2)
+        );
+    }
+
     public function test_admin_locale_update(): void
     {
         $this->seed(\Database\Seeders\AdminSeeder::class);
