@@ -37,6 +37,48 @@
             </div>
         </div>
     </div>
+    <div id="post-update-steps" class="card mb-6 hidden" role="status">
+        <div class="flex items-start gap-3">
+            <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
+                <i class="bi bi-check-lg text-xl"></i>
+            </span>
+            <div class="grow">
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                    {{ __('admin.update.post_update_title') }}
+                </h2>
+                <p id="post-update-result" class="mt-1 text-sm text-green-600 dark:text-green-400"></p>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {{ __('admin.update.post_update_message') }}
+                </p>
+
+                <div class="mt-4 space-y-4">
+                    <div class="flex flex-col gap-3 rounded-lg border border-gray-200 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-gray-700">
+                        <div class="flex items-start gap-3">
+                            <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">1</span>
+                            <div>
+                                <p class="font-medium text-gray-800 dark:text-gray-200">{{ __('admin.update.download_translations') }}</p>
+                                <p id="translation-download-status" class="text-sm text-gray-500 dark:text-gray-400"></p>
+                            </div>
+                        </div>
+                        <button id="download-update-translations" type="button" class="btn btn-secondary inline-flex items-center justify-center gap-2">
+                            <i class="bi bi-translate"></i>
+                            {{ __('admin.update.download_translations') }}
+                        </button>
+                    </div>
+
+                    <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                        <div class="flex items-start gap-3">
+                            <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">2</span>
+                            <div class="min-w-0">
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('admin.update.build_assets_message') }}</p>
+                                <code class="mt-2 block rounded-md bg-gray-900 px-3 py-2 text-sm text-gray-100">npm install && npm run build</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     @if ($publishedVersions)
         @php
             $icons = [
@@ -217,42 +259,91 @@
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const postUpdateSteps = document.getElementById('post-update-steps');
+        const postUpdateResult = document.getElementById('post-update-result');
+        const translationsButton = document.getElementById('download-update-translations');
+        const translationsStatus = document.getElementById('translation-download-status');
+        const translationDownloadUrl = @json(route('admin.update.translations'));
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+            || document.querySelector('input[name="_token"]')?.value;
         const ajaxForms = document.querySelectorAll('.ajax-extension-form');
+
         ajaxForms.forEach(form => {
-            form.addEventListener('submit', function(event) {
+            form.addEventListener('submit', async function(event) {
                 event.preventDefault();
                 const submitButton = form.querySelector('button');
                 const originalButtonContent = submitButton.innerHTML;
                 submitButton.disabled = true;
                 submitButton.innerHTML = `
-        <span class="inline-flex items-center">
-            <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            {{ __('extensions.settings.processing') }}
+                    <span class="inline-flex items-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {{ __('extensions.settings.processing') }}
                     </span>
-    `;
-                fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: new FormData(form)
-                }).then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        return Promise.reject(new Error('Internal error.'));
+                `;
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: new FormData(form)
+                    });
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Internal error.');
                     }
-                }).catch(error => {
+
+                    postUpdateResult.textContent = data.message;
+                    postUpdateSteps.classList.remove('hidden');
+                    postUpdateSteps.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } catch (error) {
                     console.error(error);
-                    alert('{{ __('
-                        extensions.settings.processing_error ') }}');
+                    alert(error.message || @json(__('extensions.settings.processing_error')));
+                } finally {
                     submitButton.disabled = false;
                     submitButton.innerHTML = originalButtonContent;
-                });
+                }
             });
+        });
+
+        translationsButton?.addEventListener('click', async function() {
+            const originalButtonContent = translationsButton.innerHTML;
+            translationsButton.disabled = true;
+            translationsButton.innerHTML = `<i class="bi bi-arrow-repeat animate-spin"></i> {{ __('admin.update.translations_downloading') }}`;
+            translationsStatus.className = 'text-sm text-gray-500 dark:text-gray-400';
+            translationsStatus.textContent = @json(__('admin.update.translations_downloading'));
+
+            try {
+                const response = await fetch(translationDownloadUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message);
+                }
+
+                translationsStatus.className = 'text-sm text-green-600 dark:text-green-400';
+                translationsStatus.textContent = data.message;
+            } catch (error) {
+                console.error(error);
+                translationsStatus.className = 'text-sm text-red-600 dark:text-red-400';
+                translationsStatus.textContent = error.message || @json(__('admin.update.translations_download_error'));
+            } finally {
+                translationsButton.disabled = false;
+                translationsButton.innerHTML = originalButtonContent;
+            }
         });
     });
 </script>

@@ -25,7 +25,7 @@
     @yield('styles')
     @vite('resources/themes/default/css/app.scss')
     @vite('resources/themes/default/js/app.js')
-    @vite('resources/global/css/a11y.css')
+    @include('shared.a11y-styles')
     {!! app('seo')->head('front', $meta_append ?? null) !!}
     {!! app('seo')->favicon('front') !!}
     <meta charset="utf-8">

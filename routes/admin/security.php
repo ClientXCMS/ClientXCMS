@@ -34,6 +34,7 @@ Route::get('/database', [DatabaseController::class, 'index'])->name('database.in
 Route::post('/database', [DatabaseController::class, 'migrate']);
 Route::get('/update', [UpdateController::class, 'index'])->name('update.index');
 Route::post('/update', [UpdateController::class, 'update'])->name('update');
+Route::post('/update/translations', [UpdateController::class, 'downloadTranslations'])->name('update.translations');
 
 Route::resource('/logs', ActionsLogController::class)->names('logs')->except('edit', 'update', 'delete', 'create', 'store');
 Route::get('/license', [LicenseController::class, 'index'])->name('license.index')->middleware('password.confirm:admin.password.confirm');
