@@ -24,6 +24,21 @@ jobs:
     if: github.event_name == 'release'
     permissions:
       contents: write
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: clientxcms_release
+          MYSQL_USER: clientxcms
+          MYSQL_PASSWORD: clientxcms
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -58,6 +73,11 @@ jobs:
       - name: Build assets
         run: npm run build
 
+      - name: Prepare Laravel for release
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+
       - name: Import translations
         run: |
           php artisan translations:import 2>&1 | tee /tmp/translations-import.log
@@ -65,18 +85,48 @@ jobs:
             exit 1
           fi
 
+      - name: Generate SQL schema
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: clientxcms_release
+          DB_USERNAME: clientxcms
+          DB_PASSWORD: clientxcms
+        run: |
+          php artisan migrate:fresh --force --no-interaction --no-ansi
+          mysqldump \
+            --host="${DB_HOST}" \
+            --port="${DB_PORT}" \
+            --user="${DB_USERNAME}" \
+            --password="${DB_PASSWORD}" \
+            --skip-comments \
+            --skip-add-locks \
+            --skip-disable-keys \
+            --compact \
+            "${DB_DATABASE}" > database/clientxcms.sql
+
       - name: Prepare release archive
         run: |
           RELEASE_TAG="${{ github.event.release.tag_name }}"
           ARTIFACT_NAME="clientxcms-${RELEASE_TAG//\//-}.zip"
+          SQL_ARTIFACT_NAME="clientxcms-${RELEASE_TAG//\//-}.sql"
           echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> "${GITHUB_ENV}"
+          echo "SQL_ARTIFACT_NAME=${SQL_ARTIFACT_NAME}" >> "${GITHUB_ENV}"
+          mv database/clientxcms.sql "${SQL_ARTIFACT_NAME}"
           mkdir -p release/clientxcms
           rsync -a ./ release/clientxcms/ \
             --exclude='.git' \
             --exclude='.github' \
             --exclude='.env' \
+            --exclude='.env.testing' \
+            --exclude='.phpunit.result.cache' \
+            --exclude='tests' \
             --exclude='node_modules' \
+            --exclude='phpunit.xml' \
+            --exclude='phpunit_github.xml' \
             --exclude='release' \
+            --exclude="${SQL_ARTIFACT_NAME}" \
             --exclude='storage/logs/*' \
             --exclude='storage/framework/cache/data/*' \
             --exclude='storage/framework/sessions/*' \
@@ -84,10 +134,22 @@ jobs:
           cd release
           zip -r "../${ARTIFACT_NAME}" clientxcms
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: clientxcms-release-assets
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            ${{ env.ARTIFACT_NAME }}
+            ${{ env.SQL_ARTIFACT_NAME }}
+
       - name: Upload compiled release asset
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.ARTIFACT_NAME }}
+          files: |
+            ${{ env.ARTIFACT_NAME }}
+            ${{ env.SQL_ARTIFACT_NAME }}
 
   unit-test:
     name: Unit testing
