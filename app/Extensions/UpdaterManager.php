@@ -34,9 +34,8 @@ class UpdaterManager
     private const ALLOWED_PREFIXES = [
         'modules/',
         'addons/',
-        'themes/',
-        'email_templates/',
-        'invoice_templates/',
+        'resources/themes/',
+        'resources/views/vendor/notifications/',
     ];
 
     public function update(string $uuid)
