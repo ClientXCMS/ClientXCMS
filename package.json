@@ -18,7 +18,7 @@
     "dependencies": {
         "@grafikart/drop-files-element": "^1.0.9",
         "@preline/accordion": "^4.2.0",
-        "@preline/collapse": "2.0.2",
+        "@preline/collapse": "4.2.0",
         "@preline/combobox": "^4.2.0",
         "@preline/select": "^3.0.0",
         "@tailwindcss/forms": "^0.5.11",
