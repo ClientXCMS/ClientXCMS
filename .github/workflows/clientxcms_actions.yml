@@ -100,6 +100,9 @@ jobs:
             --port="${DB_PORT}" \
             --user="${DB_USERNAME}" \
             --password="${DB_PASSWORD}" \
+            --no-data \
+            --no-tablespaces \
+            --single-transaction \
             --skip-comments \
             --skip-add-locks \
             --skip-disable-keys \
@@ -113,20 +116,42 @@ jobs:
           SQL_ARTIFACT_NAME="clientxcms-${RELEASE_TAG//\//-}.sql"
           echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> "${GITHUB_ENV}"
           echo "SQL_ARTIFACT_NAME=${SQL_ARTIFACT_NAME}" >> "${GITHUB_ENV}"
-          mv database/clientxcms.sql "${SQL_ARTIFACT_NAME}"
+          cp database/clientxcms.sql "${SQL_ARTIFACT_NAME}"
           mkdir -p release/clientxcms
           rsync -a ./ release/clientxcms/ \
+            --exclude='.agents' \
+            --exclude='.codex' \
+            --exclude='.editorconfig' \
             --exclude='.git' \
+            --exclude='.gitattributes' \
             --exclude='.github' \
+            --exclude='.gitignore' \
+            --exclude='.idea' \
             --exclude='.env' \
             --exclude='.env.testing' \
             --exclude='.phpunit.result.cache' \
+            --exclude='AGENTS.md' \
+            --exclude='Dockerfile' \
+            --exclude='README.md' \
+            --exclude='SECURITY.md' \
+            --exclude='_ide_helper.php' \
+            --exclude='clientxcms-worker.log' \
+            --exclude='composer.phar' \
+            --exclude='docker-compose.yml' \
+            --exclude='docker-compose.example.yml' \
+            --exclude='docs' \
             --exclude='tests' \
             --exclude='node_modules' \
+            --exclude='package.json' \
+            --exclude='package-lock.json' \
             --exclude='phpunit.xml' \
             --exclude='phpunit_github.xml' \
+            --exclude='pint.json' \
+            --exclude='postcss.config.js' \
             --exclude='release' \
             --exclude="${SQL_ARTIFACT_NAME}" \
+            --exclude='tailwind.config.js' \
+            --exclude='vite.config.js' \
             --exclude='storage/logs/*' \
             --exclude='storage/framework/cache/data/*' \
             --exclude='storage/framework/sessions/*' \

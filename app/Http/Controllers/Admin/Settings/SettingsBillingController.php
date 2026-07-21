@@ -49,7 +49,9 @@ class SettingsBillingController extends Controller
             'invoice_terms' => 'textarea',
         ];
         $tmpcountries = Countries::names();
-        $countries = collect(TaxesService::arrayVatPercents())->mapWithKeys(function ($item, $key) use ($tmpcountries) {
+        $countries = collect(TaxesService::arrayVatPercents())->filter(function ($item, $key) use ($tmpcountries) {
+            return isset($tmpcountries[$key]);
+        })->mapWithKeys(function ($item, $key) use ($tmpcountries) {
             return [$key => $tmpcountries[$key].' ('.$item.'%)'];
         });
         $rates = [
