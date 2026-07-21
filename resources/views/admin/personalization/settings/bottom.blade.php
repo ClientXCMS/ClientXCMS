@@ -177,12 +177,11 @@
             </ul>
         @endif
     </div>
-    </div>
 
     <div class="card mt-4">
         <div class="card-heading">
             <h4 class="font-semibold uppercase text-gray-600 dark:text-gray-400">
-                {{ __('personalization.bottom_menu.footer_settings') }}
+                {{ __('personalization.menu_links.bottom_menu.footer_settings') }}
             </h4>
         </div>
 
