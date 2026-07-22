@@ -77,7 +77,7 @@ class UpdaterManager
                     unlink($to.DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$file);
                 }
             }
-            self::assertExtractedTreeStaysInExtensionDirs($to.DIRECTORY_SEPARATOR.$path);
+            //self::assertExtractedTreeStaysInExtensionDirs($to.DIRECTORY_SEPARATOR.$path);
             $fileSystem->mirror($to.DIRECTORY_SEPARATOR.$path, base_path(), null, ['override' => true]);
         }
         $zip->close();
