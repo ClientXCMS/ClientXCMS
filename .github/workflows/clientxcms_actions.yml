@@ -4,6 +4,7 @@ on:
   release:
     types:
       - published
+      - edited
   push:
     branches:
       - master
@@ -21,7 +22,7 @@ jobs:
   release-build:
     name: Build release asset
     runs-on: ubuntu-latest
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' && github.event.release.draft == false
     permissions:
       contents: write
     services:
@@ -42,6 +43,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -172,6 +175,8 @@ jobs:
       - name: Upload compiled release asset
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.release.tag_name }}
+          overwrite_files: true
           files: |
             ${{ env.ARTIFACT_NAME }}
             ${{ env.SQL_ARTIFACT_NAME }}
