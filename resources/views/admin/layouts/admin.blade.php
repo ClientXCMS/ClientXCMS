@@ -33,9 +33,6 @@
 </head>
 
 <body class="bg-gray-50 dark:bg-slate-900 {{ is_darkmode(true) ? 'dark' : '' }} h-full">
-@if (Vite::isRunningHot() || $manifestHasA11yAsset)
-    <a href="#content" class="a11y-skip-link">{{ __('a11y.skip_to_content') }}</a>
-@endif
 <header class="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full bg-white border-b text-sm py-2.5 sm:py-4 dark:bg-slate-900 dark:border-gray-700">
     <nav class="max-w-7xl flex basis-full items-center w-full mx-auto px-4 sm:px-6 lg:px-8" aria-label="Global">
 
