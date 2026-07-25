@@ -146,6 +146,35 @@ class AccountDeletionServiceTest extends TestCase
         $this->assertTrue($this->service->canDelete($customer));
     }
 
+    public function test_delete_immediately_cancels_service_scheduled_for_end_of_period(): void
+    {
+        $customer = $this->createCustomer();
+
+        $service = Service::create([
+            'customer_id' => $customer->id,
+            'name' => 'Scheduled cancellation',
+            'status' => Service::STATUS_ACTIVE,
+            'type' => 'none',
+            'price' => 10.00,
+            'billing' => 'monthly',
+            'initial_price' => 10.00,
+            'expires_at' => now()->addMonth(),
+            'cancelled_at' => now()->addMonth(),
+            'cancelled_reason' => 'End-of-period cancellation',
+            'is_cancelled' => false,
+        ]);
+
+        $this->assertTrue($this->service->canDelete($customer));
+
+        $this->service->delete($customer);
+
+        $deletedService = Service::withTrashed()->findOrFail($service->id);
+
+        $this->assertTrue((bool) $deletedService->is_cancelled);
+        $this->assertSame(Service::STATUS_CANCELLED, $deletedService->status);
+        $this->assertNotNull($deletedService->deleted_at);
+    }
+
     public function test_delete_throws_exception_when_blocking_reasons_exist(): void
     {
         $customer = $this->createCustomer();

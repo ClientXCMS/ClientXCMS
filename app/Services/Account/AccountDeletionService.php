@@ -42,6 +42,11 @@ class AccountDeletionService
                 Service::STATUS_PENDING,
                 Service::STATUS_SUSPENDED,
             ])
+            ->where(function ($query) {
+                $query->whereNull('cancelled_at')
+                    ->orWhereNull('cancelled_reason')
+                    ->orWhere('is_cancelled', true);
+            })
             ->get();
 
         if ($activeServices->isNotEmpty()) {
@@ -71,6 +76,8 @@ class AccountDeletionService
             );
         }
 
+        $this->cancelScheduledServices($customer);
+
         return DB::transaction(function () use ($customer) {
             ActionLog::log(
                 ActionLog::ACCOUNT_DELETED,
@@ -89,7 +96,6 @@ class AccountDeletionService
                 ]);
 
             $customer->tickets()->update(['customer_id' => null]);
-
             $customer->invoices()->update(['customer_id' => null]);
 
             \App\Models\Store\CouponUsage::where('customer_id', $customer->id)
@@ -105,6 +111,16 @@ class AccountDeletionService
 
             return true;
         });
+    }
+
+    private function cancelScheduledServices(Customer $customer): void
+    {
+        $customer->services(true)
+            ->whereNotNull('cancelled_at')
+            ->whereNotNull('cancelled_reason')
+            ->where('is_cancelled', false)
+            ->get()
+            ->each(fn (Service $service) => $service->markAsCancelled());
     }
 
     public function formatBlockingReasons(array $reasons): string
