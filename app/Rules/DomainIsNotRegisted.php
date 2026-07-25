@@ -40,7 +40,7 @@ class DomainIsNotRegisted implements \Illuminate\Contracts\Validation\Rule
         foreach ($types as $type) {
             if ($type->server() != null) {
                 $server = $type->server();
-                if ($server->isDomainRegistered($value)) {
+                if (method_exists($server, 'isDomainRegistered') && $server->isDomainRegistered($value)) {
                     return false;
                 }
             }

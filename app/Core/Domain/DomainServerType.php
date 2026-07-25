@@ -2,6 +2,7 @@
 
 namespace App\Core\Domain;
 
+use App\Abstracts\AbstractServerType;
 use App\Contracts\Provisioning\ImportServiceInterface;
 use App\Contracts\Provisioning\ServerTypeInterface;
 use App\DTO\Provisioning\ConnectionResponse;
@@ -15,7 +16,7 @@ use App\Services\Domain\DomainRegistrarManager;
 use App\Services\Store\RecurringService;
 use GuzzleHttp\Psr7\Response;
 
-class DomainServerType implements ServerTypeInterface
+class DomainServerType extends AbstractServerType implements ServerTypeInterface
 {
     public function uuid(): string
     {
