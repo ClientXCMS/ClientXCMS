@@ -38,4 +38,4 @@
             {{ __('global.showing') }} {{ $items->firstItem() }} - {{ $items->lastItem() }} {{ __('global.of') }} {{ $items->total() }} {{ __('global.results') }}
         </span>
     </div>
-</div>
+</div>  
