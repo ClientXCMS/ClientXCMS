@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->uuid();
             $table->string('user_id')->nullable();
+            $table->string('ip_address')->nullable();
             $table->dateTime('completed_at')->nullable();
             $table->timestamps();
         });

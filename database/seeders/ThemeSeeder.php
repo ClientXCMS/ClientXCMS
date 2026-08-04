@@ -10,6 +10,8 @@ use Illuminate\Database\Seeder;
 
 class ThemeSeeder extends Seeder
 {
+    private const MAX_MAPPING_FILE_SIZE = 1_048_576;
+
     /**
      * Run the database seeds.
      */
@@ -39,41 +41,124 @@ class ThemeSeeder extends Seeder
 
     }
 
-    private function seedMenus()
+    private function seedMenus(): void
     {
         $themes = app('theme')->getThemes();
         foreach ($themes as $theme) {
             $path = $theme->path.'/menus.json';
-            if (file_exists($path)) {
-                $menus = json_decode(file_get_contents($path), true);
-                if ($menus === null) {
-                    logger()->info('[ThemeSeeder] Unable to parse menus.json for theme '.$theme->name);
+            if (! is_file($path)) {
+                continue;
+            }
+
+            $menus = $this->readMappingFile($path, $theme->name);
+            if ($menus === null || array_is_list($menus)) {
+                logger()->warning('[ThemeSeeder] menus.json must contain an object indexed by menu type.', [
+                    'path' => $path,
+                    'theme' => $theme->name,
+                ]);
+
+                continue;
+            }
+
+            foreach ($menus as $type => $menuList) {
+                if (! is_string($type) || preg_match('/^[A-Za-z0-9_-]{1,64}$/', $type) !== 1 || ! is_array($menuList) || ! array_is_list($menuList)) {
+                    $this->logInvalidMapping($path, $theme->name, (string) $type, 'invalid menu type or menu list');
 
                     continue;
                 }
-                if (is_array($menus)) {
-                    foreach ($menus as $type => $menuList) {
-                        foreach ($menuList as $menu) {
-                            if (MenuLink::where('type', $type)->where('name', $menu['name'])->exists()) {
-                                continue;
-                            }
-                            $created = MenuLink::create([
-                                'name' => $menu['name'],
-                                'url' => $menu['url'] ?? '#',
-                                'icon' => $menu['icon'] ?? null,
-                                'type' => $type,
-                                'position' => $menu['position'] ?? 0,
-                            ]);
-                            if (array_key_exists('metadata', $menu) && is_array($menu['metadata'])) {
-                                foreach ($menu['metadata'] as $key => $value) {
-                                    $created->attachMetadata($key, $value);
-                                }
-                            }
+
+                foreach ($menuList as $index => $menu) {
+                    if (! $this->isValidMenu($menu)) {
+                        $this->logInvalidMapping($path, $theme->name, $type.'.'.$index, 'invalid menu entry');
+
+                        continue;
+                    }
+
+                    if (MenuLink::where('type', $type)->where('name', $menu['name'])->exists()) {
+                        continue;
+                    }
+
+                    $created = MenuLink::create([
+                        'name' => $menu['name'],
+                        'url' => $menu['url'] ?? $menu['link'] ?? '#',
+                        'icon' => $menu['icon'] ?? null,
+                        'type' => $type,
+                        'position' => $menu['position'] ?? 0,
+                    ]);
+
+                    foreach ($menu['metadata'] ?? [] as $key => $value) {
+                        if (! is_string($key) || $key === '' || strlen($key) > 255 || (! is_scalar($value) && $value !== null)) {
+                            $this->logInvalidMapping($path, $theme->name, $type.'.'.$index.'.metadata', 'invalid metadata entry');
+
+                            continue;
                         }
+
+                        $created->attachMetadata($key, $value);
                     }
                 }
             }
         }
+    }
+
+    private function readMappingFile(string $path, string $theme): ?array
+    {
+        if (! is_readable($path)) {
+            logger()->warning('[ThemeSeeder] Unable to safely read menus.json.', compact('path', 'theme'));
+
+            return null;
+        }
+
+        $size = filesize($path);
+        if ($size === false || $size > self::MAX_MAPPING_FILE_SIZE) {
+            logger()->warning('[ThemeSeeder] Unable to safely read menus.json.', compact('path', 'theme', 'size'));
+
+            return null;
+        }
+
+        $contents = file_get_contents($path);
+        if ($contents === false) {
+            logger()->warning('[ThemeSeeder] Unable to read menus.json.', compact('path', 'theme'));
+
+            return null;
+        }
+
+        try {
+            $menus = json_decode($contents, true, 32, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            logger()->warning('[ThemeSeeder] Unable to parse menus.json.', [
+                'path' => $path,
+                'theme' => $theme,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
+
+        return is_array($menus) ? $menus : null;
+    }
+
+    private function isValidMenu(mixed $menu): bool
+    {
+        if (! is_array($menu) || ! isset($menu['name']) || ! is_string($menu['name']) || trim($menu['name']) === '' || strlen($menu['name']) > 255) {
+            return false;
+        }
+
+        foreach (['url', 'link', 'icon'] as $key) {
+            if (array_key_exists($key, $menu) && $menu[$key] !== null && (! is_string($menu[$key]) || strlen($menu[$key]) > 255)) {
+                return false;
+            }
+        }
+
+        if (array_key_exists('position', $menu) && (! is_int($menu['position']) || $menu['position'] < 0)) {
+            return false;
+        }
+
+        return ! array_key_exists('metadata', $menu) || is_array($menu['metadata']);
+    }
+
+    private function logInvalidMapping(string $path, string $theme, string $entry, string $reason): void
+    {
+        logger()->warning('[ThemeSeeder] Invalid menus.json mapping skipped.', compact('path', 'theme', 'entry', 'reason'));
     }
 
     private function createSocialNetwork(string $icon, string $name, string $url): void

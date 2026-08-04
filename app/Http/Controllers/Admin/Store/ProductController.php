@@ -81,7 +81,11 @@ class ProductController extends AbstractCrudController
         $params['groups'] = Group::all()->pluck('name', 'id')->toArray();
         $params['pricing'] = Pricing::where('related_id', $product->id)->where('related_type', 'product')->first();
         $params['recurrings'] = (new RecurringService)->getRecurrings();
-        $params['configForm'] = $product->productType()->config() ? $product->productType()->config()->render($product) : null;
+        try {
+            $params['configForm'] = $product->productType()->config() ? $product->productType()->config()->render($product) : null;
+        } catch (\Exception $e) {
+            $params['configForm'] = $e->getMessage();
+        }
         if ($params['pricing'] == null) {
             $params['pricing'] = new Pricing;
         }
