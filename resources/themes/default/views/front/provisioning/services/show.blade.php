@@ -26,6 +26,9 @@
 @section('content')
     <div class="max-w-[85rem] py-5 lg:py-7 mx-auto"
          data-service-live
+         @if (isset($current_tab) && $current_tab)
+             data-current-tab="{{ $current_tab->uuid }}"
+         @endif
          data-status-url="{{ route('front.services.status', ['service' => $service, 'panel' => 1]) }}">
         <div class="flex flex-col md:flex-row gap-4">
         <div class="md:w-3/4">

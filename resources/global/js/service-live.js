@@ -14,6 +14,7 @@ function applySnapshot(root, snapshot) {
 function startWidget(root) {
     const url = root.dataset.statusUrl
     if (!url) return
+    const currentTab = root.dataset.currentTab
     let backoff = POLL_INTERVAL_MS
     let timer = null
 
@@ -25,7 +26,10 @@ function startWidget(root) {
             return
         }
         try {
-            const response = await fetch(url, {
+            const statusUrl = new URL(url, window.location.origin)
+            if (currentTab) statusUrl.searchParams.set('tab', currentTab)
+
+            const response = await fetch(statusUrl, {
                 credentials: 'same-origin',
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             })

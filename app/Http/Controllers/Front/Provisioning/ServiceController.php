@@ -183,7 +183,20 @@ class ServiceController extends Controller
         ];
 
         if ($request->boolean('panel')) {
-            $data['panel_html'] = (string) ProvisioningTabDTO::renderPanel($service);
+            $tabUuid = $request->query('tab');
+
+            if (is_string($tabUuid) && $tabUuid !== '') {
+                $panel = $service->productType()->panel();
+                $currentTab = $panel?->getTab($service, $tabUuid);
+
+                if ($currentTab === null) {
+                    abort(404);
+                }
+
+                $data['panel_html'] = (string) $currentTab->renderTab($service);
+            } else {
+                $data['panel_html'] = (string) ProvisioningTabDTO::renderPanel($service);
+            }
         }
 
         return response()->json($data);
