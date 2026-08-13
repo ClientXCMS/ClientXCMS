@@ -29,6 +29,7 @@ use App\Models\Admin\Setting;
 use App\Rules\NotContainRule;
 use App\Services\Core\LocaleService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SettingsCoreController extends Controller
 {
@@ -80,38 +81,27 @@ class SettingsCoreController extends Controller
             'mail_salutation' => 'required|string|max:255',
             'mail_greeting' => 'required|string|max:255',
             'mail_domain' => 'required|string|max:255',
+            'mail_smtp_host' => [Rule::requiredIf($request->boolean('mail_smtp_enable')), 'nullable', 'string', 'max:1000', new \App\Rules\PublicSmtpHost],
+            'mail_smtp_port' => [Rule::requiredIf($request->boolean('mail_smtp_enable')), 'nullable', 'integer', 'between:1,65535'],
+            'mail_smtp_username' => 'nullable|string|max:1000',
+            'mail_smtp_password' => ['nullable', 'string', 'max:1000', new NotContainRule(['"'])],
+            'mail_smtp_encryption' => [Rule::requiredIf($request->boolean('mail_smtp_enable')), 'nullable', 'string', 'in:tls,ssl,none'],
         ]);
-        if ($request->has('mail_smtp_enable') || ($request->filled('mail_smtp_host'))) {
-            $data['mail_smtp_enable'] = true;
-            if (! $request->has('mail_smtp_enable') && getenv('MAIL_MAILER') == 'smtp') {
-                $data['mail_smtp_enable'] = false;
-            }
-            $data = $data + $this->validate($request, [
-                'mail_smtp_host' => ['required', 'string', 'max:1000', new \App\Rules\PublicSmtpHost],
-                'mail_smtp_port' => 'required|integer|between:1,65535',
-                'mail_smtp_username' => 'string|nullable|max:1000',
-                'mail_smtp_password' => ['string', 'nullable', 'max:1000', new NotContainRule(['"'])],
-                'mail_smtp_encryption' => 'required|string|in:tls,ssl,none',
-            ]);
-            EnvEditor::updateEnv([
-                'MAIL_HOST' => $data['mail_smtp_host'],
-                'MAIL_PORT' => $data['mail_smtp_port'],
-                'MAIL_USERNAME' => $data['mail_smtp_username'],
-                'MAIL_PASSWORD' => $data['mail_smtp_password'],
-                'MAIL_ENCRYPTION' => $data['mail_smtp_encryption'],
-            ]);
-        } else {
-            $data['mail_smtp_enable'] = false;
-        }
-        $mailer = $data['mail_smtp_enable'] == 1 ? 'smtp' : 'sendmail';
-        if (array_key_exists('mail_disable_mail', $request->all())) {
-            $mailer = 'log';
-        }
+
+        $mailer = $request->boolean('mail_disable_mail')
+            ? 'log'
+            : ($request->boolean('mail_smtp_enable') ? 'smtp' : 'sendmail');
+
         EnvEditor::updateEnv([
             'MAIL_MAILER' => $mailer,
             'MAIL_FROM_ADDRESS' => $data['mail_from_address'],
             'MAIL_FROM_NAME' => $data['mail_from_name'],
             'APP_URL' => $data['mail_domain'],
+            'MAIL_HOST' => $data['mail_smtp_host'] ?? '',
+            'MAIL_PORT' => $data['mail_smtp_port'] ?? '',
+            'MAIL_USERNAME' => $data['mail_smtp_username'] ?? '',
+            'MAIL_PASSWORD' => $data['mail_smtp_password'] ?? '',
+            'MAIL_ENCRYPTION' => $data['mail_smtp_encryption'] ?? '',
         ]);
         Setting::updateSettings($request->only('mail_greeting', 'mail_salutation'));
 

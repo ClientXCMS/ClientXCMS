@@ -79,6 +79,10 @@ class ProvisioningTabDTO
 
     public function route(int $serviceId, bool $admin = false): string
     {
+        if ($this->url !== null) {
+            return $this->url;
+        }
+
         if ($this->uuid == 'services') {
             if ($admin) {
                 return route('admin.services.show', ['service' => $serviceId]);
