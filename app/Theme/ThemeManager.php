@@ -20,8 +20,8 @@
 namespace App\Theme;
 
 use App\DTO\Core\Extensions\ExtensionThemeDTO;
-use App\Exceptions\ThemeInvalidException;
 use App\Extensions\ExtensionManager;
+use App\Exceptions\ThemeInvalidException;
 use App\Models\Admin\Setting;
 use App\Models\Personalization\MenuLink;
 use App\Models\Personalization\Section;

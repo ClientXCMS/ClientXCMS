@@ -75,12 +75,13 @@ class ThemeManagerTest extends TestCase
         } finally {
             Container::setInstance($previousContainer);
             Facade::setFacadeApplication($previousFacadeApplication);
-            @rmdir($themePath.'/lang');
-            @rmdir($themePath);
         }
     }
+
     private function resolve(?string $configuredTheme, array $enabledThemes): ExtensionThemeDTO
     {
+        $themes = array_map(function (string $uuid) {
+            $theme = new ExtensionThemeDTO;
             $theme->uuid = $uuid;
 
             return $theme;
