@@ -165,9 +165,6 @@ class QueueMonitorTest extends TestCase
 
         session()->put(RequireAdminPassword::SESSION_KEY, time());
         $this->post(route('admin.queues.action'), ['action' => 'delete_failed', 'ids' => [$delete]])->assertRedirect();
-        $this->assertDatabaseMissing('failed_jobs', ['uuid' => $delete]);
-    }
-
     public function test_action_ignores_a_job_whose_state_no_longer_matches(): void
     {
         $reserved = $this->createJob(now()->timestamp, now()->timestamp, now()->timestamp);

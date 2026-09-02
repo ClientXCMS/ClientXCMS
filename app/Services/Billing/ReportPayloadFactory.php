@@ -11,7 +11,7 @@ class ReportPayloadFactory
 {
     public function make(EReportingPeriod $period): ReportPayload
     {
-        $rows = $period->entries()->orderBy('fiscal_date')->get()->groupBy(fn ($entry) => implode('|', [$entry->fiscal_date->toDateString(), $entry->country, $entry->customer_scope, $entry->vat_rate, $entry->tax_category, $entry->operation_category]))->map(function ($entries) {
+        $rows = $period->entries()->orderBy('fiscal_date')->get()->groupBy(fn($entry) => implode('|', [$entry->fiscal_date->toDateString(), $entry->country, $entry->customer_scope, $entry->vat_rate, $entry->tax_category, $entry->operation_category]))->map(function ($entries) {
             $first = $entries->first();
 
             return ['date' => $first->fiscal_date->toDateString(), 'country' => $first->country, 'customer_scope' => $first->customer_scope, 'vat_rate' => $first->vat_rate, 'tax_category' => $first->tax_category, 'operation_category' => $first->operation_category, 'amount_ht' => number_format($entries->sum('amount_ht'), 2, '.', ''), 'amount_tax' => number_format($entries->sum('amount_tax'), 2, '.', ''), 'amount_ttc' => number_format($entries->sum('amount_ttc'), 2, '.', '')];

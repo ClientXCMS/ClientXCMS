@@ -79,11 +79,8 @@ class ThemeManagerTest extends TestCase
             @rmdir($themePath);
         }
     }
-
     private function resolve(?string $configuredTheme, array $enabledThemes): ExtensionThemeDTO
     {
-        $themes = array_map(function (string $uuid) {
-            $theme = new ExtensionThemeDTO;
             $theme->uuid = $uuid;
 
             return $theme;
