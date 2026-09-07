@@ -44,7 +44,7 @@
                                 <i class="bi bi-telephone mr-1"></i>{{ $item->phone }}
                             @endif
                         </p>
-                        <p class="text-xs text-gray-500 dark:text-gray-500">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
                             {{ __($translatePrefix . '.show.subheading', ['date' => $item->created_at->format('d/m/Y')]) }}
                         </p>
                         @if ($item->isBlocked())

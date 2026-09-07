@@ -29,7 +29,7 @@
         <h4 class="font-semibold uppercase text-gray-600 dark:text-gray-400">
             {{ __($card->name) }}
         </h4>
-        <p class="mb-2 font-semibold text-gray-600 dark:text-gray-40">{{ __($card->description) }}</p>
+        <p class="mb-2 font-semibold text-gray-600 dark:text-gray-400">{{ __($card->description) }}</p>
 
         <div class="grid gap-2 md:grid-cols-{{ $card->columns }} lg:grid-cols-{{ $card->columns + 1 }}">
             <!-- Card -->
@@ -42,10 +42,10 @@
                     </div>
 
                     <div class="grow ms-6">
-                        <h3 class="text-sm font-semibold text-indigo-600 dark:text-indigo-600">
+                        <h3 class="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
                             {{ __($item->name) }}
                         </h3>
-                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-500">
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                             {{ __($item->description, ['name' => __($item->name)]) }}
                         </p>
                     </div>

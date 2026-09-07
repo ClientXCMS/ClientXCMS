@@ -40,10 +40,10 @@
   <a
     href="https://clientxcms.com/client/support"
     aria-label="CLIENTXCMS"
-    class="flex-none text-xl font-semibold dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+    class="flex-none text-base font-semibold sm:text-xl dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
   >
     CLIENTXCMS
-    <span class="bg-gray-100 text-xs text-gray-500 font-semibold rounded-full py-1 px-2 dark:bg-gray-700 dark:text-gray-400 hs-tooltip-toggle hs-tooltip inline-block relative">
+    <span class="bg-gray-100 text-xs text-gray-500 font-semibold rounded-full py-1 px-2 dark:bg-gray-700 dark:text-gray-300 hs-tooltip-toggle hs-tooltip hidden sm:inline-block relative">
       v{{ ctx_version() }}
         @if ($appIsGit)
     <span
@@ -59,8 +59,8 @@
   @endif
     </span>
   </a>
-        <div class="w-full flex items-center justify-end ms-auto sm:justify-between sm:gap-x-3 sm:order-3">
-            <div class="w-full flex items-center justify-end ms-auto sm:justify-between sm:gap-x-3 sm:order-3">
+        <div class="flex min-w-0 flex-1 items-center justify-end gap-x-2 ms-auto sm:justify-between sm:gap-x-3 sm:order-3">
+            <div class="flex min-w-0 flex-1 items-center justify-end gap-x-2 ms-auto sm:justify-between sm:gap-x-3 sm:order-3">
                 <div class="sm:hidden">
                     <button id="mobileSearchButton" type="button" class="w-[2.375rem] h-[2.375rem] inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
                         <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -99,7 +99,7 @@
                             </div>
                             <input type="text" id="searchBarDesktop" autocomplete="do-not-autofill" name="q" class="search Barpy-2 pe-4 ps-10 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600" placeholder="{{ __('global.search')  }}">
                             <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none z-20 pe-4">
-                                <span class="text-gray-500">Ctrl + /</span>
+                                <span class="text-gray-500 dark:text-gray-400">Ctrl + /</span>
                             </div>
                             <div class="absolute z-50 w-full bg-white rounded-xl shadow-[0_10px_40px_10px_rgba(0,0,0,0.08)] dark:bg-slate-800" style="display: none;" data-hs-combo-box-output="">
                                 <div id="dropdownItemsDesktop" class="max-h-[300px] p-2 rounded-b-xl overflow-y-auto overflow-hidden [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-slate-700 dark:[&::-webkit-scrollbar-thumb]:bg-slate-500 dark:bg-slate-800"></div>

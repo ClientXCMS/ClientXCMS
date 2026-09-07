@@ -456,7 +456,7 @@
                                         </p>
 
                                         @if (count($trustedDevices) === 0)
-                                            <p class="mt-4 text-sm italic text-gray-500 dark:text-gray-500">
+                                            <p class="mt-4 text-sm italic text-gray-500 dark:text-gray-400">
                                                 {{ __('client.profile.2fa.trusted_devices_empty') }}
                                             </p>
                                         @else

@@ -5,6 +5,9 @@
 @import 'provisioning.css';
 @import 'bootstrap-icons/font/bootstrap-icons.min.css';
 @import 'flatpickr/dist/flatpickr.min.css';
+#mobile-menu {
+    --tab-accessibility-limited: false;
+}
 .input-text {
     @apply py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:pointer-events-none;
 }

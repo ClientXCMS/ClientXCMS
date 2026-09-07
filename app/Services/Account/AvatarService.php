@@ -86,7 +86,7 @@ class AvatarService
 
     public function backgroundColor(?Model $owner): string
     {
-        $colors = ['#0284c7', '#16a34a', '#9333ea', '#db2777', '#ea580c', '#0d9488', '#4f46e5'];
+        $colors = ['#0369a1', '#15803d', '#7e22ce', '#be185d', '#c2410c', '#0f766e', '#4338ca'];
         $seed = (string) ($owner?->email ?? $owner?->getKey() ?? 'anonymous');
 
         return $colors[abs(crc32($seed)) % count($colors)];

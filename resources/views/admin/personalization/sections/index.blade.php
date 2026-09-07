@@ -58,10 +58,10 @@
 
                                                             <div class="grow ms-6">
                                                                 <h3
-                                                                    class="text-sm font-semibold text-indigo-600 dark:text-indigo-600">
+                                                                    class="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
                                                                     {{ $item['title'] }}
                                                                 </h3>
-                                                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-500">
+                                                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                                                     {{ __('personalization.sections.pages.description', ['name' => $item['title']]) }}
                                                                 </p>
                                                             </div>

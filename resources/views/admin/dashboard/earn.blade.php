@@ -172,7 +172,7 @@
                     @include('admin/shared/select', ['name' => 'limit', 'options' => $limits, 'value' => $limit])
                 </form>
             </div>
-                <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
 
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead>
@@ -481,7 +481,7 @@
         <div class="card-sm">
 
         <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400 mb-2">{{ __('admin.dashboard.earn.' . $key) }}</h3>
-        <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+        <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
 
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>
@@ -569,7 +569,7 @@
                 @include('admin/shared/select', ['name' => 'limit', 'options' => $limits, 'value' => $limit])
             </form>
             </div>
-            <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+            <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
 
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead>

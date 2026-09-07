@@ -57,8 +57,8 @@
 
         <div class="text-center md:text-end space-x-2">
             @foreach (app('theme')->getSocialsNetworks() as $network)
-                <a class="size-8 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-500 hover:text-indigo-500 disabled:opacity-50 disabled:pointer-events-none dark:hover:text-indigo-700" href="{{ $network->url }}">
-                    <i class="{{ $network->icon }}"></i>
+                <a class="size-8 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-500 hover:text-indigo-600 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:text-indigo-300" href="{{ $network->url }}" aria-label="{{ $network->name }}">
+                    <i class="{{ $network->icon }}" aria-hidden="true"></i>
                 </a>
             @endforeach
         </div>

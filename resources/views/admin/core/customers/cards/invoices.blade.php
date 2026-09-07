@@ -57,7 +57,7 @@ $invoices_filters = collect(\App\Models\Billing\Invoice::FILTERS)->mapWithKeys(f
             @endif
         </div>
     </div>
-<div class="border rounded-lg overflow-hidden dark:border-gray-700">
+<div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
 
     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead>
