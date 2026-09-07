@@ -11,7 +11,7 @@ if (fs.existsSync(file)) {
         '300': '#b4c6fc',
         '400': '#8da2fb',
         '500': '#6875f5',
-        '600': '#2fa159',
+        '600': '#278549',
         '700': '#1d7a48',
         '800': '#16663c',
         '900': '#0c3f2e',
@@ -60,6 +60,13 @@ export default {
     ],
     theme: {
         extend: {
+            colors: {
+                primary: {
+                    light: primaryColors['100'],
+                    DEFAULT: primaryColors['600'],
+                    dark: primaryColors['700'],
+                },
+            },
 
             fontFamily: {
                 sans: [

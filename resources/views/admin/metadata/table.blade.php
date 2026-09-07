@@ -42,8 +42,8 @@
                         <span class="block py-2 flex flex-col">
                     <div class="flex rounded-lg shadow-sm">
                         <input type="text" name="metadata_value[{{ $metadata->id }}]" value="{{ $metadata->value }}" class="py-3 px-4 block w-full input-text" placeholder="{{ __('global.value') }}">
-                            <button type="button" onclick="deleteRow{{ $i }}(this)" class="w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-e-md border border-transparent text-white disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
-                                <span class="h-full py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-red text-red-700 shadow-sm align-middle hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-red-900 dark:hover:bg-red-800 dark:border-red-700 dark:text-white dark:hover:text-white dark:focus:ring-offset-gray-800">
+                            <button type="button" onclick="deleteRow{{ $i }}(this)" class="w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center disabled:opacity-50 disabled:pointer-events-none">
+                                <span class="btn-action-with-icon btn-action-danger h-full justify-center">
                                     <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                                 </span>
                             </button>
@@ -59,8 +59,8 @@
                         @if (staff_has_permission('admin.manage_metadata'))
                         <span class="block py-2 flex flex-col">
                     <div class="flex rounded-lg shadow-sm">
-                            <button type="button" onclick="deleteRow{{ $i }}(this)" class="w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-e-md border border-transparent text-white disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
-                                <span class="h-full py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-red text-red-700 shadow-sm align-middle hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-red-900 dark:hover:bg-red-800 dark:border-red-700 dark:text-white dark:hover:text-white dark:focus:ring-offset-gray-800">
+                            <button type="button" onclick="deleteRow{{ $i }}(this)" class="w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center disabled:opacity-50 disabled:pointer-events-none">
+                                <span class="btn-action-with-icon btn-action-danger h-full justify-center">
                                     <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                                 </span>
                             </button>
@@ -96,8 +96,8 @@
             <span class="block py-2 flex flex-col">
                     <div class="flex rounded-lg shadow-sm">
                         <input type="text" name="metadata_value[0]" class="py-3 px-4 block w-full input-text" placeholder="{{ __('global.value') }}">
-                            <button type="button" onclick="deleteRow{{ $i }}(this)" class="w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-e-md border border-transparent text-white disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
-                                <span class="h-full py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-red text-red-700 shadow-sm align-middle hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-red-900 dark:hover:bg-red-800 dark:border-red-700 dark:text-white dark:hover:text-white dark:focus:ring-offset-gray-800">
+                            <button type="button" onclick="deleteRow{{ $i }}(this)" class="w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center disabled:opacity-50 disabled:pointer-events-none">
+                                <span class="btn-action-with-icon btn-action-danger h-full justify-center">
                                     <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                                 </span>
                             </button>

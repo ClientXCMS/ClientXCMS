@@ -27,6 +27,7 @@
     @yield('styles')
     @vite('resources/themes/default/js/app.js')
     @vite('resources/themes/default/css/app.scss')
+@include('shared.a11y-styles')
     {!! app('seo')->head('auth', $meta_append ?? null) !!}
     {!! app('seo')->favicon('auth') !!}
     <meta charset="utf-8">

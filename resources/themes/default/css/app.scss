@@ -14,9 +14,6 @@
 .img-auth {
     border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
 }
-.text-primary {
-    @apply text-indigo-600;
-}
 .text-secondary {
     @apply text-gray-600;
 }
@@ -25,9 +22,6 @@
 }
 .text-warning {
     @apply text-yellow-600;
-}
-.bg-primary {
-    @apply bg-indigo-600;
 }
 .card {
     @apply bg-white rounded-lg shadow-md p-6 mb-4 border-b border-gray-900/10

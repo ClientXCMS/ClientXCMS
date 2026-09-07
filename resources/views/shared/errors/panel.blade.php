@@ -44,7 +44,7 @@
                         <i class="bi bi-arrow-left" aria-hidden="true"></i>
                         {{ __('errors.common.previous') }}
                     </a>
-                    <a href="{{ $homeUrl }}" class="inline-flex min-h-11 items-center justify-center gap-x-2 rounded-lg border border-transparent bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:pointer-events-none disabled:opacity-50 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
+                    <a href="{{ $homeUrl }}" class="btn btn-primary inline-flex min-h-11 items-center justify-center gap-x-2">
                         <i class="bi bi-house-door" aria-hidden="true"></i>
                         {{ $homeLabel }}
                     </a>

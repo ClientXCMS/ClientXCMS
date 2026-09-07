@@ -21,7 +21,7 @@
     <div id="card-errors" role="alert"></div>
 </div>
 
-<button type="submit" class="flex items-center justify-center w-full py-3 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-400">
+<button type="submit" class="btn btn-primary flex w-full items-center justify-center py-3">
     {{ __('global.add') }}
 </button>
 

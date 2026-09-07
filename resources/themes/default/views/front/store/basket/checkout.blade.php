@@ -85,10 +85,10 @@
                                     </div>
                                 @endif
                             @else
-                            <button type="button" class="block hs-collapse-toggle py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" id="login-collapse-collapse" data-hs-collapse="#login-collapse-heading">
+                            <button type="button" class="btn btn-primary hs-collapse-toggle inline-flex items-center gap-x-2 rounded-lg px-4 py-3" id="login-collapse-collapse" data-hs-collapse="#login-collapse-heading">
                                 {{ __('auth.login.btn') }}
                             </button>
-                            <button type="button" class="block hs-collapse-toggle py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none dark:hover:bg-indigo-900 dark:text-indigo-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" id="register-collapse-collapse" data-hs-collapse="#register-collapse-heading">
+                            <button type="button" class="block hs-collapse-toggle btn-primary-soft dark:hover:bg-indigo-900 dark:text-indigo-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" id="register-collapse-collapse" data-hs-collapse="#register-collapse-heading">
                                 {{ __('auth.register.btn') }}
                             </button>
                             <div id="login-collapse-heading" class="hs-collapse hidden w-full overflow-hidden transition-[height] duration-300" aria-labelledby="login-collapse">

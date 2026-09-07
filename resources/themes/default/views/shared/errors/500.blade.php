@@ -24,10 +24,10 @@
             <p class="text-gray-400 font-medium text-sm md:text-xl lg:text-2xl mt-8">{{ __('errors.500.description') }}</p>
         </div>
         <div class="max-w-2xl mx-auto text-center">
-            <a href="{{ route('home')  }}" class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none mt-10 ml-3">
+            <a href="{{ route('home')  }}" class="btn-primary-soft mt-10 ml-3">
                 <i class="bi bi-house-door"></i>
                 {{ __('errors.500.home') }}</a>
-            <a href="{{ URL::previous() }}" class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none mt-10">
+            <a href="{{ URL::previous() }}" class="btn-primary-soft mt-10">
                 <i class="bi bi-arrow-left"></i>
                 {{ __('errors.500.back') }}</a>
         </div>

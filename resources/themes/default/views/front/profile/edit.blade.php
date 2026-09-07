@@ -413,7 +413,7 @@
                                             ])
                                         @endif
                                         <button
-                                            class="btn {{ auth('web')->user()->twoFactorEnabled() ? 'bg-red-600 text-white hover:bg-red-700' : 'btn-primary' }} mt-4">
+                                            class="btn {{ auth('web')->user()->twoFactorEnabled() ? 'btn-danger' : 'btn-primary' }} mt-4">
                                             {{ __(auth('web')->user()->twoFactorEnabled() ? 'global.delete' : 'global.save') }}
                                         </button>
                                     </form>
