@@ -27,11 +27,24 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         // Use AccountEditService for common customer fields
-        return AccountEditService::rules(
-            $this->country ?? 'FR',
+        $rules = AccountEditService::rules(
+            $this->input('country', $this->user('web')?->country ?? 'FR'),
             email: false,
             password: false,
             except: $this->user('web')?->id
         );
+
+        unset(
+            $rules['address'],
+            $rules['address2'],
+            $rules['city'],
+            $rules['zipcode'],
+            $rules['region'],
+            $rules['country'],
+            $rules['company_name'],
+            $rules['billing_details'],
+        );
+
+        return $rules;
     }
 }

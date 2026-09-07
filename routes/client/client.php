@@ -59,6 +59,9 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::post('/avatar', [\App\Http\Controllers\Front\ProfileController::class, 'uploadAvatar'])->name('.avatar.upload');
         Route::delete('/avatar', [\App\Http\Controllers\Front\ProfileController::class, 'deleteAvatar'])->name('.avatar.delete');
     });
+    Route::middleware(['auth'])->prefix('/billing-profile')->name('billing-profile.')->group(function () {
+        Route::put('/', [\App\Http\Controllers\Front\Billing\FiscalProfileController::class, 'update'])->name('update');
+    });
     Route::prefix('/emails')->name('emails.')->group(function () {
         Route::get('/', [EmailController::class, 'index'])->middleware(['auth', 'verified'])->name('index');
         Route::get('/read-all', [EmailController::class, 'readAll'])->middleware(['auth', 'verified'])->name('read-all');

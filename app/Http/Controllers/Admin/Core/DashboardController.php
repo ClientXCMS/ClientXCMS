@@ -26,6 +26,7 @@ use App\DTO\Admin\Dashboard\IntelligentSearchDTO;
 use App\Models\Admin\Permission;
 use App\Models\Billing\Invoice;
 use App\Models\Helpdesk\SupportTicket;
+use App\Services\Core\ScheduledTasksHealthService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -138,6 +139,24 @@ class DashboardController
         }
         if ($tickets_assigned) {
             $heathcheck['blue'][] = __('admin.dashboard.assigned_tickets', ['tickets' => $tickets_assigned]);
+        }
+        if (staff_has_permission(Permission::SHOW_LOGS)) {
+            $scheduledTasksHealth = app(ScheduledTasksHealthService::class);
+
+            if ($scheduledTasksHealth->heartbeatIsStale()) {
+                $heartbeat = $scheduledTasksHealth->heartbeat();
+                $heathcheck['red'][] = $heartbeat
+                    ? __('admin.dashboard.cron_inactive_since', ['date' => $heartbeat->isoFormat('LLL')])
+                    : __('admin.dashboard.cron_never_executed');
+            }
+
+            foreach ($scheduledTasksHealth->activeFailures() as $failure) {
+                $heathcheck['red'][] = __('admin.dashboard.cron_task_failed', [
+                    'task' => $failure->task_name,
+                    'date' => $failure->executed_at->isoFormat('LLL'),
+                    'message' => $failure->error_message,
+                ]);
+            }
         }
         $license = \App\Core\License\LicenseCache::get();
         if ($license && ($supportExpiration = $license->getSupportExpiration())) {

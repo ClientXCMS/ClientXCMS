@@ -19,6 +19,8 @@
 
 namespace App\DTO\Core\Extensions;
 
+use Illuminate\Support\Facades\Lang;
+
 /**
  * Reusable field presets for section configuration.
  *
@@ -28,6 +30,11 @@ namespace App\DTO\Core\Extensions;
  */
 trait SectionFieldPresets
 {
+    private static function fieldLabel(string $specificKey, string $genericKey, array $replace = []): string
+    {
+        return Lang::has($specificKey) ? $specificKey : __($genericKey, $replace);
+    }
+
     /**
      * Header fields: badge + title + subtitle.
      * Present in nearly every section (~45+ times in original JSON).
@@ -40,17 +47,17 @@ trait SectionFieldPresets
         return [
             SectionField::text(
                 'badge',
-                'theme::sections.config.badge',
+                self::fieldLabel('theme::sections.config.badge', 'personalization.sections.config.fields.badge'),
                 hint: $hintPrefix ? "theme::sections.{$hintPrefix}.config.badge_hint" : null,
             ),
             SectionField::text(
                 'title',
-                'theme::sections.config.title',
+                self::fieldLabel('theme::sections.config.title', 'personalization.sections.config.fields.title'),
                 hint: $hintPrefix ? "theme::sections.{$hintPrefix}.config.title_hint" : null,
             ),
             SectionField::textarea(
                 'subtitle',
-                'theme::sections.config.subtitle',
+                self::fieldLabel('theme::sections.config.subtitle', 'personalization.sections.config.fields.subtitle'),
                 rows: 2,
                 hint: $hintPrefix ? "theme::sections.{$hintPrefix}.config.subtitle_hint" : null,
             ),
@@ -86,19 +93,19 @@ trait SectionFieldPresets
 
             $fields[] = SectionField::icon(
                 "feature{$i}_icon",
-                "theme::sections.features.config.feature{$i}_icon",
+                self::fieldLabel("theme::sections.features.config.feature{$i}_icon", 'personalization.sections.config.fields.feature_icon', ['number' => $i]),
                 $icon,
             );
 
             $fields[] = SectionField::text(
                 "feature{$i}_title",
-                "theme::sections.features.config.feature{$i}_title",
+                self::fieldLabel("theme::sections.features.config.feature{$i}_title", 'personalization.sections.config.fields.feature_title', ['number' => $i]),
             );
 
             if ($withDescription) {
                 $fields[] = SectionField::textarea(
                     "feature{$i}_description",
-                    "theme::sections.features.config.feature{$i}_description",
+                    self::fieldLabel("theme::sections.features.config.feature{$i}_description", 'personalization.sections.config.fields.feature_description', ['number' => $i]),
                     rows: 2,
                 );
             }
@@ -146,25 +153,25 @@ trait SectionFieldPresets
 
             $fields[] = SectionField::icon(
                 "feature{$i}_icon",
-                "theme::sections.features.config.feature{$i}_icon",
+                self::fieldLabel("theme::sections.features.config.feature{$i}_icon", 'personalization.sections.config.fields.feature_icon', ['number' => $i]),
                 $icon,
             );
 
             $fields[] = SectionField::text(
                 "feature{$i}_number",
-                "theme::sections.features.config.feature{$i}_number",
+                self::fieldLabel("theme::sections.features.config.feature{$i}_number", 'personalization.sections.config.fields.feature_number', ['number' => $i]),
                 translatable: false,
                 default: $number,
             );
 
             $fields[] = SectionField::text(
                 "feature{$i}_title",
-                "theme::sections.features.config.feature{$i}_title",
+                self::fieldLabel("theme::sections.features.config.feature{$i}_title", 'personalization.sections.config.fields.feature_title', ['number' => $i]),
             );
 
             $fields[] = SectionField::textarea(
                 "feature{$i}_description",
-                "theme::sections.features.config.feature{$i}_description",
+                self::fieldLabel("theme::sections.features.config.feature{$i}_description", 'personalization.sections.config.fields.feature_description', ['number' => $i]),
                 rows: 2,
             );
         }
@@ -188,14 +195,14 @@ trait SectionFieldPresets
         for ($i = 1; $i <= $count; $i++) {
             $fields[] = SectionField::text(
                 "stat{$i}_value",
-                "theme::sections.stats.config.stat{$i}_value",
+                self::fieldLabel("theme::sections.stats.config.stat{$i}_value", 'personalization.sections.config.fields.stat_value', ['number' => $i]),
                 translatable: false,
                 default: $valueDefaults[$i] ?? $defaults[$i] ?? '',
             );
 
             $fields[] = SectionField::text(
                 "stat{$i}_label",
-                "theme::sections.stats.config.stat{$i}_label",
+                self::fieldLabel("theme::sections.stats.config.stat{$i}_label", 'personalization.sections.config.fields.stat_label', ['number' => $i]),
             );
         }
 
@@ -215,20 +222,20 @@ trait SectionFieldPresets
         for ($i = 1; $i <= $count; $i++) {
             $fields[] = SectionField::textarea(
                 "testimonial{$i}_text",
-                "theme::sections.testimonials.config.testimonial{$i}_text",
+                self::fieldLabel("theme::sections.testimonials.config.testimonial{$i}_text", 'personalization.sections.config.fields.testimonial_text', ['number' => $i]),
                 rows: 3,
                 default: __('theme::sections.testimonials.testimonial_'.$i.'_text'),
             );
 
             $fields[] = SectionField::text(
                 "testimonial{$i}_author",
-                "theme::sections.testimonials.config.testimonial{$i}_author",
+                self::fieldLabel("theme::sections.testimonials.config.testimonial{$i}_author", 'personalization.sections.config.fields.testimonial_author', ['number' => $i]),
                 default: __('theme::sections.testimonials.testimonial_'.$i.'_author'),
             );
 
             $fields[] = SectionField::text(
                 "testimonial{$i}_role",
-                "theme::sections.testimonials.config.testimonial{$i}_role",
+                self::fieldLabel("theme::sections.testimonials.config.testimonial{$i}_role", 'personalization.sections.config.fields.testimonial_role', ['number' => $i]),
                 default: __('theme::sections.testimonials.testimonial_'.$i.'_role'),
             );
         }
@@ -252,20 +259,20 @@ trait SectionFieldPresets
         for ($i = 1; $i <= $count; $i++) {
             $fields[] = SectionField::text(
                 "step{$i}_title",
-                "theme::sections.steps.config.step{$i}_title",
+                self::fieldLabel("theme::sections.steps.config.step{$i}_title", 'personalization.sections.config.fields.step_title', ['number' => $i]),
                 default: __('theme::sections.steps.step_'.$i.'_title'),
             );
 
             $fields[] = SectionField::textarea(
                 "step{$i}_desc",
-                "theme::sections.steps.config.step{$i}_desc",
+                self::fieldLabel("theme::sections.steps.config.step{$i}_desc", 'personalization.sections.config.fields.step_description', ['number' => $i]),
                 rows: 2,
                 default: __('theme::sections.steps.step_'.$i.'_desc'),
             );
 
             $fields[] = SectionField::icon(
                 "step{$i}_icon",
-                "theme::sections.steps.config.step{$i}_icon",
+                self::fieldLabel("theme::sections.steps.config.step{$i}_icon", 'personalization.sections.config.fields.step_icon', ['number' => $i]),
                 $iconDefaults[$i] ?? $defaults[$i] ?? 'bi-star',
             );
         }
@@ -283,11 +290,11 @@ trait SectionFieldPresets
         return [
             SectionField::text(
                 'primary_cta',
-                'theme::sections.hero.config.primary_cta',
+                self::fieldLabel('theme::sections.hero.config.primary_cta', 'personalization.sections.config.fields.primary_cta'),
             ),
             SectionField::text(
                 'secondary_cta',
-                'theme::sections.hero.config.secondary_cta',
+                self::fieldLabel('theme::sections.hero.config.secondary_cta', 'personalization.sections.config.fields.secondary_cta'),
             ),
         ];
     }
@@ -302,16 +309,16 @@ trait SectionFieldPresets
         return [
             SectionField::icon(
                 'hero_icon',
-                'theme::sections.features.config.hero_icon',
+                self::fieldLabel('theme::sections.features.config.hero_icon', 'personalization.sections.config.fields.hero_icon'),
                 'bi-lightning-charge',
             ),
             SectionField::text(
                 'hero_title',
-                'theme::sections.features.config.hero_title',
+                self::fieldLabel('theme::sections.features.config.hero_title', 'personalization.sections.config.fields.hero_title'),
             ),
             SectionField::textarea(
                 'hero_description',
-                'theme::sections.features.config.hero_description',
+                self::fieldLabel('theme::sections.features.config.hero_description', 'personalization.sections.config.fields.hero_description'),
                 rows: 2,
             ),
         ];

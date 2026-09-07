@@ -258,23 +258,7 @@
             </div>
         </header>
 
-        <table class="addresses-table">
-            <tr>
-                <td>
-                    <h3>{{ setting('app.name') }}</h3>
-                    <pre>{!! setting('app.address') !!}</pre>
-                </td>
-                <td>
-                    <h3>{{ __('client.invoices.billto', ['name' => $address[0]]) }}</h3>
-                    @foreach ($address as $i => $line)
-                        @if ($i == 0)
-                            @continue
-                        @endif
-                        {{ $line }}<br />
-                    @endforeach
-                </td>
-            </tr>
-        </table>
+        @include('front.billing.partials.fiscal-parties')
 
         <section class="invoice-details-section" style="margin-bottom: 40px;">
             <table style="width: 100%;">

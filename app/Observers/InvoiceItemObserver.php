@@ -26,8 +26,23 @@ use App\Models\Provisioning\Service;
 
 class InvoiceItemObserver
 {
+    public function creating(InvoiceItem $model): void
+    {
+        if ($model->vat_rate === null) {
+            $ht = ((float) $model->unit_price_ht + (float) $model->unit_setup_ht);
+            $ttc = ((float) $model->unit_price_ttc + (float) $model->unit_setup_ttc);
+            $model->vat_rate = $ht > 0 ? round((($ttc - $ht) / $ht) * 100, 4) : 0;
+        }
+        if ((float) $model->vat_rate === 0.0 && blank($model->tax_category)) {
+            $model->tax_category = 'zero';
+        }
+    }
+
     public function deleting(InvoiceItem $model)
     {
+        if ($model->invoice?->isElectronicallyLocked()) {
+            throw new \LogicException('Items on an issued invoice cannot be deleted.');
+        }
         InvoiceLog::log($model->invoice, InvoiceLog::REMOVE_LINE, ['name' => $model->name]);
     }
 
@@ -49,6 +64,10 @@ class InvoiceItemObserver
 
     public function updating(InvoiceItem $item)
     {
+        $allowed = ['delivered_at', 'cancelled_at', 'refunded_at', 'updated_at'];
+        if ($item->invoice?->isElectronicallyLocked() && array_diff(array_keys($item->getDirty()), $allowed) !== []) {
+            throw new \LogicException('Items on an issued invoice are immutable.');
+        }
         if ($item->type == CustomItem::CUSTOM_ITEM) {
             $customItem = CustomItem::find($item->related_id);
             if ($customItem == null) {

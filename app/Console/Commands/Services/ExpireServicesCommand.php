@@ -41,8 +41,9 @@ class ExpireServicesCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
+        $successful = true;
         $this->info('Running services:expire at '.now()->format('Y-m-d H:i:s'));
 
         $services = Service::getShouldExpire();
@@ -51,6 +52,7 @@ class ExpireServicesCommand extends Command
             if ($result->success) {
                 $this->info($service->id.' : '.$result->message);
             } else {
+                $successful = false;
                 $this->error($service->id.' : '.$result->message);
             }
         }
@@ -60,6 +62,7 @@ class ExpireServicesCommand extends Command
             if ($result->success) {
                 $this->info($service->id.' : '.$result->message);
             } else {
+                $successful = false;
                 $this->error($service->id.' : '.$result->message);
             }
         }
@@ -77,5 +80,7 @@ class ExpireServicesCommand extends Command
             $this->info('Service '.$service->id.' has been marked as hidden.');
         }
         $this->info('Finished running services:expire at '.now()->format('Y-m-d H:i:s'));
+
+        return $successful ? self::SUCCESS : self::FAILURE;
     }
 }

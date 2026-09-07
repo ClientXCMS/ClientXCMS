@@ -25,6 +25,7 @@
 
         <div class="grid grid-cols-6 gap-4">
 
+            @if (!auth('admin')->user()->usesVerticalLayout())
             <div class="col-span-6 md:col-span-1">
                 <div class="card">
                     <div class="">
@@ -62,7 +63,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-span-6 md:col-span-5" id="setting">
+            @endif
+            <div class="col-span-6 {{ auth('admin')->user()->usesVerticalLayout() ? '' : 'md:col-span-5' }}" id="setting">
                 @yield('setting')
             </div>
         </div>

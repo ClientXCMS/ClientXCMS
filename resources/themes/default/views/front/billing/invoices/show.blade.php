@@ -57,22 +57,16 @@
                         <span class="mt-1 block text-gray-500">{{ $invoice->identifier() }}</span>
 
                         <address class="mt-4 not-italic text-gray-800 dark:text-gray-200">
-                            {!! nl2br(e(setting('app_address'))) !!}
+                            @include('front.billing.partials.fiscal-party-web', ['party' => $fiscalParties['seller'], 'role' => 'seller'])
                         </address>
                     </div>
                 </div>
 
                 <div class="mt-8 grid sm:grid-cols-2 gap-3">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ __('client.invoices.billto', ['name' => $address[0]]) }}</h3>
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ __('client.invoices.billto', ['name' => $fiscalParties['buyer']['legal_name'] ?: $fiscalParties['buyer']['name']]) }}</h3>
                         <address class="mt-2 not-italic text-gray-500">
-
-                            @foreach ($address as $i => $line)
-                                @if ($i == 0)
-                                    @continue
-                                @endif
-                                {{ $line }}<br/>
-                            @endforeach
+                            @include('front.billing.partials.fiscal-party-web', ['party' => $fiscalParties['buyer'], 'role' => 'buyer', 'showTitle' => false])
                         </address>
                     </div>
 

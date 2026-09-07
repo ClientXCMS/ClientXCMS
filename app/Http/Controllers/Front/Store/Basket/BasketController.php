@@ -30,6 +30,7 @@ use App\Models\Store\Basket\Basket;
 use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Product;
 use App\Services\Account\AccountEditService;
+use App\Services\Billing\FiscalProfileService;
 use App\Services\Billing\InvoiceService;
 use App\Services\Domain\DomainPricingService;
 use App\Services\Store\ProductConfigurationPricingService;
@@ -229,13 +230,15 @@ class BasketController extends \App\Http\Controllers\Controller
         ]);
     }
 
-    public function processCheckout(ProcessCheckoutRequest $request)
+    public function processCheckout(ProcessCheckoutRequest $request, FiscalProfileService $fiscalProfiles)
     {
         $basket = Basket::getBasket();
         $prerequisite = $this->checkPrerequisites(false, $basket, 'front.store.basket.checkout');
         if ($prerequisite !== true) {
             return $prerequisite;
         }
+
+        $fiscalProfiles->update(auth('web')->user(), $request->all());
 
         if ($basket->total() == 0) {
             $gateway = Gateway::where('uuid', 'none')->first();

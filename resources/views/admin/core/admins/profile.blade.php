@@ -86,6 +86,16 @@
                                         'options' => $locales,
                                         'value' => old('locale', $item->locale),
                                     ])
+                                    @include('admin/shared/select', [
+                                        'name' => 'admin_layout',
+                                        'label' => __('admin.admins.layout.label'),
+                                        'help' => __('admin.admins.layout.help'),
+                                        'options' => [
+                                            \App\Models\Admin\Admin::LAYOUT_HORIZONTAL => __('admin.admins.layout.horizontal'),
+                                            \App\Models\Admin\Admin::LAYOUT_VERTICAL => __('admin.admins.layout.vertical'),
+                                        ],
+                                        'value' => old('admin_layout', $item->admin_layout ?? \App\Models\Admin\Admin::LAYOUT_HORIZONTAL),
+                                    ])
                                 </div>
 
                                 <div>

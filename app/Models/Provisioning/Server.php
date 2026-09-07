@@ -94,6 +94,8 @@ class Server extends Model implements HasNotifiableVariablesInterface
 {
     use HasFactory, HasMetadata,Loggable, ModelStatutTrait, softDeletes;
 
+    public const TEST_MODE_METADATA_KEY = 'test_mode';
+
     protected $fillable = [
         'name',
         'port',
@@ -127,6 +129,11 @@ class Server extends Model implements HasNotifiableVariablesInterface
     public function services()
     {
         return $this->hasMany(Service::class);
+    }
+
+    public function isTestMode(): bool
+    {
+        return $this->getMetadata(self::TEST_MODE_METADATA_KEY) === 'true';
     }
 
     public function getNotificationVariables(): array

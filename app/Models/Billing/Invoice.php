@@ -177,6 +177,8 @@ class Invoice extends Model implements SupportRelateItemInterface
     protected $fillable = [
         'customer_id',
         'billing_address',
+        'billing_snapshot',
+        'issued_at',
         'due_date',
         'total',
         'subtotal',
@@ -202,6 +204,8 @@ class Invoice extends Model implements SupportRelateItemInterface
         'created_at' => 'datetime',
         'paid_at' => 'datetime',
         'billing_address' => 'array',
+        'billing_snapshot' => 'array',
+        'issued_at' => 'datetime',
     ];
 
     protected $attributes = [
@@ -303,6 +307,29 @@ class Invoice extends Model implements SupportRelateItemInterface
         return $this->hasMany(InvoiceLog::class);
     }
 
+    public function electronicDocuments()
+    {
+        return $this->morphMany(ElectronicDocument::class, 'documentable');
+    }
+
+    public function isElectronicallyLocked(): bool
+    {
+        return $this->issued_at !== null || $this->electronicDocuments()->exists();
+    }
+
+    public function issue(): void
+    {
+        if ($this->isDraft() || $this->issued_at !== null || blank($this->invoice_number)) {
+            return;
+        }
+
+        $this->forceFill([
+            'billing_snapshot' => app(\App\Services\Billing\FiscalProfileService::class)->snapshot($this),
+            'issued_at' => now(),
+        ])->saveQuietly();
+        event(new \App\Events\Core\Invoice\InvoiceIssued($this->fresh(['customer', 'items'])));
+    }
+
     public function pay(Gateway $gateway, Request $request)
     {
         if ($this->total == 0) {
@@ -332,6 +359,10 @@ class Invoice extends Model implements SupportRelateItemInterface
 
     public function canDelete()
     {
+        if ($this->isElectronicallyLocked()) {
+            return false;
+        }
+
         return $this->status == self::STATUS_DRAFT || $this->status == self::STATUS_CANCELLED || $this->status == self::STATUS_PENDING;
     }
 
@@ -401,6 +432,7 @@ class Invoice extends Model implements SupportRelateItemInterface
             'customer' => $this->customer,
             'color' => $color,
             'address' => $this->billing_address,
+            'fiscalParties' => $this->fiscalPartiesForPdf(),
             'logoSrc' => $logoSrc,
             'primaryColor' => $primaryColor,
         ]);
@@ -418,6 +450,46 @@ class Invoice extends Model implements SupportRelateItemInterface
         }
 
         return $pdf;
+    }
+
+    /**
+     * Return immutable seller and buyer details for invoice and credit-note PDFs.
+     * Historical invoices fall back to their frozen billing_address payload.
+     */
+    public function fiscalPartiesForPdf(): array
+    {
+        $snapshot = $this->billing_snapshot ?? [];
+        $legacyBuyer = $this->getBillingAddressArray();
+        $buyer = $snapshot['buyer'] ?? [];
+        $buyerAddress = $buyer['address'] ?? [];
+
+        return [
+            'seller' => array_merge([
+                'legal_name' => setting('billing_legal_name', setting('app.name')),
+                'address' => setting('app_address'),
+                'siren' => setting('billing_siren'),
+                'siret' => setting('billing_siret'),
+                'vat_number' => setting('billing_vat_number'),
+            ], $snapshot['seller'] ?? []),
+            'buyer' => [
+                'type' => $buyer['type'] ?? ($legacyBuyer['customer_type'] ?? Customer::TYPE_INDIVIDUAL),
+                'legal_name' => $buyer['legal_name'] ?? ($legacyBuyer['legal_name'] ?? $legacyBuyer['company_name'] ?? null),
+                'name' => trim(($legacyBuyer['firstname'] ?? '').' '.($legacyBuyer['lastname'] ?? '')),
+                'email' => $buyer['email'] ?? ($legacyBuyer['email'] ?? null),
+                'address' => $buyerAddress['address'] ?? ($legacyBuyer['address'] ?? null),
+                'address2' => $buyerAddress['address2'] ?? ($legacyBuyer['address2'] ?? null),
+                'zipcode' => $buyerAddress['zipcode'] ?? ($legacyBuyer['zipcode'] ?? null),
+                'city' => $buyerAddress['city'] ?? ($legacyBuyer['city'] ?? null),
+                'region' => $buyerAddress['region'] ?? ($legacyBuyer['region'] ?? null),
+                'country' => $buyerAddress['country'] ?? ($legacyBuyer['country'] ?? null),
+                'siren' => $buyer['siren'] ?? ($legacyBuyer['siren'] ?? null),
+                'siret' => $buyer['siret'] ?? ($legacyBuyer['siret'] ?? null),
+                'vat_number' => $buyer['vat_number'] ?? ($legacyBuyer['vat_number'] ?? null),
+                'tax_registration_number' => $buyer['tax_registration_number'] ?? ($legacyBuyer['tax_registration_number'] ?? null),
+                'rna_number' => $buyer['rna_number'] ?? ($legacyBuyer['rna_number'] ?? null),
+                'additional_details' => $buyer['additional_details'] ?? ($legacyBuyer['billing_details'] ?? null),
+            ],
+        ];
     }
 
     public function clearServiceAssociation()

@@ -62,12 +62,13 @@ class InvoiceController extends Controller
 
         $customer = $invoice->customer;
         $address = $invoice->billing_address;
+        $fiscalParties = $invoice->fiscalPartiesForPdf();
         $gateways = GatewayService::getAvailable();
         if ($invoice->isDraft()) {
             return abort(404);
         }
 
-        return view('front.billing.invoices.show', compact('invoice', 'address', 'customer', 'gateways'));
+        return view('front.billing.invoices.show', compact('invoice', 'address', 'fiscalParties', 'customer', 'gateways'));
     }
 
     public function pay(Invoice $invoice, string $gateway)

@@ -41,8 +41,9 @@ class InvoiceDeleteCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
+        $successful = true;
         $this->info('Running services:expire at '.now()->format('Y-m-d H:i:s'));
         $this->info('delete pending invoice...');
         $active = setting('remove_pending_invoice_type', 'cancel');
@@ -50,18 +51,28 @@ class InvoiceDeleteCommand extends Command
         if ($days <= 0) {
             $this->info('Auto delete is disabled.');
 
-            return;
+            return self::SUCCESS;
         }
         $invoices = Invoice::whereIn('status', [Invoice::STATUS_PENDING, Invoice::STATUS_CANCELLED])->where('created_at', '<', now()->subDays($days))->get();
         foreach ($invoices as $invoice) {
-            if ($active === 'delete') {
-                $invoice->items()->delete();
-                $invoice->delete();
-                $this->info('Invoice #'.$invoice->id.' deleted.');
-            } else {
-                $invoice->cancel();
-                $this->info('Invoice #'.$invoice->id.' canceled.');
+            try {
+                if ($active === 'delete') {
+                    if ($invoice->isElectronicallyLocked()) {
+                        throw new \LogicException('An issued invoice cannot be deleted.');
+                    }
+                    $invoice->items()->delete();
+                    $invoice->delete();
+                    $this->info('Invoice #'.$invoice->id.' deleted.');
+                } else {
+                    $invoice->cancel();
+                    $this->info('Invoice #'.$invoice->id.' canceled.');
+                }
+            } catch (\Throwable $exception) {
+                $successful = false;
+                $this->error("Invoice #{$invoice->id} could not be processed: {$exception->getMessage()}");
             }
         }
+
+        return $successful ? self::SUCCESS : self::FAILURE;
     }
 }

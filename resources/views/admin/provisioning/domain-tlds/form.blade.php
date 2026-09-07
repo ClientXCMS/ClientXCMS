@@ -23,59 +23,57 @@
     @include('admin/shared/checkbox', ['name' => 'whois_privacy', 'label' => __('provisioning.domain_manager.whois_privacy'), 'checked' => old('whois_privacy', $item->whois_privacy)])
 <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400 mt-4">{{ __($translatePrefix . '.prices') }}</h3>
 
-@if(count($currencies) > 1)
-    <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
-        <nav class="flex space-x-2" role="tablist">
-            @foreach($currencies as $currency)
-                <button type="button"
-                    class="hs-tab-active:font-semibold hs-tab-active:border-blue-600 hs-tab-active:text-blue-600 py-2 px-4 inline-flex items-center gap-x-2 border-b-2 border-transparent text-sm whitespace-nowrap text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 @if($loop->first) active @endif"
-                    id="tab-control-currency-{{ $currency }}" data-hs-tab="#tab-content-currency-{{ $currency }}"
-                    aria-controls="tab-content-currency-{{ $currency }}" role="tab">
-                    {{ $currency }}
-                </button>
-            @endforeach
-        </nav>
-    </div>
-@endif
-
-<div>
-    @foreach($currencies as $currency)
-        <div id="tab-content-currency-{{ $currency }}" class="@if(!$loop->first) hidden @endif" role="tabpanel" aria-labelledby="tab-control-currency-{{ $currency }}">
-            <div class="mt-4 border rounded-lg p-4 dark:border-gray-700">
-                @if(count($currencies) == 1)
-                    <h4 class="font-semibold dark:text-gray-300 mb-4">{{ $currency }}</h4>
-                @endif
-                
-                <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
-                    <nav class="flex space-x-2" role="tablist">
-                        @foreach($actions as $action => $actionLabel)
-                            <button type="button"
-                                class="hs-tab-active:font-semibold hs-tab-active:border-blue-600 hs-tab-active:text-blue-600 py-2 px-4 inline-flex items-center gap-x-2 border-b-2 border-transparent text-sm whitespace-nowrap text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 @if($loop->first) active @endif"
-                                id="tab-control-{{ $currency }}-{{ $action }}" data-hs-tab="#tab-content-{{ $currency }}-{{ $action }}"
-                                aria-controls="tab-content-{{ $currency }}-{{ $action }}" role="tab">
-                                {{ $actionLabel }}
-                            </button>
-                        @endforeach
-                    </nav>
-                </div>
-
-                <div>
-                    @foreach($actions as $action => $actionLabel)
-                        <div id="tab-content-{{ $currency }}-{{ $action }}" class="@if(!$loop->first) hidden @endif" role="tabpanel" aria-labelledby="tab-control-{{ $currency }}-{{ $action }}">
-                            <div class="grid md:grid-cols-3 gap-4">
-                                @foreach($recurrings as $billing => $recurring)
-                                    @php($current = $item->exists ? $item->prices->where('currency', $currency)->where('action', $action)->where('billing', $billing)->first() : null)
-                                    <div class="bg-gray-50 dark:bg-slate-900/50 p-4 rounded-xl border border-gray-100 dark:border-slate-800">
-                                        <h6 class="font-medium text-gray-800 dark:text-gray-200 mb-2">{{ $recurring['translate'] }}</h6>
-                                        @include('admin/shared/input', ['name' => "prices[$currency][$action][$billing][price]", 'label' => __('store.price'), 'value' => old("prices.$currency.$action.$billing.price", $current?->price), 'type' => 'number', 'step' => '0.01', 'min' => 0])
-                                        @include('admin/shared/input', ['name' => "prices[$currency][$action][$billing][setup]", 'label' => __('store.fees'), 'value' => old("prices.$currency.$action.$billing.setup", $current?->setup), 'type' => 'number', 'step' => '0.01', 'min' => 0])
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
+<div class="mt-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead>
+            <tr>
+                <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">
+                    {{ __('admin.products.tariff') }}
+                </th>
+                @foreach($recurrings as $recurring)
+                    <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">
+                        {{ $recurring['translate'] }}
+                    </th>
+                @endforeach
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            @foreach($actions as $action => $actionLabel)
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
+                        {{ $actionLabel }} - {{ __('store.price') }}
+                    </td>
+                    @foreach($recurrings as $billing => $recurring)
+                        @php($current = $item->exists ? $item->prices->where('currency', $defaultCurrency)->where('action', $action)->where('billing', $billing)->first() : null)
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
+                            @include('admin/shared/input', [
+                                'name' => "prices[$defaultCurrency][$action][$billing][price]",
+                                'type' => 'number',
+                                'step' => '0.01',
+                                'min' => 0,
+                                'value' => old("prices.$defaultCurrency.$action.$billing.price", $current?->price),
+                            ])
+                        </td>
                     @endforeach
-                </div>
-            </div>
-        </div>
-    @endforeach
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
+                        {{ $actionLabel }} - {{ __('store.fees') }}
+                    </td>
+                    @foreach($recurrings as $billing => $recurring)
+                        @php($current = $item->exists ? $item->prices->where('currency', $defaultCurrency)->where('action', $action)->where('billing', $billing)->first() : null)
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
+                            @include('admin/shared/input', [
+                                'name' => "prices[$defaultCurrency][$action][$billing][setup]",
+                                'type' => 'number',
+                                'step' => '0.01',
+                                'min' => 0,
+                                'value' => old("prices.$defaultCurrency.$action.$billing.setup", $current?->setup),
+                            ])
+                        </td>
+                    @endforeach
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
 </div>

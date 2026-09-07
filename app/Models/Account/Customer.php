@@ -141,6 +141,20 @@ use Laravel\Sanctum\HasApiTokens;
  */
 class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\MustVerifyEmail, HasNotifiableVariablesInterface, NotifiablePlaceholderInterface
 {
+    public const TYPE_INDIVIDUAL = 'individual';
+
+    public const TYPE_BUSINESS = 'business';
+
+    public const TYPE_ASSOCIATION = 'association';
+
+    public const TAX_STATUS_UNKNOWN = 'unknown';
+
+    public const TAX_STATUS_NON_TAXABLE = 'non_taxable';
+
+    public const TAX_STATUS_TAXABLE_NOT_VAT_LIABLE = 'taxable_not_vat_liable';
+
+    public const TAX_STATUS_VAT_LIABLE = 'vat_liable';
+
     use CanBlocked, CanUse2FA, HasApiTokens, HasFactory, HasMetadata, HasPaymentMethods, Loggable, MustVerifyEmail, Notifiable, softDeletes;
 
     /**
@@ -281,6 +295,15 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'locale',
         'billing_details',
         'company_name',
+        'customer_type',
+        'tax_subject_status',
+        'fiscal_profile_completed',
+        'legal_name',
+        'siren',
+        'siret',
+        'vat_number',
+        'tax_registration_number',
+        'rna_number',
         'avatar_path',
         'gdpr_compliment',
         'security_question_id',
@@ -289,6 +312,22 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
 
     protected static function booted(): void
     {
+        static::saving(function (self $customer) {
+            $legalNameChanged = $customer->isDirty('legal_name');
+            $companyNameChanged = $customer->isDirty('company_name');
+
+            if ($legalNameChanged) {
+                $customer->company_name = $customer->legal_name;
+            } elseif ($companyNameChanged) {
+                $customer->legal_name = $customer->company_name;
+                if (filled($customer->company_name)) {
+                    $customer->customer_type = self::TYPE_BUSINESS;
+                    $customer->fiscal_profile_completed = app(\App\Services\Billing\FiscalProfileService::class)->isComplete($customer);
+                } else {
+                    $customer->fiscal_profile_completed = false;
+                }
+            }
+        });
         static::deleting(function (self $customer) {
             $customer->tokens()->delete();
         });
@@ -301,6 +340,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'country' => 'FR',
         'locale' => 'fr_FR',
         'gdpr_compliment' => false,
+        'tax_subject_status' => self::TAX_STATUS_UNKNOWN,
     ];
 
     /**
@@ -322,6 +362,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
      * @var array<string, string>
      */
     protected $casts = [
+        'fiscal_profile_completed' => 'boolean',
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'last_login' => 'datetime',
@@ -624,7 +665,24 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
             'phone' => e($this->phone),
             'email' => e($this->email),
             'billing_details' => e($this->billing_details),
+            'customer_type' => $this->customer_type,
+            'legal_name' => e($this->legal_name),
+            'siren' => $this->siren,
+            'siret' => $this->siret,
+            'vat_number' => $this->vat_number,
+            'tax_registration_number' => $this->tax_registration_number,
+            'rna_number' => $this->rna_number,
+            'tax_subject_status' => $this->tax_subject_status,
         ];
+    }
+
+    public function hasCompleteFiscalProfile(): bool
+    {
+        if (! $this->fiscal_profile_completed) {
+            return false;
+        }
+
+        return app(\App\Services\Billing\FiscalProfileService::class)->isComplete($this);
     }
 
     /**

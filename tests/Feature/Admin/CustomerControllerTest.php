@@ -101,7 +101,7 @@ class CustomerControllerTest extends TestCase
         ]);
         $response->assertRedirect();
         $this->assertEquals('Martin', $customer->fresh()->firstname);
-        $this->assertEquals('roubaix', $customer->fresh()->city);
+        $this->assertEquals('test', $customer->fresh()->city);
         $this->assertEquals('admin@administration.com', $customer->fresh()->email);
         $this->assertEquals('test', $customer->fresh()->address);
         $this->assertEquals('FR', $customer->fresh()->country);

@@ -134,11 +134,15 @@ class LocaleService
     public static function getLocalesFromAPI()
     {
         return Cache::rememberForever('locales', function () {
-            $http = \Http::get(self::DOWNLOAD_ENDPOINT.'/locales.json');
-            if ($http->status() !== 200) {
+            try {
+                $http = \Http::get(self::DOWNLOAD_ENDPOINT.'/locales.json');
+                if ($http->status() !== 200) {
+                    $content = json_decode(self::getLocalesFromLocal(), true);
+                } else {
+                    $content = json_decode(base64_decode($http->json()['content']), true);
+                }
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
                 $content = json_decode(self::getLocalesFromLocal(), true);
-            } else {
-                $content = json_decode(base64_decode($http->json()['content']), true);
             }
 
             return collect($content)->mapWithKeys(function ($locale, $key) {

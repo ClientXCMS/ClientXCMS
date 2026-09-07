@@ -29,6 +29,7 @@ use App\Models\Admin\Permission;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\Subscription;
 use App\Services\Core\PaymentTypeService;
+use App\Services\Billing\FiscalProfileExtensionRegistry;
 use Illuminate\Support\ServiceProvider;
 
 class BillingServiceProvider extends ServiceProvider
@@ -36,6 +37,7 @@ class BillingServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(PaymentTypeService::class);
+        $this->app->singleton(FiscalProfileExtensionRegistry::class);
         $this->app->booted(function () {
             $extension = $this->app['extension'];
             $extension->addInvoiceItem(new \App\Billing\Items\ProductInvoiceItem);

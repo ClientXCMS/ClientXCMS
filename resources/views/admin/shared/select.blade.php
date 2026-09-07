@@ -18,7 +18,7 @@
 ?>
 
 @if (isset($label))
-    <label for="{{ $name }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">{{ $label }}@if(isset($optional)) ({{ __('global.optional') }}) @endif
+    <label for="{{ $id ?? $name }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">{{ $label }}@if(isset($optional)) ({{ __('global.optional') }}) @endif
         @if (isset($help))
 
             <div class="hs-tooltip inline-block">
@@ -33,7 +33,7 @@
 @endif
 <div class="mt-2">
     @php $__selected = old($name, $value ?? null); @endphp
-    <select name="{{ $name }}" id="{{ $name }}" class="input-text" @foreach($attributes ?? [] as $k => $v) {{ $k }}="{{ $v }}"@endforeach >
+    <select name="{{ $name }}" id="{{ $id ?? $name }}" class="input-text" @foreach($attributes ?? [] as $k => $v) {{ $k }}="{{ $v }}"@endforeach >
         @foreach($options as $_value => $option)
             <option value="{{ $_value }}"{{ is_scalar($__selected) && (string) $__selected === (string) $_value ? ' selected' : '' }} @foreach($options_attributes[$_value] ?? [] as $k => $v) {{ $k }}="{{ $v }}"@endforeach >{{ $option }}</option>
         @endforeach

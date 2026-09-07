@@ -21,6 +21,35 @@
 @section('title', __('store.checkout.title'))
 @section('scripts')
     <script src="{{ Vite::asset('resources/themes/default/js/checkout.js') }}" type="module" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const type = document.querySelector('#checkoutForm [name="customer_type"]');
+            const country = document.querySelector('#checkoutForm [name="country"]');
+            const taxStatus = document.querySelector('#checkoutForm [name="tax_subject_status"]');
+            const businessFields = document.getElementById('checkout-fiscal-business-fields');
+            const frenchFields = document.getElementById('checkout-fiscal-fr-fields');
+            const foreignFields = document.getElementById('checkout-fiscal-foreign-fields');
+
+            if (!type || !country || !businessFields) return;
+
+            const toggleFiscalFields = () => {
+                const isOrganization = ['business', 'association'].includes(type.value);
+                const isAssociation = type.value === 'association';
+                const isFrench = country.value === 'FR';
+                businessFields.style.display = isOrganization ? '' : 'none';
+                document.getElementById('checkout-fiscal-association-status').style.display = isAssociation ? '' : 'none';
+                document.getElementById('checkout-fiscal-rna').style.display = isAssociation ? '' : 'none';
+                document.getElementById('checkout-fiscal-vat').style.display = isOrganization && (!isAssociation || taxStatus?.value !== 'non_taxable') ? '' : 'none';
+                if (frenchFields) frenchFields.style.display = isOrganization && isFrench ? 'contents' : 'none';
+                if (foreignFields) foreignFields.style.display = isOrganization && !isFrench ? 'contents' : 'none';
+            };
+
+            type.addEventListener('change', toggleFiscalFields);
+            taxStatus?.addEventListener('change', toggleFiscalFields);
+            country.addEventListener('change', toggleFiscalFields);
+            toggleFiscalFields();
+        });
+    </script>
 @endsection
 @section('content')
 
@@ -116,18 +145,85 @@
                                     <form method="POST" action="{{ route('front.store.basket.checkout') }}" id="checkoutForm">
                                         @csrf
 
+                                        @php
+                                            $checkoutCustomer = auth('web')->user();
+                                            $fiscalStatus = app(\App\Services\Billing\FiscalProfileService::class)->status($checkoutCustomer);
+                                        @endphp
+                                        <section class="mt-5 rounded-xl bg-gray-50/60 dark:bg-gray-800/40">
+                                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                        <div class="flex items-start gap-3">
+                                            <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300">
+                                                <i class="bi bi-receipt text-lg"></i>
+                                            </span>
+                                            <div>
+                                                <h2 class="font-semibold text-gray-900 dark:text-gray-100">{{ __('einvoicing.profile.title') }}</h2>
+                                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('einvoicing.profile.description') }}</p>
+                                            </div>
+                                        </div>
+                                        <span class="inline-flex items-center gap-2 self-start rounded-full px-3 py-1 text-xs font-medium {{ $fiscalStatus === 'complete' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : ($fiscalStatus === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300') }}">
+                                            <span class="size-2 rounded-full {{ $fiscalStatus === 'complete' ? 'bg-green-500' : ($fiscalStatus === 'pending' ? 'bg-amber-500' : 'bg-red-500') }}"></span>
+                                            {{ __('einvoicing.status.'.$fiscalStatus) }}
+                                        </span>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        @include('shared.select', [
+                                            'name' => 'customer_type',
+                                            'label' => __('einvoicing.profile.type'),
+                                            'options' => [
+                                                'individual' => __('einvoicing.profile.individual'),
+                                                'business' => __('einvoicing.profile.business'),
+                                                'association' => __('einvoicing.profile.association'),
+                                            ],
+                                            'value' => old('customer_type', $checkoutCustomer->customer_type),
+                                        ])
+                                    </div>
+
+                                    <div id="checkout-fiscal-business-fields" class="mt-5 space-y-5">
+                                        @foreach(app(\App\Services\Billing\FiscalProfileExtensionRegistry::class)->views() as $extensionView)
+                                            @include($extensionView, ['customer' => $checkoutCustomer, 'context' => 'checkout'])
+                                        @endforeach
+
+                                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                            <div>
+                                                @include('shared.input', ['name' => 'legal_name', 'label' => __('einvoicing.profile.legal_name'), 'value' => old('legal_name', $checkoutCustomer->legal_name), 'optional' => true])
+                                            </div>
+                                            <div id="checkout-fiscal-association-status">
+                                                @include('shared.select', ['name' => 'tax_subject_status', 'label' => __('einvoicing.profile.tax_subject_status'), 'options' => ['unknown' => __('einvoicing.profile.tax_status_unknown'), 'non_taxable' => __('einvoicing.profile.tax_status_non_taxable'), 'taxable_not_vat_liable' => __('einvoicing.profile.tax_status_taxable_not_vat_liable'), 'vat_liable' => __('einvoicing.profile.tax_status_vat_liable')], 'value' => old('tax_subject_status', $checkoutCustomer->tax_subject_status ?? 'unknown'), 'help' => __('einvoicing.profile.tax_subject_status_help')])
+                                            </div>
+                                            <div id="checkout-fiscal-rna">
+                                                @include('shared.input', ['name' => 'rna_number', 'label' => __('einvoicing.profile.rna_number'), 'value' => old('rna_number', $checkoutCustomer->rna_number), 'optional' => true])
+                                            </div>
+                                            <div id="checkout-fiscal-vat">
+                                                @include('shared.input', ['name' => 'vat_number', 'label' => __('einvoicing.profile.vat_number'), 'value' => old('vat_number', $checkoutCustomer->vat_number), 'optional' => true])
+                                            </div>
+                                            <div id="checkout-fiscal-fr-fields" class="contents">
+                                                <div>
+                                                    @include('shared.input', ['name' => 'siren', 'label' => __('einvoicing.profile.siren'), 'value' => old('siren', $checkoutCustomer->siren), 'optional' => true])
+                                                </div>
+                                                <div>
+                                                    @include('shared.input', ['name' => 'siret', 'label' => __('einvoicing.profile.siret'), 'value' => old('siret', $checkoutCustomer->siret), 'optional' => true])
+                                                </div>
+                                            </div>
+                                            <div id="checkout-fiscal-foreign-fields" class="contents">
+                                                <div>
+                                                    @include('shared.input', ['name' => 'tax_registration_number', 'label' => __('einvoicing.profile.tax_registration_number'), 'value' => old('tax_registration_number', $checkoutCustomer->tax_registration_number), 'optional' => true])
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @include('shared.textarea', ['name' => 'billing_details', 'label' => __('einvoicing.profile.additional_details'), 'value' => old('billing_details', $checkoutCustomer->billing_details), 'help' => __('einvoicing.profile.additional_details_help'), 'optional' => true])
+                                    </div>
+                                </section>
+
                                 <div class="mt-5 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6">
-                                    <div class="sm:col-span-2">
+                                    <div class="sm:col-span-3">
                                         @include("shared.input", ["name" => "firstname", "label" => __('global.firstname'), "value" => auth('web')->user()->firstname ?? old("firstname")])
                                     </div>
 
 
-                                    <div class="sm:col-span-2">
+                                    <div class="sm:col-span-3">
                                         @include("shared.input", ["name" => "lastname", "label" => __('global.lastname'), "value" => auth('web')->user()->lastname ?? old("lastname")])
-                                    </div>
-
-                                    <div class="sm:col-span-2">
-                                        @include("shared.input", ["name" => "company_name", "label" => __('global.company_name'), "value" => auth('web')->user()->company_name ?? old("company_name")])
                                     </div>
 
                                     <div class="sm:col-span-3">
@@ -167,9 +263,6 @@
                                         @include("shared.input", ["name" => "region", "label" => __('global.region'), "value" => auth('web')->user()->region ?? old("region")])
                                     </div>
 
-                                    <div class="sm:col-span-6">
-                                        @include("shared/textarea", ["name" => "billing_details", "label" => __('global.billing_details'), "value" => auth('web')->user()->billing_details ?? old("billing_details"), "help" => __('global.billing_details_help')])
-                                    </div>
                                 </div>
 
                                         @if (setting('checkout.toslink'))

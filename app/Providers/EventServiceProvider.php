@@ -33,7 +33,9 @@ use App\Events\Resources\ResourceCreatedEvent;
 use App\Events\Resources\ResourceDeletedEvent;
 use App\Events\Resources\ResourceUpdatedEvent;
 use App\Listeners\Core\CreateServiceListener;
-use App\Listeners\Core\LastCronRunSaved;
+use App\Listeners\Core\IssueInvoice;
+use App\Listeners\Core\RecordScheduledTaskFailed;
+use App\Listeners\Core\RecordScheduledTaskFinished;
 use App\Listeners\Core\RenewServiceListerner;
 use App\Listeners\Core\SendInvoiceNotification;
 use App\Listeners\Core\WebhookNotification;
@@ -46,7 +48,8 @@ use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
-use Illuminate\Console\Events\ScheduledTaskStarting;
+use Illuminate\Console\Events\ScheduledTaskFailed;
+use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Mail\Events\MessageSending;
 
@@ -90,13 +93,17 @@ class EventServiceProvider extends ServiceProvider
             WebhookNotification::class,
         ],
         InvoiceCreated::class => [
+            IssueInvoice::class,
             SendInvoiceNotification::class,
         ],
         CheckoutCompletedEvent::class => [
             WebhookNotification::class,
         ],
-        ScheduledTaskStarting::class => [
-            LastCronRunSaved::class,
+        ScheduledTaskFinished::class => [
+            RecordScheduledTaskFinished::class,
+        ],
+        ScheduledTaskFailed::class => [
+            RecordScheduledTaskFailed::class,
         ],
         HelpdeskTicketCreatedEvent::class => [
             WebhookNotification::class,

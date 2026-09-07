@@ -7,7 +7,6 @@ use App\Models\Provisioning\Server;
 use App\Models\Store\DomainTld;
 use App\Models\Store\DomainTldPrice;
 use App\Services\Domain\DomainPricingService;
-use App\Services\Store\CurrencyService;
 use App\Services\Store\RecurringService;
 use Illuminate\Http\Request;
 
@@ -98,10 +97,12 @@ class DomainTldController extends AbstractCrudController
     {
         $this->shareSettingsCard();
 
+        $defaultCurrency = setting('store_currency', 'EUR');
+
         return [
             'item' => $item,
             'servers' => ['' => 'None'] + Server::where('type', 'domain')->pluck('name', 'id')->toArray(),
-            'currencies' => app(CurrencyService::class)->getCurrenciesKeys(),
+            'defaultCurrency' => $defaultCurrency,
             'recurrings' => collect(app(RecurringService::class)->getRecurrings())->only(['annually', 'biennially', 'triennially']),
             'actions' => [
                 DomainPricingService::ACTION_REGISTER => __('provisioning.domain_manager.register'),
@@ -114,7 +115,7 @@ class DomainTldController extends AbstractCrudController
 
     private function syncPrices(DomainTld $tld, array $prices): void
     {
-        $allowedCurrencies = app(\App\Services\Store\CurrencyService::class)->getCurrenciesKeys();
+        $defaultCurrency = setting('store_currency', 'EUR');
         $allowedActions = [
             \App\Services\Domain\DomainPricingService::ACTION_REGISTER,
             \App\Services\Domain\DomainPricingService::ACTION_RENEW,
@@ -124,7 +125,7 @@ class DomainTldController extends AbstractCrudController
 
         $tld->prices()->delete();
         foreach ($prices as $currency => $actions) {
-            if (! in_array($currency, $allowedCurrencies, true) || ! is_array($actions)) {
+            if ($currency !== $defaultCurrency || ! is_array($actions)) {
                 continue;
             }
             foreach ($actions as $action => $billings) {
@@ -157,7 +158,7 @@ class DomainTldController extends AbstractCrudController
         if (! $card) {
             abort(404);
         }
-        $item = $card->items->firstWhere('uuid', 'subdomains_hosts');
+        $item = $card->items->firstWhere('uuid', 'domain_tlds');
         \View::share('current_card', $card);
         \View::share('current_item', $item);
     }

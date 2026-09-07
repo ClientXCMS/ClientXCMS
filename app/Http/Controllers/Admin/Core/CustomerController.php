@@ -30,10 +30,13 @@ use App\Models\Billing\Invoice;
 use App\Models\Helpdesk\SupportTicket;
 use App\Models\Provisioning\Service;
 use App\Providers\RouteServiceProvider;
+use App\Services\Billing\FiscalProfileService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class CustomerController extends AbstractCrudController
@@ -194,6 +197,21 @@ class CustomerController extends AbstractCrudController
         $customer->update($data);
 
         return $this->updateRedirect($customer);
+    }
+
+    public function updateFiscalProfile(Request $request, Customer $customer, FiscalProfileService $service)
+    {
+        $this->checkPermission('update', $customer);
+        try {
+            $service->update($customer, $request->all());
+        } catch (ValidationException $exception) {
+            return redirect()->route('admin.customers.show', ['customer' => $customer, 'tab' => 'einvoicing'])
+                ->withErrors($exception->errors())
+                ->withInput();
+        }
+
+        return redirect()->route('admin.customers.show', ['customer' => $customer, 'tab' => 'einvoicing'])
+            ->with('success', __('einvoicing.profile.saved'));
     }
 
     public function autologin(Customer $customer)

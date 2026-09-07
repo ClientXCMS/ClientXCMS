@@ -66,7 +66,7 @@ class LoginRequest extends FormRequest
                 'email' => [__('auth.failed')],
             ]);
         }
-        $hash = \Hash::driver('bcrypt');
+        $hash = \Hash::driver(setting('hash_driver', 'bcrypt'));
         if ($hash->check($this->input('password'), $admin->password) && ($admin->expires_at == null || $admin->expires_at > now())) {
             if (\Hash::needsRehash($admin->password)) {
                 $admin->forceFill(['password' => \Hash::make($this->input('password'))])->save();

@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Route;
 Route::resource('/staffs', AdminController::class)->names('staffs')->except('edit');
 Route::get('/profile', [AdminController::class, 'profile'])->name('staffs.profile');
 Route::put('/profile', [AdminController::class, 'updateProfile']);
+Route::post('/profile/layout/toggle', [AdminController::class, 'toggleLayout'])->name('profile.layout.toggle');
+Route::post('/profile/layout/choose', [AdminController::class, 'chooseLayout'])->name('profile.layout.choose');
 Route::post('/profile/2fa', [AdminController::class, 'save2fa'])->name('profile.2fa');
 Route::post('/profile/2fa/options', [AdminController::class, 'save2faOptions'])->name('profile.2fa_options');
 Route::post('/profile/2fa/trusted/revoke', [AdminController::class, 'revokeTrustedDevice'])->name('profile.2fa_trusted_revoke');

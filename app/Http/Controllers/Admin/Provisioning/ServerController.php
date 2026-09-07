@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Http\Requests\Provisioning\StoreServerRequest;
 use App\Http\Requests\Provisioning\UpdateServerRequest;
 use App\Models\Provisioning\Server;
+use App\Services\Domain\DomainRegistrarManager;
 use DB;
 use Illuminate\Http\Request;
 
@@ -41,7 +42,7 @@ class ServerController extends AbstractCrudController
 
     protected array $labels = [
         'pterodactyl' => ['Client API', 'Application API'],
-        'pelican' => ['Client API', 'Application API'],
+        'pelican' => ['Application API', 'Client API'],
         'wisp' => ['Client API', 'Application API'],
         'plesk' => ['Username', 'Password'],
         'virtualizor' => ['Key', 'Password'],
@@ -76,6 +77,7 @@ class ServerController extends AbstractCrudController
             return [$k->uuid() => $k->title()];
         });
         $params['labels'] = $this->labels;
+        $params['registrars'] = app(DomainRegistrarManager::class)->all()->mapWithKeys(fn ($registrar) => [$registrar->uuid() => $registrar->title()]);
 
         return $this->showView($params);
     }
@@ -89,6 +91,7 @@ class ServerController extends AbstractCrudController
             return [$k->uuid() => $k->title()];
         });
         $params['labels'] = $this->labels;
+        $params['registrars'] = app(DomainRegistrarManager::class)->all()->mapWithKeys(fn ($registrar) => [$registrar->uuid() => $registrar->title()]);
 
         return $this->createView($params);
     }
@@ -100,6 +103,9 @@ class ServerController extends AbstractCrudController
         $server = new Server;
         $server->fill($data);
         $server->save();
+        if ($server->type === 'domain') {
+            $server->attachMetadata(Server::TEST_MODE_METADATA_KEY, $request->boolean('test_mode') ? 'true' : 'false');
+        }
 
         return $this->storeRedirect($server);
     }
@@ -112,7 +118,15 @@ class ServerController extends AbstractCrudController
             return $value !== null;
         });
         $server->fill($data);
+        if ($server->type === 'domain') {
+            $server->port = 443;
+        }
         $server->save();
+        if ($server->type === 'domain') {
+            $server->attachMetadata(Server::TEST_MODE_METADATA_KEY, $request->boolean('test_mode') ? 'true' : 'false');
+        } else {
+            $server->detachMetadata(Server::TEST_MODE_METADATA_KEY);
+        }
 
         return $this->updateRedirect($server);
     }
@@ -120,7 +134,7 @@ class ServerController extends AbstractCrudController
     public function test(Request $request)
     {
         $this->checkPermission('create');
-        $data = $request->only(['address', 'port', 'type', 'username', 'password', 'hostname']);
+        $data = $request->only(['address', 'port', 'type', 'username', 'password', 'hostname', 'test_mode']);
         $copy = new Server;
         if ($request->has('server_id')) {
             $server = Server::find($request->server_id);
@@ -143,6 +157,9 @@ class ServerController extends AbstractCrudController
         if (empty($data['hostname']) && $request->has('server_id')) {
             $data['hostname'] = $server->hostname;
         }
+        if (! $request->has('test_mode') && $request->has('server_id')) {
+            $data['test_mode'] = $server->isTestMode();
+        }
 
         $copy->fill($data);
         $type = $data['type'] ?? 'none';
@@ -161,7 +178,9 @@ class ServerController extends AbstractCrudController
 
                 return response()->json(['success' => false, 'status' => 500, 'message' => $errors]);
             }
-            $result = $serverType->server()->testConnection($copy->toArray());
+            $result = $serverType->server()->testConnection(array_merge($copy->toArray(), [
+                'test_mode' => filter_var($data['test_mode'] ?? false, FILTER_VALIDATE_BOOL),
+            ]));
             if ($result->successful()) {
                 return response()->json(['success' => true, 'status' => $result->status(), 'message' => $result->toString()]);
             }

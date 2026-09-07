@@ -52,6 +52,6 @@ class DomainSearchController extends Controller
 
     private function domainProduct(): ?Product
     {
-        return Product::where('type', 'domain')->where('status', 'active')->orderBy('sort_order')->first();
+        return Product::where('type', 'domain')->orderBy('sort_order')->first();
     }
 }

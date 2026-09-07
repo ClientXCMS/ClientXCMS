@@ -42,17 +42,21 @@ class InvoiceDeliveryCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $this->info('Running services:delivery at '.now()->format('Y-m-d H:i:s'));
-        $this->deliverManualServices();
-        $this->deliverInvoiceItems();
+
+        $successful = $this->deliverManualServices();
+        $successful = $this->deliverInvoiceItems() && $successful;
+
+        return $successful ? self::SUCCESS : self::FAILURE;
     }
 
-    private function deliverManualServices()
+    private function deliverManualServices(): bool
     {
+        $successful = true;
         $services = Service::getItemsByMetadata('must_created_manually', '1');
-        $services->each(function (Service $service) {
+        $services->each(function (Service $service) use (&$successful) {
             try {
                 if (! $service->isPending()) {
                     $this->info("Service {$service->id} is not pending, skipping delivery.");
@@ -64,21 +68,26 @@ class InvoiceDeliveryCommand extends Command
                     $service->attachMetadata('must_created_manually', '0');
                     $this->info("Service {$service->id} delivered : ".$result->message);
                 } else {
+                    $successful = false;
                     $this->error("Service {$service->id} delivery failed Error : ".$result->message);
                 }
             } catch (\Exception $e) {
+                $successful = false;
                 $this->error("Service {$service->id} delivery failed : ".$e->getMessage());
             }
         });
+
+        return $successful;
     }
 
-    private function deliverInvoiceItems()
+    private function deliverInvoiceItems(): bool
     {
+        $successful = true;
         $items = InvoiceItem::findItemsMustDeliver();
-        $items->each(function (InvoiceItem $item) {
+        $items->each(function (InvoiceItem $item) use (&$successful) {
             try {
                 // Double livraison pour les renouvellements du à l'event RenewServiceListerner qui peut avoir déjà livré le service et donc on attend 2 minutes avant de relivrer
-                if ($item->type == 'renewal' && ($item->invoice && $item->invoice->paid_at != null && $item->invoice->paid_at->subMinutes(2)->isFuture())) {
+                if ($item->type == 'renewal' && ($item->invoice && $item->invoice->paid_at != null && $item->invoice->paid_at->gt(now()->subMinutes(2)))) {
                     $this->info("Skipping invoice item {$item->id} as it is a renewal and the invoice is not yet paid or too recent.");
 
                     return;
@@ -86,11 +95,15 @@ class InvoiceDeliveryCommand extends Command
                 if ($item->tryDeliver()) {
                     $this->info("Service delivered for invoice item {$item->id}");
                 } else {
+                    $successful = false;
                     $this->error("Service delivery failed for invoice item {$item->id} (item not supported)");
                 }
             } catch (\Exception $e) {
+                $successful = false;
                 $this->error("Service delivery failed for invoice item {$item->id} : ".$e->getMessage());
             }
         });
+
+        return $successful;
     }
 }

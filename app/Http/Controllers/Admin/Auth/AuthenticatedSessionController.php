@@ -48,6 +48,9 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
+        if ($request->user('admin')->admin_layout_prompted_at === null) {
+            $request->session()->put('show_admin_layout_prompt', true);
+        }
         if ($request->has('redirect')) {
             return secure_redirect($request->get('redirect'));
         }
@@ -117,6 +120,9 @@ class AuthenticatedSessionController extends Controller
         }
         \Session::put('autologin', true);
         Auth::guard('admin')->login($admin);
+        if ($admin->admin_layout_prompted_at === null) {
+            $request->session()->put('show_admin_layout_prompt', true);
+        }
 
         return redirect()->route('admin.dashboard')->with('success', __('admin.dashboard.autologin_success', ['name' => $admin->name]));
     }

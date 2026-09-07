@@ -160,7 +160,7 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456789',
         ]);
         $response->assertStatus(200);
-        $response->assertJsonFragment(['email' => 'admin@administration.com', 'city' => 'roubaix', 'firstname' => 'Martin']);
+        $response->assertJsonFragment(['email' => 'admin@administration.com', 'city' => 'test', 'firstname' => 'Martin']);
     }
 
     public function test_api_application_customer_confirm(): void

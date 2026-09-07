@@ -25,6 +25,7 @@ use App\Models\Account\Customer;
 use App\Models\ActionLog;
 use App\Rules\Valid2FACodeRule;
 use App\Services\Account\AccountDeletionService;
+use App\Services\Billing\FiscalProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -68,7 +69,7 @@ class ProfileController extends Controller
      *     )
      * )
      */
-    public function show(Request $request): JsonResponse
+    public function show(Request $request, FiscalProfileService $fiscalProfiles): JsonResponse
     {
         $customer = $request->user();
 
@@ -78,6 +79,9 @@ class ProfileController extends Controller
                 'email' => $customer->email,
                 'firstname' => $customer->firstname,
                 'lastname' => $customer->lastname,
+                'legal_name' => $customer->legal_name,
+                'company_name' => $customer->legal_name,
+                'billing_details' => $customer->billing_details,
                 'address' => $customer->address,
                 'address2' => $customer->address2,
                 'city' => $customer->city,
@@ -93,6 +97,22 @@ class ProfileController extends Controller
                 'two_factor_enabled' => $customer->twoFactorEnabled(),
                 'has_security_question' => $customer->security_question_id !== null,
                 'created_at' => $customer->created_at->toIso8601String(),
+                'fiscal_profile' => [
+                    'completed' => $customer->hasCompleteFiscalProfile(),
+                    'status' => $fiscalProfiles->status($customer),
+                    'customer_type' => $customer->customer_type,
+                    'tax_subject_status' => $customer->tax_subject_status,
+                    'legal_name' => $customer->legal_name,
+                    'company_name' => $customer->legal_name,
+                    'siren' => $customer->siren,
+                    'siret' => $customer->siret,
+                    'vat_number' => $customer->vat_number,
+                    'tax_registration_number' => $customer->tax_registration_number,
+                    'rna_number' => $customer->rna_number,
+                    'billing_details' => $customer->billing_details,
+                    'electronic_routing' => $fiscalProfiles->electronicRouting($customer),
+                    'evidence' => $fiscalProfiles->evidence($customer),
+                ],
             ],
         ]);
     }
@@ -147,7 +167,14 @@ class ProfileController extends Controller
             'region' => ['sometimes', 'nullable', 'string', 'max:100'],
             'country' => ['sometimes', 'nullable', 'string', 'size:2'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'legal_name' => ['sometimes', 'nullable', 'string', 'max:255', 'regex:/^[^<>]*$/'],
+            'company_name' => ['sometimes', 'nullable', 'string', 'max:255', 'regex:/^[^<>]*$/'],
+            'billing_details' => ['sometimes', 'nullable', 'string', 'max:255', 'regex:/^[^<>]*$/'],
         ]);
+
+        if (array_key_exists('legal_name', $validated)) {
+            $validated['company_name'] = $validated['legal_name'];
+        }
 
         $customer->fill($validated);
 
@@ -164,8 +191,27 @@ class ProfileController extends Controller
                 'email' => $customer->email,
                 'firstname' => $customer->firstname,
                 'lastname' => $customer->lastname,
+                'legal_name' => $customer->legal_name,
+                'company_name' => $customer->legal_name,
+                'billing_details' => $customer->billing_details,
             ],
         ]);
+    }
+
+    public function updateFiscal(Request $request, FiscalProfileService $service): JsonResponse
+    {
+        /** @var Customer $customer */
+        $customer = $request->user();
+        $customer = $service->update($customer, $request->all());
+
+        return response()->json(['message' => __('einvoicing.profile.saved'), 'data' => [
+            ...$customer->only(['customer_type', 'tax_subject_status', 'legal_name', 'siren', 'siret', 'vat_number', 'tax_registration_number', 'rna_number', 'billing_details', 'address', 'address2', 'zipcode', 'city', 'region', 'country']),
+            'company_name' => $customer->legal_name,
+            'completed' => $customer->hasCompleteFiscalProfile(),
+            'status' => $service->status($customer),
+            'electronic_routing' => $service->electronicRouting($customer),
+            'evidence' => $service->evidence($customer),
+        ]]);
     }
 
     /**

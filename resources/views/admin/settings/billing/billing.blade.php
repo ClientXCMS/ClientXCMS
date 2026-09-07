@@ -99,6 +99,15 @@
                 <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('billing.admin.settings.tax') }}</h3>
             </div>
             <div class="col-span-3">
+                <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('einvoicing.settings.legal_entity') }}</h3>
+            </div>
+            <div>@include('admin/shared/input', ['name' => 'billing_legal_name', 'label' => __('einvoicing.profile.legal_name'), 'value' => setting('billing_legal_name')])</div>
+            <div>@include('admin/shared/input', ['name' => 'billing_siren', 'label' => __('einvoicing.profile.siren'), 'value' => setting('billing_siren')])</div>
+            <div>@include('admin/shared/input', ['name' => 'billing_siret', 'label' => __('einvoicing.profile.siret'), 'value' => setting('billing_siret'), 'optional' => true])</div>
+            <div>@include('admin/shared/input', ['name' => 'billing_vat_number', 'label' => __('einvoicing.profile.vat_number'), 'value' => setting('billing_vat_number'), 'optional' => true])</div>
+            <div>@include('admin/shared/select', ['name' => 'billing_operation_category', 'label' => __('einvoicing.settings.operation_category'), 'options' => ['goods' => __('einvoicing.settings.goods'), 'services' => __('einvoicing.settings.services'), 'mixed' => __('einvoicing.settings.mixed')], 'value' => setting('billing_operation_category', 'services')])</div>
+            <div>@include('admin/shared/checkbox', ['name' => 'billing_vat_on_debits', 'label' => __('einvoicing.settings.vat_on_debits'), 'value' => setting('billing_vat_on_debits', false)])</div>
+            <div class="col-span-3">
                 @include('admin/shared/checkbox', ['label' => __('billing.admin.settings.fields.store_vat_enabled'), 'name' => 'store_vat_enabled', 'value' => setting('store_vat_enabled')])
             </div>
 

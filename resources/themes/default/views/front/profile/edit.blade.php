@@ -27,20 +27,14 @@
             let defaultTabId = null;
             @if (old('_subuser_form') && $errors->any())
                 defaultTabId = '#pane-subusers';
+            @elseif (old('_fiscal_profile_form') && $errors->any())
+                defaultTabId = '#pane-einvoicing';
             @elseif (
                 $errors->hasAny([
                     'firstname',
                     'lastname',
-                    'company_name',
-                    'address',
-                    'address2',
-                    'zipcode',
                     'phone',
-                    'country',
-                    'city',
-                    'region',
                     'locale',
-                    'billing_details',
                 ]))
                 defaultTabId = '#pane-profile';
             @elseif (
@@ -96,6 +90,29 @@
                     this.closest('form').submit();
                 });
             }
+
+            const fiscalType = document.querySelector('#pane-einvoicing [name="customer_type"]');
+            const fiscalTaxStatus = document.querySelector('#pane-einvoicing [name="tax_subject_status"]');
+            const fiscalCountry = document.querySelector('#pane-einvoicing [name="country"]');
+            const fiscalBusinessFields = document.getElementById('front-fiscal-business-fields');
+            if (fiscalType && fiscalBusinessFields) {
+                const toggleFiscalBusinessFields = () => {
+                    const isOrganization = ['business', 'association'].includes(fiscalType.value);
+                    const isAssociation = fiscalType.value === 'association';
+                    const isFrench = fiscalCountry?.value === 'FR';
+                    fiscalBusinessFields.style.display = isOrganization ? '' : 'none';
+                    document.getElementById('front-fiscal-association-status').style.display = isAssociation ? '' : 'none';
+                    document.getElementById('front-fiscal-rna').style.display = isAssociation ? '' : 'none';
+                    document.getElementById('front-fiscal-siren').style.display = isOrganization && isFrench ? '' : 'none';
+                    document.getElementById('front-fiscal-siret').style.display = isOrganization && isFrench ? '' : 'none';
+                    document.getElementById('front-fiscal-tax-registration').style.display = isOrganization && !isFrench ? '' : 'none';
+                    document.getElementById('front-fiscal-vat').style.display = isOrganization && (!isAssociation || fiscalTaxStatus?.value !== 'non_taxable') ? '' : 'none';
+                };
+                fiscalType.addEventListener('change', toggleFiscalBusinessFields);
+                fiscalTaxStatus?.addEventListener('change', toggleFiscalBusinessFields);
+                fiscalCountry?.addEventListener('change', toggleFiscalBusinessFields);
+                toggleFiscalBusinessFields();
+            }
         });
     </script>
 @endsection
@@ -113,6 +130,12 @@
                             id="tab-profile-item" data-hs-tab="#pane-profile" aria-controls="pane-profile" role="tab">
                             <i class="bi bi-person text-lg"></i>
                             {{ __('client.profile.index') }}
+                        </button>
+                        <button type="button"
+                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 text-left w-full"
+                            id="tab-einvoicing-item" data-hs-tab="#pane-einvoicing" aria-controls="pane-einvoicing" role="tab">
+                            <i class="bi bi-receipt text-lg"></i>
+                            {{ __('einvoicing.profile.title') }}
                         </button>
                         <button type="button"
                             class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 text-left w-full"
@@ -208,34 +231,6 @@
                                     ])
                                 </div>
 
-                                <div class="sm:col-span-2">
-                                    @include('shared/input', [
-                                        'name' => 'company_name',
-                                        'label' => __('global.company_name') . ' (' . __('global.optional') . ')',
-                                        'value' => auth('web')->user()->company_name ?? old('company_name'),
-                                    ])
-                                </div>
-                                <div class="sm:col-span-3">
-                                    @include('shared.input', [
-                                        'name' => 'address',
-                                        'label' => __('global.address'),
-                                        'value' => auth('web')->user()->address ?? old('address'),
-                                    ])
-                                </div>
-                                <div class="sm:col-span-2">
-                                    @include('shared.input', [
-                                        'name' => 'address2',
-                                        'label' => __('global.address2'),
-                                        'value' => auth('web')->user()->address2 ?? old('address2'),
-                                    ])
-                                </div>
-                                <div class="sm:col-span-1">
-                                    @include('shared.input', [
-                                        'name' => 'zipcode',
-                                        'label' => __('global.zip'),
-                                        'value' => auth('web')->user()->zipcode ?? old('zipcode'),
-                                    ])
-                                </div>
                                 <div class="sm:col-span-3">
                                     @include('shared.input', [
                                         'name' => 'email',
@@ -254,28 +249,6 @@
                                     ])
                                 </div>
                                 <div class="sm:col-span-2">
-                                    @include('shared.select', [
-                                        'name' => 'country',
-                                        'label' => __('global.country'),
-                                        'options' => $countries,
-                                        'value' => auth('web')->user()->country ?? old('country'),
-                                    ])
-                                </div>
-                                <div class="sm:col-span-2">
-                                    @include('shared.input', [
-                                        'name' => 'city',
-                                        'label' => __('global.city'),
-                                        'value' => auth('web')->user()->city ?? old('city'),
-                                    ])
-                                </div>
-                                <div class="sm:col-span-2">
-                                    @include('shared.input', [
-                                        'name' => 'region',
-                                        'label' => __('global.region'),
-                                        'value' => auth('web')->user()->region ?? old('region'),
-                                    ])
-                                </div>
-                                <div class="sm:col-span-2">
                                     @include('shared/select', [
                                         'name' => 'locale',
                                         'label' => __('global.locale'),
@@ -283,17 +256,15 @@
                                         'value' => auth('web')->user()->locale ?? old('locale'),
                                     ])
                                 </div>
-                                <div class="sm:col-span-4">
-                                    @include('shared/textarea', [
-                                        'name' => 'billing_details',
-                                        'label' => __('global.billing_details'),
-                                        'value' => auth('web')->user()->billing_details ?? old('billing_details'),
-                                        'help' => __('global.billing_details_help'),
-                                    ])
-                                </div>
                             </div>
-                            <button class="btn btn-primary mt-4">{{ __('global.save') }}</button>
+                            <div class="flex flex-wrap gap-3 mt-4">
+                                <button class="btn btn-primary">{{ __('global.save') }}</button>
+                            </div>
                         </form>
+                    </div>
+
+                    <div id="pane-einvoicing" class="hidden" role="tabpanel" aria-labelledby="tab-einvoicing-item">
+                        @include('front.profile.partials.fiscal-profile')
                     </div>
 
                     <!-- Security Panel -->

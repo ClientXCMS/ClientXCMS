@@ -221,11 +221,43 @@ class AdminController extends AbstractCrudController
             'username' => 'nullable|string|max:255',
             'signature' => 'nullable|string|max:255',
             'locale' => ['required', 'string', Rule::in(array_keys(\App\Services\Core\LocaleService::getLocalesNames()))],
+            'admin_layout' => ['required', 'string', Rule::in([
+                Admin::LAYOUT_HORIZONTAL,
+                Admin::LAYOUT_VERTICAL,
+            ])],
         ]);
         $request->user('admin')->update($validated);
         event(new ResourceUpdatedEvent($request->user('admin')));
 
         return back()->with('success', __('client.profile.updated'));
+    }
+
+    public function toggleLayout(Request $request)
+    {
+        $admin = $request->user('admin');
+        $admin->update([
+            'admin_layout' => $admin->usesVerticalLayout() ? Admin::LAYOUT_HORIZONTAL : Admin::LAYOUT_VERTICAL,
+        ]);
+
+        return back();
+    }
+
+    public function chooseLayout(Request $request)
+    {
+        $validated = $request->validate([
+            'admin_layout' => ['required', 'string', Rule::in([
+                Admin::LAYOUT_HORIZONTAL,
+                Admin::LAYOUT_VERTICAL,
+            ])],
+        ]);
+
+        $request->user('admin')->update([
+            'admin_layout' => $validated['admin_layout'],
+            'admin_layout_prompted_at' => now(),
+        ]);
+        $request->session()->forget('show_admin_layout_prompt');
+
+        return back()->with('success', __('admin.admins.layout.updated'));
     }
 
     public function updatePassword(Request $request)

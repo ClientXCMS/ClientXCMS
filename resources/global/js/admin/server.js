@@ -5,6 +5,30 @@ const resultContainer = document.getElementById("result-container");
 const state = document.getElementById("state");
 const statuscode = document.getElementById("statuscode");
 const data = document.getElementById("data");
+const hostnameInputContainer = document.getElementById("hostname-input-container");
+const registrarSelectContainer = document.getElementById("registrar-select-container");
+const hostnameInput = document.querySelector("[data-server-hostname-input]");
+const registrarSelect = document.querySelector("[data-server-registrar-select]");
+const portContainer = document.getElementById("port-container");
+const portInput = portContainer?.querySelector("input[name=\"port\"]");
+const testModeContainer = document.getElementById("test-mode-container");
+const testModeInput = testModeContainer?.querySelector("input[name=\"test_mode\"]");
+
+function updateDomainFields() {
+    const isDomain = typeSelect.value === "domain";
+
+    hostnameInputContainer.classList.toggle("hidden", isDomain);
+    hostnameInputContainer.classList.toggle("flex", !isDomain);
+    hostnameInput.disabled = isDomain;
+    registrarSelectContainer.classList.toggle("hidden", !isDomain);
+    registrarSelectContainer.classList.toggle("flex", isDomain);
+    registrarSelect.disabled = !isDomain;
+    portContainer.classList.toggle("hidden", isDomain);
+    portInput.disabled = isDomain;
+    testModeContainer.classList.toggle("hidden", !isDomain);
+    testModeContainer.classList.toggle("flex", isDomain);
+    testModeInput.disabled = !isDomain;
+}
 
 const text = button.innerText
 typeSelect.addEventListener("change", (e) => {
@@ -14,6 +38,7 @@ typeSelect.addEventListener("change", (e) => {
         document.querySelector("label[for^=\"username\"]").innerHTML = currentLabel[0];
         document.querySelector("label[for^=\"password\"]").innerHTML = currentLabel[1];
     }
+    updateDomainFields();
 })
 const selected = typeSelect.options[typeSelect.selectedIndex];
 const currentLabel = labels[selected.value];
@@ -21,6 +46,7 @@ if (currentLabel){
     document.querySelector("label[for^=\"username\"]").innerHTML = currentLabel[0];
     document.querySelector("label[for^=\"password\"]").innerHTML = currentLabel[1];
 }
+updateDomainFields();
 
 button.addEventListener("click", (e) => {
     resultContainer.classList.add("hidden")
@@ -31,8 +57,9 @@ button.addEventListener("click", (e) => {
         type: document.querySelector("select[name=\"type\"]").value,
         username: document.querySelector("input[name^=\"username\"]").value,
         password: document.querySelector("input[name^=\"password\"]").value,
-        port: document.querySelector("input[name^=\"port\"]").value,
-        hostname: document.querySelector("input[name^=\"hostname\"]").value,
+        port: portInput.disabled ? "" : portInput.value,
+        hostname: document.querySelector("[name=\"hostname\"]:not(:disabled)").value,
+        test_mode: testModeInput && !testModeInput.disabled && testModeInput.checked ? "1" : "0",
     });
 
     e.preventDefault()

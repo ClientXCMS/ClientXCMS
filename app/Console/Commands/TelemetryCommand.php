@@ -40,26 +40,30 @@ class TelemetryCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $this->info('Running clientxcms:telemetry at '.now()->format('Y-m-d H:i:s'));
 
         try {
-            if (env('TELEMETRY_ENABLED', 'true') === 'false') {
+            if (! config('telemetry.enabled', true)) {
                 $this->info('Telemetry is disabled. Skipping telemetry data sending.');
 
-                return;
+                return self::SUCCESS;
             }
             $telemetryService = app(\App\Services\TelemetryService::class);
             $result = $telemetryService->sendTelemetry();
             if (! $result) {
                 $this->error('Failed to send telemetry data.');
 
-                return;
+                return self::FAILURE;
             }
             $this->info('Telemetry data sent successfully.');
+
+            return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error('Error sending telemetry data: '.$e->getMessage());
+
+            return self::FAILURE;
         }
     }
 }
