@@ -40,7 +40,7 @@
                                 </p>
                             </div>
 
-                            @include('admin/shared/mass_actions/header', ['searchFields' => $searchFields, 'search' => $search, 'searchField' => $searchField, 'filters' => $filters, 'checkedFilters' => $checkedFilters])
+                            @include('admin/shared/mass-actions/header', ['searchFields' => $searchFields, 'search' => $search, 'searchField' => $searchField, 'filters' => $filters, 'checkedFilters' => $checkedFilters])
                                 @if (staff_has_permission('admin.manage_services'))
                                 <a class="btn btn-primary text-sm sm:ml-1 mt-2 sm:mt-0 w-full max-w-md sm:w-auto" href="{{ route($routePath . '.create') }}">
                                     {{ __('admin.create') }}
@@ -198,7 +198,11 @@
                                         </a>
                                         @if (staff_has_permission('admin.manage_services'))
 
-                                        <form method="POST" action="{{ route($routePath . '.show', ['service' => $item]) }}" class="inline confirmation-popup">
+                                        <form method="POST" action="{{ route($routePath . '.show', ['service' => $item]) }}" class="inline confirmation-popup"
+                                              @if ($item->pendingInvoiceItems()->exists())
+                                                  data-cancel-delivery-label="{{ __('provisioning.admin.services.delete_cancel_delivery') }}"
+                                              @endif>
+                                            <input type="hidden" name="cancel_invoice_item_delivery" value="0">
                                             @method('DELETE')
                                             @csrf
                                             <button>
@@ -215,11 +219,11 @@
                                 </tbody>
                             </table>
                         </div>
-                        @include('admin/shared/mass_actions/select')
+                        @include('admin/shared/mass-actions/select')
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    @include('admin/shared/mass_actions/modal')
+    @include('admin/shared/mass-actions/modal')
 @endsection
