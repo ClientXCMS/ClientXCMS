@@ -44,7 +44,7 @@ Route::delete('invoices/{invoice}/delete/{invoiceItem}', [InvoiceController::cla
 Route::patch('invoices/{invoice}/update/{invoiceItem}', [InvoiceController::class, 'updateItem'])->name('invoices.updateitem');
 Route::post('invoices/{invoice}/cancel/{invoiceItem}', [InvoiceController::class, 'cancelItem'])->name('invoices.cancelitem');
 Route::post('invoices/export', [InvoiceController::class, 'export'])->name('invoices.export');
-Route::post('/invoices/mass_action', [InvoiceController::class, 'massAction'])->name('invoices.mass_action');
+Route::post('/invoices/mass-action', [InvoiceController::class, 'massAction'])->name('invoices.mass_action');
 Route::resource('/subscriptions', SubscriptionController::class)->names('subscriptions')->except('edit');
 
 Route::post('/customers/{customer}/credit-notes', [CreditNoteController::class, 'store'])->name('customers.credit_notes.store');

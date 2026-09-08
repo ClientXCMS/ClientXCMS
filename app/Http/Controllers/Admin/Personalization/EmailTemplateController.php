@@ -30,7 +30,7 @@ class EmailTemplateController extends AbstractCrudController
 {
     protected string $model = EmailTemplate::class;
 
-    protected string $viewPath = 'admin.personalization.email_templates';
+    protected string $viewPath = 'admin.personalization.email-templates';
 
     protected string $translatePrefix = 'personalization.email_templates';
 

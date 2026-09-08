@@ -49,4 +49,4 @@ Route::put('/api-keys/{apiKey}', [\App\Http\Controllers\Admin\Security\ApiKeysCo
 Route::name('settings.')->prefix('settings')->group(function () {
     Route::put('/security/security', [SettingsSecurityController::class, 'storeSecurity'])->name('security.security');
 });
-Route::resource('/security_questions', SecurityQuestionController::class)->names('security_questions')->except('edit');
+Route::resource('/security-questions', SecurityQuestionController::class)->names('security_questions')->except('edit');

@@ -35,7 +35,7 @@
                                 </p>
                             </div>
 
-                            @include('admin/shared/mass_actions/header', ['searchFields' => $searchFields, 'search' => $search, 'searchField' => $searchField, 'filters' => $filters, 'checkedFilters' => $checkedFilters])
+                            @include('admin/shared/mass-actions/header', ['searchFields' => $searchFields, 'search' => $search, 'searchField' => $searchField, 'filters' => $filters, 'checkedFilters' => $checkedFilters])
                         </div>
                     </div>
                     <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">

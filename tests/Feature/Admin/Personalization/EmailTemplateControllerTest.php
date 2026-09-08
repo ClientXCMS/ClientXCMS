@@ -17,7 +17,7 @@ class EmailTemplateControllerTest extends TestCase
         $this->seed(EmailTemplateSeeder::class);
         $response = $this->performAdminAction('GET', route('admin.personalization.email_templates.index'));
         $response->assertStatus(200);
-        $response->assertViewIs('admin.personalization.email_templates.index');
+        $response->assertViewIs('admin.personalization.email-templates.index');
     }
 
     public function test_email_template_index_without_permission()
@@ -33,7 +33,7 @@ class EmailTemplateControllerTest extends TestCase
         $emailTemplate = EmailTemplate::first();
         $response = $this->performAdminAction('GET', route('admin.personalization.email_templates.show', $emailTemplate));
         $response->assertStatus(200);
-        $response->assertViewIs('admin.personalization.email_templates.show');
+        $response->assertViewIs('admin.personalization.email-templates.show');
     }
 
     public function test_email_template_create()
@@ -41,7 +41,7 @@ class EmailTemplateControllerTest extends TestCase
         $this->seed(EmailTemplateSeeder::class);
         $response = $this->performAdminAction('GET', route('admin.personalization.email_templates.create'));
         $response->assertStatus(200);
-        $response->assertViewIs('admin.personalization.email_templates.create');
+        $response->assertViewIs('admin.personalization.email-templates.create');
     }
 
     public function test_email_template_store()

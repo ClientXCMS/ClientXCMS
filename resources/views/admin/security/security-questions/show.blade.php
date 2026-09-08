@@ -39,7 +39,7 @@
         <form method="POST" action="{{ route($routePath . '.update', $item) }}" id="edit-form">
             @csrf
             @method('PUT')
-            @include('admin.security.security_questions.form')
+            @include('admin.security.security-questions.form')
         </form>
     </div>
     

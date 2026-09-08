@@ -136,7 +136,7 @@
                             </div>
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
                             
-                            @include('admin/shared/mass_actions/header', [
+                            @include('admin/shared/mass-actions/header', [
                                 'searchFields' => $searchFields,
                                 'search' => $search,
                                 'searchField' => $searchField,

@@ -36,9 +36,9 @@ Route::post('/profile/2fa', [AdminController::class, 'save2fa'])->name('profile.
 Route::post('/profile/2fa/options', [AdminController::class, 'save2faOptions'])->name('profile.2fa_options');
 Route::post('/profile/2fa/trusted/revoke', [AdminController::class, 'revokeTrustedDevice'])->name('profile.2fa_trusted_revoke');
 Route::post('/profile/2fa/trusted/revoke-all', [AdminController::class, 'revokeAllTrustedDevices'])->name('profile.2fa_trusted_revoke_all');
-Route::get('/profile/download_codes', [AdminController::class, 'downloadCodes'])->name('profile.2fa_codes');
+Route::get('/profile/download-codes', [AdminController::class, 'downloadCodes'])->name('profile.2fa_codes');
 Route::put('/profile/password', [AdminController::class, 'updatePassword'])->name('profile.password');
-Route::post('/profile/security_question', [AdminController::class, 'saveSecurityQuestion'])->name('profile.security_question');
+Route::post('/profile/security-question', [AdminController::class, 'saveSecurityQuestion'])->name('profile.security_question');
 Route::post('/profile/avatar', [AdminController::class, 'uploadOwnAvatar'])->name('profile.avatar.upload');
 Route::delete('/profile/avatar', [AdminController::class, 'deleteOwnAvatar'])->name('profile.avatar.delete');
 Route::post('/staffs/{staff}/avatar', [AdminController::class, 'uploadStaffAvatar'])->name('staffs.avatar.upload');
@@ -47,7 +47,7 @@ Route::resource('/roles', RoleController::class)->names('roles')->except('edit')
 
 Route::resource('/emails', EmailController::class)->names('emails')->except('edit');
 Route::get('/preview/emails', [EmailController::class, 'preview'])->name('emails.preview');
-Route::get('/intelligent_search', [DashboardController::class, 'intelligentSearch'])->name('intelligent_search');
+Route::get('/intelligent-search', [DashboardController::class, 'intelligentSearch'])->name('intelligent_search');
 Route::post('/translations/settings', [TranslationController::class, 'storeSettingsTranslations'])->name('translations.settings');
 Route::post('/translations', [TranslationController::class, 'storeTranslations'])->name('translations.index');
 Route::get('/locales', [AdminLocalesController::class, 'index'])->name('locales.index');

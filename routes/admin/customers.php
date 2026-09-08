@@ -20,8 +20,8 @@ use App\Http\Controllers\Admin\Core\CustomerController;
 use App\Http\Controllers\Admin\Core\CustomerSubUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/customers/{customer}/send_password', [CustomerController::class, 'sendForgotPassword'])->name('customers.send_password');
-Route::post('/customers/{customer}/resend_confirmation', [CustomerController::class, 'resendConfirmation'])->name('customers.resend_confirmation');
+Route::get('/customers/{customer}/send-password', [CustomerController::class, 'sendForgotPassword'])->name('customers.send_password');
+Route::post('/customers/{customer}/resend-confirmation', [CustomerController::class, 'resendConfirmation'])->name('customers.resend_confirmation');
 Route::post('/customers/{customer}/confirm', [CustomerController::class, 'confirm'])->name('customers.confirm');
 Route::put('/customers/{customer}/fiscal-profile', [CustomerController::class, 'updateFiscalProfile'])->name('customers.fiscal-profile.update');
 Route::resource('/customers', CustomerController::class)->names('customers')->except('edit');

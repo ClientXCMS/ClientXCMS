@@ -138,7 +138,7 @@
                                     </p>
                                 </div>
 
-                                @include('admin/shared/mass_actions/header', [
+                                @include('admin/shared/mass-actions/header', [
                                     'searchFields' => $searchFields,
                                     'search' => $search,
                                     'searchField' => $searchField,
@@ -558,7 +558,7 @@
                                     </p>
                                 </div>
 
-                                @include('admin/shared/mass_actions/header', [
+                                @include('admin/shared/mass-actions/header', [
                                     'searchFields' => $searchFields,
                                     'search' => $search,
                                     'searchField' => $searchField,

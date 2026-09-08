@@ -38,7 +38,7 @@
 
     <form method="POST" action="{{ route($routePath . '.store') }}" id="create-form">
         @csrf
-        @include('admin.security.security_questions.form')
+        @include('admin.security.security-questions.form')
     </form>
 </div>
 @endsection

@@ -35,7 +35,7 @@
                                 </p>
                             </div>
 
-                                @include('admin/shared/mass_actions/header', ['searchFields' => $searchFields, 'search' => $search, 'searchField' => $searchField, 'filters' => $filters, 'checkedFilters' => $checkedFilters])
+                                @include('admin/shared/mass-actions/header', ['searchFields' => $searchFields, 'search' => $search, 'searchField' => $searchField, 'filters' => $filters, 'checkedFilters' => $checkedFilters])
 
                                 <a class="btn btn-primary text-sm sm:ml-1 mt-2 sm:mt-0 w-full max-w-md sm:w-auto" href="{{ route($routePath . '.create') }}">
                                     {{ __('admin.create') }}

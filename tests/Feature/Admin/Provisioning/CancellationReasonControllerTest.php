@@ -11,7 +11,7 @@ class CancellationReasonControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    const API_URL = 'admin/cancellation_reasons';
+    const API_URL = 'admin/cancellation-reasons';
 
     public function test_admin_cancellation_reason_index(): void
     {
