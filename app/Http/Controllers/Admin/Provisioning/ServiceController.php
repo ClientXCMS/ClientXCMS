@@ -489,9 +489,17 @@ class ServiceController extends AbstractCrudController
         return $this->model::where('id', $q)->paginate($this->perPage);
     }
 
-    public function destroy(Service $service)
+    public function destroy(Service $service, Request $request)
     {
         $this->checkPermission('delete', $service);
+        $request->validate(['cancel_invoice_item_delivery' => ['sometimes', 'boolean']]);
+
+        if ($request->boolean('cancel_invoice_item_delivery')) {
+            foreach ($service->pendingInvoiceItems()->get() as $invoiceItem) {
+                $invoiceItem->cancel();
+            }
+        }
+
         $result = $service->expire();
         $service->delete();
         if (! $result->success) {

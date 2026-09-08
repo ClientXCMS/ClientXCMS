@@ -169,22 +169,26 @@
                 </div>
                 @endif
 
-                @if (collect($service->pricingAvailable())->count() > 1)
+                @if (collect($service->pricingAvailable($service->currency))->count() > 1)
                 <form method="POST" action="{{ route('front.services.billing', ['service' => $service]) }}">
                     @csrf
 
                     <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mt-2 mb-2">
                         {{ __('client.services.managerenew') }}
                     </h2>
-                        <ul class="flex flex-col sm:flex-row w-full">
-                            @foreach(collect($service->pricingAvailable()) as $pricing)
+                        <ul class="{{ $service->type === 'domain' ? 'grid grid-cols-1 sm:grid-cols-3 gap-3 w-full' : 'flex flex-col sm:flex-row w-full' }}">
+                            @foreach(collect($service->pricingAvailable($service->currency)) as $pricing)
                                 <li class="inline-flex items-center gap-x-2.5 py-3 px-4 text-sm font-medium bg-white border text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg sm:-ms-px sm:mt-0 sm:first:rounded-se-none sm:first:rounded-es-lg sm:last:rounded-es-none sm:last:rounded-se-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white">
                                     <div class="relative flex items-start w-full">
                                         <div class="flex items-center h-5">
                                             <input id="months-{{ $pricing->recurring }}" @if($service->billing == $pricing->recurring) checked="checked" @endif name="billing" value="{{ $pricing->recurring }}" type="radio" class="border-gray-200 rounded-full disabled:opacity-50 dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800">
                                         </div>
-                                        <label for="months-{{ $pricing->recurring }}" class="ms-3 block w-full text-sm text-gray-600 dark:text-gray-400">
-                                            {{ $pricing->recurring()['months'] == 0.5 ? 1 : $pricing->recurring()['months'] }} {{ $pricing->recurring()['months'] == 0.5 ? __('global.week') : __('global.month') }} - {{ $pricing->pricingMessage(false) }}
+                                        <label for="months-{{ $pricing->recurring }}" class="ms-3 block w-full text-sm text-gray-600 dark:text-gray-500">
+                                            @if ($service->type === 'domain')
+                                                {{ (int) ($pricing->recurring()['months'] / 12) }} {{ (int) $pricing->recurring()['months'] === 12 ? __('recurring.year') : __('recurring.years') }}
+                                            @else
+                                                {{ $pricing->recurring()['months'] == 0.5 ? 1 : $pricing->recurring()['months'] }} {{ $pricing->recurring()['months'] == 0.5 ? __('global.week') : __('global.month') }}
+                                            @endif - {{ $pricing->pricingMessage(false) }}
                                         </label>
                                     </div>
                                 </li>

@@ -164,7 +164,9 @@ class InvoiceService
         if ($product->productType()->server() != null) {
             $server = $product->productType()->server()->findServer($product);
             if ($item->type === ProductTypeInterface::DOMAIN && ! empty($item->data['tld'])) {
-                $tldServer = \App\Models\Store\DomainTld::where('extension', $item->data['tld'])->first()?->server;
+                $tldServer = array_key_exists('domain_server_id', $item->data)
+                    ? Server::find($item->data['domain_server_id'])
+                    : \App\Models\Store\DomainTld::where('extension', $item->data['tld'])->first()?->server;
                 if ($tldServer !== null) {
                     $server = $tldServer;
                 }
@@ -280,6 +282,10 @@ class InvoiceService
 
     public static function createInvoiceFromService(Service $service, ?string $billing = null)
     {
+        // Validate domain tariffs before creating an invoice, including scheduled renewals.
+        if ($service->type === \App\Contracts\Store\ProductTypeInterface::DOMAIN) {
+            $service->getBillingPrice($billing ?? $service->billing);
+        }
         $currency = $service->currency;
         $months = app(RecurringService::class)->get($billing ?? $service->billing)['months'];
         $days = setting('remove_pending_invoice', 0) != 0 ? setting('remove_pending_invoice') : 7;

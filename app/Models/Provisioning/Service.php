@@ -22,11 +22,15 @@ namespace App\Models\Provisioning;
 use App\Abstracts\SupportRelateItemTrait;
 use App\Contracts\Notifications\HasNotifiableVariablesInterface;
 use App\Core\NoneProductType;
+use App\Contracts\Store\ProductTypeInterface;
+use App\Services\Domain\DomainPricingService;
+use App\Models\Store\DomainTld;
 use App\DTO\Store\ConfigOptionDTO;
 use App\DTO\Store\ProductPriceDTO;
 use App\Mail\Service\NotifyExpirationEmail;
 use App\Models\Account\Customer;
 use App\Models\Billing\ConfigOption;
+use App\Models\Billing\InvoiceItem;
 use App\Models\Billing\Traits\PricingInteractTrait;
 use App\Models\Billing\Upgrade;
 use App\Models\Store\Basket\BasketRow;
@@ -133,7 +137,13 @@ use Illuminate\Support\Str;
  */
 class Service extends Model implements HasNotifiableVariablesInterface
 {
-    use HasFactory, HasMetadata, Loggable, PricingInteractTrait, SoftDeletes, SupportRelateItemTrait, Traits\ServerTypeTrait;
+    use HasFactory, HasMetadata, Loggable, SoftDeletes, SupportRelateItemTrait, Traits\ServerTypeTrait;
+    use PricingInteractTrait {
+        pricingAvailable as private traitPricingAvailable;
+        getPriceByCurrency as private traitGetPriceByCurrency;
+        hasBilling as private traitHasBilling;
+        hasPricesForCurrency as private traitHasPricesForCurrency;
+    }
 
     const STATUS_ACTIVE = 'active';
 
@@ -475,10 +485,79 @@ class Service extends Model implements HasNotifiableVariablesInterface
         });
     }
 
+    public function pricingAvailable(?string $currency = null): array
+    {
+        if ($this->type !== ProductTypeInterface::DOMAIN) {
+            return $this->traitPricingAvailable($currency);
+        }
+        $extension = $this->domainPricingExtension();
+        if ($extension === null) {
+            return [];
+        }
+        $billings = ['annually', 'biennially', 'triennially'];
+
+        return collect(app(DomainPricingService::class)->availableForTld(
+            $extension, $currency ?? $this->currency, DomainPricingService::ACTION_RENEW
+        ))->filter(fn (ProductPriceDTO $price) => in_array($price->recurring, $billings, true))
+            ->sortBy(fn (ProductPriceDTO $price) => array_search($price->recurring, $billings, true))
+            ->values()->all();
+    }
+
+    public function getPriceByCurrency(string $currency, ?string $recurring = null): ProductPriceDTO
+    {
+        if ($this->type !== ProductTypeInterface::DOMAIN) {
+            return $this->traitGetPriceByCurrency($currency, $recurring);
+        }
+        $billing = $recurring ?? $this->billing;
+        $price = collect($this->pricingAvailable($currency))->first(
+            fn (ProductPriceDTO $price) => $price->recurring === $billing
+        );
+        if ($price === null) {
+            throw new \App\Exceptions\WrongPaymentException('Domain renewal price is not configured for this TLD, currency and billing period');
+        }
+
+        return $price;
+    }
+
+    public function hasBilling(string $billing): bool
+    {
+        if ($this->type !== ProductTypeInterface::DOMAIN) {
+            return $this->traitHasBilling($billing);
+        }
+
+        return collect($this->pricingAvailable($this->currency))->contains(
+            fn (ProductPriceDTO $price) => $price->recurring === $billing
+        );
+    }
+
+    public function hasPricesForCurrency(?string $currency = null): bool
+    {
+        return $this->type === ProductTypeInterface::DOMAIN
+            ? $this->pricingAvailable($currency ?? $this->currency) !== []
+            : $this->traitHasPricesForCurrency($currency);
+    }
+
+    private function domainPricingExtension(): ?string
+    {
+        $extension = trim((string) (($this->data ?? [])['tld'] ?? ''));
+        if ($extension !== '') {
+            return DomainPricingService::normalizeExtension($extension);
+        }
+        // Legacy services may only store the domain. Prefer the longest configured suffix.
+        $domain = strtolower(trim((string) (($this->data ?? [])['domain'] ?? $this->name), " .\t\n\r"));
+
+        return DomainTld::where('status', 'active')->pluck('extension')
+            ->filter(fn (string $tld) => str_ends_with($domain, $tld))
+            ->sortByDesc(fn (string $tld) => strlen($tld))->first();
+    }
+
     public function getBillingPrice(?string $billing = null): ProductPriceDTO
     {
         if ($billing == null) {
             $billing = $this->billing;
+        }
+        if ($this->type === ProductTypeInterface::DOMAIN) {
+            return $this->getPriceByCurrency($this->currency, $billing);
         }
         if ($this->product_id == null) {
             $pricing = $this->getPriceByCurrency($this->currency, $billing);
@@ -554,6 +633,25 @@ class Service extends Model implements HasNotifiableVariablesInterface
             return $this->product->getAllPricingCurrency($related_id, $this->pricing_key, $currency);
         }
         throw new \Exception('Service Pricing not found for #'.$this->id);
+    }
+
+    public function pendingInvoiceItems()
+    {
+        // Initial invoice items reference their services as a comma-separated list.
+        $id = (string) $this->id;
+
+        return InvoiceItem::query()
+            ->whereNull('delivered_at')
+            ->whereNull('cancelled_at')
+            ->whereHas('metadata', function ($query) use ($id) {
+                $query->where('key', 'services')
+                    ->where(function ($query) use ($id) {
+                        $query->where('value', $id)
+                            ->orWhere('value', 'like', $id.',%')
+                            ->orWhere('value', 'like', '%,'.$id)
+                            ->orWhere('value', 'like', '%,'.$id.',%');
+                    });
+            });
     }
 
     public function invoice()
