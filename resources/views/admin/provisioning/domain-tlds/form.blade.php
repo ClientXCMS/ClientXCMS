@@ -21,6 +21,7 @@
 </div>
     @include('admin/shared/checkbox', ['name' => 'dns_management', 'label' => __('provisioning.domain_manager.dns'), 'checked' => old('dns_management', $item->dns_management)])
     @include('admin/shared/checkbox', ['name' => 'whois_privacy', 'label' => __('provisioning.domain_manager.whois_privacy'), 'checked' => old('whois_privacy', $item->whois_privacy)])
+@include('admin.provisioning.domain-tlds.partials.defaults')
 <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400 mt-4">{{ __($translatePrefix . '.prices') }}</h3>
 
 <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">

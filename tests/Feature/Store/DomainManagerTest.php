@@ -76,7 +76,13 @@ class DomainManagerTest extends TestCase
         $product->type = 'domain';
         $product->save();
 
-        $tld = DomainTld::create(['extension' => '.com', 'status' => 'active']);
+        $tld = DomainTld::create([
+            'extension' => '.com',
+            'status' => 'active',
+            'default_nameservers' => ['ns1.example.net', 'ns2.example.net'],
+            'default_dns_records' => [['type' => 'A', 'name' => '@', 'value' => '192.0.2.10', 'ttl' => 3600]],
+            'apply_default_dns' => false,
+        ]);
         DomainTldPrice::create([
             'domain_tld_id' => $tld->id,
             'currency' => 'USD',
@@ -98,6 +104,11 @@ class DomainManagerTest extends TestCase
 
         $this->assertSame('example.com', $row->data['domain']);
         $this->assertSame('.com', $row->data['tld']);
+        $this->assertSame(['ns1.example.net', 'ns2.example.net'], $row->data['nameservers']);
+        $this->assertSame('192.0.2.10', $row->data['default_dns_records'][0]['value']);
         $this->assertEquals(10, $row->recurringPayment(false));
+
+        $tld->update(['default_nameservers' => ['ns3.example.net', 'ns4.example.net']]);
+        $this->assertSame(['ns1.example.net', 'ns2.example.net'], $row->fresh()->data['nameservers']);
     }
 }

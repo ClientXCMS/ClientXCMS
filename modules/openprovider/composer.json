@@ -1,0 +1,17 @@
+{
+    "name": "clientxcms/openprovider",
+    "description": "Openprovider domain registrar and DNS integration for ClientXCMS.",
+    "type": "clientxcms-module",
+    "require": {
+        "php": ">=8.2"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "platform-check": false
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\Modules\\OpenProvider\\": "src/"
+        }
+    }
+}

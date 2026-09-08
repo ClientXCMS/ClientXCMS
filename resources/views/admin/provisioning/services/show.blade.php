@@ -31,6 +31,16 @@
 @section('content')
     <div class="container mx-auto">
         @include('admin/shared/alerts')
+        @if ($item->type === 'domain' && !empty($item->data['apply_default_dns']))
+            <div class="card mb-4">
+                <h2 class="font-semibold">{{ __('provisioning.admin.domain_tlds.tools.dns_status') }}</h2>
+                <p>{{ __('provisioning.admin.domain_tlds.tools.state_' . ($item->data['dns_initialization']['status'] ?? 'pending')) }}</p>
+                @if (!empty($item->data['dns_initialization']['error']))<p class="text-red-600">{{ $item->data['dns_initialization']['error'] }}</p>@endif
+                @if (auth('admin')->user()->can('admin.manage_domain_tlds') && ($item->data['dns_initialization']['status'] ?? '') !== 'completed' && !empty($item->data['registrar_id']))
+                    <form method="POST" action="{{ route('admin.domain_tlds.tools.retry-dns', $item) }}">@csrf<button class="btn btn-primary mt-3">{{ __('provisioning.admin.domain_tlds.tools.retry_dns') }}</button></form>
+                @endif
+            </div>
+        @endif
         @if ($item->pack_id !== null)
             <div class="alert text-blue-800 bg-blue-100 mt-2 mb-4" role="alert">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>

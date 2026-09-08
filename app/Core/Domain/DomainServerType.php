@@ -65,7 +65,22 @@ class DomainServerType extends AbstractServerType implements ServerTypeInterface
             return new ServiceStateChangeDTO($service, false, 'Domain registrar not found');
         }
 
-        return $registrar->register($service);
+        if (! empty(($service->data ?? [])['registrar_id'])) {
+            $result = new ServiceStateChangeDTO($service, true, 'Domain registration already submitted');
+        } else {
+            $result = $registrar->register($service);
+        }
+        if ($result->success && ! empty(($service->data ?? [])['apply_default_dns'])) {
+            try {
+                \App\Jobs\Domain\InitializeDomainDns::dispatch($service->id)->afterCommit();
+            } catch (\Throwable $e) {
+                $service->data = array_merge($service->data ?? [], ['dns_initialization' => ['status' => 'failed', 'error' => 'DNS job could not be queued']]);
+                $service->save();
+                report($e);
+            }
+        }
+
+        return $result;
     }
 
     public function suspendAccount(Service $service): ServiceStateChangeDTO

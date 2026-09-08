@@ -2,6 +2,8 @@
 @section('title', __($translatePrefix .'.title'))
 @section('setting')
 <div class="container mx-auto">
+    @include('admin.shared.alerts')
+    @include('admin.provisioning.domain-tlds.partials.tools')
     <div class="card">
         <div class="card-heading">
             <div>
@@ -94,4 +96,5 @@
         <div class="py-1 px-4 mx-auto">{{ $items->links('admin.shared.layouts.pagination') }}</div>
     </div>
 </div>
+<script src="{{ Vite::asset('resources/global/js/admin/domain-tlds.js') }}" type="module"></script>
 @endsection

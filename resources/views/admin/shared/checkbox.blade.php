@@ -26,17 +26,21 @@
 @php
     $rand = rand(1, 999);
     if (session()->hasOldInput()) {
-        $__old = session()->getOldInput($name);
-        $checked = $__old !== null && in_array((string) $__old, ['true', '1', 'on'], true);
+        $__oldName = str_ends_with($name, '[]') ? substr($name, 0, -2) : $name;
+        $__old = session()->getOldInput($__oldName);
+        $checked = is_array($__old)
+            ? in_array((string) ($value ?? 'true'), array_map('strval', $__old), true)
+            : $__old !== null && in_array((string) $__old, ['true', '1', 'on'], true);
     }
+    $__checkboxId = preg_replace('/[^a-zA-Z0-9_-]/', '-', $name).$rand;
 @endphp
 
     <div class="flex">
         <input type="checkbox" value="{{ $value ?? 'true' }}"
                class="shrink-0 mt-0.5 border-gray-200 rounded text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"
-               id="{{ $name }}{{ $rand }}" name="{{ $name }}" {{ $checked ?? false ? 'checked' : '' }}>
+               id="{{ $__checkboxId }}" name="{{ $name }}" {{ $checked ?? false ? 'checked' : '' }}>
         @if ($label)
-        <label for="{{ $name }}{{ $rand }}" class="text-sm text-gray-500 ms-3 dark:text-gray-400">{{ $label }}</label>
+        <label for="{{ $__checkboxId }}" class="text-sm text-gray-500 ms-3 dark:text-gray-400">{{ $label }}</label>
         @endif
         @if ($errors->has($name))
             <div class="invalid-feedback">{{ $errors->first($name) }}</div>

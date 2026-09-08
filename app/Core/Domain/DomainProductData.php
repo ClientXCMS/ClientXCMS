@@ -30,12 +30,24 @@ class DomainProductData extends AbstractProductData
             return ['error' => __('provisioning.domain_manager.errors.invalid_tld')];
         }
 
+        // Preserve the snapshot on an already configured basket row (including legacy rows).
+        if (($productDataDTO->data['domain'] ?? null) === $domain && ! empty($productDataDTO->data['nameservers'])) {
+            return array_merge($productDataDTO->data, ['domain' => $domain, 'tld' => $tld]);
+        }
+        $config = app(DomainPricingService::class)->findTld($tld);
+        if (! $config || count($config->default_nameservers ?? []) < 2) {
+            return ['error' => __('provisioning.admin.domain_tlds.tools.missing_nameservers')];
+        }
+        $server = $config->server ?? $productDataDTO->product->productType()->server()?->findServer($productDataDTO->product);
+
         return [
-            'domain' => $domain,
-            'tld' => $tld,
-            'operation' => 'register',
-            'provider' => 'fake',
-            'nameservers' => ['ns1.example.net', 'ns2.example.net'],
+            'domain' => $domain, 'tld' => $tld, 'operation' => 'register',
+            'provider' => $server?->hostname, 'domain_server_id' => $server?->id,
+            'nameservers' => $config->default_nameservers,
+            'default_dns_records' => $config->default_dns_records ?? [],
+            'apply_default_dns' => (bool) $config->apply_default_dns,
+            'dns_management' => (bool) $config->dns_management,
+            'whois_privacy' => (bool) $config->whois_privacy,
         ];
     }
 

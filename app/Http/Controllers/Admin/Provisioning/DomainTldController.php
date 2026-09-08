@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin\Provisioning;
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Models\Provisioning\Server;
 use App\Models\Store\DomainTld;
-use App\Models\Store\DomainTldPrice;
 use App\Services\Domain\DomainPricingService;
+use App\Services\Domain\DomainRegistrarManager;
 use App\Services\Store\RecurringService;
 use Illuminate\Http\Request;
 
@@ -30,6 +30,15 @@ class DomainTldController extends AbstractCrudController
         return parent::index($request);
     }
 
+    protected function getIndexParams($items, string $translatePrefix)
+    {
+        return parent::getIndexParams($items, $translatePrefix) + [
+            'tlds' => DomainTld::orderBy('extension')->get(),
+            'servers' => Server::where('type', 'domain')->get(),
+            'registrars' => app(DomainRegistrarManager::class)->all(),
+        ];
+    }
+
     public function create(Request $request)
     {
         $this->checkPermission('create');
@@ -48,10 +57,14 @@ class DomainTldController extends AbstractCrudController
     {
         $this->checkPermission('create');
         $data = $this->validated($request);
-        $tld = new DomainTld($data);
-        $tld->normalizeExtension();
-        $tld->save();
-        $this->syncPrices($tld, $request->input('prices', []));
+        $tld = \DB::transaction(function () use ($data, $request) {
+            $tld = new DomainTld($data);
+            $tld->normalizeExtension();
+            $tld->save();
+            $this->syncPrices($tld, $request->input('prices', []));
+
+            return $tld;
+        });
 
         return $this->storeRedirect($tld);
     }
@@ -60,10 +73,12 @@ class DomainTldController extends AbstractCrudController
     {
         $this->checkPermission('update', $domain_tld);
         $data = $this->validated($request, $domain_tld);
-        $domain_tld->fill($data);
-        $domain_tld->normalizeExtension();
-        $domain_tld->save();
-        $this->syncPrices($domain_tld, $request->input('prices', []));
+        \DB::transaction(function () use ($domain_tld, $data, $request) {
+            $domain_tld->fill($data);
+            $domain_tld->normalizeExtension();
+            $domain_tld->save();
+            $this->syncPrices($domain_tld, $request->input('prices', []));
+        });
 
         return $this->updateRedirect($domain_tld);
     }
@@ -78,10 +93,14 @@ class DomainTldController extends AbstractCrudController
 
     private function validated(Request $request, ?DomainTld $tld = null): array
     {
+        $request->merge(['extension' => \App\Services\Domain\DomainPricingService::normalizeExtension((string) $request->input('extension'))]);
         $data = $request->validate([
             'extension' => 'required|string|max:32|unique:domain_tlds,extension,'.($tld?->id ?? 'NULL'),
             'status' => 'required|string|in:active,hidden,unreferenced',
-            'server_id' => 'nullable|exists:servers,id',
+            'server_id' => ['nullable', \Illuminate\Validation\Rule::exists('servers', 'id')->where('type', 'domain')],
+            'default_nameservers' => 'sometimes|array',
+            'default_dns_records' => 'sometimes|array',
+            'apply_default_dns' => 'nullable',
             'dns_management' => 'nullable',
             'whois_privacy' => 'nullable',
             'prices.*.*.*.price' => 'nullable|numeric|min:0',
@@ -90,7 +109,13 @@ class DomainTldController extends AbstractCrudController
         $data['dns_management'] = $request->boolean('dns_management');
         $data['whois_privacy'] = $request->boolean('whois_privacy');
 
-        return $data;
+        $data['apply_default_dns'] = $request->has('defaults_present') ? $request->boolean('apply_default_dns') : (bool) $tld?->apply_default_dns;
+        foreach (['default_nameservers', 'default_dns_records'] as $key) {
+            $data[$key] = $request->has('defaults_present') ? $request->input($key, []) : ($tld?->$key ?? []);
+        }
+        unset($data['prices']);
+
+        return app(\App\Services\Domain\DomainDefaultsService::class)->validate($data, Server::find($data['server_id'] ?? null));
     }
 
     private function formParams(DomainTld $item): array
@@ -115,41 +140,7 @@ class DomainTldController extends AbstractCrudController
 
     private function syncPrices(DomainTld $tld, array $prices): void
     {
-        $defaultCurrency = setting('store_currency', 'EUR');
-        $allowedActions = [
-            \App\Services\Domain\DomainPricingService::ACTION_REGISTER,
-            \App\Services\Domain\DomainPricingService::ACTION_RENEW,
-            \App\Services\Domain\DomainPricingService::ACTION_TRANSFER,
-        ];
-        $allowedBillings = ['annually', 'biennially', 'triennially'];
-
-        $tld->prices()->delete();
-        foreach ($prices as $currency => $actions) {
-            if ($currency !== $defaultCurrency || ! is_array($actions)) {
-                continue;
-            }
-            foreach ($actions as $action => $billings) {
-                if (! in_array($action, $allowedActions, true) || ! is_array($billings)) {
-                    continue;
-                }
-                foreach ($billings as $billing => $price) {
-                    if (! in_array($billing, $allowedBillings, true) || ! is_array($price)) {
-                        continue;
-                    }
-                    if (($price['price'] ?? null) === null && ($price['setup'] ?? null) === null) {
-                        continue;
-                    }
-                    DomainTldPrice::create([
-                        'domain_tld_id' => $tld->id,
-                        'currency' => $currency,
-                        'action' => $action,
-                        'billing' => $billing,
-                        'price' => $price['price'] ?? 0,
-                        'setup' => $price['setup'] ?? 0,
-                    ]);
-                }
-            }
-        }
+        app(\App\Services\Domain\DomainTldPriceWriter::class)->write($tld, $prices);
     }
 
     private function shareSettingsCard(): void

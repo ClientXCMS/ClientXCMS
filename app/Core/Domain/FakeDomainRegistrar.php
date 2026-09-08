@@ -2,7 +2,8 @@
 
 namespace App\Core\Domain;
 
-use App\Contracts\Domain\DomainRegistrarInterface;
+use App\Abstracts\AbstractDomainRegistrar;
+use App\Contracts\Domain\DomainDnsInitializationInterface;
 use App\DTO\Domain\DomainAvailabilityDTO;
 use App\DTO\Domain\DomainInfoDTO;
 use App\DTO\Provisioning\ConnectionResponse;
@@ -11,8 +12,18 @@ use App\Models\Provisioning\Service;
 use Carbon\Carbon;
 use GuzzleHttp\Psr7\Response;
 
-class FakeDomainRegistrar implements DomainRegistrarInterface
+class FakeDomainRegistrar extends AbstractDomainRegistrar implements DomainDnsInitializationInterface
 {
+    public function dnsCapabilities(\App\Models\Provisioning\Server $server): array
+    {
+        return ['nameservers' => ['ns1.example.net', 'ns2.example.net'], 'types' => ['A', 'AAAA', 'CNAME', 'MX', 'TXT']];
+    }
+
+    public function initializationRecords(Service $service): array
+    {
+        return $this->getDnsRecords($service);
+    }
+
     public function uuid(): string
     {
         return 'fake';
