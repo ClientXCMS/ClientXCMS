@@ -48,7 +48,7 @@ Route::post('/services/{service}/reinstall', [ServiceController::class, 'reinsta
 Route::post('/services/{service}/update-data', [ServiceController::class, 'updateData'])->name('services.update_data');
 Route::post('/services/{service}/upgrade', [ServiceController::class, 'upgrade'])->name('services.upgrade');
 Route::get('/services/{service}/{tab}', [ServiceController::class, 'tab'])->name('services.tab');
-Route::post('/services/{service}/action/{action}', [ServiceController::class, 'changeStatus'])->name('services.action')->where('action', 'suspend|unsuspend|expire|cancel|cancel_delivery');
+Route::post('/services/{service}/action/{action}', [ServiceController::class, 'changeStatus'])->name('services.action')->where('action', 'suspend|unsuspend|expire|cancel|cancel_delivery|disable_suspension|enable_suspension|disable_expiration|enable_expiration');
 Route::resource('/configoptions-services', \App\Http\Controllers\Admin\Provisioning\ConfigOptionServiceController::class)->names('configoptions_services')->except('edit');
 
 Route::name('settings.')->prefix('settings')->middleware('admin')->group(function () {

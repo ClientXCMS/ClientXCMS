@@ -67,10 +67,31 @@ class ServiceCronCommandsTest extends TestCase
         $service->update(['expires_at' => $databaseNow->addDays(3), 'cancelled_at' => null]);
         $service->attachMetadata('disable_notify_expiration', true);
 
-        $this->assertTrue(Service::getShouldNotifyExpiration(['3'])->contains('id', $service->id));
+        $this->assertFalse(Service::getShouldNotifyExpiration(['3'])->contains('id', $service->id));
 
         $this->artisan('services:notify-expiration')
-            ->expectsOutputToContain("Service {$service->id} was not notified")
-            ->assertExitCode(Command::FAILURE);
+            ->assertExitCode(Command::SUCCESS);
+    }
+
+    public function test_disabled_suspension_and_expiration_are_excluded_from_automatic_processing(): void
+    {
+        Carbon::setTestNow('2026-08-26 12:00:00');
+        $customer = Customer::factory()->create();
+
+        $active = $this->createServiceModel($customer->id, Service::STATUS_ACTIVE);
+        $active->update(['expires_at' => now()->subDay(), 'cancelled_at' => null]);
+        $active->attachMetadata('disable_suspension', true);
+
+        $suspended = $this->createServiceModel($customer->id, Service::STATUS_SUSPENDED);
+        $suspended->update(['expires_at' => now()->subDays(30)]);
+        $suspended->attachMetadata('disable_expiration', true);
+
+        $notification = $this->createServiceModel($customer->id, Service::STATUS_ACTIVE);
+        $notification->update(['expires_at' => now()->addDays(3), 'cancelled_at' => null]);
+        $notification->attachMetadata('disable_expiration', true);
+
+        $this->assertFalse(Service::getShouldSuspend()->contains('id', $active->id));
+        $this->assertFalse(Service::getShouldExpire()->contains('id', $suspended->id));
+        $this->assertFalse(Service::getShouldNotifyExpiration(['3'])->contains('id', $notification->id));
     }
 }

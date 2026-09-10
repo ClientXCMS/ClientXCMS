@@ -21,10 +21,8 @@ namespace App\Models\Provisioning;
 
 use App\Abstracts\SupportRelateItemTrait;
 use App\Contracts\Notifications\HasNotifiableVariablesInterface;
-use App\Core\NoneProductType;
 use App\Contracts\Store\ProductTypeInterface;
-use App\Services\Domain\DomainPricingService;
-use App\Models\Store\DomainTld;
+use App\Core\NoneProductType;
 use App\DTO\Store\ConfigOptionDTO;
 use App\DTO\Store\ProductPriceDTO;
 use App\Mail\Service\NotifyExpirationEmail;
@@ -35,10 +33,12 @@ use App\Models\Billing\Traits\PricingInteractTrait;
 use App\Models\Billing\Upgrade;
 use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Coupon;
+use App\Models\Store\DomainTld;
 use App\Models\Store\Pricing;
 use App\Models\Store\Product;
 use App\Models\Traits\HasMetadata;
 use App\Models\Traits\Loggable;
+use App\Services\Domain\DomainPricingService;
 use App\Services\Store\PricingService;
 use App\Services\Store\RecurringService;
 use Carbon\Carbon;
@@ -400,6 +400,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
     public static function getShouldExpire()
     {
         return self::where('status', self::STATUS_SUSPENDED)
+            ->whereDoesntHave('metadata', fn ($query) => $query->where('key', 'disable_expiration'))
             ->whereNotNull('expires_at')
             ->whereRaw('NOW() >= DATE_ADD(expires_at, INTERVAL ? DAY)', [setting('days_before_expiration')])
             ->get();
@@ -423,6 +424,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         $suspendAfterDays = (int) setting('services_suspend_after_unpaid_days', 0);
 
         return self::whereIn('status', [self::STATUS_ACTIVE, self::STATUS_CANCELLED])
+            ->whereDoesntHave('metadata', fn ($query) => $query->where('key', 'disable_suspension'))
             ->where(function ($query) {
                 $query->whereNull('cancelled_at')
                     ->orWhere('cancelled_at', '<=', now());
@@ -453,6 +455,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
     public static function getShouldNotifyExpiration(array $days)
     {
         return self::where('status', self::STATUS_ACTIVE)
+            ->whereDoesntHave('metadata', fn ($query) => $query->whereIn('key', ['disable_expiration', 'disable_notify_expiration']))
             ->whereNull('cancelled_at')
             ->whereNotNull('expires_at')
             ->where(function ($query) use ($days) {

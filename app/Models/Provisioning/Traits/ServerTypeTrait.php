@@ -121,6 +121,7 @@ trait ServerTypeTrait
             if ($server != null) {
                 $result = $server->expireAccount($this);
                 if ($result->success) {
+                    $this->detachMetadata('disable_expiration');
                     $this->status = self::STATUS_EXPIRED;
                     if ($this->invoice_id != null && $this->invoice) {
                         $this->invoice->cancel();
@@ -137,6 +138,7 @@ trait ServerTypeTrait
                 }
             } else {
                 $result = new ServiceStateChangeDTO($this, true, 'Server '.$this->id.' expired');
+                $this->detachMetadata('disable_expiration');
                 $this->status = self::STATUS_EXPIRED;
 
                 if ($this->invoice_id != null) {
@@ -152,6 +154,7 @@ trait ServerTypeTrait
         } catch (ExternalApiException|\Exception $e) {
 
             if ($force) {
+                $this->detachMetadata('disable_expiration');
                 $this->status = self::STATUS_EXPIRED;
                 $this->save();
                 event(new ServiceExpired($this));
@@ -175,6 +178,7 @@ trait ServerTypeTrait
                 $result = $server->suspendAccount($this);
                 if ($result->success) {
                     $result = new ServiceStateChangeDTO($this, true, 'Server suspended');
+                    $this->detachMetadata('disable_suspension');
                     $this->status = self::STATUS_SUSPENDED;
                     $this->suspended_at = now();
                     $this->suspend_reason = $reason;
@@ -187,6 +191,7 @@ trait ServerTypeTrait
                 }
             } else {
                 $result = new ServiceStateChangeDTO($this, true, 'Server '.$this->id.' suspended');
+                $this->detachMetadata('disable_suspension');
                 $this->status = self::STATUS_SUSPENDED;
                 $this->suspended_at = now();
                 $this->save();

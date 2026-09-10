@@ -112,6 +112,18 @@ class ServiceController extends AbstractCrudController
             new MassActionDTO('deliver', __('provisioning.admin.services.delivery.btn'), function (Service $service) {
                 return $service->deliver();
             }),
+            new MassActionDTO('disable_suspension', __('provisioning.admin.services.automation.disable_suspension'), function (Service $service) {
+                return $service->attachMetadata('disable_suspension', true);
+            }),
+            new MassActionDTO('enable_suspension', __('provisioning.admin.services.automation.enable_suspension'), function (Service $service) {
+                return $service->detachMetadata('disable_suspension');
+            }),
+            new MassActionDTO('disable_expiration', __('provisioning.admin.services.automation.disable_expiration'), function (Service $service) {
+                return $service->attachMetadata('disable_expiration', true);
+            }),
+            new MassActionDTO('enable_expiration', __('provisioning.admin.services.automation.enable_expiration'), function (Service $service) {
+                return $service->detachMetadata('disable_expiration');
+            }),
             new MassActionDTO('delete', __('global.delete'), function (Service $service) {
                 return $service->delete();
             }),
@@ -389,6 +401,18 @@ class ServiceController extends AbstractCrudController
     public function changeStatus(Request $request, Service $service, string $status)
     {
         $this->checkPermission('update', $service);
+        $automationActions = [
+            'disable_suspension' => ['disable_suspension', true],
+            'enable_suspension' => ['disable_suspension', false],
+            'disable_expiration' => ['disable_expiration', true],
+            'enable_expiration' => ['disable_expiration', false],
+        ];
+        if (isset($automationActions[$status])) {
+            [$metadata, $enabled] = $automationActions[$status];
+            $enabled ? $service->attachMetadata($metadata, true) : $service->detachMetadata($metadata);
+
+            return back()->with('success', __('provisioning.admin.services.automation.'.$status.'_success'));
+        }
         if (! in_array($status, ['suspend', 'unsuspend', 'expire', 'cancel', 'cancel_delivery'])) {
             return back()->with('error', __('provisioning.admin.services.invalid_status'));
         }

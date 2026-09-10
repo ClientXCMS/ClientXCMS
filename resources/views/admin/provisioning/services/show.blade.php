@@ -189,6 +189,38 @@
                         <h3 class="font-bold text-gray-800 dark:text-white mb-3">
                             {{ __($translatePrefix . '.renewals.title') }}
                         </h3>
+                        @if (staff_has_permission('admin.manage_services'))
+                            @php
+                                $suspensionDisabled = $item->hasMetadata('disable_suspension');
+                                $expirationDisabled = $item->hasMetadata('disable_expiration');
+                                $automationNotice = match (true) {
+                                    $suspensionDisabled && $expirationDisabled => 'disabled_notice',
+                                    $suspensionDisabled => 'suspension_disabled_notice',
+                                    $expirationDisabled => 'expiration_disabled_notice',
+                                    default => 'enabled_notice',
+                                };
+                            @endphp
+                            <div class="alert text-blue-800 bg-blue-100 mb-4" role="alert">
+                                <i class="bi bi-info-circle flex-shrink-0 me-2"></i>
+                                <span>{{ __('provisioning.admin.services.automation.'.$automationNotice) }}</span>
+                            </div>
+                            <div class="flex flex-row gap-2 mb-4">
+                                <form method="POST" action="{{ route('admin.services.action', ['service' => $item, 'action' => $item->hasMetadata('disable_suspension') ? 'enable_suspension' : 'disable_suspension']) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-{{ $item->hasMetadata('disable_suspension') ? 'success' : 'secondary' }} text-left">
+                                        <i class="bi bi-{{ $item->hasMetadata('disable_suspension') ? 'play-circle' : 'pause-circle' }} mr-2"></i>
+                                        {{ __('provisioning.admin.services.automation.'.($item->hasMetadata('disable_suspension') ? 'enable_suspension' : 'disable_suspension')) }}
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('admin.services.action', ['service' => $item, 'action' => $item->hasMetadata('disable_expiration') ? 'enable_expiration' : 'disable_expiration']) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-{{ $item->hasMetadata('disable_expiration') ? 'success' : 'secondary' }} text-left">
+                                        <i class="bi bi-{{ $item->hasMetadata('disable_expiration') ? 'play-circle' : 'pause-circle' }} mr-2"></i>
+                                        {{ __('provisioning.admin.services.automation.'.($item->hasMetadata('disable_expiration') ? 'enable_expiration' : 'disable_expiration')) }}
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
                         <div>
                             @if (staff_has_permission('admin.show_invoices'))
                                 <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
