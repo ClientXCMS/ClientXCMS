@@ -118,6 +118,7 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('allow_plus_in_email', true);
             $service->setDefaultValue('force_password_reset', false);
             $service->setDefaultValue('force_login_client', false);
+            $service->setDefaultValue('passkeys_enabled', false);
             $service->setDefaultValue('banned_emails', '');
             $service->setDefaultValue('captcha_driver', 'none');
             $service->setDefaultValue('maintenance_enabled', false);

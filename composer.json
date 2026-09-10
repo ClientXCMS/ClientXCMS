@@ -30,6 +30,7 @@
         "guzzlehttp/guzzle": "^7.2",
         "horstoeko/zugferd": "^1.0",
         "laravel/framework": "^12",
+        "laravel/passkeys": "^0.2.1",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.8",
         "league/flysystem-sftp-v3": "^3.30",

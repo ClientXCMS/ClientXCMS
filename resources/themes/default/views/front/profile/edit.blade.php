@@ -508,6 +508,9 @@
                                 </div>
                             </div>
                         </div>
+                        @if($passkeysEnabled ?? false)
+                            @include('front.profile.passkeys')
+                        @endif
                     </div>
 
                     <!-- Subusers Panel -->

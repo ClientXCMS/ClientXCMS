@@ -64,6 +64,7 @@ class SettingsSecurityController
             'force_login_client' => 'nullable|string|in:true,false',
             'force_2fa_client' => 'nullable|string|in:true,false',
             'force_2fa_admin' => 'nullable|string|in:true,false',
+            'passkeys_enabled' => 'nullable|string|in:true,false',
             'allow_plus_in_email' => 'nullable|string|in:true,false',
             'password_timeout' => 'nullable|integer',
             'banned_emails' => 'nullable|string',
@@ -88,6 +89,7 @@ class SettingsSecurityController
         $data['force_login_client'] = $data['force_login_client'] ?? 'false';
         $data['force_2fa_client'] = $data['force_2fa_client'] ?? 'false';
         $data['force_2fa_admin'] = $data['force_2fa_admin'] ?? 'false';
+        $data['passkeys_enabled'] = $data['passkeys_enabled'] ?? 'false';
         $data['allow_plus_in_email'] = $data['allow_plus_in_email'] ?? 'false';
         Setting::updateSettings($data);
 

@@ -37,12 +37,16 @@ use App\Observers\CustomerObserver;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Notifications\Dispatcher;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\URL;
+use Laravel\Passkeys\Contracts\PasskeyUser;
+use Laravel\Passkeys\PasskeyAuthenticatable;
+use Laravel\Passkeys\Passkeys;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -139,7 +143,7 @@ use Laravel\Sanctum\HasApiTokens;
  *
  * @mixin \Eloquent
  */
-class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\MustVerifyEmail, HasNotifiableVariablesInterface, NotifiablePlaceholderInterface
+class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\MustVerifyEmail, HasNotifiableVariablesInterface, NotifiablePlaceholderInterface, PasskeyUser
 {
     public const TYPE_INDIVIDUAL = 'individual';
 
@@ -155,7 +159,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
 
     public const TAX_STATUS_VAT_LIABLE = 'vat_liable';
 
-    use CanBlocked, CanUse2FA, HasApiTokens, HasFactory, HasMetadata, HasPaymentMethods, Loggable, MustVerifyEmail, Notifiable, softDeletes;
+    use CanBlocked, CanUse2FA, HasApiTokens, HasFactory, HasMetadata, HasPaymentMethods, Loggable, MustVerifyEmail, Notifiable, PasskeyAuthenticatable, softDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -461,6 +465,29 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
     public function getFullNameAttribute(): string
     {
         return $this->firstname.' '.$this->lastname;
+    }
+
+    public function getPasskeyDisplayName(): string
+    {
+        return trim($this->full_name) ?: $this->email;
+    }
+
+    public function getPasskeyUsername(): string
+    {
+        return $this->email;
+    }
+
+    /**
+     * Get the passkeys associated with the user.
+     *
+     * @param  \Laravel\Passkeys\Passkey  $passkey
+     * @return HasMany<Passkey, Model>
+     *
+     * @phpstan-return HasMany<Passkey, Model>
+     */
+    public function passkeys(): HasMany
+    {
+        return $this->hasMany(Passkeys::passkeyModel(), 'user_id');
     }
 
     public function excerptFullName(int $length = 24): string

@@ -21,7 +21,9 @@ use App\Http\Controllers\Front\Billing\PaymentMethodController;
 use App\Http\Controllers\Front\ClientController;
 use App\Http\Controllers\Front\EmailController;
 use App\Http\Controllers\Front\SubUserController;
+use App\Http\Middleware\EnsurePasskeysEnabled;
 use Illuminate\Support\Facades\Route;
+use Laravel\Passkeys\Http\Controllers\PasskeyRegistrationController;
 
 Route::prefix('/client')->name('front.')->group(function () {
     Route::get('/', [ClientController::class, 'index'])->middleware(['auth'])->name('client.index');
@@ -58,6 +60,11 @@ Route::prefix('/client')->name('front.')->group(function () {
         Route::post('/security-question', [\App\Http\Controllers\Front\ProfileController::class, 'saveSecurityQuestion'])->name('.security_question');
         Route::post('/avatar', [\App\Http\Controllers\Front\ProfileController::class, 'uploadAvatar'])->name('.avatar.upload');
         Route::delete('/avatar', [\App\Http\Controllers\Front\ProfileController::class, 'deleteAvatar'])->name('.avatar.delete');
+        Route::middleware([EnsurePasskeysEnabled::class, 'password.confirm', 'throttle:passkey-management'])->group(function () {
+            Route::get('/passkeys/options', [PasskeyRegistrationController::class, 'index'])->name('.passkeys.options');
+            Route::post('/passkeys', [PasskeyRegistrationController::class, 'store'])->name('.passkeys.store');
+            Route::delete('/passkeys/{passkey}', [PasskeyRegistrationController::class, 'destroy'])->name('.passkeys.destroy');
+        });
     });
     Route::middleware(['auth'])->prefix('/billing-profile')->name('billing-profile.')->group(function () {
         Route::put('/', [\App\Http\Controllers\Front\Billing\FiscalProfileController::class, 'update'])->name('update');

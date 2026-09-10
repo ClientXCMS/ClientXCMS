@@ -49,6 +49,7 @@
             <form method="POST" action="{{ route('login') }}">
                 @include('shared.auth.login', ['captcha' => true])
             </form>
+            @if($passkeysEnabled ?? false) @include('shared.auth.passkeys') @endif
 
         </div>
     </div>
