@@ -20,6 +20,7 @@
 namespace App\Extensions;
 
 use GuzzleHttp\Psr7\Utils;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use ZipArchive;
@@ -31,12 +32,12 @@ class UpdaterManager
     public function update(string $uuid, ExtensionType $type)
     {
         ExtensionType::assertValidUuid($uuid);
-        $this->extractExtension($this->download($uuid), storage_path("app/extracts/{$uuid}"), $type, $uuid);
+        $this->extractExtension($this->download($uuid, $type->value), storage_path("app/extracts/{$uuid}"), $type, $uuid);
     }
 
     public function updateCore()
     {
-        $this->extract($this->download('core'), storage_path('app/extracts/core'));
+        $this->extract($this->download('core', 'core'), storage_path('app/extracts/core'));
     }
 
     /**
@@ -95,7 +96,7 @@ class UpdaterManager
         }
     }
 
-    private function download(string $uuid): string
+    private function download(string $uuid, string $type): string
     {
         $filename = storage_path("app/updates/{$uuid}.zip");
         if (! is_dir(dirname($filename))) {
@@ -105,11 +106,17 @@ class UpdaterManager
         if (! $resource) {
             throw new \RuntimeException("Unable to open file for writing: {$filename}");
         }
-        app('license')->download($uuid, $resource);
+        $response = app('license')->download($uuid, $resource);
         if (! file_exists($filename)) {
             throw new \RuntimeException("File not found after download: {$filename}");
         }
         self::checkIfValidZip($filename);
+        (new ArchiveVerifier)->verify(
+            $filename,
+            ArchiveProof::fromResponse($response instanceof ResponseInterface ? $response : null),
+            $uuid,
+            $type
+        );
 
         return $filename;
     }
