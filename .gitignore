@@ -28,6 +28,10 @@ yarn-error.log
 /.github/logs
 /lang/*
 !/lang/README.md
+# git cannot re-include a file under an excluded directory: re-allow the locale
+# folders, then exclude their generated content, so install.php stays tracked.
+!/lang/*/
+/lang/*/*
 !/lang/*/install.php
 /resources/views/vendor/notifications/*
 /data/*
