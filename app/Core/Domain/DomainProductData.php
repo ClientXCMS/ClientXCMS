@@ -21,7 +21,7 @@ class DomainProductData extends AbstractProductData
             'tld' => ['required', 'string', Rule::exists('domain_tlds', 'extension')->where('status', 'active')],
             'nameserver_mode' => ['nullable', Rule::in(['managed', 'custom'])],
             'nameservers' => ['exclude_unless:nameserver_mode,custom', 'required', 'array', 'min:2', 'max:8'],
-            'nameservers.*' => ['exclude_unless:nameserver_mode,custom', 'required', 'string', 'distinct', 'max:253', 'regex:/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i'],
+            'nameservers.*' => ['exclude_unless:nameserver_mode,custom', 'required', 'string', 'distinct', 'max:253', Nameserver::RULE],
         ];
     }
 
@@ -45,7 +45,7 @@ class DomainProductData extends AbstractProductData
 
         $nameserverMode = $productDataDTO->parameters['nameserver_mode'] ?? 'managed';
         $nameservers = $nameserverMode === 'custom'
-            ? array_values(array_filter(array_map(fn ($name) => strtolower(rtrim(trim((string) $name), '.')), $productDataDTO->parameters['nameservers'] ?? [])))
+            ? Nameserver::normalizeAll($productDataDTO->parameters['nameservers'] ?? [])
             : $config->default_nameservers;
 
         return [

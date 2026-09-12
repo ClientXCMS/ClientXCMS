@@ -20,6 +20,7 @@
 namespace App\Http\Requests\Store\Basket;
 
 use App\Contracts\Store\ProductTypeInterface;
+use App\Core\Domain\Nameserver;
 use App\Services\Domain\DomainPricingService;
 use App\Services\Store\CurrencyService;
 use Illuminate\Contracts\Validation\Validator;
@@ -31,6 +32,13 @@ class BasketConfigRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('nameservers')) {
+            $this->merge(['nameservers' => Nameserver::normalizeAll($this->input('nameservers'))]);
+        }
     }
 
     /**
