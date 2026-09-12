@@ -9,17 +9,34 @@ use Illuminate\Validation\ValidationException;
 
 class DomainDefaultsService
 {
-    public const FIELDS = ['default_nameservers', 'default_dns_records', 'apply_default_dns', 'dns_management', 'whois_privacy', 'server_id'];
+    public const FIELDS = ['default_nameservers', 'default_nameserver_ips', 'default_dns_records', 'apply_default_dns', 'dns_management', 'whois_privacy', 'server_id'];
 
     public const TYPES = ['A', 'AAAA', 'CNAME', 'MX', 'TXT'];
 
     public function validate(array $data, ?Server $server = null): array
     {
-        $data['default_nameservers'] = array_values(array_filter(array_map(fn ($name) => strtolower(rtrim(trim((string) $name), '.')), $data['default_nameservers'] ?? [])));
+        $nameservers = [];
+        $nameserverIps = [];
+        foreach ($data['default_nameservers'] ?? [] as $index => $name) {
+            $name = strtolower(rtrim(trim((string) $name), '.'));
+            if ($name === '') {
+                continue;
+            }
+            $nameservers[] = $name;
+            $nameserverIps[] = [
+                'ipv4' => trim((string) ($data['default_nameserver_ips'][$index]['ipv4'] ?? '')) ?: null,
+                'ipv6' => trim((string) ($data['default_nameserver_ips'][$index]['ipv6'] ?? '')) ?: null,
+            ];
+        }
+        $data['default_nameservers'] = $nameservers;
+        $data['default_nameserver_ips'] = $nameserverIps;
         $data['default_dns_records'] = array_values($data['default_dns_records'] ?? []);
         Validator::make($data, [
             'default_nameservers' => 'array|max:8',
             'default_nameservers.*' => ['required', 'distinct', 'max:253', 'regex:/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/'],
+            'default_nameserver_ips' => 'array|max:8',
+            'default_nameserver_ips.*.ipv4' => 'nullable|ipv4',
+            'default_nameserver_ips.*.ipv6' => 'nullable|ipv6',
             'default_dns_records' => 'array|max:100',
             'default_dns_records.*.type' => 'required|in:A,AAAA,CNAME,MX,TXT',
             'default_dns_records.*.name' => ['required', 'string', 'max:253', 'regex:/^(?:@|\*|(?:\*\.)?[a-zA-Z0-9_](?:[a-zA-Z0-9_.-]*[a-zA-Z0-9_])?)$/'],
@@ -27,8 +44,11 @@ class DomainDefaultsService
             'default_dns_records.*.ttl' => 'required|integer|min:60|max:2147483647',
             'default_dns_records.*.priority' => 'nullable|integer|min:0|max:65535',
         ])->validate();
+        if (($data['status'] ?? null) === 'active' && count($data['default_nameservers']) < 2) {
+            throw ValidationException::withMessages(['default_nameservers' => __('provisioning.admin.domain_tlds.tools.nameservers_minimum')]);
+        }
         if (count($data['default_nameservers']) === 1) {
-            throw ValidationException::withMessages(['default_nameservers' => __('provisioning.admin.domain_tlds.tools.invalid_dns')]);
+            throw ValidationException::withMessages(['default_nameservers' => __('provisioning.admin.domain_tlds.tools.nameservers_minimum')]);
         }
         $byName = [];
         foreach ($data['default_dns_records'] as $i => &$record) {
@@ -60,6 +80,7 @@ class DomainDefaultsService
         }
         if (! empty($data['apply_default_dns'])) {
             $registrar = $server ? app(DomainRegistrarManager::class)->all()->get($server->hostname) : null;
+            dd($registrar);
             if (! $data['dns_management'] || ! $registrar instanceof DomainDnsInitializationInterface || count($data['default_nameservers']) < 2 || $data['default_dns_records'] === []) {
                 throw ValidationException::withMessages(['apply_default_dns' => __('provisioning.admin.domain_tlds.tools.incompatible_dns')]);
             }

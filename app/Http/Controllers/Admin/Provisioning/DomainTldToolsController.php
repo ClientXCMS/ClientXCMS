@@ -124,7 +124,7 @@ class DomainTldToolsController extends Controller
             }
             $settings = $tld ? [] : ['server_id' => $operation->server_id, 'status' => $request->boolean('activate') ? 'active' : 'hidden', 'whois_privacy' => false];
             if (! $tld && $source) {
-                $settings += \Illuminate\Support\Arr::only($source->toArray(), ['default_nameservers', 'default_dns_records', 'apply_default_dns', 'dns_management']);
+                $settings += \Illuminate\Support\Arr::only($source->toArray(), ['default_nameservers', 'default_nameserver_ips', 'default_dns_records', 'apply_default_dns', 'dns_management']);
             }
             $priceRows = [];
             foreach ($groups[$extension] as $row) {

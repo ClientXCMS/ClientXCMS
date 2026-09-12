@@ -32,6 +32,10 @@ class DomainRegistrarInfrastructureTest extends TestCase
     {
         $validated = app(DomainDefaultsService::class)->validate([
             'default_nameservers' => ['NS1.EXAMPLE.NET.', 'ns2.example.net'],
+            'default_nameserver_ips' => [
+                ['ipv4' => '192.0.2.1', 'ipv6' => '2001:db8::1'],
+                ['ipv4' => '192.0.2.2', 'ipv6' => ''],
+            ],
             'default_dns_records' => [
                 ['type' => 'A', 'name' => '@', 'value' => '192.0.2.10', 'ttl' => '3600'],
                 ['type' => 'MX', 'name' => '@', 'value' => 'MAIL.EXAMPLE.NET.', 'ttl' => 3600, 'priority' => '10'],
@@ -39,6 +43,9 @@ class DomainRegistrarInfrastructureTest extends TestCase
         ]);
 
         $this->assertSame(['ns1.example.net', 'ns2.example.net'], $validated['default_nameservers']);
+        $this->assertSame('192.0.2.1', $validated['default_nameserver_ips'][0]['ipv4']);
+        $this->assertSame('2001:db8::1', $validated['default_nameserver_ips'][0]['ipv6']);
+        $this->assertNull($validated['default_nameserver_ips'][1]['ipv6']);
         $this->assertSame(3600, $validated['default_dns_records'][0]['ttl']);
         $this->assertSame(10, $validated['default_dns_records'][1]['priority']);
     }
@@ -52,6 +59,16 @@ class DomainRegistrarInfrastructureTest extends TestCase
                 ['type' => 'CNAME', 'name' => 'www', 'value' => 'target.example.net', 'ttl' => 3600],
                 ['type' => 'A', 'name' => 'www', 'value' => '192.0.2.10', 'ttl' => 3600],
             ],
+        ]);
+    }
+
+    public function test_active_tld_requires_two_nameservers(): void
+    {
+        $this->expectException(ValidationException::class);
+        app(DomainDefaultsService::class)->validate([
+            'status' => 'active',
+            'default_nameservers' => ['ns1.example.net'],
+            'default_dns_records' => [],
         ]);
     }
 

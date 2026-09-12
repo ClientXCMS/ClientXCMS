@@ -111,4 +111,39 @@ class DomainManagerTest extends TestCase
         $tld->update(['default_nameservers' => ['ns3.example.net', 'ns4.example.net']]);
         $this->assertSame(['ns1.example.net', 'ns2.example.net'], $row->fresh()->data['nameservers']);
     }
+
+    public function test_customer_can_choose_custom_nameservers_for_a_domain(): void
+    {
+        $product = $this->createProductModel('active', 10, []);
+        $product->type = 'domain';
+        $product->save();
+
+        $tld = DomainTld::create([
+            'extension' => '.com',
+            'status' => 'active',
+            'default_nameservers' => ['ns1.managed.test', 'ns2.managed.test'],
+        ]);
+        DomainTldPrice::create([
+            'domain_tld_id' => $tld->id,
+            'currency' => 'USD',
+            'action' => 'register',
+            'billing' => 'annually',
+            'price' => 10,
+            'setup' => 0,
+        ]);
+
+        $response = $this->post(route('front.store.basket.config', $product), [
+            'currency' => 'USD',
+            'billing' => 'annually',
+            'domain' => 'example.com',
+            'tld' => '.com',
+            'nameserver_mode' => 'custom',
+            'nameservers' => ['NS1.EXTERNAL.TEST.', 'ns2.external.test'],
+        ]);
+
+        $response->assertRedirect(route('front.store.basket.show'));
+        $row = Basket::getBasket()->rows()->first();
+        $this->assertSame('custom', $row->data['nameserver_mode']);
+        $this->assertSame(['ns1.external.test', 'ns2.external.test'], $row->data['nameservers']);
+    }
 }

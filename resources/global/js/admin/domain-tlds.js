@@ -1,6 +1,7 @@
 function init() {
     document.querySelectorAll('[data-domain-defaults]').forEach(root => {
         let index = Math.max(-1, ...[...root.querySelectorAll('[name^="default_dns_records["]')].map(el => Number(el.name.match(/\[(\d+)\]/)?.[1] ?? -1))) + 1;
+        let nameserverIndex = Math.max(-1, ...[...root.querySelectorAll('[name^="default_nameservers["]')].map(el => Number(el.name.match(/\[(\d+)\]/)?.[1] ?? -1))) + 1;
         const priorities = () => root.querySelectorAll('[data-dns-record-list] [data-dns-row]').forEach(row => {
             const input = row.querySelector('[data-dns-priority]');
             if (input) { input.disabled = row.querySelector('select').value !== 'MX'; input.required = !input.disabled; }
@@ -8,7 +9,11 @@ function init() {
         root.addEventListener('change', priorities);
         root.addEventListener('click', event => {
             if (event.target.closest('[data-remove-row]')) event.target.closest('[data-dns-row]').remove();
-            if (event.target.closest('[data-add-nameserver]')) root.querySelector('[data-nameserver-list]').append(root.querySelector('[data-nameserver-template]').content.cloneNode(true));
+            if (event.target.closest('[data-add-nameserver]')) {
+                const template = document.createElement('template');
+                template.innerHTML = root.querySelector('[data-nameserver-template]').innerHTML.replaceAll('__INDEX__', String(nameserverIndex++));
+                root.querySelector('[data-nameserver-list]').append(template.content.cloneNode(true));
+            }
             if (event.target.closest('[data-add-dns]')) {
                 const template = document.createElement('template');
                 template.innerHTML = root.querySelector('[data-dns-template]').innerHTML.replaceAll('__INDEX__', String(index++));

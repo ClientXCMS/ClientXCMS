@@ -19,6 +19,7 @@ class DomainTld extends Model
         'dns_management',
         'whois_privacy',
         'default_nameservers',
+        'default_nameserver_ips',
         'default_dns_records',
         'apply_default_dns',
     ];
@@ -27,6 +28,7 @@ class DomainTld extends Model
         'dns_management' => 'boolean',
         'whois_privacy' => 'boolean',
         'default_nameservers' => 'array',
+        'default_nameserver_ips' => 'array',
         'default_dns_records' => 'array',
         'apply_default_dns' => 'boolean',
     ];
@@ -36,8 +38,9 @@ class DomainTld extends Model
         'dns_management' => true,
         'whois_privacy' => false,
         'default_nameservers' => '[]',
+        'default_nameserver_ips' => '[]',
         'default_dns_records' => '[]',
-        'apply_default_dns' => false,
+        'apply_default_dns' => true,
     ];
 
     public function prices()

@@ -99,6 +99,7 @@ class DomainTldController extends AbstractCrudController
             'status' => 'required|string|in:active,hidden,unreferenced',
             'server_id' => ['nullable', \Illuminate\Validation\Rule::exists('servers', 'id')->where('type', 'domain')],
             'default_nameservers' => 'sometimes|array',
+            'default_nameserver_ips' => 'sometimes|array',
             'default_dns_records' => 'sometimes|array',
             'apply_default_dns' => 'nullable',
             'dns_management' => 'nullable',
@@ -110,7 +111,7 @@ class DomainTldController extends AbstractCrudController
         $data['whois_privacy'] = $request->boolean('whois_privacy');
 
         $data['apply_default_dns'] = $request->has('defaults_present') ? $request->boolean('apply_default_dns') : (bool) $tld?->apply_default_dns;
-        foreach (['default_nameservers', 'default_dns_records'] as $key) {
+        foreach (['default_nameservers', 'default_nameserver_ips', 'default_dns_records'] as $key) {
             $data[$key] = $request->has('defaults_present') ? $request->input($key, []) : ($tld?->$key ?? []);
         }
         unset($data['prices']);

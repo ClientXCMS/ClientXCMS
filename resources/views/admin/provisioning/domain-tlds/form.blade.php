@@ -8,6 +8,23 @@
     <button class="btn btn-primary">{{ $item->exists ? __('global.save') : __('admin.create') }}</button>
 </div>
 
+@if ($errors->any())
+    <div class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300" role="alert" aria-live="polite">
+        <div class="flex items-start gap-3">
+            <i class="bi bi-exclamation-triangle-fill mt-0.5 text-lg" aria-hidden="true"></i>
+            <div>
+                <h3 class="font-semibold">{{ __('provisioning.admin.domain_tlds.tools.form_errors_title') }}</h3>
+                <p class="mt-1 text-sm">{{ __('provisioning.admin.domain_tlds.tools.form_errors_help') }}</p>
+                <ul class="mt-3 list-disc space-y-1 pl-5 text-sm">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    </div>
+@endif
+
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     <div>
         @include('admin/shared/input', ['name' => 'extension', 'label' => __($translatePrefix . '.extension'), 'value' => old('extension', $item->extension), 'placeholder' => '.com'])

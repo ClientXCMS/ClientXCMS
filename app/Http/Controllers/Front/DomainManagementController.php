@@ -19,9 +19,12 @@ class DomainManagementController extends Controller
     public function nameservers(Request $request, Service $service)
     {
         $this->authorizeService($service);
+        $request->merge([
+            'nameservers' => array_values(array_filter(array_map(fn ($name) => strtolower(rtrim(trim((string) $name), '.')), $request->input('nameservers', [])))),
+        ]);
         $validated = $request->validate([
             'nameservers' => 'required|array|min:2|max:8',
-            'nameservers.*' => 'required|string|max:253',
+            'nameservers.*' => ['required', 'string', 'distinct', 'max:253', 'regex:/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/'],
         ]);
         $result = app(DomainRegistrarManager::class)->fromService($service)->updateNameservers($service, $validated['nameservers']);
 
