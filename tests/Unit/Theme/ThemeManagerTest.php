@@ -44,10 +44,14 @@ class ThemeManagerTest extends TestCase
         Container::setInstance($application);
         Facade::setFacadeApplication($application);
 
+        // The namespace is only registered for a theme that ships a lang directory
+        $themePath = sys_get_temp_dir().'/ctx-theme-'.bin2hex(random_bytes(4));
+        mkdir($themePath.'/lang', 0755, true);
+
         try {
             $theme = new ExtensionThemeDTO;
             $theme->uuid = 'altura';
-            $theme->path = dirname(__DIR__, 3).'/resources/themes/altura';
+            $theme->path = $themePath;
             $manager = (new \ReflectionClass(ThemeManager::class))->newInstanceWithoutConstructor();
             (new ReflectionProperty(ThemeManager::class, 'theme'))->setValue($manager, $theme);
 
@@ -71,6 +75,8 @@ class ThemeManagerTest extends TestCase
         } finally {
             Container::setInstance($previousContainer);
             Facade::setFacadeApplication($previousFacadeApplication);
+            @rmdir($themePath.'/lang');
+            @rmdir($themePath);
         }
     }
 

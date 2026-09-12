@@ -46,10 +46,12 @@ class ServiceCronCommandsTest extends TestCase
         Carbon::setTestNow('2026-08-25 12:00:00');
         $customer = Customer::factory()->create();
         Setting::updateSettings(['services_expire_and_delete_after_days' => 90], null, false);
+        // getShouldHidden() compares against the database clock, which Carbon::setTestNow does not move
+        $databaseNow = Carbon::parse(DB::scalar('SELECT NOW()'));
         $old = $this->createServiceModel($customer->id, Service::STATUS_EXPIRED);
-        $old->update(['expires_at' => now()->subDays(91)]);
+        $old->update(['expires_at' => $databaseNow->copy()->subDays(91)]);
         $recent = $this->createServiceModel($customer->id, Service::STATUS_EXPIRED);
-        $recent->update(['expires_at' => now()->subDays(89)]);
+        $recent->update(['expires_at' => $databaseNow->copy()->subDays(89)]);
 
         $this->artisan('services:expire')->assertExitCode(Command::SUCCESS);
 

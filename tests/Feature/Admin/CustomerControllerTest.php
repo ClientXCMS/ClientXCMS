@@ -297,7 +297,7 @@ class CustomerControllerTest extends TestCase
         ]);
         $id = $customer->id;
 
-        $response = $this->performAdminAction('get', self::API_URL.'/'.$id.'/send_password');
+        $response = $this->performAdminAction('get', route('admin.customers.send_password', ['customer' => $id], false));
         // send_password kept GET intentionally; not part of CSRF migration batch.
         $response->assertStatus(302);
         $response->assertSessionHas('success');
