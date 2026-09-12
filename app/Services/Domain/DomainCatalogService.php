@@ -24,18 +24,29 @@ class DomainCatalogService
         return hash_hmac('sha256', json_encode([$server->id, $server->hostname, $server->username, $server->password, $server->ip, $server->hasMetadata('test_mode')]), (string) config('app.key'));
     }
 
-    public function start(Server $server, int $adminId): DomainOperation
+    /** @param array<int, string> $extensions */
+    public function start(Server $server, int $adminId, array $extensions): DomainOperation
     {
-        $this->registrar($server);
+        $registrar = $this->registrar($server);
+        if (! $registrar instanceof \App\Contracts\Domain\DomainCatalogFilterInterface) {
+            throw ValidationException::withMessages(['extensions' => __('provisioning.admin.domain_tlds.tools.filtered_catalog_unsupported')]);
+        }
+        $extensions = collect($extensions)
+            ->map(fn ($extension) => strtolower(ltrim(trim((string) $extension), '.')))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
         $key = $this->connectionKey($server);
 
-        return \DB::transaction(function () use ($server, $adminId, $key) {
+        return \DB::transaction(function () use ($server, $adminId, $key, $extensions) {
             Server::whereKey($server->id)->lockForUpdate()->firstOrFail();
-            $cached = DomainOperation::where('kind', 'catalog')->where('admin_id', $adminId)->where('connection_key', $key)->where('expires_at', '>', now())->whereIn('status', ['pending', 'loading', 'ready'])->latest()->first();
+            $cached = DomainOperation::where('kind', 'catalog')->where('admin_id', $adminId)->where('connection_key', $key)->where('expires_at', '>', now())->whereIn('status', ['pending', 'loading', 'ready'])->latest()->get()
+                ->first(fn (DomainOperation $operation) => ($operation->payload['extensions'] ?? []) === $extensions);
             if ($cached) {
                 return $cached;
             }
-            $operation = DomainOperation::create(['kind' => 'catalog', 'admin_id' => $adminId, 'server_id' => $server->id, 'connection_key' => $key, 'payload' => ['rows' => [], 'offset' => 0, 'environment' => $server->hasMetadata('test_mode') ? 'sandbox' : 'production'], 'expires_at' => now()->addHour()]);
+            $operation = DomainOperation::create(['kind' => 'catalog', 'admin_id' => $adminId, 'server_id' => $server->id, 'connection_key' => $key, 'payload' => ['rows' => [], 'extensions' => $extensions, 'offset' => 0, 'environment' => $server->hasMetadata('test_mode') ? 'sandbox' : 'production'], 'expires_at' => now()->addHour()]);
             \App\Jobs\Domain\LoadDomainCatalog::dispatch($operation->id)->afterCommit();
 
             return $operation;

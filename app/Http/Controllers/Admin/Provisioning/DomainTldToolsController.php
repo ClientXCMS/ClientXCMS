@@ -27,10 +27,20 @@ class DomainTldToolsController extends Controller
     public function catalog(Request $request, DomainCatalogService $catalog)
     {
         $admin = $this->authorizeTools();
-        $request->validate(['server_id' => 'required|integer|exists:servers,id', 'registrar' => 'required|string']);
+        $data = $request->validate([
+            'server_id' => 'required|integer|exists:servers,id',
+            'registrar' => 'required|string',
+            'extensions' => ['required', 'string', 'max:2000'],
+        ]);
+        $extensions = preg_split('/[\s,;]+/', $data['extensions'], -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $extensions = collect($extensions)->map(fn ($extension) => strtolower(ltrim(trim($extension), '.')))->unique()->values()->all();
+        validator(['extensions' => $extensions], [
+            'extensions' => 'required|array|min:1|max:100',
+            'extensions.*' => ['required', 'string', 'distinct', 'max:32', 'regex:/^[a-z0-9-]+(?:\.[a-z0-9-]+)*$/'],
+        ])->validate();
         $server = Server::findOrFail($request->integer('server_id'));
         abort_unless($server->hostname === $request->input('registrar'), 422);
-        $operation = $catalog->start($server, $admin);
+        $operation = $catalog->start($server, $admin, $extensions);
 
         return redirect()->route('admin.domain_tlds.tools.operation', $operation);
     }

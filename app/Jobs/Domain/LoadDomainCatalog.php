@@ -34,7 +34,11 @@ class LoadDomainCatalog implements ShouldQueue
                 }
                 $payload = $operation->payload;
                 $offset = (int) $payload['offset'];
-                $page = $catalog->registrar($server)->catalogPage($server, $offset, 100);
+                $registrar = $catalog->registrar($server);
+                $extensions = $payload['extensions'] ?? [];
+                $page = $extensions !== [] && $registrar instanceof \App\Contracts\Domain\DomainCatalogFilterInterface
+                    ? $registrar->catalogExtensions($server, $extensions)
+                    : $registrar->catalogPage($server, $offset, 100);
                 if ($page->nextOffset !== null && $page->nextOffset <= $offset) {
                     throw new \RuntimeException('Invalid catalog pagination');
                 }
