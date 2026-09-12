@@ -1,5 +1,5 @@
 <div data-dns-row class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end rounded-xl border dark:border-gray-700 p-3 mb-3">
-    <label class="text-sm">Type<select class="input-text" name="default_dns_records[{{ $index }}][type]">@foreach(['A','AAAA','CNAME','MX','TXT'] as $type)<option value="{{ $type }}" @selected(($record['type'] ?? 'A') === $type)>{{ $type }}</option>@endforeach</select></label>
+    <label class="text-sm">Type<select class="input-text" name="default_dns_records[{{ $index }}][type]">@foreach(['A','AAAA','CNAME','MX','TXT'] as $type)<option value="{{ $type }}" @selected(($record['type'] ?? 'A' )===$type)>{{ $type }}</option>@endforeach</select></label>
     <label class="text-sm">{{ __('global.name') }}<input class="input-text" name="default_dns_records[{{ $index }}][name]" value="{{ $record['name'] ?? '@' }}" required></label>
     <label class="text-sm md:col-span-2">{{ __('provisioning.admin.domain_tlds.tools.value') }}<input class="input-text" name="default_dns_records[{{ $index }}][value]" value="{{ $record['value'] ?? '' }}" required></label>
     <div class="grid grid-cols-2 gap-2">

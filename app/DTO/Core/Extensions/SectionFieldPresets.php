@@ -185,11 +185,13 @@ trait SectionFieldPresets
      *
      * @param  int  $count  Number of stats
      * @param  array  $valueDefaults  Override default values, keyed by 1-based index
+     * @param  array  $labelDefaults  Override default labels, keyed by 1-based index
      * @return SectionField[]
      */
-    public static function statFields(int $count = 4, array $valueDefaults = []): array
+    public static function statFields(int $count = 4, array $valueDefaults = [], array $labelDefaults = []): array
     {
         $defaults = [1 => '10K+', 2 => '99.9%', 3 => '24/7', 4 => '5+'];
+        $labelDefaults = [1 => 'Clients satisfaits', 2 => 'Disponibilité', 3 => 'Support', 4 => 'Années d\'expérience'];
 
         $fields = [];
         for ($i = 1; $i <= $count; $i++) {
@@ -203,6 +205,7 @@ trait SectionFieldPresets
             $fields[] = SectionField::text(
                 "stat{$i}_label",
                 self::fieldLabel("theme::sections.stats.config.stat{$i}_label", 'personalization.sections.config.fields.stat_label', ['number' => $i]),
+                default: $labelDefaults[$i] ?? $labelDefaults[$i] ?? '',
             );
         }
 
