@@ -38,6 +38,8 @@ class UpdaterManager
         'resources/views/vendor/notifications/',
     ];
 
+    private const METADATA_FILES = ['README.md', 'LICENSE.txt', 'CHANGELOG.md', '.gitignore', 'LICENSE'];
+
     public function update(string $uuid)
     {
 
@@ -61,33 +63,43 @@ class UpdaterManager
     public function extract(string $file, string $to)
     {
         self::rejectZipSlip($file);
+        $fileSystem = new Filesystem;
         $zip = new ZipArchive;
-        $finder = new Finder;
 
-        $res = $zip->open($file, ZipArchive::CHECKCONS);
-        if ($res) {
+        if ($zip->open($file, ZipArchive::CHECKCONS) !== true) {
+            $fileSystem->remove($file);
+
+            throw new \RuntimeException("Unable to open zip file: {$file}");
+        }
+
+        try {
             if (! $zip->extractTo($to)) {
                 throw new \RuntimeException("Failed to extract zip file: {$file}");
             }
-            $path = (basename(collect($finder->in($to)->directories()->depth('== 0'))->first()->getPathname()));
-            $fileSystem = new Filesystem;
-            $removedFiles = ['README.md', 'LICENSE.txt', 'CHANGELOG.md', '.gitignore', 'LICENSE'];
-            foreach ($removedFiles as $file) {
-                if (file_exists($to.DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$file)) {
-                    unlink($to.DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$file);
-                }
-            }
-            // self::assertExtractedTreeStaysInExtensionDirs($to.DIRECTORY_SEPARATOR.$path);
-            $fileSystem->mirror($to.DIRECTORY_SEPARATOR.$path, base_path(), null, ['override' => true]);
+            $root = $to.DIRECTORY_SEPARATOR.self::archiveRootDirectory($to);
+            $fileSystem->remove(array_map(
+                static fn (string $metadata): string => $root.DIRECTORY_SEPARATOR.$metadata,
+                self::METADATA_FILES
+            ));
+            $fileSystem->mirror($root, base_path(), null, ['override' => true]);
+        } finally {
+            $zip->close();
+            $fileSystem->remove([$file, $to]);
         }
-        $zip->close();
-        if (file_exists($file)) {
-            unlink($file);
+    }
+
+    /**
+     * Vendor archives wrap everything in a single root directory, whose name is
+     * the repository name and not the extension identifier.
+     */
+    private static function archiveRootDirectory(string $to): string
+    {
+        $root = collect((new Finder)->in($to)->directories()->depth('== 0'))->first();
+        if ($root === null) {
+            throw new \RuntimeException("Archive has no root directory: {$to}");
         }
-        if (is_dir($to)) {
-            $fileSystem = new Filesystem;
-            $fileSystem->remove($to);
-        }
+
+        return basename($root->getPathname());
     }
 
     /**

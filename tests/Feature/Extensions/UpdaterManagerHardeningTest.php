@@ -3,11 +3,42 @@
 namespace Tests\Feature\Extensions;
 
 use App\Extensions\UpdaterManager;
+use Symfony\Component\Filesystem\Filesystem;
 use Tests\TestCase;
 use ZipArchive;
 
 class UpdaterManagerHardeningTest extends TestCase
 {
+    private string $sandbox;
+
+    private string $projectRoot;
+
+    private string $extractDir;
+
+    private string $previousBasePath;
+
+    private string $previousCwd;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->sandbox = sys_get_temp_dir().'/ctx-updater-'.bin2hex(random_bytes(6));
+        $this->projectRoot = $this->sandbox.'/project';
+        $this->extractDir = $this->sandbox.'/extract';
+        (new Filesystem)->mkdir([$this->projectRoot, $this->extractDir]);
+        $this->previousBasePath = base_path();
+        $this->previousCwd = (string) getcwd();
+        $this->app->setBasePath($this->projectRoot);
+    }
+
+    protected function tearDown(): void
+    {
+        chdir($this->previousCwd);
+        $this->app->setBasePath($this->previousBasePath);
+        (new Filesystem)->remove($this->sandbox);
+        parent::tearDown();
+    }
+
     private function makeZip(string $path, array $entries): void
     {
         if (file_exists($path)) {
@@ -59,6 +90,41 @@ class UpdaterManagerHardeningTest extends TestCase
         UpdaterManager::rejectZipSlip($zip);
         $this->assertTrue(true, 'no exception means the legit archive passed');
         @unlink($zip);
+    }
+
+    public function test_it_deletes_the_downloaded_archive(): void
+    {
+        $archive = $this->sandbox.'/package.zip';
+        $this->makeZip($archive, ['package/modules/demo/module.json' => '{}']);
+
+        (new UpdaterManager)->extract($archive, $this->extractDir);
+
+        $this->assertFileDoesNotExist($archive, 'the downloaded archive must be cleaned up');
+        $this->assertDirectoryDoesNotExist($this->extractDir, 'the extract directory must be cleaned up');
+    }
+
+    public function test_it_keeps_the_project_license_when_updating(): void
+    {
+        $archive = $this->sandbox.'/package.zip';
+        $this->makeZip($archive, [
+            'package/modules/demo/module.json' => '{}',
+            'package/LICENSE' => 'extension licence',
+        ]);
+        file_put_contents($this->projectRoot.'/LICENSE', 'product licence');
+        chdir($this->projectRoot);
+
+        (new UpdaterManager)->extract($archive, $this->extractDir);
+
+        $this->assertFileExists($this->projectRoot.'/LICENSE', 'updating must not delete the project LICENSE');
+    }
+
+    public function test_it_refuses_an_archive_without_a_root_directory(): void
+    {
+        $archive = $this->sandbox.'/flat.zip';
+        $this->makeZip($archive, ['loose.txt' => 'x']);
+
+        $this->expectException(\RuntimeException::class);
+        (new UpdaterManager)->extract($archive, $this->extractDir);
     }
 
     public function test_extracted_tree_outside_extension_dirs_is_rejected(): void
