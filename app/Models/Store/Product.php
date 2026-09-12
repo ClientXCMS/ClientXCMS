@@ -562,6 +562,6 @@ class Product extends Model
 
     public function formattedDescription(string $a = '- '): string
     {
-        return \App\Helpers\StringHTML::htmlToPlainLines($this->description, $a);
+        return \App\Helpers\StringHTML::htmlToPlainLines($this->description ?? '', $a);
     }
 }

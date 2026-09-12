@@ -63,4 +63,12 @@ class ProductDescriptionTest extends TestCase
         $this->assertSame(['Introduction', 'Premier', 'Second'], $product->formattedDescriptionLines());
         $this->assertSame($html, $product->description);
     }
+
+    public function test_a_product_without_description_formats_to_an_empty_string(): void
+    {
+        $product = new Product;
+
+        $this->assertSame('', $product->formattedDescription());
+        $this->assertSame([], $product->formattedDescriptionLines());
+    }
 }
