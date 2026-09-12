@@ -19,6 +19,10 @@
 
 
 <footer class="print:hidden mt-auto py-10 sm:px-6 lg:px-8 mx-auto dark:bg-gray-900 border-gray-700 shadow-sm ">
+    @includeWhen(
+        app('extension')->extensionIsEnabled('brevo') && setting('brevo_footer_enabled', false),
+        'brevo::newsletter-footer'
+    )
     <!-- Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-5 max-w-7xl mx-2 lg:mx-auto">
         <div>
