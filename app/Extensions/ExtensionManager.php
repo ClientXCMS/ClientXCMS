@@ -281,7 +281,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         })->toArray();
 
         try {
-            (new UpdaterManager)->update($api['uuid']);
+            (new UpdaterManager)->update($extension, ExtensionType::fromAny($type));
             self::writeExtensionJson($extensions);
         } catch (\Exception $e) {
             throw new ExtensionException('Error in UpdaterManager: '.$e->getMessage());

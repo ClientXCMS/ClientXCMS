@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Extensions;
 
+use App\Extensions\ExtensionType;
 use App\Extensions\UpdaterManager;
 use Symfony\Component\Filesystem\Filesystem;
 use Tests\TestCase;
@@ -127,42 +128,93 @@ class UpdaterManagerHardeningTest extends TestCase
         (new UpdaterManager)->extract($archive, $this->extractDir);
     }
 
-    public function test_extracted_tree_outside_extension_dirs_is_rejected(): void
+    public function test_an_extension_archive_only_writes_inside_its_own_directory(): void
     {
-        $tmp = sys_get_temp_dir().'/pentest-tree-'.uniqid();
-        mkdir($tmp.'/app/Http/Controllers', 0755, true);
-        file_put_contents($tmp.'/app/Http/Controllers/Backdoor.php', '<?php');
+        $archive = $this->sandbox.'/payload.zip';
+        $this->makeZip($archive, [
+            'package/modules/demo/module.json' => '{"uuid":"demo"}',
+            'package/modules/demo/src/Service.php' => '<?php // legit',
+            'package/app/Http/Middleware/Authenticate.php' => '<?php // backdoor',
+            'package/database/migrations/9999_99_99_999999_evil.php' => '<?php // backdoor',
+            'package/public/health.php' => '<?php // backdoor',
+            'package/.env' => 'APP_KEY=stolen',
+            'package/composer.json' => '{"require":{}}',
+        ]);
+
+        (new UpdaterManager)->extractExtension($archive, $this->extractDir, ExtensionType::Module, 'demo');
+
+        $this->assertFileExists($this->projectRoot.'/modules/demo/module.json');
+        $this->assertFileExists($this->projectRoot.'/modules/demo/src/Service.php');
+
+        $this->assertFileDoesNotExist($this->projectRoot.'/app/Http/Middleware/Authenticate.php');
+        $this->assertFileDoesNotExist($this->projectRoot.'/database/migrations/9999_99_99_999999_evil.php');
+        $this->assertFileDoesNotExist($this->projectRoot.'/public/health.php');
+        $this->assertFileDoesNotExist($this->projectRoot.'/.env');
+        $this->assertFileDoesNotExist($this->projectRoot.'/composer.json');
+    }
+
+    public function test_an_extension_archive_cannot_touch_another_extension(): void
+    {
+        $archive = $this->sandbox.'/neighbour.zip';
+        $this->makeZip($archive, [
+            'package/modules/demo/module.json' => '{"uuid":"demo"}',
+            'package/modules/victim/src/Service.php' => '<?php // hijacked',
+        ]);
+        (new Filesystem)->mkdir($this->projectRoot.'/modules/victim/src');
+        file_put_contents($this->projectRoot.'/modules/victim/src/Service.php', '<?php // original');
+
+        (new UpdaterManager)->extractExtension($archive, $this->extractDir, ExtensionType::Module, 'demo');
+
+        $this->assertStringContainsString(
+            'original',
+            (string) file_get_contents($this->projectRoot.'/modules/victim/src/Service.php')
+        );
+    }
+
+    public function test_an_extension_archive_that_carries_nothing_of_its_own_is_refused(): void
+    {
+        $archive = $this->sandbox.'/empty.zip';
+        $this->makeZip($archive, ['package/app/Http/Kernel.php' => '<?php // backdoor']);
 
         try {
             $this->expectException(\RuntimeException::class);
-            $this->expectExceptionMessageMatches('/outside the allowed extension directories/');
-            UpdaterManager::assertExtractedTreeStaysInExtensionDirs($tmp);
+            $this->expectExceptionMessageMatches('/does not contain modules\/demo/');
+            (new UpdaterManager)->extractExtension($archive, $this->extractDir, ExtensionType::Module, 'demo');
         } finally {
-            @unlink($tmp.'/app/Http/Controllers/Backdoor.php');
-            @rmdir($tmp.'/app/Http/Controllers');
-            @rmdir($tmp.'/app/Http');
-            @rmdir($tmp.'/app');
-            @rmdir($tmp);
+            $this->assertFileDoesNotExist($this->projectRoot.'/app/Http/Kernel.php');
         }
     }
 
-    public function test_extracted_tree_under_modules_passes(): void
+    public function test_an_email_template_archive_only_writes_the_files_the_product_reads(): void
     {
-        $tmp = sys_get_temp_dir().'/pentest-tree-ok-'.uniqid();
-        mkdir($tmp.'/modules/my-mod/src', 0755, true);
-        file_put_contents($tmp.'/modules/my-mod/composer.json', '{}');
-        file_put_contents($tmp.'/modules/my-mod/src/X.php', '<?php');
+        $archive = $this->sandbox.'/template.zip';
+        $folder = 'resources/views/vendor/notifications';
+        $this->makeZip($archive, [
+            "package/{$folder}/wave.blade.php" => 'template',
+            "package/{$folder}/wave_config.blade.php" => 'config',
+            "package/{$folder}/other.blade.php" => 'someone else template',
+            'package/app/Console/Kernel.php' => '<?php // backdoor',
+        ]);
 
-        try {
-            UpdaterManager::assertExtractedTreeStaysInExtensionDirs($tmp);
-            $this->assertTrue(true);
-        } finally {
-            @unlink($tmp.'/modules/my-mod/composer.json');
-            @unlink($tmp.'/modules/my-mod/src/X.php');
-            @rmdir($tmp.'/modules/my-mod/src');
-            @rmdir($tmp.'/modules/my-mod');
-            @rmdir($tmp.'/modules');
-            @rmdir($tmp);
-        }
+        (new UpdaterManager)->extractExtension($archive, $this->extractDir, ExtensionType::EmailTemplate, 'wave');
+
+        $this->assertFileExists($this->projectRoot."/{$folder}/wave.blade.php");
+        $this->assertFileExists($this->projectRoot."/{$folder}/wave_config.blade.php");
+        $this->assertFileDoesNotExist($this->projectRoot."/{$folder}/other.blade.php");
+        $this->assertFileDoesNotExist($this->projectRoot.'/app/Console/Kernel.php');
+    }
+
+    public function test_the_product_update_still_writes_outside_extension_directories(): void
+    {
+        $archive = $this->sandbox.'/core.zip';
+        $this->makeZip($archive, [
+            'package/app/Providers/AppServiceProvider.php' => '<?php // core',
+            'package/config/app.php' => '<?php return [];',
+        ]);
+
+        (new UpdaterManager)->extract($archive, $this->extractDir);
+
+        $this->assertFileExists($this->projectRoot.'/app/Providers/AppServiceProvider.php');
+        $this->assertFileExists($this->projectRoot.'/config/app.php');
     }
 }

@@ -26,41 +26,48 @@ use ZipArchive;
 
 class UpdaterManager
 {
-    /**
-     * Sub-directories under base_path() that an extension archive is allowed
-     * to write into. Any file outside this list is treated as a supply-chain
-     * attempt (overwriting app/Http/Controllers, bootstrap/, vendor/, .env, ...).
-     */
-    private const ALLOWED_PREFIXES = [
-        'modules/',
-        'addons/',
-        'resources/themes/',
-        'resources/views/vendor/notifications/',
-    ];
-
     private const METADATA_FILES = ['README.md', 'LICENSE.txt', 'CHANGELOG.md', '.gitignore', 'LICENSE'];
 
-    public function update(string $uuid)
+    public function update(string $uuid, ExtensionType $type)
     {
+        ExtensionType::assertValidUuid($uuid);
+        $this->extractExtension($this->download($uuid), storage_path("app/extracts/{$uuid}"), $type, $uuid);
+    }
 
-        $filename = storage_path("app/updates/{$uuid}.zip");
-        $to = storage_path("app/extracts/{$uuid}");
-        if (! is_dir(dirname($filename))) {
-            mkdir(dirname($filename), 0755, true);
-        }
-        $resource = Utils::tryFopen($filename, 'w+b');
-        if (! $resource) {
-            throw new \RuntimeException("Unable to open file for writing: {$filename}");
-        }
-        app('license')->download($uuid, $resource);
-        if (! file_exists($filename)) {
-            throw new \RuntimeException("File not found after download: {$filename}");
-        }
-        self::checkIfValidZip($filename);
-        $this->extract($filename, $to);
+    public function updateCore()
+    {
+        $this->extract($this->download('core'), storage_path('app/extracts/core'));
+    }
+
+    /**
+     * Only ever writes the files the extension owns. The destination comes from
+     * the type and uuid the product asked for, never from the archive itself.
+     */
+    public function extractExtension(string $file, string $to, ExtensionType $type, string $uuid)
+    {
+        ExtensionType::assertValidUuid($uuid);
+
+        $this->extractArchive($file, $to, function (string $root) use ($type, $uuid): Finder {
+            $owned = (new Finder)->in($root)->files()->ignoreDotFiles(false)->ignoreVCS(false)
+                ->filter(static fn (\SplFileInfo $file): bool => $type->owns(
+                    substr($file->getPathname(), strlen($root) + 1),
+                    $uuid
+                ));
+
+            if (! $owned->hasResults()) {
+                throw new \RuntimeException("Archive does not contain {$type->path($uuid)}");
+            }
+
+            return $owned;
+        });
     }
 
     public function extract(string $file, string $to)
+    {
+        $this->extractArchive($file, $to, null);
+    }
+
+    private function extractArchive(string $file, string $to, ?\Closure $confine)
     {
         self::rejectZipSlip($file);
         $fileSystem = new Filesystem;
@@ -81,11 +88,30 @@ class UpdaterManager
                 static fn (string $metadata): string => $root.DIRECTORY_SEPARATOR.$metadata,
                 self::METADATA_FILES
             ));
-            $fileSystem->mirror($root, base_path(), null, ['override' => true]);
+            $fileSystem->mirror($root, base_path(), $confine === null ? null : $confine($root), ['override' => true]);
         } finally {
             $zip->close();
             $fileSystem->remove([$file, $to]);
         }
+    }
+
+    private function download(string $uuid): string
+    {
+        $filename = storage_path("app/updates/{$uuid}.zip");
+        if (! is_dir(dirname($filename))) {
+            mkdir(dirname($filename), 0755, true);
+        }
+        $resource = Utils::tryFopen($filename, 'w+b');
+        if (! $resource) {
+            throw new \RuntimeException("Unable to open file for writing: {$filename}");
+        }
+        app('license')->download($uuid, $resource);
+        if (! file_exists($filename)) {
+            throw new \RuntimeException("File not found after download: {$filename}");
+        }
+        self::checkIfValidZip($filename);
+
+        return $filename;
     }
 
     /**
@@ -104,8 +130,7 @@ class UpdaterManager
 
     /**
      * Walk the ZIP entries before extracting and refuse any entry whose name
-     * either escapes the destination (.., absolute path, Windows drive) or
-     * targets a path under a non-extension prefix at the project root.
+     * escapes the destination: .. segment, absolute path or Windows drive.
      */
     public static function rejectZipSlip(string $file): void
     {
@@ -128,30 +153,6 @@ class UpdaterManager
             }
         } finally {
             $zip->close();
-        }
-    }
-
-    /**
-     * Refuse to mirror anything outside the whitelisted extension directories.
-     * The vendor archive layout is `<root>/<prefix>/<extension>/...` where
-     * <prefix> is one of ALLOWED_PREFIXES; files at any other location are
-     * a supply-chain payload trying to overwrite app/, bootstrap/, etc.
-     */
-    public static function assertExtractedTreeStaysInExtensionDirs(string $root): void
-    {
-        $finder = (new Finder)->in($root)->files()->ignoreDotFiles(false);
-        foreach ($finder as $file) {
-            $rel = ltrim(str_replace('\\', '/', $file->getRelativePathname()), '/');
-            $allowed = false;
-            foreach (self::ALLOWED_PREFIXES as $prefix) {
-                if (str_starts_with($rel, $prefix)) {
-                    $allowed = true;
-                    break;
-                }
-            }
-            if (! $allowed) {
-                throw new \RuntimeException("Extension archive contains a file outside the allowed extension directories: {$rel}");
-            }
         }
     }
 
