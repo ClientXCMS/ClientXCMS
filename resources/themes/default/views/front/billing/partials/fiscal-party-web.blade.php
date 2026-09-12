@@ -16,8 +16,11 @@
     <div>{{ $party['address'] }}@if (!empty($party['address2'])) {{ $party['address2'] }}@endif</div>
     <div>@if (!empty($party['region'])){{ $party['region'] }} · @endif{{ $party['zipcode'] }} {{ $party['city'] }}</div>
     <div>{{ \App\Helpers\Countries::names()[$party['country']] ?? $party['country'] }}</div>
-@elseif (!empty($party['address']['address']))
-    <div>{!! nl2br(e($party['address']['address'])) !!}</div>
+@elseif (!empty($party['address']))
+    <div>{!! nl2br(e($party['address'])) !!}</div>
+    @if (!empty($party['zipcode']) || !empty($party['city']))
+        <div>{{ $party['zipcode'] }} {{ $party['city'] }}</div>
+    @endif
 @endif
 
 @foreach ([
