@@ -9,7 +9,6 @@ use App\Models\Provisioning\Service;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ServiceCronCommandsTest extends TestCase
@@ -46,17 +45,40 @@ class ServiceCronCommandsTest extends TestCase
         Carbon::setTestNow('2026-08-25 12:00:00');
         $customer = Customer::factory()->create();
         Setting::updateSettings(['services_expire_and_delete_after_days' => 90], null, false);
-        // getShouldHidden() compares against the database clock, which Carbon::setTestNow does not move
-        $databaseNow = Carbon::parse(DB::scalar('SELECT NOW()'));
         $old = $this->createServiceModel($customer->id, Service::STATUS_EXPIRED);
-        $old->update(['expires_at' => $databaseNow->copy()->subDays(91)]);
+        $old->update(['expires_at' => now()->subDays(91)]);
         $recent = $this->createServiceModel($customer->id, Service::STATUS_EXPIRED);
-        $recent->update(['expires_at' => $databaseNow->copy()->subDays(89)]);
+        $recent->update(['expires_at' => now()->subDays(89)]);
 
         $this->artisan('services:expire')->assertExitCode(Command::SUCCESS);
 
         $this->assertSame(Service::STATUS_HIDDEN, $old->fresh()->status);
         $this->assertSame(Service::STATUS_EXPIRED, $recent->fresh()->status);
+    }
+
+    /**
+     * Dates are written by the application, so the rules that read them must use
+     * the application clock. Freezing far ahead of the database clock proves it.
+     */
+    public function test_service_lifecycle_rules_follow_the_application_clock(): void
+    {
+        Carbon::setTestNow('2031-03-04 09:00:00');
+        $customer = Customer::factory()->create();
+        Setting::updateSettings(['services_expire_and_delete_after_days' => 90], null, false);
+
+        $due = $this->createServiceModel($customer->id, Service::STATUS_ACTIVE);
+        $due->update([
+            'cancelled_at' => now()->subMinutes(30),
+            'cancelled_reason' => 'asked by the customer',
+            'is_cancelled' => false,
+        ]);
+        $retained = $this->createServiceModel($customer->id, Service::STATUS_EXPIRED);
+        $retained->update(['expires_at' => now()->subDays(91)]);
+
+        $this->artisan('services:expire')->assertExitCode(Command::SUCCESS);
+
+        $this->assertTrue((bool) $due->fresh()->is_cancelled, 'a due cancellation must be processed');
+        $this->assertSame(Service::STATUS_HIDDEN, $retained->fresh()->status);
     }
 
     public function test_expiration_notification_failure_returns_non_zero(): void
@@ -65,8 +87,7 @@ class ServiceCronCommandsTest extends TestCase
         $customer = Customer::factory()->create();
         Setting::updateSettings(['notifications_expiration_days' => '3'], null, false);
         $service = $this->createServiceModel($customer->id, Service::STATUS_ACTIVE);
-        $databaseNow = Carbon::parse(DB::scalar('SELECT NOW()'));
-        $service->update(['expires_at' => $databaseNow->addDays(3), 'cancelled_at' => null]);
+        $service->update(['expires_at' => now()->addDays(3), 'cancelled_at' => null]);
         $service->attachMetadata('disable_notify_expiration', true);
 
         $this->assertFalse(Service::getShouldNotifyExpiration(['3'])->contains('id', $service->id));
