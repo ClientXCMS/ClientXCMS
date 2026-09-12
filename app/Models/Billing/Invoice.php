@@ -462,15 +462,23 @@ class Invoice extends Model implements SupportRelateItemInterface
         $legacyBuyer = $this->getBillingAddressArray();
         $buyer = $snapshot['buyer'] ?? [];
         $buyerAddress = $buyer['address'] ?? [];
+        $seller = $snapshot['seller'] ?? [];
+        // Snapshots store the seller address as an array, settings as a plain string
+        $sellerAddress = is_array($seller['address'] ?? null) ? $seller['address'] : [];
 
         return [
             'seller' => array_merge([
                 'legal_name' => setting('billing_legal_name', setting('app.name')),
-                'address' => setting('app_address'),
                 'siren' => setting('billing_siren'),
                 'siret' => setting('billing_siret'),
                 'vat_number' => setting('billing_vat_number'),
-            ], $snapshot['seller'] ?? []),
+            ], $seller, [
+                'address' => $sellerAddress['address'] ?? ($seller['address'] ?? setting('app_address')),
+                'address2' => $sellerAddress['address2'] ?? null,
+                'zipcode' => $sellerAddress['zipcode'] ?? null,
+                'city' => $sellerAddress['city'] ?? null,
+                'country' => $sellerAddress['country'] ?? null,
+            ]),
             'buyer' => [
                 'type' => $buyer['type'] ?? ($legacyBuyer['customer_type'] ?? Customer::TYPE_INDIVIDUAL),
                 'legal_name' => $buyer['legal_name'] ?? ($legacyBuyer['legal_name'] ?? $legacyBuyer['company_name'] ?? null),

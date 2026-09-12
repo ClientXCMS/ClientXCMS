@@ -399,10 +399,12 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public static function getShouldExpire()
     {
+        $expireAfterDays = (int) setting('days_before_expiration', 7);
+
         return self::where('status', self::STATUS_SUSPENDED)
             ->whereDoesntHave('metadata', fn ($query) => $query->where('key', 'disable_expiration'))
             ->whereNotNull('expires_at')
-            ->whereRaw('NOW() >= DATE_ADD(expires_at, INTERVAL ? DAY)', [setting('days_before_expiration')])
+            ->where('expires_at', '<=', now()->subDays($expireAfterDays))
             ->get();
     }
 
@@ -439,7 +441,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         return self::whereNotNull('cancelled_at')
             ->whereNotNull('cancelled_reason')
             ->where('is_cancelled', false)
-            ->whereRaw('NOW() >= cancelled_at')
+            ->where('cancelled_at', '<=', now())
             ->get();
     }
 
@@ -448,7 +450,8 @@ class Service extends Model implements HasNotifiableVariablesInterface
         $retentionDays = (int) setting('services_expire_and_delete_after_days', 90);
 
         return self::where('status', self::STATUS_EXPIRED)
-            ->whereRaw('NOW() >= DATE_ADD(expires_at, INTERVAL ? DAY)', [$retentionDays])
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', now()->subDays($retentionDays))
             ->get();
     }
 
@@ -460,7 +463,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
             ->whereNotNull('expires_at')
             ->where(function ($query) use ($days) {
                 foreach ($days as $day) {
-                    $query->orWhereRaw('DATEDIFF(expires_at, NOW()) = ?', [$day]);
+                    $query->orWhereDate('expires_at', now()->addDays((int) $day)->toDateString());
                 }
             })->get();
     }

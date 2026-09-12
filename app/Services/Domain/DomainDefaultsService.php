@@ -3,6 +3,7 @@
 namespace App\Services\Domain;
 
 use App\Contracts\Domain\DomainDnsInitializationInterface;
+use App\Core\Domain\Nameserver;
 use App\Models\Provisioning\Server;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -18,7 +19,7 @@ class DomainDefaultsService
         $nameservers = [];
         $nameserverIps = [];
         foreach ($data['default_nameservers'] ?? [] as $index => $name) {
-            $name = strtolower(rtrim(trim((string) $name), '.'));
+            $name = Nameserver::normalize($name);
             if ($name === '') {
                 continue;
             }
@@ -33,7 +34,7 @@ class DomainDefaultsService
         $data['default_dns_records'] = array_values($data['default_dns_records'] ?? []);
         Validator::make($data, [
             'default_nameservers' => 'array|max:8',
-            'default_nameservers.*' => ['required', 'distinct', 'max:253', 'regex:/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/'],
+            'default_nameservers.*' => ['required', 'distinct', 'max:253', Nameserver::RULE],
             'default_nameserver_ips' => 'array|max:8',
             'default_nameserver_ips.*.ipv4' => 'nullable|ipv4',
             'default_nameserver_ips.*.ipv6' => 'nullable|ipv6',
@@ -80,7 +81,6 @@ class DomainDefaultsService
         }
         if (! empty($data['apply_default_dns'])) {
             $registrar = $server ? app(DomainRegistrarManager::class)->all()->get($server->hostname) : null;
-            dd($registrar);
             if (! $data['dns_management'] || ! $registrar instanceof DomainDnsInitializationInterface || count($data['default_nameservers']) < 2 || $data['default_dns_records'] === []) {
                 throw ValidationException::withMessages(['apply_default_dns' => __('provisioning.admin.domain_tlds.tools.incompatible_dns')]);
             }

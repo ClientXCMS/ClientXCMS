@@ -2,14 +2,19 @@
     $seller = $fiscalParties['seller'];
     $buyer = $fiscalParties['buyer'];
     $buyerTitle = $buyer['legal_name'] ?: $buyer['name'];
+    $sellerAddress = implode("\n", array_filter([
+        $seller['address'] ?? null,
+        $seller['address2'] ?? null,
+        trim(($seller['zipcode'] ?? '').' '.($seller['city'] ?? '')) ?: null,
+    ]));
 @endphp
 
 <table class="addresses-table">
     <tr>
         <td>
             <h3>{{ $seller['legal_name'] ?: setting('app.name') }}</h3>
-            @if (!empty($seller['address']))
-                <pre>{{ $seller['address'] }}</pre>
+            @if ($sellerAddress !== '')
+                <pre>{{ $sellerAddress }}</pre>
             @endif
             @if (!empty($seller['siren']))
                 <span class="detail-label">{{ __('einvoicing.profile.siren') }} :</span> {{ $seller['siren'] }}<br>

@@ -138,4 +138,73 @@ class FiscalProfilePersistenceTest extends TestCase
         $this->assertSame('W123456789', $parties['buyer']['rna_number']);
         $this->assertSame('20 rue Figée', $parties['buyer']['address']);
     }
+
+    /**
+     * FiscalProfileService::snapshot() stores the seller address as an array,
+     * which is the shape real invoices carry.
+     */
+    private function invoiceWithRealSnapshot(): Invoice
+    {
+        $customer = Customer::create(['legal_name' => 'Client', 'address' => 'Adresse actuelle']);
+        $invoice = new Invoice(['currency' => 'EUR', 'paymethod' => 'stripe']);
+        $invoice->setRelation('customer', $customer);
+        $invoice->billing_address = $customer->generateBillingAddress();
+        $invoice->billing_snapshot = [
+            'seller' => [
+                'legal_name' => 'Vendeur figé',
+                'address' => [
+                    'address' => '10 rue du Vendeur',
+                    'address2' => 'Bâtiment B',
+                    'zipcode' => '75001',
+                    'city' => 'Paris',
+                    'country' => 'FR',
+                ],
+            ],
+            'buyer' => [
+                'legal_name' => 'Client figé',
+                'address' => ['address' => '20 rue Figée', 'zipcode' => '59000', 'city' => 'Lille', 'country' => 'FR'],
+            ],
+        ];
+
+        return $invoice;
+    }
+
+    public function test_seller_address_is_always_a_string_whatever_the_snapshot_shape(): void
+    {
+        $parties = $this->invoiceWithRealSnapshot()->fiscalPartiesForPdf();
+
+        $this->assertSame('10 rue du Vendeur', $parties['seller']['address']);
+        $this->assertSame('75001', $parties['seller']['zipcode']);
+        $this->assertSame('Paris', $parties['seller']['city']);
+    }
+
+    public function test_invoice_pdf_partial_renders_with_a_snapshot_seller_address(): void
+    {
+        $parties = $this->invoiceWithRealSnapshot()->fiscalPartiesForPdf();
+
+        $html = view('front.billing.partials.fiscal-parties', ['fiscalParties' => $parties])->render();
+
+        $this->assertStringContainsString('10 rue du Vendeur', $html);
+        $this->assertStringContainsString('20 rue Figée', $html);
+    }
+
+    public function test_invoice_web_partial_shows_a_plain_string_seller_address(): void
+    {
+        $customer = Customer::create(['legal_name' => 'Client', 'address' => 'Adresse actuelle']);
+        $invoice = new Invoice(['currency' => 'EUR', 'paymethod' => 'stripe']);
+        $invoice->setRelation('customer', $customer);
+        $invoice->billing_address = $customer->generateBillingAddress();
+        $invoice->billing_snapshot = [
+            'seller' => ['legal_name' => 'Vendeur', 'address' => '3 rue Sans Instantané'],
+            'buyer' => ['legal_name' => 'Client'],
+        ];
+
+        $parties = $invoice->fiscalPartiesForPdf();
+        $html = view('front.billing.partials.fiscal-party-web', [
+            'party' => $parties['seller'],
+            'role' => 'seller',
+        ])->render();
+
+        $this->assertStringContainsString('3 rue Sans Instantané', $html);
+    }
 }
