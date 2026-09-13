@@ -80,14 +80,19 @@ class BasketController extends \App\Http\Controllers\Controller
             return back()->with('error', __('store.basket.not_valid'));
         }
         $row = BasketRow::findByProductOnSession($product, false);
-        $available = $product->type === ProductTypeInterface::DOMAIN && $request->query('tld')
+        $available = $product->type === ProductTypeInterface::DOMAIN && is_string($request->query('tld')) && $request->query('tld') !== ''
             ? app(DomainPricingService::class)->availableForTld($request->query('tld'), currency())
             : $product->pricingAvailable(currency());
+        if ($product->type === ProductTypeInterface::DOMAIN && $available === []) {
+            return back()->with('error', __('store.basket.no_prices'));
+        }
         $validated = $request->validate([
             'billing' => 'nullable|string|in:'.implode(',', collect($available)->pluck('recurring')->toArray()),
         ]);
         $billing = $validated['billing'] ?? $row->billing;
-        if ($product->getPriceByCurrency(currency(), $billing)->price == 0 && count($available) > 0) {
+        if ($product->type === ProductTypeInterface::DOMAIN && ! in_array($billing, collect($available)->pluck('recurring')->all(), true)) {
+            $billing = $available[0]->recurring;
+        } elseif ($product->type !== ProductTypeInterface::DOMAIN && $product->getPriceByCurrency(currency(), $billing)->price == 0 && count($available) > 0) {
             $billing = $available[0]->recurring;
         }
 
@@ -166,6 +171,10 @@ class BasketController extends \App\Http\Controllers\Controller
             return response()->json(['message' => __('store.basket.validation_failed'), 'errors' => $errors], 422);
         }
         if (! $product->hasPricesForCurrency($validated['currency'])) {
+            return response()->json(['message' => __('store.basket.no_prices')], 422);
+        }
+        if ($product->type === ProductTypeInterface::DOMAIN
+            && (empty($validated['tld']) || app(DomainPricingService::class)->priceFor($validated['tld'], $validated['currency'], $validated['billing']) === null)) {
             return response()->json(['message' => __('store.basket.no_prices')], 422);
         }
         $coupon = null;

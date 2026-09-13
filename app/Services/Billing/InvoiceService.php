@@ -310,6 +310,12 @@ class InvoiceService
 
     public static function createInvoiceFromProduct(Customer $customer, Product $product, string $billing, string $currency, array $data = [])
     {
+        $price = $product->type === ProductTypeInterface::DOMAIN
+            ? (! empty($data['tld']) ? app(\App\Services\Domain\DomainPricingService::class)->priceFor($data['tld'], $currency, $billing) : null)
+            : $product->getPriceByCurrency($currency, $billing);
+        if ($price === null) {
+            throw new \UnexpectedValueException('No exact domain price is available for this invoice.');
+        }
         $invoice = Invoice::create([
             'customer_id' => $customer->id,
             'due_date' => now()->addDays(7),
@@ -318,7 +324,6 @@ class InvoiceService
             'invoice_number' => Invoice::generateInvoiceNumber(),
             'notes' => "Created from product #{$product->id} ({$product->name})",
         ]);
-        $price = $product->getPriceByCurrency($currency, $billing);
         $current = Carbon::now();
         $expiresAt = app(RecurringService::class)->addFrom(clone $current, $billing);
         $name = "{$product->trans('name')} ({$current->format('d/m/y')} - {$expiresAt->format('d/m/y')})";

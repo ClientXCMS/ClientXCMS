@@ -326,8 +326,6 @@
                             </button>
                             </div>
                             @foreach($basket->items as $row)
-                                @php($pricing = $row->product->getPriceByCurrency($row->currency, $row->billing))
-
                                 <div class="flex justify-between mb-2">
                                     <span>{{ $row->product->trans('name') }}</span>
                                     <span>{{ formatted_price($row->subtotalWithoutCoupon(), $row->currency) }}</span>

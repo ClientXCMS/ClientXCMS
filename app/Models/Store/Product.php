@@ -334,8 +334,17 @@ class Product extends Model
     {
         if ($this->type === ProductTypeInterface::DOMAIN) {
             $tld = request('tld');
+            if ($tld !== null && ! is_string($tld)) {
+                return [];
+            }
             if ($tld === null) {
-                $tld = DomainTld::where('status', 'active')->orderBy('extension')->value('extension');
+                $tld = DomainTld::where('status', 'active')
+                    ->whereHas('prices', function ($query) use ($currency) {
+                        $query->where('action', DomainPricingService::ACTION_REGISTER);
+                        if ($currency !== null) {
+                            $query->where('currency', $currency);
+                        }
+                    })->orderBy('extension')->value('extension');
             }
 
             return $tld ? app(DomainPricingService::class)->availableForTld($tld, $currency) : [];
@@ -348,6 +357,7 @@ class Product extends Model
     {
         if ($this->type === ProductTypeInterface::DOMAIN) {
             return DomainTld::where('status', 'active')->whereHas('prices', function ($query) use ($currency) {
+                $query->where('action', DomainPricingService::ACTION_REGISTER);
                 if ($currency !== null) {
                     $query->where('currency', $currency);
                 }
@@ -360,10 +370,16 @@ class Product extends Model
     public function getPriceByCurrency(string $currency, ?string $recurring = null): \App\DTO\Store\ProductPriceDTO
     {
         if ($this->type === ProductTypeInterface::DOMAIN) {
-            $tld = request('tld') ?? DomainTld::where('status', 'active')->orderBy('extension')->value('extension');
+            $tld = request('tld');
+            if ($tld !== null && ! is_string($tld)) {
+                throw new \UnexpectedValueException('Invalid domain extension.');
+            }
+            $tld ??= DomainTld::where('status', 'active')
+                ->whereHas('prices', fn ($query) => $query->where('action', DomainPricingService::ACTION_REGISTER)->where('currency', $currency))
+                ->orderBy('extension')->value('extension');
             $price = $tld ? app(DomainPricingService::class)->priceFor($tld, $currency, $recurring ?? 'annually') : null;
 
-            return $price ?? new \App\DTO\Store\ProductPriceDTO(0, 0, $currency, $recurring ?? 'annually');
+            return $price ?? throw new \UnexpectedValueException('No exact domain price is available for this product.');
         }
 
         return $this->traitGetPriceByCurrency($currency, $recurring);

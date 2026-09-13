@@ -208,6 +208,8 @@ class Basket extends Model
             $filter->each(function ($row) {
                 $row->delete();
             });
+            $this->unsetRelation('rows');
+            $this->load('rows');
 
             return false;
         }
@@ -224,6 +226,9 @@ class Basket extends Model
             if ($row->product == null) {
                 return true;
             }
+            if (! $row->hasValidDomainPricing()) {
+                return true;
+            }
             if ($row->product->stock == -1) {
                 return false;
             }
@@ -235,6 +240,8 @@ class Basket extends Model
             $filter->each(function ($row) {
                 $row->delete();
             });
+            $this->unsetRelation('rows');
+            $this->load('rows');
 
             return false;
         }
