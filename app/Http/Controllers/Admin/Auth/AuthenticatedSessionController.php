@@ -20,6 +20,7 @@
 namespace App\Http\Controllers\Admin\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\RequireAdminPassword;
 use App\Http\Requests\Admin\Auth\LoginRequest;
 use App\Models\Admin\Admin;
 use Illuminate\Http\RedirectResponse;
@@ -87,7 +88,7 @@ class AuthenticatedSessionController extends Controller
                 'password' => [__('auth.password')],
             ]);
         }
-        $request->session()->passwordConfirmed();
+        RequireAdminPassword::confirm($request->session());
 
         return redirect()->intended();
     }
