@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Security;
 
+use App\Http\Middleware\RequireAdminPassword;
 use App\Models\Admin\Admin;
 use App\Models\Admin\Permission;
 use App\Models\Admin\Setting;
@@ -35,7 +36,7 @@ class ApiKeysEscalationTest extends TestCase
         $admin = $this->bootstrapStaff(['admin.manage_api_keys'], false);
 
         $this->be($admin, 'admin')
-            ->withSession(['auth.password_confirmed_at' => time()])
+            ->withSession([RequireAdminPassword::SESSION_KEY => time()])
             ->post(route('admin.api-keys.store'), [
                 'name' => 'pentest-token',
                 'is_admin' => 'on',
@@ -55,7 +56,7 @@ class ApiKeysEscalationTest extends TestCase
         $admin = $this->bootstrapStaff(['admin.manage_api_keys'], true);
 
         $this->be($admin, 'admin')
-            ->withSession(['auth.password_confirmed_at' => time()])
+            ->withSession([RequireAdminPassword::SESSION_KEY => time()])
             ->post(route('admin.api-keys.store'), [
                 'name' => 'admin-token',
                 'is_admin' => 'on',
@@ -74,7 +75,7 @@ class ApiKeysEscalationTest extends TestCase
         $admin = $this->bootstrapStaff(['admin.manage_api_keys'], false);
 
         $this->be($admin, 'admin')
-            ->withSession(['auth.password_confirmed_at' => time()])
+            ->withSession([RequireAdminPassword::SESSION_KEY => time()])
             ->post(route('admin.api-keys.store'), [
                 'name' => 'scoped-token',
                 'permissions' => ['customers:index' => '1'],
@@ -95,7 +96,7 @@ class ApiKeysEscalationTest extends TestCase
         $existing = $admin->createToken('legacy-wildcard', ['*']);
 
         $this->be($admin, 'admin')
-            ->withSession(['auth.password_confirmed_at' => time()])
+            ->withSession([RequireAdminPassword::SESSION_KEY => time()])
             ->put(route('admin.api-keys.rotate', $existing->accessToken->id))
             ->assertStatus(403);
 

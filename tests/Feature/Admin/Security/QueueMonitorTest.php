@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Security;
 
+use App\Http\Middleware\RequireAdminPassword;
 use App\Jobs\QueueWorkerHeartbeatJob;
 use App\Models\ActionLog;
 use App\Models\Admin\Admin;
@@ -134,17 +135,17 @@ class QueueMonitorTest extends TestCase
         $delayed = $this->createJob(now()->timestamp, now()->addHour()->timestamp);
         $reserved = $this->createJob(now()->timestamp, now()->timestamp, now()->timestamp);
 
-        $this->withSession(['auth.password_confirmed_at' => time()]);
+        $this->withSession([RequireAdminPassword::SESSION_KEY => time()]);
         $this->performAdminAction('POST', route('admin.queues.action'), [
             'action' => 'make_available', 'ids' => [(string) $delayed],
         ], ['admin.show_logs'])->assertRedirect();
         $this->assertSame(now()->timestamp, QueueJob::findOrFail($delayed)->available_at);
 
-        session()->put('auth.password_confirmed_at', time());
+        session()->put(RequireAdminPassword::SESSION_KEY, time());
         $this->post(route('admin.queues.action'), ['action' => 'release', 'ids' => [(string) $reserved]])->assertRedirect();
         $this->assertNull(QueueJob::findOrFail($reserved)->reserved_at);
 
-        session()->put('auth.password_confirmed_at', time());
+        session()->put(RequireAdminPassword::SESSION_KEY, time());
         $this->post(route('admin.queues.action'), ['action' => 'delete_pending', 'ids' => [(string) $delayed]])->assertRedirect();
         $this->assertDatabaseMissing('jobs', ['id' => $delayed]);
         $this->assertGreaterThanOrEqual(3, ActionLog::where('model', QueueJob::class)->count());
@@ -154,7 +155,7 @@ class QueueMonitorTest extends TestCase
     {
         $retry = $this->createFailedJob('Retry Job');
         $delete = $this->createFailedJob('Delete Job');
-        $this->withSession(['auth.password_confirmed_at' => time()]);
+        $this->withSession([RequireAdminPassword::SESSION_KEY => time()]);
 
         $this->performAdminAction('POST', route('admin.queues.action'), [
             'action' => 'retry_failed', 'ids' => [$retry],
@@ -162,7 +163,7 @@ class QueueMonitorTest extends TestCase
         $this->assertDatabaseMissing('failed_jobs', ['uuid' => $retry]);
         $this->assertDatabaseCount('jobs', 1);
 
-        session()->put('auth.password_confirmed_at', time());
+        session()->put(RequireAdminPassword::SESSION_KEY, time());
         $this->post(route('admin.queues.action'), ['action' => 'delete_failed', 'ids' => [$delete]])->assertRedirect();
         $this->assertDatabaseMissing('failed_jobs', ['uuid' => $delete]);
     }
@@ -170,7 +171,7 @@ class QueueMonitorTest extends TestCase
     public function test_action_ignores_a_job_whose_state_no_longer_matches(): void
     {
         $reserved = $this->createJob(now()->timestamp, now()->timestamp, now()->timestamp);
-        $this->withSession(['auth.password_confirmed_at' => time()]);
+        $this->withSession([RequireAdminPassword::SESSION_KEY => time()]);
 
         $this->performAdminAction('POST', route('admin.queues.action'), [
             'action' => 'make_available', 'ids' => [(string) $reserved],
