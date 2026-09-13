@@ -20,6 +20,7 @@
 namespace App\Extensions;
 
 use GuzzleHttp\Psr7\Utils;
+use Illuminate\Support\Facades\Log;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
@@ -48,18 +49,32 @@ class UpdaterManager
     {
         ExtensionType::assertValidUuid($uuid);
 
-        $this->extractArchive($file, $to, function (string $root) use ($type, $uuid): Finder {
-            $owned = (new Finder)->in($root)->files()->ignoreDotFiles(false)->ignoreVCS(false)
-                ->filter(static fn (\SplFileInfo $file): bool => $type->owns(
-                    substr($file->getPathname(), strlen($root) + 1),
-                    $uuid
-                ));
+        $this->extractArchive($file, $to, function (string $root) use ($type, $uuid): \ArrayIterator {
+            $owned = [];
+            $dropped = [];
+            foreach ((new Finder)->in($root)->files()->ignoreDotFiles(false)->ignoreVCS(false) as $candidate) {
+                $relative = substr($candidate->getPathname(), strlen($root) + 1);
+                if ($type->owns($relative, $uuid)) {
+                    $owned[] = $candidate;
+                } else {
+                    $dropped[] = $relative;
+                }
+            }
 
-            if (! $owned->hasResults()) {
+            if ($dropped !== []) {
+                // Silently dropping them would turn a mispackaged archive into an unexplainable bug
+                Log::warning('extensions.update.files_outside_extension_dropped', [
+                    'uuid' => $uuid,
+                    'type' => $type->value,
+                    'dropped' => count($dropped),
+                    'sample' => array_slice($dropped, 0, 10),
+                ]);
+            }
+            if ($owned === []) {
                 throw new \RuntimeException("Archive does not contain {$type->path($uuid)}");
             }
 
-            return $owned;
+            return new \ArrayIterator($owned);
         });
     }
 

@@ -4,6 +4,7 @@ namespace Tests\Feature\Extensions;
 
 use App\Extensions\ExtensionType;
 use App\Extensions\UpdaterManager;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\Filesystem\Filesystem;
 use Tests\TestCase;
 use ZipArchive;
@@ -151,6 +152,43 @@ class UpdaterManagerHardeningTest extends TestCase
         $this->assertFileDoesNotExist($this->projectRoot.'/public/health.php');
         $this->assertFileDoesNotExist($this->projectRoot.'/.env');
         $this->assertFileDoesNotExist($this->projectRoot.'/composer.json');
+    }
+
+    public function test_it_reports_the_files_it_dropped_from_the_archive(): void
+    {
+        Log::spy();
+        $archive = $this->sandbox.'/mispackaged.zip';
+        $this->makeZip($archive, [
+            'package/modules/demo/module.json' => '{"uuid":"demo"}',
+            'package/public/assets/demo.css' => 'body{}',
+            'package/app/Http/Kernel.php' => '<?php // backdoor',
+        ]);
+
+        (new UpdaterManager)->extractExtension($archive, $this->extractDir, ExtensionType::Module, 'demo');
+
+        Log::shouldHaveReceived('warning')
+            ->once()
+            ->withArgs(function (string $message, array $context): bool {
+                return $message === 'extensions.update.files_outside_extension_dropped'
+                    && $context['uuid'] === 'demo'
+                    && $context['dropped'] === 2
+                    && in_array('public/assets/demo.css', $context['sample'], true)
+                    && in_array('app/Http/Kernel.php', $context['sample'], true);
+            });
+    }
+
+    public function test_it_stays_quiet_when_the_archive_only_carries_its_own_files(): void
+    {
+        Log::spy();
+        $archive = $this->sandbox.'/clean.zip';
+        $this->makeZip($archive, [
+            'package/modules/demo/module.json' => '{"uuid":"demo"}',
+            'package/README.md' => 'documentation',
+        ]);
+
+        (new UpdaterManager)->extractExtension($archive, $this->extractDir, ExtensionType::Module, 'demo');
+
+        Log::shouldNotHaveReceived('warning');
     }
 
     public function test_an_extension_archive_cannot_touch_another_extension(): void
