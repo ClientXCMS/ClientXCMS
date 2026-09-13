@@ -23,10 +23,7 @@ class PasswordPolicyTest extends TestCase
         )->fails();
     }
 
-    /**
-     * Have I Been Pwned answers the SHA-1 suffixes sharing the sent prefix.
-     * Returning the suffix of the password under test marks it as breached.
-     */
+    // HIBP answers the SHA-1 suffixes sharing the sent prefix, so returning our own marks it breached
     private function fakeBreachApi(string $breached): void
     {
         Http::fake([
@@ -44,9 +41,7 @@ class PasswordPolicyTest extends TestCase
         $this->assertFalse($this->fails('twelvecharss'));
     }
 
-    /**
-     * bcrypt stops reading at 72 bytes, so anything past it never counts.
-     */
+    // bcrypt stops reading at 72 bytes, so anything past it never counts
     public function test_a_password_longer_than_the_bcrypt_limit_is_refused(): void
     {
         $this->assertFalse($this->fails(str_repeat('a', 72)));
@@ -78,10 +73,7 @@ class PasswordPolicyTest extends TestCase
         Http::assertNothingSent();
     }
 
-    /**
-     * Nobody must be locked out of setting a password because the breach
-     * service is down.
-     */
+    // Nobody must be locked out of setting a password because the breach service is down
     public function test_a_password_is_accepted_when_the_breach_service_is_unreachable(): void
     {
         $this->app->detectEnvironment(fn () => 'production');

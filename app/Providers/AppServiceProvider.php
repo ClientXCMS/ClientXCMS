@@ -38,10 +38,7 @@ class AppServiceProvider extends ServiceProvider
 {
     const VERSION = '2.17';
 
-    /**
-     * Laravel waits 30 seconds by default. Past a few seconds we would rather
-     * skip the breach check than keep a customer staring at a form.
-     */
+    // Laravel waits 30s by default, too long to keep a customer staring at a form
     const BREACH_CHECK_TIMEOUT = 5;
 
     /**
@@ -85,14 +82,7 @@ class AppServiceProvider extends ServiceProvider
         Carbon::setLocale(setting('app.locale', 'fr_FR'));
     }
 
-    /**
-     * One place for every password the product accepts, since Password::defaults()
-     * is what the nine validation sites already ask for.
-     *
-     * No composition rule on purpose: OWASP advises against requiring upper case,
-     * digits or symbols, which mostly produces Password1! and buys nothing. What
-     * counts is length, and not being in a known breach.
-     */
+    // No composition rule on purpose: OWASP advises against it, length and breach checks are what count
     private function definePasswordRules(): void
     {
         // bcrypt silently truncates past 72 bytes, so anything beyond does not count
