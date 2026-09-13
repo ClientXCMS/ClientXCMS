@@ -25,14 +25,24 @@ use App\Services\Core\SeoService;
 use App\View\Components\BadgeStateComponant;
 use App\View\Components\Provisioning\ServiceDaysRemaining;
 use Carbon\Carbon;
+use Illuminate\Contracts\Validation\UncompromisedVerifier;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\NotPwnedVerifier;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
     const VERSION = '2.17';
+
+    /**
+     * Laravel waits 30 seconds by default. Past a few seconds we would rather
+     * skip the breach check than keep a customer staring at a form.
+     */
+    const BREACH_CHECK_TIMEOUT = 5;
 
     /**
      * Register any application services.
@@ -51,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         date_default_timezone_set('Europe/Paris');
+        $this->definePasswordRules();
 
         if ($this->app->environment('production') && config('app.debug')) {
             // si il n'y a pas d'admin connecté, on désactive le debug pour éviter de divulguer des informations sensibles
@@ -72,5 +83,28 @@ class AppServiceProvider extends ServiceProvider
         Blade::component('service-days-remaining', ServiceDaysRemaining::class);
         \View::share('clientxcms_version', self::VERSION);
         Carbon::setLocale(setting('app.locale', 'fr_FR'));
+    }
+
+    /**
+     * One place for every password the product accepts, since Password::defaults()
+     * is what the nine validation sites already ask for.
+     *
+     * No composition rule on purpose: OWASP advises against requiring upper case,
+     * digits or symbols, which mostly produces Password1! and buys nothing. What
+     * counts is length, and not being in a known breach.
+     */
+    private function definePasswordRules(): void
+    {
+        // bcrypt silently truncates past 72 bytes, so anything beyond does not count
+        Password::defaults(function () {
+            $rule = Password::min(12)->max(72);
+
+            return $this->app->isProduction() ? $rule->uncompromised() : $rule;
+        });
+
+        // extend, not singleton: ValidationServiceProvider is deferred and would overwrite it
+        $this->app->extend(UncompromisedVerifier::class, function ($verifier, $app) {
+            return new NotPwnedVerifier($app[HttpFactory::class], self::BREACH_CHECK_TIMEOUT);
+        });
     }
 }
