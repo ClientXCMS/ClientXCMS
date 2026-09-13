@@ -385,11 +385,6 @@ class ExtensionManager extends ExtensionCollectionsManager
         return $extensionType?->absolutePath($extension) ?? base_path($type.'/'.$extension);
     }
 
-    public function getMigrationPath(string $type, string $extension): string
-    {
-        return $type.'/'.$extension.'/database/migrations';
-    }
-
     private function validateExtensionIdentifier(string $extension): void
     {
         if (! preg_match('/^[a-zA-Z0-9_-]+$/', $extension)) {
