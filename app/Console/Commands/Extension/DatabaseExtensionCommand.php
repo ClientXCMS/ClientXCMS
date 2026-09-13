@@ -19,6 +19,7 @@
 
 namespace App\Console\Commands\Extension;
 
+use App\Extensions\ExtensionType;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -43,7 +44,7 @@ class DatabaseExtensionCommand extends Command
      */
     public function handle()
     {
-        $folders = [base_path('modules'), base_path('addons'), base_path('resources/themes')];
+        $types = [ExtensionType::Module, ExtensionType::Addon, ExtensionType::Theme];
         $extensions = [];
         if ($this->option('extension') == null && $this->option('all') == null) {
             $this->error('No extension specified.');
@@ -55,15 +56,19 @@ class DatabaseExtensionCommand extends Command
 
             return;
         }
-        $extension = $this->option('extension');
-        foreach ($folders as $folder) {
-            $directories = \File::directories($folder);
+        $requested = $this->option('extension');
+        $extension = null;
+        foreach ($types as $type) {
+            $directories = \File::directories(base_path($type->directory()));
             foreach ($directories as $directory) {
-                if (app('extension')->extensionIsEnabled(basename($directory))) {
-                    $extensions[] = basename($folder).'/'.basename($directory).'/database/migrations';
+                $uuid = basename($directory);
+                // directory(), not basename(): themes live under resources/themes
+                $migrations = $type->directory().'/'.$uuid.'/database/migrations';
+                if (app('extension')->extensionIsEnabled($uuid)) {
+                    $extensions[] = $migrations;
                 }
-                if ($this->option('extension') == basename($directory)) {
-                    $extension = basename($folder).'/'.basename($directory).'/database/migrations';
+                if ($requested === $uuid) {
+                    $extension = $migrations;
                 }
             }
         }
@@ -76,17 +81,24 @@ class DatabaseExtensionCommand extends Command
                     ]);
                     $this->comment(\Artisan::output());
                 } catch (Throwable $e) {
+                    $this->error("Migration failed for {$extension}: ".$e->getMessage());
                 }
             }
 
             return;
         }
-        if (empty($extensions)) {
-            $this->error('No extensions found in the modules or addons folder.');
+        // A named extension must not depend on which other ones happen to be enabled
+        if ($requested !== null && $extension === null) {
+            $this->error("Extension not found: {$requested}");
 
             return;
         }
-        if ($extension == null) {
+        if ($extension === null) {
+            if (empty($extensions)) {
+                $this->error('No extensions found in the modules or addons folder.');
+
+                return;
+            }
             $extension = $this->choice('Which extension do you want to create a migration for?', $extensions);
         }
         $extension = sanitize($extension);
