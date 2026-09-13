@@ -166,12 +166,12 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456710',
             'id' => $customer->id,
             'email' => 'admin@administration.com',
-            'password' => 'newpassword',
+            'password' => 'new-strong-password',
             'address' => 'test',
         ]);
         $response->assertRedirect();
         $this->assertEquals('Martin', $customer->fresh()->firstname);
-        $this->assertTrue(Hash::check('newpassword', $customer->fresh()->password));
+        $this->assertTrue(Hash::check('new-strong-password', $customer->fresh()->password));
     }
 
     public function test_admin_customer_update_with_invalid_permission()
