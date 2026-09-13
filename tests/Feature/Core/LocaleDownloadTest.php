@@ -19,23 +19,29 @@ class LocaleDownloadTest extends TestCase
      * downloadFiles() imports into lang/, so the suite would overwrite whatever
      * translations the developer has locally.
      */
+    private bool $langBackupTaken = false;
+
     protected function setUp(): void
     {
         parent::setUp();
         foreach (glob(base_path('lang/en/*.php')) ?: [] as $file) {
             $this->langBackup[$file] = (string) file_get_contents($file);
         }
+        $this->langBackupTaken = true;
     }
 
     protected function tearDown(): void
     {
-        foreach (glob(base_path('lang/en/*.php')) ?: [] as $file) {
-            if (! array_key_exists($file, $this->langBackup)) {
-                @unlink($file);
+        // Never clean up on a half-built backup: it would delete tracked files
+        if ($this->langBackupTaken) {
+            foreach (glob(base_path('lang/en/*.php')) ?: [] as $file) {
+                if (! array_key_exists($file, $this->langBackup)) {
+                    @unlink($file);
+                }
             }
-        }
-        foreach ($this->langBackup as $file => $content) {
-            file_put_contents($file, $content);
+            foreach ($this->langBackup as $file => $content) {
+                file_put_contents($file, $content);
+            }
         }
         parent::tearDown();
     }
