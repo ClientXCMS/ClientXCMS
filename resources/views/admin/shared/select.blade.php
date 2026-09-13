@@ -18,18 +18,20 @@
 ?>
 
 @if (isset($label))
-    <label for="{{ $id ?? $name }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400 mt-2">{{ $label }}@if(isset($optional)) ({{ __('global.optional') }}) @endif
+    <div class="flex items-center gap-1 mt-2">
+        <label for="{{ $id ?? $name }}" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-400">{{ $label }}@if(isset($optional)) ({{ __('global.optional') }})@endif</label>
         @if (isset($help))
-
-            <div class="hs-tooltip inline-block">
-                <button type="button" class="hs-tooltip-toggle">
-                    <i class="bi bi-info-circle-fill text-gray-500 dark:text-gray-400"></i>
+            <span class="hs-tooltip inline-block">
+                {{-- aria-label carries the hint: an icon-only button is nameless to a screen reader --}}
+                <button type="button" class="hs-tooltip-toggle" aria-label="{{ $help }}">
+                    <i class="bi bi-info-circle-fill text-gray-500 dark:text-gray-400" aria-hidden="true"></i>
                     <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-white" role="tooltip">
-      {{ $help }}
-    </span>
+                        {{ $help }}
+                    </span>
                 </button>
-            </div>
-        @endif</label>
+            </span>
+        @endif
+    </div>
 @endif
 <div class="mt-2">
     @php $__selected = old($name, $value ?? null); @endphp

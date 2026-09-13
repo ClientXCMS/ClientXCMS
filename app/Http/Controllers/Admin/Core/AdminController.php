@@ -76,7 +76,7 @@ class AdminController extends AbstractCrudController
         $this->checkPermission('update', $staff);
         $validated = $request->validated();
         if ($request->password != null) {
-            $validated['password'] = bcrypt($request->password);
+            $validated['password'] = \Hash::make($request->password);
         } else {
             unset($validated['password']);
         }
@@ -101,7 +101,7 @@ class AdminController extends AbstractCrudController
         if ($request->password == null) {
             $validated['password'] = \Str::uuid();
         }
-        $validated['password'] = bcrypt($validated['password']);
+        $validated['password'] = \Hash::make($validated['password']);
 
         if ($role = Role::find($request->role_id)) {
             if ($role->level > auth('admin')->user()->role->level) {
@@ -279,7 +279,7 @@ class AdminController extends AbstractCrudController
         $request->validate($rules);
 
         $admin->update([
-            'password' => bcrypt($request->password),
+            'password' => \Hash::make($request->password),
             'remember_token' => \Str::random(60),
         ]);
         $admin->revokeAllTwoFactorTrust();

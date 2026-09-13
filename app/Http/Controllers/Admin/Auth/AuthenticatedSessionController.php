@@ -82,8 +82,7 @@ class AuthenticatedSessionController extends Controller
         $request->validate([
             'password' => 'required',
         ]);
-        $hash = \Hash::driver('bcrypt');
-        if (! $hash->check($request->password, $request->user('admin')->password)) {
+        if (! \Hash::check($request->password, $request->user('admin')->password)) {
             return back()->withErrors([
                 'password' => [__('auth.password')],
             ]);
