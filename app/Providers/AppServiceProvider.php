@@ -19,6 +19,7 @@
 
 namespace App\Providers;
 
+use App\Core\Auth\MigratingHashManager;
 use App\Core\License\LicenseGateway;
 use App\Services\Core\SeoService;
 use App\View\Components\BadgeStateComponant;
@@ -40,6 +41,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton('license', LicenseGateway::class);
         $this->app->singleton('seo', SeoService::class);
+        // extend, not singleton: HashServiceProvider is deferred and would overwrite the binding
+        $this->app->extend('hash', fn ($manager, $app) => new MigratingHashManager($app));
     }
 
     /**
