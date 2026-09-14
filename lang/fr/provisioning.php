@@ -147,6 +147,7 @@ return [
       'extensions_help' => 'Sélectionnez une extension pour vérifier immédiatement sa disponibilité.',
       'from' => 'À partir de',
       'loading' => 'Nous recherchons les meilleures options et les meilleurs prix pour votre domaine…',
+      'checking' => 'Vérification en cours…',
       'check_failed' => 'La disponibilité n’a pas pu être vérifiée. Veuillez réessayer.',
       'invalid_domain' => 'Saisissez un nom de domaine valide avec une seule partie avant l’extension.',
       'transfer_cta' => 'Transférer ce domaine',

@@ -36,25 +36,109 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!form) return;
     const output = document.getElementById('domain-search-results');
     const loading = document.getElementById('domain-search-loading');
+    const cachePrefix = 'domain-search:v1:';
+    const cacheScope = @json(hash('sha256', session()->getId()));
+    const cacheContext = @json([currency(), app()->getLocale()]);
+    const cacheLifetime = 5 * 60 * 1000;
+    const cacheKey = (data) => cachePrefix + JSON.stringify([
+        cacheScope, cacheContext, String(data.get('operation') || 'register'),
+        String(data.get('domain') || '').toLowerCase(),
+    ]);
+    const cachedResults = (key) => {
+        try {
+            const cached = JSON.parse(localStorage.getItem(key));
+            if (cached && cached.expires > Date.now() && typeof cached.html === 'string') return cached.html;
+            localStorage.removeItem(key);
+        } catch (_) { /* Storage may be disabled by the browser. */ }
+        return null;
+    };
+    const saveResults = (key, html) => {
+        try {
+            localStorage.setItem(key, JSON.stringify({html, expires: Date.now() + cacheLifetime}));
+        } catch (_) { /* The search remains usable without browser storage. */ }
+    };
+    let currentSearch = null;
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const submit = form.querySelector('button[type="submit"]');
+        currentSearch?.abort();
+        const controller = new AbortController();
+        currentSearch = controller;
+        const searchData = new FormData(form);
+        const key = cacheKey(searchData);
+        const cached = cachedResults(key);
+        if (cached !== null) {
+            loading.classList.add('hidden');
+            output.innerHTML = cached;
+            currentSearch = null;
+            return;
+        }
         loading.classList.remove('hidden');
         output.replaceChildren();
-        submit.disabled = true;
         try {
-            const response = await fetch(form.action, {method: 'POST', body: new FormData(form), headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}});
+            const response = await fetch(form.action, {method: 'POST', body: searchData, signal: controller.signal, headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}});
             const body = await response.json();
             if (!response.ok) throw new Error(Object.values(body.errors || {}).flat().join(' ') || body.message);
+            if (currentSearch !== controller) return;
             output.innerHTML = body.html;
+            loading.classList.add('hidden');
+
+            const batches = body.batches || [];
+            let nextBatch = 0;
+            let hadFailures = false;
+            const updateCard = (domain, html) => {
+                const card = Array.from(output.querySelectorAll('[data-domain-card]')).find((element) => element.dataset.domainCard === domain);
+                if (!card) return;
+                const template = document.createElement('template');
+                template.innerHTML = html.trim();
+                if (template.content.firstElementChild) card.replaceWith(template.content.firstElementChild);
+            };
+            const failBatch = (batch) => {
+                hadFailures = true;
+                for (const domain of batch.domains) {
+                    const card = Array.from(output.querySelectorAll('[data-domain-card]')).find((element) => element.dataset.domainCard === domain);
+                    if (!card) continue;
+                    const status = card.querySelector('[role="status"]');
+                    if (!status) continue;
+                    status.className = 'mt-2 inline-flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400';
+                    status.textContent = @json(__('provisioning.domain_manager.search.check_failed'));
+                    status.removeAttribute('role');
+                }
+            };
+            const worker = async () => {
+                while (nextBatch < batches.length && !controller.signal.aborted) {
+                    const batch = batches[nextBatch++];
+                    try {
+                        const data = new FormData(form);
+                        data.set('domain', body.domain);
+                        data.set('batch', batch.id);
+                        const result = await fetch(@json(route('front.store.domains.check')), {method: 'POST', body: data, signal: controller.signal, headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}});
+                        if (!result.ok) throw new Error('Domain check failed');
+                        const checked = await result.json();
+                        if (currentSearch !== controller) return;
+                        if (checked.failed?.length) hadFailures = true;
+                        for (const domain of batch.domains) {
+                            if (checked.cards?.[domain]) updateCard(domain, checked.cards[domain]);
+                            else failBatch({domains: [domain]});
+                        }
+                    } catch (error) {
+                        if (controller.signal.aborted) return;
+                        failBatch(batch);
+                    }
+                }
+            };
+            await Promise.all(Array.from({length: Math.min(3, batches.length)}, worker));
+            if (currentSearch === controller && !hadFailures) saveResults(key, output.innerHTML);
         } catch (error) {
+            if (controller.signal.aborted || currentSearch !== controller) return;
             const message = document.createElement('p');
             message.className = 'rounded-xl border border-red-200 bg-red-50 p-5 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200';
             message.textContent = error.message || @json(__('provisioning.domain_manager.search.check_failed'));
             output.append(message);
         } finally {
-            loading.classList.add('hidden');
-            submit.disabled = false;
+            if (currentSearch === controller) {
+                loading.classList.add('hidden');
+                currentSearch = null;
+            }
         }
     });
 });
