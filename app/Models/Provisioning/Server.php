@@ -108,6 +108,8 @@ class Server extends Model implements HasNotifiableVariablesInterface
         'status',
     ];
 
+    protected $hidden = ['username', 'password'];
+
     protected $attributes = [
         'status' => 'active',
         'port' => 443,
