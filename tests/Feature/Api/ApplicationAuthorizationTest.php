@@ -6,6 +6,7 @@ use App\Models\Account\Customer;
 use App\Models\Admin\Admin;
 use App\Models\Provisioning\Server;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class ApplicationAuthorizationTest extends TestCase
@@ -14,11 +15,12 @@ class ApplicationAuthorizationTest extends TestCase
 
     public function test_customer_session_cannot_access_application_api(): void
     {
-        $this->actingAs(Customer::factory()->create(), 'web');
+        $customer = Customer::factory()->create();
+        $this->actingAs($customer, 'web');
 
         $this->getJson('/api/application/customers')->assertForbidden();
         $this->getJson('/api/application/servers')->assertForbidden();
-        $this->postJson('/api/application/customers/1/action/disable2FA')->assertForbidden();
+        $this->postJson("/api/application/customers/{$customer->id}/action/disable2FA")->assertForbidden();
     }
 
     public function test_customer_wildcard_token_cannot_access_application_api(): void
@@ -42,6 +44,26 @@ class ApplicationAuthorizationTest extends TestCase
         $token = $admin->createToken('servers', ['servers:index'])->plainTextToken;
 
         $this->withToken($token)->getJson('/api/application/servers')->assertOk();
+    }
+
+    public function test_admin_session_cannot_access_application_api(): void
+    {
+        $this->actingAs(Admin::factory()->create(), 'admin');
+
+        $this->getJson('/api/application/servers')->assertForbidden();
+        $this->getJson('/api/application/customers')->assertForbidden();
+    }
+
+    public function test_refused_requests_are_logged_with_their_reason(): void
+    {
+        Log::spy();
+        $this->actingAs(Admin::factory()->create(), 'admin');
+
+        $this->getJson('/api/application/servers')->assertForbidden();
+
+        Log::shouldHaveReceived('warning')
+            ->withArgs(fn ($message, $context) => $context['reason'] === 'session_principal')
+            ->once();
     }
 
     public function test_server_credentials_are_not_serialized(): void

@@ -6,6 +6,8 @@ use App\Models\Admin\Admin;
 use App\Models\Admin\Permission;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Laravel\Sanctum\TransientToken;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthorizeApplicationApi
@@ -15,7 +17,12 @@ class AuthorizeApplicationApi
         $admin = $request->user();
 
         if (! $admin instanceof Admin || ! $admin->isActive() || ! $admin->role) {
-            abort(403);
+            $this->deny($request, 'not_an_active_admin');
+        }
+
+        // A session principal carries a TransientToken that answers true to every ability, and it exists before the second factor is validated: this API is token only.
+        if ($admin->currentAccessToken() instanceof TransientToken) {
+            $this->deny($request, 'session_principal');
         }
 
         $name = $request->route()?->getName();
@@ -55,9 +62,25 @@ class AuthorizeApplicationApi
         };
 
         if ($permissions === [] || ! $admin->role->is_admin && ! $admin->role->hasAnyPermission($permissions)) {
-            abort(403);
+            $this->deny($request, 'missing_permission');
         }
 
         return $next($request);
+    }
+
+    private function deny(Request $request, string $reason): never
+    {
+        $principal = $request->user();
+
+        Log::warning('Application API request refused', [
+            'reason' => $reason,
+            'route' => $request->route()?->getName(),
+            'method' => $request->method(),
+            'ip' => $request->ip(),
+            'principal' => $principal ? $principal::class : null,
+            'principal_id' => $principal?->getAuthIdentifier(),
+        ]);
+
+        abort(403);
     }
 }
