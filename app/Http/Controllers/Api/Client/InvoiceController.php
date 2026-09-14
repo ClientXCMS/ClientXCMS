@@ -338,13 +338,17 @@ class InvoiceController extends Controller
             ], 400);
         }
 
-        if ($invoice->balance + $validated['amount'] > $invoice->total) {
+        if ($validated['amount'] > $invoice->total) {
             return response()->json([
                 'error' => __('client.invoices.balance.exceeds_total'),
             ], 400);
         }
 
-        $invoice->addBalance($validated['amount']);
+        if (! $invoice->addBalance((float) $validated['amount'])) {
+            return response()->json([
+                'error' => __('client.invoices.balance.balance_not_enough'),
+            ], 400);
+        }
 
         return response()->json([
             'message' => __('client.invoices.balance.success'),

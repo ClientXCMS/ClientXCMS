@@ -618,23 +618,31 @@ class Invoice extends Model implements SupportRelateItemInterface
         return 'uuid';
     }
 
-    public function addBalance(float $amount)
+    public function addBalance(float $amount): bool
     {
         if ($amount <= 0 || ! $this->canPay()) {
-            return;
+            return false;
         }
-        if ($amount >= ($this->total - $this->balance)) {
-            $amount = $this->total - $this->balance;
-            $this->customer->addFund(-$amount, 'Invoice payment for '.$this->id);
+        // recalculate() already takes the applied balance out of the total, so what is left to pay IS the total.
+        $remaining = round((float) $this->total, 2);
+        $amount = min($amount, $remaining);
+
+        if ($amount <= 0 || ! $this->customer->tryDeductBalance($amount, 'Invoice payment for '.$this->id)) {
+            return false;
+        }
+
+        if ($amount >= $remaining) {
             $this->update(['paymethod' => 'balance']);
             $this->complete();
 
-            return;
+            return true;
         }
-        $this->customer->addFund(-$amount, 'Invoice payment for '.$this->id);
-        $this->balance = $amount;
+
+        $this->balance += $amount;
         $this->save();
         $this->recalculate();
+
+        return true;
     }
 
     public function getBillingAddressAttribute(): array
