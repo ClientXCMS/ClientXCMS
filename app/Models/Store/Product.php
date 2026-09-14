@@ -377,7 +377,8 @@ class Product extends Model
             $tld ??= DomainTld::where('status', 'active')
                 ->whereHas('prices', fn ($query) => $query->where('action', DomainPricingService::ACTION_REGISTER)->where('currency', $currency))
                 ->orderBy('extension')->value('extension');
-            $price = $tld ? app(DomainPricingService::class)->priceFor($tld, $currency, $recurring ?? 'annually') : null;
+            // domain products are always billed annually, so we can ignore the $recurring parameter here
+            $price = $tld ? app(DomainPricingService::class)->priceFor($tld, $currency, 'annually') : null;
 
             return $price ?? throw new \UnexpectedValueException('No exact domain price is available for this product.');
         }

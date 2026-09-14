@@ -50,7 +50,12 @@ trait ServerTypeTrait
                 $message = sprintf('No server type %s found for service %d', $this->type, $this->id);
             } else {
                 $result = $server->createAccount($this);
-                if ($result->success) {
+                if ($result->success && $this->type === 'domain' && ($this->data['operation'] ?? 'register') === 'transfer' && ($this->data['registrar_status'] ?? null) === 'transfer_pending') {
+                    $this->status = self::STATUS_PENDING;
+                    $this->delivery_errors = null;
+                    $success = true;
+                    $message = $result->message ?? 'Domain transfer submitted';
+                } elseif ($result->success) {
                     $this->status = self::STATUS_ACTIVE;
                     $this->delivery_errors = null;
                     event(new ServiceDelivered($this, $result));

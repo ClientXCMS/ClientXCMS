@@ -28,6 +28,12 @@
             <p class="mt-1 text-gray-600 dark:text-gray-400">{{ $subtitle }}</p>
         </div>
         @include('shared.alerts')
+        @if($domainSearchAvailable ?? false)
+            <section class="mb-10 rounded-2xl bg-blue-600 p-6 text-white shadow-sm md:flex md:items-center md:justify-between md:p-8">
+                <div><h2 class="text-2xl font-bold">{{ __('provisioning.domain_manager.search.title') }}</h2><p class="mt-2 text-blue-100">{{ __('provisioning.domain_manager.search.subtitle') }}</p></div>
+                <a class="mt-5 inline-flex rounded-xl bg-white px-5 py-3 font-semibold text-blue-700 hover:bg-blue-50 md:mt-0" href="{{ route('front.store.domains.index') }}">{{ __('provisioning.domain_manager.search.submit') }}</a>
+            </section>
+        @endif
 
         @foreach ($groups->chunk(3) as $row)
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">

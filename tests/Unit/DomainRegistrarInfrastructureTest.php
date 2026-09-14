@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Abstracts\AbstractDomainRegistrar;
+use App\Core\Domain\FakeDomainRegistrar;
 use App\DTO\Domain\DomainAvailabilityDTO;
 use App\DTO\Provisioning\ConnectionResponse;
 use App\DTO\Provisioning\ServiceStateChangeDTO;
@@ -15,6 +16,27 @@ use Tests\TestCase;
 
 class DomainRegistrarInfrastructureTest extends TestCase
 {
+    public function test_batch_availability_falls_back_to_single_checks_for_existing_registrars(): void
+    {
+        $registrar = new MinimalDomainRegistrar;
+        $results = $registrar->checkAvailabilityBatch(['example.com', 'example.net']);
+
+        $this->assertSame(['example.com', 'example.net'], array_keys($results));
+        $this->assertTrue($results['example.com']->available);
+        $this->assertFalse($registrar->supportsTransfer());
+        $this->assertFalse($registrar->transfer(new Service)->success);
+    }
+
+    public function test_fake_registrar_returns_one_result_per_domain(): void
+    {
+        $registrar = new FakeDomainRegistrar;
+        $results = $registrar->checkAvailabilityBatch(['example.com', 'taken.net']);
+
+        $this->assertTrue($results['example.com']->available);
+        $this->assertFalse($results['taken.net']->available);
+        $this->assertTrue($registrar->supportsTransfer());
+    }
+
     public function test_optional_registrar_operations_fail_explicitly(): void
     {
         $registrar = new MinimalDomainRegistrar;

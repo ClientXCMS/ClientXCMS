@@ -103,7 +103,7 @@ class BasketRow extends Model
         $billing = $billing ?? $this->billing;
         if ($this->product && $this->product->type === ProductTypeInterface::DOMAIN) {
             $price = ! empty($this->data['tld'])
-                ? app(DomainPricingService::class)->priceFor($this->data['tld'], $this->currency, $billing)
+                ? app(DomainPricingService::class)->priceFor($this->data['tld'], $this->currency, $billing, $this->data['operation'] ?? DomainPricingService::ACTION_REGISTER)
                 : null;
 
             return $price ?? throw new \UnexpectedValueException('No exact domain price is available for this basket row.');
@@ -119,7 +119,7 @@ class BasketRow extends Model
         }
 
         return ! empty($this->data['tld'])
-            && app(DomainPricingService::class)->priceFor($this->data['tld'], $this->currency, $billing ?? $this->billing) !== null;
+            && app(DomainPricingService::class)->priceFor($this->data['tld'], $this->currency, $billing ?? $this->billing, $this->data['operation'] ?? DomainPricingService::ACTION_REGISTER) !== null;
     }
 
     public function applyCoupon(float $price, string $type)

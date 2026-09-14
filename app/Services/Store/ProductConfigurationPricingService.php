@@ -15,7 +15,7 @@ class ProductConfigurationPricingService
     public function preview(Product $product, string $billing, string $currency, array $optionsInput = [], array $data = [], ?Coupon $coupon = null): array
     {
         if ($product->type === ProductTypeInterface::DOMAIN && ! empty($data['tld'])) {
-            $price = app(DomainPricingService::class)->priceFor($data['tld'], $currency, $billing)
+            $price = app(DomainPricingService::class)->priceFor($data['tld'], $currency, $billing, $data['operation'] ?? DomainPricingService::ACTION_REGISTER)
                 ?? throw new \UnexpectedValueException('No exact domain price is available for this preview.');
         } else {
             $price = $product->getPriceByCurrency($currency, $billing);

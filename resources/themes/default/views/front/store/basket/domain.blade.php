@@ -1,6 +1,6 @@
 @php
-    $selectedTld = old('tld', request('tld', $data['tld'] ?? ''));
     $domain = old('domain', request('domain', $data['domain'] ?? ''));
+    $operation = old('operation', request('operation', $data['operation'] ?? 'register'));
     $nameserverMode = old('nameserver_mode', $data['nameserver_mode'] ?? 'managed');
     $currentNameservers = old('nameservers', $data['nameservers'] ?? []);
 @endphp
@@ -13,11 +13,13 @@
     .dark [data-domain-order] .theme-cart-soft { background: color-mix(in srgb, var(--domain-accent) 20%, transparent) !important; }
 </style>
 
-<div class="space-y-6 text-slate-700 dark:text-slate-300" data-domain-order data-nameservers='@json($tldNameservers)'>
-    <div class="grid md:grid-cols-2 gap-4">
-        <div>@include('shared/input', ['name' => 'domain', 'label' => __('provisioning.domain_manager.domain'), 'value' => $domain])</div>
-        <div>@include('shared/select', ['name' => 'tld', 'label' => __('provisioning.domain_manager.tld'), 'options' => $tlds, 'value' => $selectedTld])</div>
-    </div>
+<div class="space-y-6 text-slate-700 dark:text-slate-300" data-domain-order>
+    <input type="hidden" name="operation" value="{{ $operation === 'transfer' ? 'transfer' : 'register' }}">
+    @if($operation === 'transfer')
+        <div class="rounded-xl bg-blue-50 p-4 dark:bg-blue-900/20">{{ __('provisioning.domain_manager.search.transfer_help') }}</div>
+        <div>@include('shared/input', ['name' => 'auth_code', 'label' => __('provisioning.domain_manager.search.auth_code'), 'value' => old('auth_code', $data['auth_code'] ?? '')])</div>
+    @endif
+    <div>@include('shared/input', ['name' => 'domain', 'label' => __('provisioning.domain_manager.domain'), 'value' => $domain])</div>
 
     <div>
         <div class="mb-3">
@@ -32,7 +34,7 @@
                     <span>
                         <span class="block font-semibold text-slate-900 dark:text-white">{{ __('provisioning.domain_manager.dns_choice.managed') }}</span>
                         <span class="mt-1 block text-sm text-slate-500 dark:text-slate-400">{{ __('provisioning.domain_manager.dns_choice.managed_help') }}</span>
-                        <span class="mt-3 flex flex-wrap gap-2" data-managed-nameservers></span>
+                        <span class="mt-3 flex flex-wrap gap-2"></span>
                     </span>
                 </span>
             </label>
@@ -61,21 +63,13 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-domain-order]').forEach((root) => {
-        const tld = root.querySelector('[name="tld"]');
         const custom = root.querySelector('[data-custom-nameservers]');
-        const list = root.querySelector('[data-managed-nameservers]');
-        const nameservers = JSON.parse(root.dataset.nameservers || '{}');
         const refresh = () => {
             const usesCustomNameservers = root.querySelector('[name="nameserver_mode"]:checked')?.value === 'custom';
             custom.classList.toggle('hidden', !usesCustomNameservers);
             custom.querySelectorAll('input').forEach((input) => input.disabled = !usesCustomNameservers);
-            const values = nameservers[tld?.value] || [];
-            list.innerHTML = values.length
-                ? values.map((server) => `<span class="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300"><strong class="font-mono">${server.hostname}</strong>${server.ipv4 || server.ipv6 ? `<small class="mt-0.5 block font-mono opacity-70">${[server.ipv4, server.ipv6].filter(Boolean).join(' · ')}</small>` : ''}</span>`).join('')
-                : `<span class="text-xs text-amber-600">{{ __('provisioning.domain_manager.dns_choice.unavailable') }}</span>`;
         };
         root.querySelectorAll('[name="nameserver_mode"]').forEach((radio) => radio.addEventListener('change', refresh));
-        tld?.addEventListener('change', refresh);
         refresh();
     });
 });

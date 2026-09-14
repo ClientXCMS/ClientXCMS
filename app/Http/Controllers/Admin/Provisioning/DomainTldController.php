@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 
 class DomainTldController extends AbstractCrudController
 {
+    protected array $relations = ['server', 'prices'];
+
     protected string $model = DomainTld::class;
 
     protected string $routePath = 'admin.domain_tlds';
@@ -36,6 +38,7 @@ class DomainTldController extends AbstractCrudController
             'tlds' => DomainTld::orderBy('extension')->get(),
             'servers' => Server::where('type', 'domain')->get(),
             'registrars' => app(DomainRegistrarManager::class)->all(),
+            'defaultCurrency' => setting('store_currency', 'EUR'),
         ];
     }
 

@@ -80,8 +80,9 @@ class BasketController extends \App\Http\Controllers\Controller
             return back()->with('error', __('store.basket.not_valid'));
         }
         $row = BasketRow::findByProductOnSession($product, false);
+        $operation = $product->type === ProductTypeInterface::DOMAIN && $request->query('operation') === 'transfer' ? DomainPricingService::ACTION_TRANSFER : DomainPricingService::ACTION_REGISTER;
         $available = $product->type === ProductTypeInterface::DOMAIN && is_string($request->query('tld')) && $request->query('tld') !== ''
-            ? app(DomainPricingService::class)->availableForTld($request->query('tld'), currency())
+            ? app(DomainPricingService::class)->availableForTld($request->query('tld'), currency(), $operation)
             : $product->pricingAvailable(currency());
         if ($product->type === ProductTypeInterface::DOMAIN && $available === []) {
             return back()->with('error', __('store.basket.no_prices'));
@@ -117,7 +118,7 @@ class BasketController extends \App\Http\Controllers\Controller
             return [$product->key => ['pricing' => $product->getPricingArray(), 'key' => $product->key, 'type' => $product->type, 'step' => $product->step, 'unit' => $product->unit, 'title' => $product->name]];
         });
         $context['options'] = $configoptions;
-        $context['pricings'] = $product->pricingAvailable(currency());
+        $context['pricings'] = $product->type === ProductTypeInterface::DOMAIN ? $available : $product->pricingAvailable(currency());
 
         return view('front.store.basket.config', $context);
     }
@@ -174,7 +175,7 @@ class BasketController extends \App\Http\Controllers\Controller
             return response()->json(['message' => __('store.basket.no_prices')], 422);
         }
         if ($product->type === ProductTypeInterface::DOMAIN
-            && (empty($validated['tld']) || app(DomainPricingService::class)->priceFor($validated['tld'], $validated['currency'], $validated['billing']) === null)) {
+            && (empty($validated['tld']) || app(DomainPricingService::class)->priceFor($validated['tld'], $validated['currency'], $validated['billing'], $validated['operation'] ?? DomainPricingService::ACTION_REGISTER) === null)) {
             return response()->json(['message' => __('store.basket.no_prices')], 422);
         }
         $coupon = null;

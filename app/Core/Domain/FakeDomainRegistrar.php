@@ -56,6 +56,36 @@ class FakeDomainRegistrar extends AbstractDomainRegistrar implements DomainDnsIn
         return new DomainAvailabilityDTO($domain, ! $blocked, $blocked ? 'Domain unavailable' : null);
     }
 
+    public function checkAvailabilityBatch(array $domains): array
+    {
+        $results = [];
+        foreach ($domains as $domain) {
+            $results[$domain] = $this->checkAvailability($domain);
+        }
+
+        return $results;
+    }
+
+    public function supportsTransfer(): bool
+    {
+        return true;
+    }
+
+    public function transfer(Service $service): ServiceStateChangeDTO
+    {
+        $data = $service->data ?? [];
+        if (empty($data['auth_code'])) {
+            return new ServiceStateChangeDTO($service, false, 'Authorization code is required');
+        }
+        $data['registrar_id'] = $data['registrar_id'] ?? 'fake-transfer-'.sha1($data['domain'] ?? $service->uuid);
+        $data['registrar_status'] = 'transfer_pending';
+        unset($data['auth_code']);
+        $service->data = $data;
+        $service->save();
+
+        return new ServiceStateChangeDTO($service, true, 'Domain transfer submitted');
+    }
+
     public function register(Service $service): ServiceStateChangeDTO
     {
         $data = $service->data ?? [];

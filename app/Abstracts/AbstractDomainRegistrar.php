@@ -4,6 +4,7 @@ namespace App\Abstracts;
 
 use App\Contracts\Domain\DomainRegistrarInterface;
 use App\DTO\Domain\DomainInfoDTO;
+use App\DTO\Domain\DomainAvailabilityDTO;
 use App\DTO\Provisioning\ServiceStateChangeDTO;
 use App\Models\Provisioning\Service;
 use BadMethodCallException;
@@ -11,6 +12,25 @@ use BadMethodCallException;
 /** Optional operations fail explicitly; essential operations remain abstract via the interface. */
 abstract class AbstractDomainRegistrar implements DomainRegistrarInterface
 {
+    public function checkAvailabilityBatch(array $domains): array
+    {
+        $results = [];
+        foreach ($domains as $domain) {
+            $results[$domain] = $this->checkAvailability($domain);
+        }
+
+        return $results;
+    }
+
+    public function supportsTransfer(): bool
+    {
+        return false;
+    }
+
+    public function transfer(Service $service): ServiceStateChangeDTO
+    {
+        return $this->unsupported($service);
+    }
     public function validate(): array
     {
         return [];
