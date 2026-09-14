@@ -86,6 +86,44 @@ return [
     'nameservers' => 'Serveurs de noms',
     'nameserver' => 'Serveur de noms :number',
     'dns' => 'DNS',
+    'dns_choice' => [
+      'title' => 'Où souhaitez-vous gérer vos DNS ?',
+      'help' => 'Vous pourrez modifier ce choix plus tard depuis votre espace client.',
+      'managed' => 'Garder les DNS chez nous',
+      'managed_help' => 'Profitez d’une gestion centralisée et modifiez vos enregistrements directement depuis votre espace client.',
+      'custom' => 'Utiliser mes propres DNS',
+      'custom_help' => 'Indiquez les serveurs de noms de votre hébergeur ou d’un fournisseur DNS externe.',
+      'custom_notice' => 'Deux serveurs de noms valides au minimum sont nécessaires. La gestion des enregistrements se fera alors chez votre fournisseur DNS.',
+      'unavailable' => 'Aucun serveur DNS préconfiguré pour cette extension.'
+    ],
+    'dns_editor' => [
+      'help' => 'Gérez les enregistrements qui dirigent votre domaine vers votre site, vos e-mails et vos autres services.',
+      'records_count' => '{0} Aucun enregistrement|{1} :count enregistrement|[2,*] :count enregistrements',
+      'type' => 'Type',
+      'name' => 'Nom / hôte',
+      'value' => 'Valeur / destination',
+      'empty' => 'Aucun enregistrement DNS pour le moment.',
+      'add' => 'Ajouter un enregistrement',
+      'add_action' => 'Ajouter l’enregistrement',
+      'type_help' => [
+        'A' => 'Associe un nom à une adresse IPv4.',
+        'AAAA' => 'Associe un nom à une adresse IPv6.',
+        'CNAME' => 'Crée un alias vers un autre nom de domaine.',
+        'MX' => 'Définit le serveur e-mail, sous la forme « priorité serveur ».',
+        'TXT' => 'Ajoute une valeur texte, notamment pour SPF, DKIM ou les validations.',
+        'NS' => 'Délègue une zone ou un sous-domaine à un serveur de noms.',
+        'SRV' => 'Décrit un service sous la forme « priorité poids port cible ».',
+        'CAA' => 'Autorise une autorité à émettre des certificats pour le domaine.'
+      ],
+    ],
+    'nameservers_editor' => [
+      "help" => "Choisissez les serveurs qui hébergent la zone DNS de votre domaine.",
+      'recommended' => 'DNS recommandés',
+      'recommended_help' => 'Utilisez ces serveurs pour conserver la gestion DNS centralisée dans votre espace client.',
+      'use_recommended' => 'Utiliser ces DNS',
+      'add' => 'Ajouter un serveur',
+      'server' => 'Serveur de noms'
+    ],
     'whois_privacy' => 'Protection WHOIS',
     'creation_date' => 'Date de création',
     'expiration_date' => 'Date d\'expiration',
@@ -108,6 +146,13 @@ return [
       'extensions' => 'Découvrez nos extensions',
       'extensions_help' => 'Sélectionnez une extension pour vérifier immédiatement sa disponibilité.',
       'from' => 'À partir de',
+      'loading' => 'Nous recherchons les meilleures options et les meilleurs prix pour votre domaine…',
+      'check_failed' => 'La disponibilité n’a pas pu être vérifiée. Veuillez réessayer.',
+      'invalid_domain' => 'Saisissez un nom de domaine valide avec une seule partie avant l’extension.',
+      'transfer_cta' => 'Transférer ce domaine',
+      'transfer_help' => 'Votre domaine doit être enregistré chez un autre fournisseur et déverrouillé pour le transfert.',
+      'transfer_unavailable' => 'Le transfert de cette extension n’est pas pris en charge par le registrar.',
+      "auth_code" => "Code d’autorisation (EPP)"
     ],
     'errors' => [
       'invalid_tld' => 'Le domaine ne correspond pas à l\'extension sélectionnée.',
