@@ -19,10 +19,12 @@
 
 namespace App\Http\Controllers\Api\Provisioning;
 
+use App\Exceptions\CustomTargetRequiresCredentialsException;
 use App\Http\Controllers\Api\AbstractApiController;
 use App\Http\Requests\Provisioning\StoreServerRequest;
 use App\Http\Requests\Provisioning\UpdateServerRequest;
 use App\Models\Provisioning\Server;
+use App\Services\Provisioning\ServerConnectionTestPayload;
 use DB;
 use Illuminate\Http\Request;
 
@@ -303,31 +305,23 @@ class ServerController extends AbstractApiController
      *     )
      * )
      */
-    public function test(Request $request)
+    public function test(Request $request, ServerConnectionTestPayload $payload)
     {
         $data = $request->only(['address', 'port', 'type', 'username', 'password', 'hostname']);
         $copy = new Server;
+        $server = null;
 
         if ($request->has('server_id')) {
             $server = Server::find($request->server_id);
             if ($server == null) {
                 return response()->json(['success' => false, 'message' => 'Server not found'], 422);
             }
-            if (empty($data['password'])) {
-                $data['password'] = $server->password;
-            }
-            if (empty($data['username'])) {
-                $data['username'] = $server->username;
-            }
-            if (empty($data['address'])) {
-                $data['address'] = $server->address;
-            }
-            if (empty($data['port'])) {
-                $data['port'] = $server->port;
-            }
-            if (empty($data['hostname'])) {
-                $data['hostname'] = $server->hostname;
-            }
+        }
+
+        try {
+            $data = $payload->resolve($data, $server);
+        } catch (CustomTargetRequiresCredentialsException $e) {
+            return response()->json(['success' => false, 'status' => 422, 'message' => $e->getMessage()], 422);
         }
 
         $copy->fill($data);
@@ -350,7 +344,8 @@ class ServerController extends AbstractApiController
                 return response()->json(['success' => false, 'status' => 500, 'message' => $errors]);
             }
 
-            $result = $serverType->server()->testConnection($copy->toArray());
+            // The driver rebuilds a Server from this payload, so it needs the credentials that $hidden keeps out of every other serialization.
+            $result = $serverType->server()->testConnection($copy->makeVisible(['username', 'password'])->toArray());
             if ($result->successful()) {
                 return response()->json(['success' => true, 'status' => $result->status(), 'message' => $result->toString()]);
             }

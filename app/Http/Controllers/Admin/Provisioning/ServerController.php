@@ -20,11 +20,13 @@
 namespace App\Http\Controllers\Admin\Provisioning;
 
 use App\Core\NoneProductType;
+use App\Exceptions\CustomTargetRequiresCredentialsException;
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Http\Requests\Provisioning\StoreServerRequest;
 use App\Http\Requests\Provisioning\UpdateServerRequest;
 use App\Models\Provisioning\Server;
 use App\Services\Domain\DomainRegistrarManager;
+use App\Services\Provisioning\ServerConnectionTestPayload;
 use DB;
 use Illuminate\Http\Request;
 
@@ -138,34 +140,26 @@ class ServerController extends AbstractCrudController
         return $this->updateRedirect($server);
     }
 
-    public function test(Request $request)
+    public function test(Request $request, ServerConnectionTestPayload $payload)
     {
         $this->checkPermission('create');
         $data = $request->only(['address', 'port', 'type', 'username', 'password', 'hostname', 'test_mode']);
         $copy = new Server;
+        $server = null;
         if ($request->has('server_id')) {
             $server = Server::find($request->server_id);
             if ($server == null) {
                 return response()->json(['success' => false, 'message' => 'Server not found'], 422);
             }
+            if (! $request->has('test_mode')) {
+                $data['test_mode'] = $server->isTestMode();
+            }
         }
-        if (empty($data['password']) && $request->has('server_id')) {
-            $data['password'] = $server->password;
-        }
-        if (empty($data['username']) && $request->has('server_id')) {
-            $data['username'] = $server->username;
-        }
-        if (empty($data['address']) && $request->has('server_id')) {
-            $data['address'] = $server->address;
-        }
-        if (empty($data['port']) && $request->has('server_id')) {
-            $data['port'] = $server->port;
-        }
-        if (empty($data['hostname']) && $request->has('server_id')) {
-            $data['hostname'] = $server->hostname;
-        }
-        if (! $request->has('test_mode') && $request->has('server_id')) {
-            $data['test_mode'] = $server->isTestMode();
+
+        try {
+            $data = $payload->resolve($data, $server);
+        } catch (CustomTargetRequiresCredentialsException $e) {
+            return response()->json(['success' => false, 'status' => 422, 'message' => $e->getMessage()], 422);
         }
 
         $copy->fill($data);
@@ -185,7 +179,8 @@ class ServerController extends AbstractCrudController
 
                 return response()->json(['success' => false, 'status' => 500, 'message' => $errors]);
             }
-            $result = $serverType->server()->testConnection(array_merge($copy->toArray(), [
+            // The driver rebuilds a Server from this payload, so it needs the credentials that $hidden keeps out of every other serialization.
+            $result = $serverType->server()->testConnection(array_merge($copy->makeVisible(['username', 'password'])->toArray(), [
                 'test_mode' => filter_var($data['test_mode'] ?? false, FILTER_VALIDATE_BOOL),
             ]));
             if ($result->successful()) {

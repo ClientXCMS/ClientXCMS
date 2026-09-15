@@ -4,6 +4,8 @@ namespace Tests\Feature\Admin\Provisioning;
 
 use App\Models\Provisioning\Server;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Fixtures\RecordingProductType;
+use Tests\Fixtures\RecordingServerType;
 use Tests\TestCase;
 
 class ServerControllerTest extends TestCase
@@ -11,6 +13,8 @@ class ServerControllerTest extends TestCase
     const API_URL = 'admin/servers';
 
     const TEST_ENDPOINT = 'admin/testservers';
+
+    const RECORDING_TYPE = RecordingServerType::UUID;
 
     use RefreshDatabase;
 
@@ -194,5 +198,58 @@ class ServerControllerTest extends TestCase
         $response->assertJson([
             'success' => true,
         ]);
+    }
+
+    public function test_admin_server_test_hands_the_stored_credentials_to_the_driver(): void
+    {
+        $driver = $this->registerRecordingServerType();
+        $id = $this->createRecordedServer();
+
+        $response = $this->performAdminAction('GET', self::TEST_ENDPOINT, [
+            'server_id' => $id,
+            'type' => self::RECORDING_TYPE,
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSame('stored-user', $driver->received['username'] ?? null);
+        $this->assertSame('stored-secret', $driver->received['password'] ?? null);
+    }
+
+    public function test_admin_server_test_never_sends_the_stored_credentials_to_another_address(): void
+    {
+        $driver = $this->registerRecordingServerType();
+        $id = $this->createRecordedServer();
+
+        $response = $this->performAdminAction('GET', self::TEST_ENDPOINT, [
+            'server_id' => $id,
+            'type' => self::RECORDING_TYPE,
+            'address' => 'attacker.example.net',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJson(['success' => false]);
+        $this->assertSame([], $driver->received);
+    }
+
+    private function createRecordedServer(): int
+    {
+        return Server::create([
+            'name' => 'Test Server',
+            'address' => 'panel.example.com',
+            'hostname' => 'panel.example.com',
+            'status' => 'active',
+            'username' => 'stored-user',
+            'password' => 'stored-secret',
+            'type' => self::RECORDING_TYPE,
+            'port' => 443,
+        ])->id;
+    }
+
+    private function registerRecordingServerType(): RecordingServerType
+    {
+        $driver = new RecordingServerType;
+        app('extension')->addProductType(new RecordingProductType($driver));
+
+        return $driver;
     }
 }
