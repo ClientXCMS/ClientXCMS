@@ -52,7 +52,7 @@ class ExpireServicesCommand extends Command
             if ($result->success) {
                 $this->info($service->id.' : '.$result->message);
             } else {
-                $successful = false;
+                // $successful = false;
                 $this->error($service->id.' : '.$result->message);
             }
         }
@@ -62,7 +62,7 @@ class ExpireServicesCommand extends Command
             if ($result->success) {
                 $this->info($service->id.' : '.$result->message);
             } else {
-                $successful = false;
+                // $successful = false;
                 $this->error($service->id.' : '.$result->message);
             }
         }

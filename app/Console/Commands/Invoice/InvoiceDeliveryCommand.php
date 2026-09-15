@@ -68,7 +68,7 @@ class InvoiceDeliveryCommand extends Command
                     $service->attachMetadata('must_created_manually', '0');
                     $this->info("Service {$service->id} delivered : ".$result->message);
                 } else {
-                    $successful = false;
+                    //$successful = false;
                     $this->error("Service {$service->id} delivery failed Error : ".$result->message);
                 }
             } catch (\Exception $e) {
@@ -99,7 +99,7 @@ class InvoiceDeliveryCommand extends Command
                     $this->error("Service delivery failed for invoice item {$item->id} (item not supported)");
                 }
             } catch (\Exception $e) {
-                $successful = false;
+                //$successful = false;
                 $this->error("Service delivery failed for invoice item {$item->id} : ".$e->getMessage());
             }
         });
