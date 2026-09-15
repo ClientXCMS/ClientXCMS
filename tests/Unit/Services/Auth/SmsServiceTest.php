@@ -68,7 +68,7 @@ class SmsServiceTest extends TestCase
             $captured = compact('event', 'context');
         });
 
-        $gateway->send('+33612345678', 'CTX — code: 123456');
+        $gateway->send('+33612345678', 'CTX - code: 123456');
 
         $this->assertSame('mfa.sms.log_driver', $captured['event']);
         $this->assertArrayNotHasKey('body', $captured['context']);
@@ -92,7 +92,7 @@ class SmsServiceTest extends TestCase
         $this->assertFalse($customer->isValidSmsTwoFactorCode('000000'));
 
         // Read the underlying hash, brute-force the only 6-digit code the
-        // metadata represents — we can't recover the code in a test, so
+        // metadata represents - we can't recover the code in a test, so
         // we re-call sendTwoFactorSmsCode with `Hash::make` mocked? Too
         // brittle. Instead assert the structural pieces.
         $this->assertNotNull($customer->getMetadata('2fa_sms_code'));

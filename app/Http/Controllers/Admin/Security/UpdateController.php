@@ -56,6 +56,7 @@ class UpdateController
         \View::share('current_item', $item);
         $currentVersion = AppServiceProvider::VERSION;
         $publishedVersions = collect($changelog)->first();
+
         return view('admin.security.update.index', compact('changelogUrl', 'changelog', 'currentVersion', 'publishedVersions'));
     }
 
@@ -63,7 +64,7 @@ class UpdateController
     {
         staff_aborts_permission(Permission::MANAGE_UPDATE);
         try {
-            (new UpdaterManager)->update('core');
+            (new UpdaterManager)->updateCore();
             Artisan::call('optimize:clear');
             Artisan::call('cache:clear');
             Artisan::call('migrate', ['--force' => true, '--seed' => true]);

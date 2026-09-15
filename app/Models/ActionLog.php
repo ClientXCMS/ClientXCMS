@@ -116,6 +116,10 @@ class ActionLog extends Model
 
     const TWO_FACTOR_RECOVERY_CODES_GENERATED = 'two_factor_recovery_codes_generated';
 
+    const PASSKEY_REGISTERED = 'passkey_registered';
+
+    const PASSKEY_DELETED = 'passkey_deleted';
+
     const FAILED_LOGIN = 'failed_login';
 
     const ACCOUNT_DELETED = 'account_deleted';
@@ -172,6 +176,8 @@ class ActionLog extends Model
         self::TWO_FACTOR_ENABLED,
         self::TWO_FACTOR_DISABLED,
         self::TWO_FACTOR_RECOVERY_CODES_GENERATED,
+        self::PASSKEY_REGISTERED,
+        self::PASSKEY_DELETED,
         self::FAILED_LOGIN,
         self::ACCOUNT_DELETED,
         self::NEW_REGISTERED,
@@ -288,6 +294,10 @@ class ActionLog extends Model
                 return 'bi bi-person-x';
             case self::TWO_FACTOR_RECOVERY_CODES_GENERATED:
                 return 'bi bi-shield-check';
+            case self::PASSKEY_REGISTERED:
+                return 'bi bi-key-fill';
+            case self::PASSKEY_DELETED:
+                return 'bi bi-key';
             case self::TICKET_CREATED:
                 return 'bi bi-ticket';
             case self::TICKET_CLOSED:

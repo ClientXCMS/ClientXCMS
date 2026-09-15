@@ -98,6 +98,14 @@ class UpdateProductRequest extends FormRequest
             'pinned' => 'nullable|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'remove_image' => 'nullable|string|in:true,false',
+            'product_descriptions' => 'nullable|array|max:100',
+            'product_descriptions_present' => 'nullable|boolean',
+            'product_descriptions.*.id' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9_-]+$/'],
+            'product_descriptions.*.text' => 'required_with:product_descriptions|string|max:1000',
+            'product_descriptions.*.icon' => ['nullable', 'string', 'max:100', 'regex:/^bi bi-[a-z0-9]+(?:-[a-z0-9]+)*$/'],
+            'product_description_translations' => 'nullable|array',
+            'product_description_translations.*' => 'array|max:100',
+            'product_description_translations.*.*' => 'nullable|string|max:1000',
         ], $this->pricingRules());
     }
 
@@ -116,6 +124,7 @@ class UpdateProductRequest extends FormRequest
     public function update()
     {
         $product = $this->product;
+        $requestData = $this->validated();
         $validated = $this->only(['name', 'description', 'status', 'group_id', 'stock', 'type', 'pinned']);
         $product->update($validated);
         $pricing = Pricing::where('related_id', $product->id)->where('related_type', 'product')->first();
@@ -140,6 +149,12 @@ class UpdateProductRequest extends FormRequest
             $product->save();
         }
         PricingService::forgot();
+        if ($this->boolean('product_descriptions_present')) {
+            $product->syncProductDescriptions(
+                $requestData['product_descriptions'] ?? [],
+                $requestData['product_description_translations'] ?? []
+            );
+        }
 
         return $product;
     }

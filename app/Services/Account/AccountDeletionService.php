@@ -106,6 +106,7 @@ class AccountDeletionService
             }
             Cache::forget('payment_methods_'.$customer->id);
             $customer->tokens()->delete();
+            $customer->passkeys()->delete();
             $customer->metadata()->delete();
             $customer->delete();
 

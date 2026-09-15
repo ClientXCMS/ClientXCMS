@@ -112,7 +112,7 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ __('extensions.settings.sections.my_modules') }}</h2>
                 <span class="text-sm text-gray-500 dark:text-gray-400">({{ $installedModulesAddons->count() }})</span>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" id="installed-grid">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-{{ auth('admin')->user()->admin_layout == 'vertical' ? '6' : '3' }} gap-5" id="installed-grid">
                 @foreach ($installedModulesAddons as $extension)
                 @include('admin.settings.extensions._card', ['extension' => $extension, 'groupName' => $extension->api['group_uuid'] ?? 'unknown'])
                 @endforeach
@@ -197,7 +197,7 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="extensions-grid">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-{{ auth('admin')->user()->admin_layout == 'vertical' ? '6' : '3' }} gap-5" id="extensions-grid">
             @foreach ($groups as $groupName => $groupData)
             @foreach ($groupData['items'] as $extension)
             @include('admin.settings.extensions._card', ['extension' => $extension, 'groupName' => $groupName])
@@ -223,7 +223,7 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
         </div>
 
         @if ($themes->count() > 0)
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="themes-grid">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-{{ auth('admin')->user()->admin_layout == 'vertical' ? '6' : '3' }} gap-6" id="themes-grid">
             @foreach ($themes as $extension)
             @include('admin.settings.extensions._card-theme', ['extension' => $extension])
             @endforeach

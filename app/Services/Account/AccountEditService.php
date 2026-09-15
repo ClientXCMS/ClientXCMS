@@ -87,9 +87,12 @@ class AccountEditService
             'phone' => $all['phone'],
             'region' => $all['region'],
             'country' => $all['country'],
-            'company_name' => $all['company_name'] ?? null,
-            'billing_details' => $all['billing_details'] ?? null,
         ];
+        foreach (['company_name', 'billing_details'] as $legacyBillingField) {
+            if (array_key_exists($legacyBillingField, $all)) {
+                $filtred[$legacyBillingField] = $all[$legacyBillingField];
+            }
+        }
         if (isset($all['locale']) && LocaleService::isValideLocale($all['locale'])) {
             $filtred['locale'] = $all['locale'];
         }

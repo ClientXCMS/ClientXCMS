@@ -22,6 +22,7 @@ namespace App\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Facades\File;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\ViewException;
 use Symfony\Component\Mailer\Exception\TransportException;
 use Throwable;
@@ -59,6 +60,12 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $exception)
     {
+        // Let Laravel turn validation failures into redirects (or 422 JSON
+        // responses) before the generic branded 500-page handling below.
+        if ($exception instanceof ValidationException) {
+            return parent::render($request, $exception);
+        }
+
         if ($exception instanceof ThrottleRequestsException && $request->routeIs('front.profile.export')) {
             $retryAfter = max(1, (int) ($exception->getHeaders()['Retry-After'] ?? 60));
 
@@ -71,7 +78,8 @@ class Handler extends ExceptionHandler
         if ($exception instanceof ViewException && \Str::contains($exception->getMessage(), 'Vite manifest not found at')) {
             return response("Vite manifest not found. Please execute 'npm install && npm run build'", 404);
         }
-        $status = $this->isHttpException($exception) ? $exception->getStatusCode() : 500;
+        $response = parent::render($request, $exception);
+        $status = $response->getStatusCode();
         $canRenderBrandedPage = in_array($status, self::RENDERED_STATUSES, true)
             && ! $request->expectsJson()
             && ($this->isHttpException($exception) || ! config('app.debug'));
@@ -96,7 +104,7 @@ class Handler extends ExceptionHandler
             }
         }
 
-        return parent::render($request, $exception);
+        return $response;
     }
 
     private function errorView($request, int $status, array $data): mixed

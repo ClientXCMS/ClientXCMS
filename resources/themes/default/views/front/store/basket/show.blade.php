@@ -62,7 +62,7 @@
                                     @endif
                                 @foreach($basket->items()->get() as $row)
                                     @php($pricing = $row->getUnitPrice())
-                                    <tr class="dark:text-gray-500">
+                                    <tr class="dark:text-gray-400">
                                     <td class="py-4 ">
                                         <div class="flex items-center">
                                             <form method="POST" action="{{ route('front.store.basket.remove', ['product' => $row->product]) }}">

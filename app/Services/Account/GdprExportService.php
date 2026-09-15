@@ -72,7 +72,7 @@ class GdprExportService
         $zip->addFromString('coupon_usages.json', $this->encode($this->couponUsages($customer)));
         $zip->addFromString('api_tokens.json', $this->encode($this->apiTokens($customer)));
 
-        // Attach each invoice's PDF — generated on demand if missing.
+        // Attach each invoice's PDF - generated on demand if missing.
         foreach ($customer->invoices ?? [] as $invoice) {
             try {
                 $pdfBytes = $invoice->invoiceOutput();

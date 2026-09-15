@@ -264,6 +264,11 @@
                 'checked' => setting('force_2fa_admin'),
             ])
             @include('admin/shared/checkbox', [
+                'label' => __('admin.settings.core.security.fields.passkeys_enabled'),
+                'name' => 'passkeys_enabled',
+                'checked' => setting('passkeys_enabled', false),
+            ])
+            @include('admin/shared/checkbox', [
                 'label' => __('admin.settings.core.security.fields.allow_reset_password'),
                 'name' => 'allow_reset_password',
                 'checked' => setting('allow_reset_password'),

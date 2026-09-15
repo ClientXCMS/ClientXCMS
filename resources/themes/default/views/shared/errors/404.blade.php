@@ -25,10 +25,10 @@
         </div>
         <div class="max-w-2xl mx-auto text-center">
 
-            <a href="{{ $link }}" class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none mt-10 ml-3">
+            <a href="{{ $link }}" class="btn-primary-soft mt-10 ml-3">
                 <i class="bi bi-house-door"></i>
                 {{ __($label) }}</a>
-            <a href="{{ URL::previous() }}" class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none mt-10">
+            <a href="{{ URL::previous() }}" class="btn-primary-soft mt-10">
                 <i class="bi bi-arrow-left"></i>
                 {{ __('errors.404.back') }}</a>
         </div>

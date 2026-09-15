@@ -76,6 +76,11 @@ class InvoiceService
         if ($basket->getMetadata('invoice') != null) {
             $invoice = Invoice::find($basket->getMetadata('invoice'));
             if ($invoice != null) {
+                if ($invoice->isElectronicallyLocked()) {
+                    $invoice->update(['paymethod' => $gateway->uuid]);
+
+                    return $invoice;
+                }
                 $invoice->update([
                     'customer_id' => $basket->user_id,
                     'due_date' => now()->addDays(7),
@@ -90,6 +95,8 @@ class InvoiceService
                 ]);
                 $invoice->items()->delete();
                 self::createInvoiceItemsFromBasket($basket, $invoice);
+
+                event(new InvoiceCreated($invoice));
 
                 return $invoice;
             }
@@ -157,7 +164,9 @@ class InvoiceService
         if ($product->productType()->server() != null) {
             $server = $product->productType()->server()->findServer($product);
             if ($item->type === ProductTypeInterface::DOMAIN && ! empty($item->data['tld'])) {
-                $tldServer = \App\Models\Store\DomainTld::where('extension', $item->data['tld'])->first()?->server;
+                $tldServer = array_key_exists('domain_server_id', $item->data)
+                    ? Server::find($item->data['domain_server_id'])
+                    : \App\Models\Store\DomainTld::where('extension', $item->data['tld'])->first()?->server;
                 if ($tldServer !== null) {
                     $server = $tldServer;
                 }
@@ -273,6 +282,10 @@ class InvoiceService
 
     public static function createInvoiceFromService(Service $service, ?string $billing = null)
     {
+        // Validate domain tariffs before creating an invoice, including scheduled renewals.
+        if ($service->type === \App\Contracts\Store\ProductTypeInterface::DOMAIN) {
+            $service->getBillingPrice($billing ?? $service->billing);
+        }
         $currency = $service->currency;
         $months = app(RecurringService::class)->get($billing ?? $service->billing)['months'];
         $days = setting('remove_pending_invoice', 0) != 0 ? setting('remove_pending_invoice') : 7;
@@ -290,12 +303,19 @@ class InvoiceService
             'notes' => $description,
         ]);
         self::appendServiceOnExistingInvoice($service, $invoice, $billing ?? $service->billing);
+        event(new InvoiceCreated($invoice));
 
         return $invoice;
     }
 
     public static function createInvoiceFromProduct(Customer $customer, Product $product, string $billing, string $currency, array $data = [])
     {
+        $price = $product->type === ProductTypeInterface::DOMAIN
+            ? (! empty($data['tld']) ? app(\App\Services\Domain\DomainPricingService::class)->priceFor($data['tld'], $currency, $billing) : null)
+            : $product->getPriceByCurrency($currency, $billing);
+        if ($price === null) {
+            throw new \UnexpectedValueException('No exact domain price is available for this invoice.');
+        }
         $invoice = Invoice::create([
             'customer_id' => $customer->id,
             'due_date' => now()->addDays(7),
@@ -304,7 +324,6 @@ class InvoiceService
             'invoice_number' => Invoice::generateInvoiceNumber(),
             'notes' => "Created from product #{$product->id} ({$product->name})",
         ]);
-        $price = $product->getPriceByCurrency($currency, $billing);
         $current = Carbon::now();
         $expiresAt = app(RecurringService::class)->addFrom(clone $current, $billing);
         $name = "{$product->trans('name')} ({$current->format('d/m/y')} - {$expiresAt->format('d/m/y')})";
@@ -347,6 +366,10 @@ class InvoiceService
 
     public static function appendServiceOnExistingInvoice(Service $service, Invoice $invoice, ?string $billing = null, ?ProductPriceDTO $price = null)
     {
+        if ($invoice->isElectronicallyLocked()) {
+            throw new \LogicException('An issued invoice is immutable; create a credit note instead.');
+        }
+
         if ($price) {
             $price = $price->price_ht;
         } elseif ($service->discountAmount() != 0) {

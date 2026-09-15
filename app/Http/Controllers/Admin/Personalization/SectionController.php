@@ -153,7 +153,7 @@ class SectionController extends AbstractCrudController
         $section->save();
         ThemeManager::clearCache();
 
-        return back();
+        return $this->updateRedirect($section);
     }
 
     public function restore(Section $section)

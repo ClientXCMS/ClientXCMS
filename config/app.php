@@ -186,6 +186,7 @@ return [
         L5SwaggerServiceProvider::class,
         \App\Providers\ClientareaServiceProvider::class,
         \App\Providers\MfaServiceProvider::class,
+        \App\Providers\PasskeyServiceProvider::class,
     ])->toArray(),
 
     'proxies' => [

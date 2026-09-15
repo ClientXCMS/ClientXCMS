@@ -123,8 +123,8 @@ class SecurityQuestionTest extends TestCase
             'address' => 'test street',
             'city' => 'test city',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'a-strong-test-password',
+            'password_confirmation' => 'a-strong-test-password',
             'security_question_id' => $question->id,
             'security_answer' => 'Blue',
         ]);
@@ -152,8 +152,8 @@ class SecurityQuestionTest extends TestCase
             'address' => 'test street',
             'city' => 'test city',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'a-strong-test-password',
+            'password_confirmation' => 'a-strong-test-password',
         ]);
 
         $this->assertAuthenticated();
@@ -183,8 +183,8 @@ class SecurityQuestionTest extends TestCase
 
         $response = $this->actingAs($customer, 'web')
             ->post(route('front.profile.password'), [
-                'password' => 'newpassword',
-                'password_confirmation' => 'newpassword',
+                'password' => 'new-strong-password',
+                'password_confirmation' => 'new-strong-password',
                 'currentpassword' => 'oldpassword',
                 // Missing security_answer
             ]);
@@ -207,8 +207,8 @@ class SecurityQuestionTest extends TestCase
 
         $response = $this->actingAs($customer, 'web')
             ->post(route('front.profile.password'), [
-                'password' => 'newpassword',
-                'password_confirmation' => 'newpassword',
+                'password' => 'new-strong-password',
+                'password_confirmation' => 'new-strong-password',
                 'currentpassword' => 'oldpassword',
                 'security_answer' => 'wrong answer',
             ]);
@@ -231,8 +231,8 @@ class SecurityQuestionTest extends TestCase
 
         $response = $this->actingAs($customer, 'web')
             ->post(route('front.profile.password'), [
-                'password' => 'newpassword',
-                'password_confirmation' => 'newpassword',
+                'password' => 'new-strong-password',
+                'password_confirmation' => 'new-strong-password',
                 'currentpassword' => 'oldpassword',
                 'security_answer' => 'RED', // Case insensitive
             ]);
@@ -249,8 +249,8 @@ class SecurityQuestionTest extends TestCase
 
         $response = $this->actingAs($customer, 'web')
             ->post(route('front.profile.password'), [
-                'password' => 'newpassword',
-                'password_confirmation' => 'newpassword',
+                'password' => 'new-strong-password',
+                'password_confirmation' => 'new-strong-password',
                 'currentpassword' => 'oldpassword',
             ]);
 

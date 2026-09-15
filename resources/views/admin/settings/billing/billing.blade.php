@@ -99,6 +99,26 @@
                 <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('billing.admin.settings.tax') }}</h3>
             </div>
             <div class="col-span-3">
+                <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('einvoicing.settings.legal_entity') }}</h3>
+            </div>
+            <div>@include('admin/shared/input', ['name' => 'billing_legal_name', 'label' => __('einvoicing.profile.legal_name'), 'value' => setting('billing_legal_name')])</div>
+            <div>@include('admin/shared/input', ['name' => 'billing_siren', 'label' => __('einvoicing.profile.siren'), 'value' => setting('billing_siren')])</div>
+            <div>@include('admin/shared/input', ['name' => 'billing_siret', 'label' => __('einvoicing.profile.siret'), 'value' => setting('billing_siret'), 'optional' => true])</div>
+            <div>@include('admin/shared/input', ['name' => 'billing_vat_number', 'label' => __('einvoicing.profile.vat_number'), 'value' => setting('billing_vat_number'), 'optional' => true])</div>
+            <div>@include('admin/shared/select', ['name' => 'billing_operation_category', 'label' => __('einvoicing.settings.operation_category'), 'options' => ['goods' => __('einvoicing.settings.goods'), 'services' => __('einvoicing.settings.services'), 'mixed' => __('einvoicing.settings.mixed')], 'value' => setting('billing_operation_category', 'services')])</div>
+            <div>@include('admin/shared/checkbox', ['name' => 'billing_vat_on_debits', 'label' => __('einvoicing.settings.vat_on_debits'), 'value' => setting('billing_vat_on_debits', false)])</div>
+            <div>@include('admin/shared/input', ['name' => 'billing_address', 'label' => __('einvoicing.settings.seller_street'), 'value' => setting('billing_address', setting('app_address'))])</div>
+            <div>@include('admin/shared/input', ['name' => 'billing_address2', 'label' => __('einvoicing.settings.seller_address2'), 'value' => setting('billing_address2'), 'optional' => true])</div>
+            <div>@include('admin/shared/input', ['name' => 'billing_zipcode', 'label' => __('einvoicing.settings.seller_zipcode'), 'value' => setting('billing_zipcode')])</div>
+            <div>@include('admin/shared/input', ['name' => 'billing_city', 'label' => __('einvoicing.settings.seller_city'), 'value' => setting('billing_city')])</div>
+            <div>@include('admin/shared/input', ['name' => 'billing_country', 'label' => __('einvoicing.settings.seller_country'), 'help' => __('einvoicing.settings.seller_country_help'), 'value' => setting('billing_country', 'FR')])</div>
+            <div class="col-span-3"><h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('einvoicing.settings.electronic_section') }}</h3></div>
+            <div>@include('admin/shared/checkbox', ['name' => 'einvoicing_enabled', 'label' => __('einvoicing.settings.enabled'), 'value' => setting('einvoicing_enabled', false)])</div>
+            <div>@include('admin/shared/select', ['name' => 'einvoicing_provider', 'label' => __('einvoicing.settings.provider'), 'options' => collect(app(\App\Services\Billing\ElectronicProviderRegistry::class)->all())->mapWithKeys(fn ($provider, $key) => [$key => strtoupper($key)])->all(), 'value' => setting('einvoicing_provider', 'local')])</div>
+            <div>@include('admin/shared/select', ['name' => 'einvoicing_vat_regime', 'label' => __('einvoicing.settings.vat_regime'), 'options' => collect(['real_normal_monthly', 'real_normal_quarterly', 'simplified', 'franchise_base'])->mapWithKeys(fn ($regime) => [$regime => __('einvoicing.settings.regimes.'.$regime)])->all(), 'value' => setting('einvoicing_vat_regime', 'real_normal_monthly')])</div>
+            <div>@include('admin/shared/input', ['name' => 'einvoicing_timezone', 'label' => __('einvoicing.settings.timezone'), 'value' => setting('einvoicing_timezone', 'Europe/Paris')])</div>
+            <div>@include('admin/shared/input', ['name' => 'einvoicing_activation_date', 'label' => __('einvoicing.settings.activation_date'), 'help' => __('einvoicing.settings.activation_date_help'), 'type' => 'date', 'value' => setting('einvoicing_activation_date'), 'optional' => true])</div>
+            <div class="col-span-3">
                 @include('admin/shared/checkbox', ['label' => __('billing.admin.settings.fields.store_vat_enabled'), 'name' => 'store_vat_enabled', 'value' => setting('store_vat_enabled')])
             </div>
 

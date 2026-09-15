@@ -19,21 +19,24 @@
 
 namespace App\Http\Controllers\Admin\Settings;
 
+use App\Core\Auth\MigratingHashManager;
 use App\Helpers\EnvEditor;
 use App\Models\Admin\Permission;
 use App\Models\Admin\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\RequiredIf;
 
 class SettingsSecurityController
 {
     public function showSecuritySettings()
     {
-        $drivers = [
+        // Offering a driver this PHP build cannot produce would break every password write
+        $drivers = array_intersect_key([
             'argon' => 'Argon - For Migrated instances',
             'bcrypt' => 'Bcrypt',
             'argon2id' => 'Argon2id',
-        ];
+        ], array_flip(MigratingHashManager::availableDrivers()));
         $captcha = [
             'none' => 'None',
             'recaptcha' => 'Google reCAPTCHA',
@@ -57,13 +60,14 @@ class SettingsSecurityController
         }
 
         $rules = [
-            'hash_driver' => 'required|string',
+            'hash_driver' => ['required', 'string', Rule::in(MigratingHashManager::availableDrivers())],
             'allow_reset_password' => 'nullable|string|in:true,false',
             'allow_registration' => 'nullable|string|in:true,false',
             'auto_confirm_registration' => 'nullable|string|in:true,false',
             'force_login_client' => 'nullable|string|in:true,false',
             'force_2fa_client' => 'nullable|string|in:true,false',
             'force_2fa_admin' => 'nullable|string|in:true,false',
+            'passkeys_enabled' => 'nullable|string|in:true,false',
             'allow_plus_in_email' => 'nullable|string|in:true,false',
             'password_timeout' => 'nullable|integer',
             'banned_emails' => 'nullable|string',
@@ -88,6 +92,7 @@ class SettingsSecurityController
         $data['force_login_client'] = $data['force_login_client'] ?? 'false';
         $data['force_2fa_client'] = $data['force_2fa_client'] ?? 'false';
         $data['force_2fa_admin'] = $data['force_2fa_admin'] ?? 'false';
+        $data['passkeys_enabled'] = $data['passkeys_enabled'] ?? 'false';
         $data['allow_plus_in_email'] = $data['allow_plus_in_email'] ?? 'false';
         Setting::updateSettings($data);
 

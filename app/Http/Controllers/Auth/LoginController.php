@@ -26,6 +26,10 @@ class LoginController extends Controller
 {
     public function showForm(Request $request)
     {
+        $redirect = $request->query('redirect');
+        if (is_string($redirect) && str_starts_with($redirect, '/') && ! str_starts_with($redirect, '//')) {
+            $request->session()->put('url.intended', url($redirect));
+        }
         if (app('extension')->extensionIsEnabled('socialauth')) {
             $providers = \App\Addons\SocialAuth\Models\ProviderEntity::where('enabled', true)->get();
         } else {
@@ -34,8 +38,9 @@ class LoginController extends Controller
 
         return view('front.auth.login', [
             'providers' => $providers,
-            'redirect' => $request->query('redirect'),
+            'redirect' => $redirect,
             'email' => $request->query('email'),
+            'passkeysEnabled' => (bool) setting('passkeys_enabled', false),
         ]);
     }
 }

@@ -10,8 +10,6 @@ use Illuminate\Database\Seeder;
 
 class ThemeSeeder extends Seeder
 {
-    private const MAX_MAPPING_FILE_SIZE = 1_048_576;
-
     /**
      * Run the database seeds.
      */
@@ -45,20 +43,12 @@ class ThemeSeeder extends Seeder
     {
         $themes = app('theme')->getThemes();
         foreach ($themes as $theme) {
+            if (! $theme->supportsMenus()) {
+                continue;
+            }
+
             $path = $theme->path.'/menus.json';
-            if (! is_file($path)) {
-                continue;
-            }
-
-            $menus = $this->readMappingFile($path, $theme->name);
-            if ($menus === null || array_is_list($menus)) {
-                logger()->warning('[ThemeSeeder] menus.json must contain an object indexed by menu type.', [
-                    'path' => $path,
-                    'theme' => $theme->name,
-                ]);
-
-                continue;
-            }
+            $menus = $theme->menus();
 
             foreach ($menus as $type => $menuList) {
                 if (! is_string($type) || preg_match('/^[A-Za-z0-9_-]{1,64}$/', $type) !== 1 || ! is_array($menuList) || ! array_is_list($menuList)) {
@@ -82,6 +72,10 @@ class ThemeSeeder extends Seeder
                         'name' => $menu['name'],
                         'url' => $menu['url'] ?? $menu['link'] ?? '#',
                         'icon' => $menu['icon'] ?? null,
+                        'badge' => $menu['badge'] ?? null,
+                        'description' => $menu['description'] ?? null,
+                        'link_type' => $menu['link_type'] ?? 'link',
+                        'allowed_role' => $menu['allowed_role'] ?? 'all',
                         'type' => $type,
                         'position' => $menu['position'] ?? 0,
                     ]);
@@ -100,53 +94,24 @@ class ThemeSeeder extends Seeder
         }
     }
 
-    private function readMappingFile(string $path, string $theme): ?array
-    {
-        if (! is_readable($path)) {
-            logger()->warning('[ThemeSeeder] Unable to safely read menus.json.', compact('path', 'theme'));
-
-            return null;
-        }
-
-        $size = filesize($path);
-        if ($size === false || $size > self::MAX_MAPPING_FILE_SIZE) {
-            logger()->warning('[ThemeSeeder] Unable to safely read menus.json.', compact('path', 'theme', 'size'));
-
-            return null;
-        }
-
-        $contents = file_get_contents($path);
-        if ($contents === false) {
-            logger()->warning('[ThemeSeeder] Unable to read menus.json.', compact('path', 'theme'));
-
-            return null;
-        }
-
-        try {
-            $menus = json_decode($contents, true, 32, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $exception) {
-            logger()->warning('[ThemeSeeder] Unable to parse menus.json.', [
-                'path' => $path,
-                'theme' => $theme,
-                'error' => $exception->getMessage(),
-            ]);
-
-            return null;
-        }
-
-        return is_array($menus) ? $menus : null;
-    }
-
     private function isValidMenu(mixed $menu): bool
     {
         if (! is_array($menu) || ! isset($menu['name']) || ! is_string($menu['name']) || trim($menu['name']) === '' || strlen($menu['name']) > 255) {
             return false;
         }
 
-        foreach (['url', 'link', 'icon'] as $key) {
+        foreach (['url', 'link', 'icon', 'badge', 'description'] as $key) {
             if (array_key_exists($key, $menu) && $menu[$key] !== null && (! is_string($menu[$key]) || strlen($menu[$key]) > 255)) {
                 return false;
             }
+        }
+
+        if (isset($menu['link_type']) && ! in_array($menu['link_type'], ['link', 'new_tab', 'dropdown'], true)) {
+            return false;
+        }
+
+        if (isset($menu['allowed_role']) && ! in_array($menu['allowed_role'], ['all', 'staff', 'customer', 'logged'], true)) {
+            return false;
         }
 
         if (array_key_exists('position', $menu) && (! is_int($menu['position']) || $menu['position'] < 0)) {

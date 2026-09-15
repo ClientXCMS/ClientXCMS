@@ -73,7 +73,7 @@ class UpdateAdminCommand extends Command
         }
 
         if ($this->option('password')) {
-            $data['password'] = bcrypt($this->option('password'));
+            $data['password'] = \Hash::make($this->option('password'));
         }
 
         $admin->update($data);

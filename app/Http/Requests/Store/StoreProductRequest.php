@@ -64,6 +64,14 @@ class StoreProductRequest extends FormRequest
             'type' => ['required', 'string', Rule::in($types)],
             'pinned' => 'nullable|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'product_descriptions' => 'nullable|array|max:100',
+            'product_descriptions_present' => 'nullable|boolean',
+            'product_descriptions.*.id' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9_-]+$/'],
+            'product_descriptions.*.text' => 'required_with:product_descriptions|string|max:1000',
+            'product_descriptions.*.icon' => ['nullable', 'string', 'max:100', 'regex:/^bi bi-[a-z0-9]+(?:-[a-z0-9]+)*$/'],
+            'product_description_translations' => 'nullable|array',
+            'product_description_translations.*' => 'array|max:100',
+            'product_description_translations.*.*' => 'nullable|string|max:1000',
         ], $this->pricingRules());
     }
 
@@ -91,6 +99,10 @@ class StoreProductRequest extends FormRequest
             $product->image = 'products/'.$filename;
             $product->save();
         }
+        $product->syncProductDescriptions(
+            $validated['product_descriptions'] ?? [],
+            $validated['product_description_translations'] ?? []
+        );
 
         return $product;
     }

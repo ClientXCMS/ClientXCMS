@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Front;
 
+use App\Core\Domain\Nameserver;
 use App\Http\Controllers\Controller;
 use App\Models\Provisioning\Service;
 use App\Services\Domain\DomainRegistrarManager;
@@ -19,9 +20,10 @@ class DomainManagementController extends Controller
     public function nameservers(Request $request, Service $service)
     {
         $this->authorizeService($service);
+        $request->merge(['nameservers' => Nameserver::normalizeAll($request->input('nameservers', []))]);
         $validated = $request->validate([
             'nameservers' => 'required|array|min:2|max:8',
-            'nameservers.*' => 'required|string|max:253',
+            'nameservers.*' => ['required', 'string', 'distinct', 'max:253', Nameserver::RULE],
         ]);
         $result = app(DomainRegistrarManager::class)->fromService($service)->updateNameservers($service, $validated['nameservers']);
 

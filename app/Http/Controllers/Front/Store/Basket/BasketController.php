@@ -30,6 +30,7 @@ use App\Models\Store\Basket\Basket;
 use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Product;
 use App\Services\Account\AccountEditService;
+use App\Services\Billing\FiscalProfileService;
 use App\Services\Billing\InvoiceService;
 use App\Services\Domain\DomainPricingService;
 use App\Services\Store\ProductConfigurationPricingService;
@@ -79,14 +80,20 @@ class BasketController extends \App\Http\Controllers\Controller
             return back()->with('error', __('store.basket.not_valid'));
         }
         $row = BasketRow::findByProductOnSession($product, false);
-        $available = $product->type === ProductTypeInterface::DOMAIN && $request->query('tld')
-            ? app(DomainPricingService::class)->availableForTld($request->query('tld'), currency())
+        $operation = $product->type === ProductTypeInterface::DOMAIN && $request->query('operation') === 'transfer' ? DomainPricingService::ACTION_TRANSFER : DomainPricingService::ACTION_REGISTER;
+        $available = $product->type === ProductTypeInterface::DOMAIN && is_string($request->query('tld')) && $request->query('tld') !== ''
+            ? app(DomainPricingService::class)->availableForTld($request->query('tld'), currency(), $operation)
             : $product->pricingAvailable(currency());
+        if ($product->type === ProductTypeInterface::DOMAIN && $available === []) {
+            return back()->with('error', __('store.basket.no_prices'));
+        }
         $validated = $request->validate([
             'billing' => 'nullable|string|in:'.implode(',', collect($available)->pluck('recurring')->toArray()),
         ]);
         $billing = $validated['billing'] ?? $row->billing;
-        if ($product->getPriceByCurrency(currency(), $billing)->price == 0 && count($available) > 0) {
+        if ($product->type === ProductTypeInterface::DOMAIN && ! in_array($billing, collect($available)->pluck('recurring')->all(), true)) {
+            $billing = $available[0]->recurring;
+        } elseif ($product->type !== ProductTypeInterface::DOMAIN && $product->getPriceByCurrency(currency(), $billing)->price == 0 && count($available) > 0) {
             $billing = $available[0]->recurring;
         }
 
@@ -111,7 +118,7 @@ class BasketController extends \App\Http\Controllers\Controller
             return [$product->key => ['pricing' => $product->getPricingArray(), 'key' => $product->key, 'type' => $product->type, 'step' => $product->step, 'unit' => $product->unit, 'title' => $product->name]];
         });
         $context['options'] = $configoptions;
-        $context['pricings'] = $product->pricingAvailable(currency());
+        $context['pricings'] = $product->type === ProductTypeInterface::DOMAIN ? $available : $product->pricingAvailable(currency());
 
         return view('front.store.basket.config', $context);
     }
@@ -165,6 +172,10 @@ class BasketController extends \App\Http\Controllers\Controller
             return response()->json(['message' => __('store.basket.validation_failed'), 'errors' => $errors], 422);
         }
         if (! $product->hasPricesForCurrency($validated['currency'])) {
+            return response()->json(['message' => __('store.basket.no_prices')], 422);
+        }
+        if ($product->type === ProductTypeInterface::DOMAIN
+            && (empty($validated['tld']) || app(DomainPricingService::class)->priceFor($validated['tld'], $validated['currency'], $validated['billing'], $validated['operation'] ?? DomainPricingService::ACTION_REGISTER) === null)) {
             return response()->json(['message' => __('store.basket.no_prices')], 422);
         }
         $coupon = null;
@@ -229,13 +240,15 @@ class BasketController extends \App\Http\Controllers\Controller
         ]);
     }
 
-    public function processCheckout(ProcessCheckoutRequest $request)
+    public function processCheckout(ProcessCheckoutRequest $request, FiscalProfileService $fiscalProfiles)
     {
         $basket = Basket::getBasket();
         $prerequisite = $this->checkPrerequisites(false, $basket, 'front.store.basket.checkout');
         if ($prerequisite !== true) {
             return $prerequisite;
         }
+
+        $fiscalProfiles->update(auth('web')->user(), $request->all());
 
         if ($basket->total() == 0) {
             $gateway = Gateway::where('uuid', 'none')->first();

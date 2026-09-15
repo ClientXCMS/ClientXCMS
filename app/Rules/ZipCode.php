@@ -38,7 +38,7 @@ class ZipCode implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $regex = $this->regex()[$this->country];
+        $regex = $this->regex()[$this->country] ?? null;
         if ($regex === null) {
             return;
         }

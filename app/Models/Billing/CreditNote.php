@@ -75,6 +75,16 @@ class CreditNote extends Model
         return $this->belongsTo(Invoice::class);
     }
 
+    public function identifier(): string
+    {
+        return $this->credit_note_number;
+    }
+
+    public function electronicDocuments()
+    {
+        return $this->morphMany(ElectronicDocument::class, 'documentable');
+    }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);
@@ -92,7 +102,7 @@ class CreditNote extends Model
      */
     public static function generateNumber(?string $date = null): string
     {
-        $prefix = setting('billing_invoice_prefix', 'CTX') . '-AVOIR';
+        $prefix = setting('billing_invoice_prefix', 'CTX').'-AVOIR';
         $yearMonth = $date ?? now()->format('Y-m');
 
         // Atomic pre-create, cf. InvoiceSequenceService::nextNumber.
@@ -180,6 +190,7 @@ class CreditNote extends Model
             'customer' => $this->customer,
             'color' => $color,
             'address' => $this->invoice->billing_address,
+            'fiscalParties' => $this->invoice->fiscalPartiesForPdf(),
             'logoSrc' => $logoSrc,
             'primaryColor' => $primaryColor,
         ]);

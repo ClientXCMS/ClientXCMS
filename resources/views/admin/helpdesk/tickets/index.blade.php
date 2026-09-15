@@ -58,7 +58,7 @@
                             </div>
                         </div>
                         
-                        <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                        <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead class="bg-gray-50 dark:bg-slate-800">
                                     <tr>
@@ -106,7 +106,7 @@
                                                         </span>
                                                     @endif
                                                 @else
-                                                    <span class="text-xs text-gray-400 dark:text-gray-500">--</span>
+                                                    <span class="text-xs text-gray-400 dark:text-gray-400">--</span>
                                                 @endif
                                             </td>
                                             <td class="h-px w-px whitespace-nowrap px-6 py-2">
@@ -138,7 +138,7 @@
                                     </p>
                                 </div>
 
-                                @include('admin/shared/mass_actions/header', [
+                                @include('admin/shared/mass-actions/header', [
                                     'searchFields' => $searchFields,
                                     'search' => $search,
                                     'searchField' => $searchField,
@@ -150,7 +150,7 @@
                             </div>
                         </div>
 
-                        <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                        <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
 
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead class="bg-gray-50 dark:bg-slate-800">
@@ -351,7 +351,7 @@
                                 </p>
                             </div>
 
-                            <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                            <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
                                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead class="bg-gray-50 dark:bg-slate-800">
 
@@ -558,7 +558,7 @@
                                     </p>
                                 </div>
 
-                                @include('admin/shared/mass_actions/header', [
+                                @include('admin/shared/mass-actions/header', [
                                     'searchFields' => $searchFields,
                                     'search' => $search,
                                     'searchField' => $searchField,
@@ -568,7 +568,7 @@
                             </div>
                         </div>
 
-                        <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                        <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
                                 id="mass_action_table">
                                 <thead class="bg-gray-50 dark:bg-slate-800">

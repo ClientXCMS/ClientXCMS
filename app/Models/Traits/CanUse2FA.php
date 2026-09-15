@@ -387,7 +387,7 @@ trait CanUse2FA
             $appName = config('app.name', 'ClientXCMS');
             \App\Services\Auth\SmsService::gateway()->send(
                 $phone,
-                sprintf('%s — code de connexion : %s (valide 5 min)', $appName, $code)
+                sprintf('%s - code de connexion : %s (valide 5 min)', $appName, $code)
             );
 
             $this->attachMetadata($dailyKey, (string) ($count + 1));

@@ -47,14 +47,10 @@ class ProfileControllerTest extends \Tests\TestCase
             'id' => $this->user->id,
             'firstname' => 'John',
             'lastname' => 'Doe',
-            'country' => 'FR',
-            'company_name' => 'Doe Industries',
-            'billing_details' => 'Billing details here',
-            'address' => 'test',
-            'city' => 'roubaix',
-            'region' => 'Test User',
-            'country' => 'FR',
-            'zipcode' => '59100',
+            'address' => $this->user->address,
+            'city' => $this->user->city,
+            'company_name' => $this->user->company_name,
+            'billing_details' => $this->user->billing_details,
         ]);
     }
 

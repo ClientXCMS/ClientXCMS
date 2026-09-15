@@ -19,27 +19,21 @@
 
 
 
-<a href="{{ route('front.store.basket.show') }}" class="btn-icon2">
-    <svg class="hs-collapse-open:hidden flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+<a href="{{ route('front.store.basket.show') }}" class="btn-icon2" aria-label="{{ __('store.basket.title') }}">
+    <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-         stroke-linejoin="round">
+         stroke-linejoin="round" aria-hidden="true">
         <circle cx="10" cy="20.5" r="1"/>
         <circle cx="18" cy="20.5" r="1"/>
         <path d="M2.5 2.5h3l2.7 12.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6l1.6-8.4H7.1"/>
     </svg>
     @if (basket(false) != null && basket()->quantity() > 0)
         <span
-            class="absolute top-0 end-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-red-500 text-white">{{ basket()->quantity() }}</span>
+            class="absolute top-0 end-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-red-600 text-white">{{ basket()->quantity() }}</span>
     @endif
-    <svg class="hs-collapse-open:block hidden flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24"
-         height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-         stroke-linejoin="round">
-        <path d="M18 6 6 18"/>
-        <path d="m6 6 12 12"/>
-    </svg>
 </a>
 @if (setting('theme_switch_mode') == 'both')
-    <button id="dark-mode-btn"  data-url="{{ route('darkmode.switch') }}"
+    <button id="dark-mode-btn"  data-url="{{ route('darkmode.switch') }}" aria-label="{{ __('global.darkmode') }}"
             class="w-9 h-9 relative inline-flex justify-center items-center text-sm font-semibold rounded-lg text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-gray-700 dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
         <svg class="@if (!is_darkmode()) hidden @endif flex-shrink-0 w-4 h-4" id="dark-mode-sun"
              xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -76,12 +70,12 @@
 </div>
 @if (auth('web')->guest())
 
-    <a href="{{ route('login') }}" class="btn-icon2">
+    <a href="{{ route('login') }}" class="btn-icon2" aria-label="{{ __('auth.login.btn') }}">
         @include('shared.icons.user')
     </a>
 @else
 
-    <div class="hs-dropdown relative inline-flex" data-hs-dropdown-placement="bottom-right">
+    <div class="hs-dropdown relative hidden sm:inline-flex" data-hs-dropdown-placement="bottom-right">
         <button id="hs-dropdown-with-header" type="button"
                 class="hs-dropdown-toggle inline-flex justify-center items-center rounded-full border border-transparent text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700">
             <x-avatar :user="Auth::user()" size="md" class="!ring-0" />

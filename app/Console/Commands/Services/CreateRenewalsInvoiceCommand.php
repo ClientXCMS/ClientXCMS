@@ -42,16 +42,25 @@ class CreateRenewalsInvoiceCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
+        $successful = true;
         $services = Service::getShouldCreateInvoice();
         $this->info('Running services:renewals at '.now()->format('Y-m-d H:i:s'));
         foreach ($services as $service) {
-            $invoice = InvoiceService::createInvoiceFromService($service, $service->billing);
-            logger()->info("Created invoice for service #{$service->id}");
-            $service->invoice_id = $invoice->id;
-            $service->save();
-            $this->info("Created invoice for service #{$service->id}");
+            try {
+                $invoice = InvoiceService::createInvoiceFromService($service, $service->billing);
+                logger()->info("Created invoice for service #{$service->id}");
+                $service->invoice_id = $invoice->id;
+                $service->save();
+                $this->info("Created invoice for service #{$service->id}");
+            } catch (\Throwable $exception) {
+                $successful = false;
+                logger()->error($exception->getMessage());
+                $this->error("Failed to create invoice for service #{$service->id}: {$exception->getMessage()}");
+            }
         }
+
+        return $successful ? self::SUCCESS : self::FAILURE;
     }
 }

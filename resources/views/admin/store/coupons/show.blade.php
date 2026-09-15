@@ -118,7 +118,7 @@
                                     <div class="flex flex-col">
                                         <div class="-m-1.5 overflow-x-auto">
                                             <div class="p-1.5 min-w-full inline-block align-middle">
-                                                <a href="#" class="text-primary" id="showmorepricingbtn">{{ __('admin.products.showmorepricing') }}</a>
+                                                <button type="button" class="text-primary" id="showmorepricingbtn" aria-expanded="false" aria-controls="pricingtable">{{ __('admin.products.showmorepricing') }}</button>
                                                 <div class="overflow-hidden">
                                                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="pricingtable">
                                                         <thead>
@@ -176,7 +176,7 @@
                                     <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
                                         {{ __($translatePrefix . '.usage') }}
                                     </h3>
-                                    <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                                    <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
                                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                             <thead>
 

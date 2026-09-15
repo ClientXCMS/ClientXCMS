@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class SubdomainHostTestControllerTest extends \Tests\TestCase
 {
-    const API_URL = 'admin/subdomains_hosts';
+    const API_URL = 'admin/subdomains-hosts';
 
     use RefreshDatabase;
 

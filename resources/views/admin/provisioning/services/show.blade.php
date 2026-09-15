@@ -31,6 +31,16 @@
 @section('content')
     <div class="container mx-auto">
         @include('admin/shared/alerts')
+        @if ($item->type === 'domain' && !empty($item->data['apply_default_dns']))
+            <div class="card mb-4">
+                <h2 class="font-semibold">{{ __('provisioning.admin.domain_tlds.tools.dns_status') }}</h2>
+                <p>{{ __('provisioning.admin.domain_tlds.tools.state_' . ($item->data['dns_initialization']['status'] ?? 'pending')) }}</p>
+                @if (!empty($item->data['dns_initialization']['error']))<p class="text-red-600">{{ $item->data['dns_initialization']['error'] }}</p>@endif
+                @if (auth('admin')->user()->can('admin.manage_domain_tlds') && ($item->data['dns_initialization']['status'] ?? '') !== 'completed' && !empty($item->data['registrar_id']))
+                    <form method="POST" action="{{ route('admin.domain_tlds.tools.retry-dns', $item) }}">@csrf<button class="btn btn-primary mt-3">{{ __('provisioning.admin.domain_tlds.tools.retry_dns') }}</button></form>
+                @endif
+            </div>
+        @endif
         @if ($item->pack_id !== null)
             <div class="alert text-blue-800 bg-blue-100 mt-2 mb-4" role="alert">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -179,9 +189,41 @@
                         <h3 class="font-bold text-gray-800 dark:text-white mb-3">
                             {{ __($translatePrefix . '.renewals.title') }}
                         </h3>
+                        @if (staff_has_permission('admin.manage_services'))
+                            @php
+                                $suspensionDisabled = $item->hasMetadata('disable_suspension');
+                                $expirationDisabled = $item->hasMetadata('disable_expiration');
+                                $automationNotice = match (true) {
+                                    $suspensionDisabled && $expirationDisabled => 'disabled_notice',
+                                    $suspensionDisabled => 'suspension_disabled_notice',
+                                    $expirationDisabled => 'expiration_disabled_notice',
+                                    default => 'enabled_notice',
+                                };
+                            @endphp
+                            <div class="alert text-blue-800 bg-blue-100 mb-4" role="alert">
+                                <i class="bi bi-info-circle flex-shrink-0 me-2"></i>
+                                <span>{{ __('provisioning.admin.services.automation.'.$automationNotice) }}</span>
+                            </div>
+                            <div class="flex flex-row gap-2 mb-4">
+                                <form method="POST" action="{{ route('admin.services.action', ['service' => $item, 'action' => $item->hasMetadata('disable_suspension') ? 'enable_suspension' : 'disable_suspension']) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-{{ $item->hasMetadata('disable_suspension') ? 'success' : 'secondary' }} text-left">
+                                        <i class="bi bi-{{ $item->hasMetadata('disable_suspension') ? 'play-circle' : 'pause-circle' }} mr-2"></i>
+                                        {{ __('provisioning.admin.services.automation.'.($item->hasMetadata('disable_suspension') ? 'enable_suspension' : 'disable_suspension')) }}
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('admin.services.action', ['service' => $item, 'action' => $item->hasMetadata('disable_expiration') ? 'enable_expiration' : 'disable_expiration']) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-{{ $item->hasMetadata('disable_expiration') ? 'success' : 'secondary' }} text-left">
+                                        <i class="bi bi-{{ $item->hasMetadata('disable_expiration') ? 'play-circle' : 'pause-circle' }} mr-2"></i>
+                                        {{ __('provisioning.admin.services.automation.'.($item->hasMetadata('disable_expiration') ? 'enable_expiration' : 'disable_expiration')) }}
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
                         <div>
                             @if (staff_has_permission('admin.show_invoices'))
-                                <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                                <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
                                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                         <thead>
                                         <tr>
@@ -323,7 +365,7 @@
                                                                 <div class="flex items-center h-5">
                                                                     <input id="months-{{ $pricing->recurring }}" @if($loop->first) checked="checked" @endif name="billing" value="{{ $pricing->recurring }}" type="radio" class="border-gray-200 rounded-full disabled:opacity-50 dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800">
                                                                 </div>
-                                                                <label for="months-{{ $pricing->recurring }}" class="ms-3 block w-full text-sm text-gray-600 dark:text-gray-500">
+                                                                <label for="months-{{ $pricing->recurring }}" class="ms-3 block w-full text-sm text-gray-600 dark:text-gray-400">
                                                                     {{ $pricing->recurring()['months'] == 0.5 ? 1 : $pricing->recurring()['months'] }} {{ $pricing->recurring()['months'] == 0.5 ? __('global.week') : __('global.month') }} - {{ $pricing->pricingMessage(false) }}
                                                                 </label>
                                                             </div>
@@ -348,7 +390,7 @@
                                         <div>
                                             <div class="flex rounded-lg shadow-sm mt-2">
                                                 <input type="text" readonly class="input-text" id="invoice_url" value="{{ route('front.invoices.show', ['invoice' => $item->invoice]) }}">
-                                                <button type="button" data-clipboard-target="#invoice_url" data-clipboard-action="copy" data-clipboard-success-text="Copied" class=" js-clipboard w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-e-md border border-transparent bg-blue-600 text-white hover:bg-blue-700  dark:focus:ring-1 dark:focus:ring-gray-600">
+                                                <button type="button" data-clipboard-target="#invoice_url" data-clipboard-action="copy" data-clipboard-success-text="Copied" class=" js-clipboard btn-addon">
                                                     <svg class="js-clipboard-default w-4 h-4 group-hover:rotate-6 transition" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
 
                                                     <svg class="js-clipboard-success hidden w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -377,7 +419,7 @@
                             </h3>
                             <div>
                                 @if (staff_has_permission('admin.manage_services'))
-                                    <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                                    <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
                                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                             <thead>
                                             <tr>
@@ -515,7 +557,7 @@
                         </h3>
 
                         @if (staff_has_permission('admin.manage_services'))
-                            <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                            <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
                                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead>
                                     <tr>
@@ -693,14 +735,14 @@
                         @endif
                     @if (staff_has_permission('admin.show_customers') && $item->customer)
 
-                        <a class="btn bg-blue-600 w-full text-left mb-2" href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
+                        <a class="btn btn-info w-full text-left mb-2" href="{{ route('admin.customers.show', ['customer' => $item->customer]) }}">
                             <i class="bi bi-people mr-2"></i>
                             {{ __('provisioning.admin.services.show.customerbtn') }}
                             <i class="bi bi-box-arrow-up-right mr-auto"></i>
                         </a>
                     @endif
                     @if (staff_has_permission('admin.manage_services'))
-                        <button class="btn bg-red-500 mb-2 w-full text-left" data-hs-overlay="#cancel-overlay">
+                        <button class="btn btn-danger mb-2 w-full text-left" data-hs-overlay="#cancel-overlay">
                             <i class="bi bi-trash2 mr-2"></i>
                             @if ($item->isPending())
                                 {{ __('provisioning.admin.services.cancel.delivery') }}

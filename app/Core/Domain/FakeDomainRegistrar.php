@@ -2,7 +2,8 @@
 
 namespace App\Core\Domain;
 
-use App\Contracts\Domain\DomainRegistrarInterface;
+use App\Abstracts\AbstractDomainRegistrar;
+use App\Contracts\Domain\DomainDnsInitializationInterface;
 use App\DTO\Domain\DomainAvailabilityDTO;
 use App\DTO\Domain\DomainInfoDTO;
 use App\DTO\Provisioning\ConnectionResponse;
@@ -11,8 +12,18 @@ use App\Models\Provisioning\Service;
 use Carbon\Carbon;
 use GuzzleHttp\Psr7\Response;
 
-class FakeDomainRegistrar implements DomainRegistrarInterface
+class FakeDomainRegistrar extends AbstractDomainRegistrar implements DomainDnsInitializationInterface
 {
+    public function dnsCapabilities(\App\Models\Provisioning\Server $server): array
+    {
+        return ['nameservers' => ['ns1.example.net', 'ns2.example.net'], 'types' => ['A', 'AAAA', 'CNAME', 'MX', 'TXT']];
+    }
+
+    public function initializationRecords(Service $service): array
+    {
+        return $this->getDnsRecords($service);
+    }
+
     public function uuid(): string
     {
         return 'fake';
@@ -43,6 +54,36 @@ class FakeDomainRegistrar implements DomainRegistrarInterface
         $blocked = str_contains($domain, 'taken') || str_contains($domain, 'unavailable');
 
         return new DomainAvailabilityDTO($domain, ! $blocked, $blocked ? 'Domain unavailable' : null);
+    }
+
+    public function checkAvailabilityBatch(array $domains): array
+    {
+        $results = [];
+        foreach ($domains as $domain) {
+            $results[$domain] = $this->checkAvailability($domain);
+        }
+
+        return $results;
+    }
+
+    public function supportsTransfer(): bool
+    {
+        return true;
+    }
+
+    public function transfer(Service $service): ServiceStateChangeDTO
+    {
+        $data = $service->data ?? [];
+        if (empty($data['auth_code'])) {
+            return new ServiceStateChangeDTO($service, false, 'Authorization code is required');
+        }
+        $data['registrar_id'] = $data['registrar_id'] ?? 'fake-transfer-'.sha1($data['domain'] ?? $service->uuid);
+        $data['registrar_status'] = 'transfer_pending';
+        unset($data['auth_code']);
+        $service->data = $data;
+        $service->save();
+
+        return new ServiceStateChangeDTO($service, true, 'Domain transfer submitted');
     }
 
     public function register(Service $service): ServiceStateChangeDTO

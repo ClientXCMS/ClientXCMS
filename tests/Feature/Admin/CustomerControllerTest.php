@@ -101,7 +101,7 @@ class CustomerControllerTest extends TestCase
         ]);
         $response->assertRedirect();
         $this->assertEquals('Martin', $customer->fresh()->firstname);
-        $this->assertEquals('roubaix', $customer->fresh()->city);
+        $this->assertEquals('test', $customer->fresh()->city);
         $this->assertEquals('admin@administration.com', $customer->fresh()->email);
         $this->assertEquals('test', $customer->fresh()->address);
         $this->assertEquals('FR', $customer->fresh()->country);
@@ -166,12 +166,12 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456710',
             'id' => $customer->id,
             'email' => 'admin@administration.com',
-            'password' => 'newpassword',
+            'password' => 'new-strong-password',
             'address' => 'test',
         ]);
         $response->assertRedirect();
         $this->assertEquals('Martin', $customer->fresh()->firstname);
-        $this->assertTrue(Hash::check('newpassword', $customer->fresh()->password));
+        $this->assertTrue(Hash::check('new-strong-password', $customer->fresh()->password));
     }
 
     public function test_admin_customer_update_with_invalid_permission()
@@ -297,7 +297,7 @@ class CustomerControllerTest extends TestCase
         ]);
         $id = $customer->id;
 
-        $response = $this->performAdminAction('get', self::API_URL.'/'.$id.'/send_password');
+        $response = $this->performAdminAction('get', route('admin.customers.send_password', ['customer' => $id], false));
         // send_password kept GET intentionally; not part of CSRF migration batch.
         $response->assertStatus(302);
         $response->assertSessionHas('success');

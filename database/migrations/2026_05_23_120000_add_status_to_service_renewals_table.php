@@ -40,7 +40,7 @@ return new class extends Migration
             }
         });
 
-        // 2. Backfill — done in raw SQL to remain fast and order-stable.
+        // 2. Backfill - done in raw SQL to remain fast and order-stable.
         DB::statement(<<<'SQL'
             UPDATE service_renewals sr
             LEFT JOIN invoices i ON i.id = sr.invoice_id

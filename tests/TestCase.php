@@ -20,6 +20,29 @@ abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
 
+    private ?string $environmentFileSnapshot = null;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $contents = @file_get_contents($this->app->environmentFilePath());
+        $this->environmentFileSnapshot = $contents === false ? null : $contents;
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->environmentFileSnapshot !== null) {
+            $path = $this->app->environmentFilePath();
+
+            if (@file_get_contents($path) !== $this->environmentFileSnapshot) {
+                file_put_contents($path, $this->environmentFileSnapshot);
+            }
+        }
+
+        parent::tearDown();
+    }
+
     protected function performAction(string $method, string $url, array $abbilities = ['*'], array $data = []): TestResponse
     {
         $this->seed(AdminSeeder::class);

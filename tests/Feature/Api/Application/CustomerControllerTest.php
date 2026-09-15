@@ -40,7 +40,7 @@ class CustomerControllerTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0323456789',
-            'password' => 'password',
+            'password' => 'a-strong-test-password',
         ])->id;
         $response = $this->performAction('GET', self::API_URL.'?filter[firstname]=Fake', [self::ABILITY_INDEX]);
         $response->assertStatus(200);
@@ -71,7 +71,7 @@ class CustomerControllerTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0223456789',
-            'password' => 'password',
+            'password' => 'a-strong-test-password',
             'locale' => 'fr_FR',
         ]);
         $response->assertStatus(201);
@@ -89,7 +89,7 @@ class CustomerControllerTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0323456789',
-            'password' => 'password',
+            'password' => 'a-strong-test-password',
             'verified' => '1',
             'locale' => 'fr_FR',
         ]);
@@ -109,7 +109,7 @@ class CustomerControllerTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0323456789',
-            'password' => 'password',
+            'password' => 'a-strong-test-password',
         ])->id;
         $response = $this->performAction('GET', self::API_URL.'/'.$id, [self::ABILITY_SHOW]);
         $response->assertStatus(200);
@@ -127,7 +127,7 @@ class CustomerControllerTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0323456789',
-            'password' => 'password',
+            'password' => 'a-strong-test-password',
         ])->id;
         $response = $this->performAction('DELETE', self::API_URL.'/'.$id, [self::ABILITY_DELETE]);
         $response->assertStatus(200);
@@ -145,7 +145,7 @@ class CustomerControllerTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0323456789',
-            'password' => 'password',
+            'password' => 'a-strong-test-password',
             'address' => 'test',
         ])->id;
         $response = $this->performAction('POST', self::API_URL.'/'.$id, [self::ABILITY_UPDATE], [
@@ -160,7 +160,7 @@ class CustomerControllerTest extends TestCase
             'phone' => '0323456789',
         ]);
         $response->assertStatus(200);
-        $response->assertJsonFragment(['email' => 'admin@administration.com', 'city' => 'roubaix', 'firstname' => 'Martin']);
+        $response->assertJsonFragment(['email' => 'admin@administration.com', 'city' => 'test', 'firstname' => 'Martin']);
     }
 
     public function test_api_application_customer_confirm(): void

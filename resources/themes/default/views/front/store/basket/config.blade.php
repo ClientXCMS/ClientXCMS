@@ -155,7 +155,7 @@
                         <span class="font-semibold" id="total">0</span>
                     </div>
 
-                    <button class="bg-indigo-600 text-white py-2 px-4 rounded-lg mt-4 w-full">{{ __('store.basket.addtocart') }}</button>
+                    <button class="btn btn-primary mt-4 w-full">{{ __('store.basket.addtocart') }}</button>
                 </div>
             </div>
         </div>

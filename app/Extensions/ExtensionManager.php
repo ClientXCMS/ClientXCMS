@@ -183,10 +183,7 @@ class ExtensionManager extends ExtensionCollectionsManager
             $enabled = array_merge($enabled, [\setting('email_template_name')]);
         }
         $return = collect($this->fetch()['items'] ?? [])->filter(function (array $extensionDTO) use ($withTheme) {
-            $allowedTypes = ['module', 'addon', 'email_template', 'invoice_template'];
-            if ($withTheme) {
-                $allowedTypes[] = 'theme';
-            }
+            $allowedTypes = array_diff(ExtensionType::singularValues(), $withTheme ? [] : [ExtensionType::Theme->value]);
 
             return in_array($extensionDTO['type'], $allowedTypes);
         })->map(function ($extension) use ($uuids, $enabled, $versions, $bootErrors) {
@@ -284,7 +281,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         })->toArray();
 
         try {
-            (new UpdaterManager)->update($api['uuid']);
+            (new UpdaterManager)->update($extension, ExtensionType::fromAny($type));
             self::writeExtensionJson($extensions);
         } catch (\Exception $e) {
             throw new ExtensionException('Error in UpdaterManager: '.$e->getMessage());
@@ -383,20 +380,9 @@ class ExtensionManager extends ExtensionCollectionsManager
 
     public function getExtensionPath(string $type, string $extension): string
     {
-        if ($type === 'themes') {
-            return base_path('resources/themes/'.$extension);
-        }
+        $extensionType = ExtensionType::tryFromAny($type);
 
-        if ($type == 'email_template' || $type == 'invoice_template') {
-            return base_path('resources/views/vendor/notifications/'.$extension.'.blade.php');
-        }
-
-        return base_path($type.'/'.$extension);
-    }
-
-    public function getMigrationPath(string $type, string $extension): string
-    {
-        return $type.'/'.$extension.'/database/migrations';
+        return $extensionType?->absolutePath($extension) ?? base_path($type.'/'.$extension);
     }
 
     private function validateExtensionIdentifier(string $extension): void
@@ -484,10 +470,11 @@ class ExtensionManager extends ExtensionCollectionsManager
     private function fetchUnofficialExtensions(array $extensions, array $enabled)
     {
         $unofficial = [];
-        $unofficial = array_merge($unofficial, $this->scanFolder('modules', 'module', $extensions, $enabled));
-        $unofficial = array_merge($unofficial, $this->scanFolder('resources/themes', 'theme', $extensions, $enabled));
+        foreach ([ExtensionType::Module, ExtensionType::Theme, ExtensionType::Addon] as $type) {
+            $unofficial = array_merge($unofficial, $this->scanFolder($type->directory(), $type->value, $extensions, $enabled));
+        }
 
-        return array_merge($unofficial, $this->scanFolder('addons', 'addon', $extensions, $enabled));
+        return $unofficial;
     }
 
     private function scanFolder(string $folder, string $type, array $extensions, array $enabled)

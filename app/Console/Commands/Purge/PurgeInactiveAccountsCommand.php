@@ -36,7 +36,7 @@ class PurgeInactiveAccountsCommand extends Command
     {
         $days = (int) setting('gdpr_purge_inactive_days', 0);
         if ($days <= 0) {
-            $this->info('gdpr_purge_inactive_days is disabled — nothing to do.');
+            $this->info('gdpr_purge_inactive_days is disabled - nothing to do.');
 
             return self::SUCCESS;
         }

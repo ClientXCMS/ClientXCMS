@@ -86,6 +86,16 @@
                                         'options' => $locales,
                                         'value' => old('locale', $item->locale),
                                     ])
+                                    @include('admin/shared/select', [
+                                        'name' => 'admin_layout',
+                                        'label' => __('admin.admins.layout.label'),
+                                        'help' => __('admin.admins.layout.help'),
+                                        'options' => [
+                                            \App\Models\Admin\Admin::LAYOUT_HORIZONTAL => __('admin.admins.layout.horizontal'),
+                                            \App\Models\Admin\Admin::LAYOUT_VERTICAL => __('admin.admins.layout.vertical'),
+                                        ],
+                                        'value' => old('admin_layout', $item->admin_layout ?? \App\Models\Admin\Admin::LAYOUT_HORIZONTAL),
+                                    ])
                                 </div>
 
                                 <div>
@@ -221,7 +231,7 @@
                         ])
                     @endif
                     <button
-                        class="btn {{ auth('admin')->user()->twoFactorEnabled() ? 'bg-red-600 text-white' : 'bg-primary text-gray-200' }} mt-4">{{ __(auth('admin')->user()->twoFactorEnabled() ? 'global.delete' : 'global.save') }}</button>
+                        class="btn {{ auth('admin')->user()->twoFactorEnabled() ? 'btn-danger' : 'btn-primary' }} mt-4">{{ __(auth('admin')->user()->twoFactorEnabled() ? 'global.delete' : 'global.save') }}</button>
                 </form>
 
                 <form method="POST" action="{{ route('admin.profile.2fa_options') }}" class="mt-4">
@@ -262,7 +272,7 @@
                     </p>
 
                     @if (count($trustedDevices) === 0)
-                        <p class="mt-4 text-sm italic text-gray-500 dark:text-gray-500">
+                        <p class="mt-4 text-sm italic text-gray-500 dark:text-gray-400">
                             {{ __('client.profile.2fa.trusted_devices_empty') }}
                         </p>
                     @else
