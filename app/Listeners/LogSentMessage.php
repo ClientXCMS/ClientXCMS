@@ -50,6 +50,14 @@ class LogSentMessage
             'template' => $event->data['template'] ?? null,
             'created_at' => Carbon::now(),
         ];
-        EmailMessage::insert($params);
+        try {
+            EmailMessage::insert($params);
+        } catch (\Throwable $e) {
+            // This event fires before the message goes out: a failed archive must not cancel the send.
+            logger()->warning('mail.archive_failed', [
+                'subject' => $params['subject'],
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }
