@@ -447,9 +447,14 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         return $this->hasMany(CustomerAccountAccess::class, 'sub_customer_id');
     }
 
+    public function accountInvitations()
+    {
+        return $this->hasMany(CustomerAccountInvitation::class, 'owner_customer_id');
+    }
+
     public function pendingAccountInvitations()
     {
-        return $this->hasMany(CustomerAccountInvitation::class, 'owner_customer_id')
+        return $this->accountInvitations()
             ->whereNull('accepted_at')
             ->whereNull('revoked_at')
             ->where(function ($query) {
