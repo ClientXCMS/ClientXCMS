@@ -69,7 +69,7 @@ class EmailMessage extends Model
 
     public function template()
     {
-        return $this->belongsTo(EmailTemplate::class);
+        return $this->belongsTo(EmailTemplate::class, 'template');
     }
 
     public function customer()
