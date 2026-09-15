@@ -196,7 +196,7 @@
     </nav>
 
     <div class="w-full pt-10 dark:bg-gray-900 dark:border-gray-700 dark:shadow-slate-700/[.7]">
-        <div class="w-full max-w-none px-4 sm:px-6 lg:px-8 [&_.container]:max-w-none">
+        <div class="max-w-[85rem] px-4 sm:px-6 lg:px-8 mx-auto">
             @yield('content')
         </div>
     </div>
