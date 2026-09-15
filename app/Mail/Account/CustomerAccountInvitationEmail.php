@@ -34,11 +34,14 @@ class CustomerAccountInvitationEmail extends Notification implements ShouldQueue
             'email' => $this->invitation->email,
         ]);
 
-        return EmailTemplate::getMailMessage('customer_account_invitation', $url, [
+        $mail = EmailTemplate::getMailMessage('customer_account_invitation', $url, [
             'invitation' => $this->invitation,
             'owner' => $this->invitation->owner,
             'url' => $url,
             'register_url' => $registerUrl,
         ], $notifiable);
+        $mail->metadata('disable_save', true);
+
+        return $mail;
     }
 }

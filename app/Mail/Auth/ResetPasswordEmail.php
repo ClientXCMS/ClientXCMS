@@ -30,21 +30,14 @@ class ResetPasswordEmail extends ResetPassword implements \Illuminate\Contracts\
 
     public function toMail($notifiable)
     {
-        if ($notifiable instanceof Admin) {
-            $resetUrl = url(route('admin.password.reset', [
-                'token' => $this->token,
-                'email' => $notifiable->getEmailForPasswordReset(),
-            ], false));
-            $mail = EmailTemplate::getMailMessage('reset', $resetUrl, ['count' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire'), 'customer' => $notifiable], $notifiable);
-            $mail->metadata('disable_save', true);
-
-            return $mail;
-        }
-        $resetUrl = url(route('password.reset', [
+        $route = $notifiable instanceof Admin ? 'admin.password.reset' : 'password.reset';
+        $resetUrl = url(route($route, [
             'token' => $this->token,
             'email' => $notifiable->getEmailForPasswordReset(),
         ], false));
+        $mail = EmailTemplate::getMailMessage('reset', $resetUrl, ['count' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire'), 'customer' => $notifiable], $notifiable);
+        $mail->metadata('disable_save', true);
 
-        return EmailTemplate::getMailMessage('reset', $resetUrl, ['count' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire'), 'customer' => $notifiable], $notifiable);
+        return $mail;
     }
 }
