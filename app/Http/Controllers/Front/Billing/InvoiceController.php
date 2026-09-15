@@ -124,10 +124,12 @@ class InvoiceController extends Controller
         if ($amount > $userBalance) {
             return redirect()->route('front.invoices.show', $invoice)->with('error', __('client.invoices.balance.balance_not_enough'));
         }
-        if ($invoice->balance + $amount > $invoice->total) {
-            $amount = $invoice->total - $invoice->balance;
+        if ($amount > $invoice->total) {
+            $amount = (float) $invoice->total;
         }
-        $invoice->addBalance($amount);
+        if (! $invoice->addBalance($amount)) {
+            return redirect()->route('front.invoices.show', $invoice)->with('error', __('client.invoices.balance.balance_not_enough'));
+        }
 
         return redirect()->route('front.invoices.show', $invoice)->with('success', __('client.invoices.balance.success'));
     }
