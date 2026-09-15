@@ -24,6 +24,7 @@ use App\Models\Provisioning\Service;
 use App\Services\Store\PricingService;
 use App\Services\Store\RecurringService;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class ConfigOptionDTO
 {
@@ -303,12 +304,21 @@ class ConfigOptionDTO
         }
         if ($this->option->type === ConfigOption::TYPE_NUMBER || $this->option->type === ConfigOption::TYPE_SLIDER) {
             $rules[] = 'numeric';
-            if ($this->option->min_value) {
+            // A bound of zero is still a bound: testing the value itself let negative quantities through.
+            if ($this->option->min_value !== null) {
                 $rules[] = 'min:'.$this->option->min_value;
             }
-            if ($this->option->max_value) {
+            if ($this->option->max_value !== null) {
                 $rules[] = 'max:'.$this->option->max_value;
             }
+        }
+        if ($this->option->type === ConfigOption::TYPE_RADIO || $this->option->type === ConfigOption::TYPE_DROPDOWN) {
+            $values = $this->option->options->pluck('value')->all();
+            if (! $this->option->required) {
+                $values[] = '';
+            }
+            // An unlisted value matches no tariff and silently falls back to the parent price, which these types do not have.
+            $rules[] = Rule::in($values);
         }
 
         return $rules;
