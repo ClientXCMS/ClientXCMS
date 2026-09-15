@@ -69,7 +69,7 @@ class GdprExportService
                 'profile.json', 'invoices.json', 'credit_notes.json', 'services.json',
                 'subscriptions.json', 'upgrades.json', 'tickets.json', 'emails.json',
                 'account_accesses.json', 'coupon_usages.json', 'api_tokens.json',
-                'passkeys.json', 'baskets.json', 'metadata.json', 'staff_notes.json',
+                'passkeys.json', 'baskets.json', 'metadata.json',
             ],
         ]));
 
@@ -87,7 +87,6 @@ class GdprExportService
         $zip->addFromString('passkeys.json', $this->encode($this->passkeys($customer)));
         $zip->addFromString('baskets.json', $this->encode($this->baskets($customer)));
         $zip->addFromString('metadata.json', $this->encode($this->metadata($customer)));
-        $zip->addFromString('staff_notes.json', $this->encode($this->staffNotes($customer)));
 
         // Attach each invoice's PDF - generated on demand if missing.
         foreach ($customer->invoices ?? [] as $invoice) {
@@ -392,16 +391,6 @@ class GdprExportService
         }
 
         return false;
-    }
-
-    private function staffNotes(Customer $c): array
-    {
-        // Content and date only: the agent who wrote the note is a third party.
-        return $c->customerNotes()->orderBy('created_at')->get()->map(fn ($note) => [
-            'id' => $note->id,
-            'content' => $note->content,
-            'created_at' => $note->created_at,
-        ])->all();
     }
 
     private function encode(array $data): string

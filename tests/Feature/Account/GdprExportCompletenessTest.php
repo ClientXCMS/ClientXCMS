@@ -83,7 +83,7 @@ class GdprExportCompletenessTest extends TestCase
         $this->assertStringContainsString('203.0.113.4', $baskets, 'A basket keeps the address the order was started from');
     }
 
-    public function test_the_staff_notes_are_exported_without_their_author(): void
+    public function test_the_staff_notes_stay_internal(): void
     {
         $this->seed(\Database\Seeders\AdminSeeder::class);
         CustomerNote::create([
@@ -92,10 +92,10 @@ class GdprExportCompletenessTest extends TestCase
             'content' => 'Called about the invoice, sounded annoyed.',
         ]);
 
-        $notes = $this->entry('staff_notes.json');
+        $manifest = $this->entry('manifest.json');
 
-        $this->assertStringContainsString('sounded annoyed', $notes, 'What the staff writes about somebody is data about that somebody');
-        $this->assertStringNotContainsString('author_id', $notes, 'The agent who wrote it is a third party');
+        $this->assertStringNotContainsString('staff_notes', $manifest);
+        $this->assertStringNotContainsString('sounded annoyed', $this->entry('metadata.json'));
     }
 
     public function test_the_manifest_lists_the_new_files(): void
@@ -103,7 +103,7 @@ class GdprExportCompletenessTest extends TestCase
         $manifest = json_decode($this->entry('manifest.json'), true);
 
         $this->assertSame(3, $manifest['export_version']);
-        foreach (['metadata.json', 'passkeys.json', 'baskets.json', 'staff_notes.json'] as $file) {
+        foreach (['metadata.json', 'passkeys.json', 'baskets.json'] as $file) {
             $this->assertContains($file, $manifest['files']);
         }
     }
