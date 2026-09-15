@@ -543,9 +543,9 @@ class Invoice extends Model implements SupportRelateItemInterface
             $subtotal += $item->price() - $item->discountTotal();
             $setupfees += $item->unit_setup_ht * $item->quantity;
         }
-        $subtotal = $subtotal - $this->balance;
         $vat = TaxesService::getTaxAmount($subtotal, tax_percent());
-        $this->total = $subtotal + $vat;
+        // An instalment is money already paid, so it comes off the tax-inclusive amount: taking it off the subtotal used to drop the tax owed on it.
+        $this->total = $subtotal + $vat - $this->balance;
         $this->subtotal = $subtotal;
         $this->tax = $vat;
         $this->setupfees = $setupfees;
