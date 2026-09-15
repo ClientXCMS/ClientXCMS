@@ -1,0 +1,1 @@
+@include('admin.shared.mass-actions.modal')
