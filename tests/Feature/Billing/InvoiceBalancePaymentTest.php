@@ -21,7 +21,7 @@ class InvoiceBalancePaymentTest extends TestCase
         $this->assertTrue($invoice->addBalance($first), 'the first instalment must be accepted');
         $invoice->refresh();
 
-        $this->assertLessThan($total, (float) $invoice->total, 'what is left to pay must go down after an instalment');
+        $this->assertEqualsWithDelta($total - $first, (float) $invoice->total, 0.01, 'what is left to pay must drop by exactly what was paid');
         $this->assertTrue($invoice->canPay(), 'a partly paid invoice stays payable');
 
         $second = (float) $invoice->total;
@@ -30,6 +30,32 @@ class InvoiceBalancePaymentTest extends TestCase
 
         $this->assertFalse($invoice->canPay(), 'the invoice must be settled once the remainder is paid');
         $this->assertEqualsWithDelta(500.0 - ($first + $second), (float) $customer->fresh()->balance, 0.01, 'the customer must be debited exactly what was paid, no more and no less');
+    }
+
+    public function test_an_instalment_does_not_change_what_is_invoiced(): void
+    {
+        [, $invoice] = $this->invoiceOf(100.0, 500.0);
+        $subtotal = (float) $invoice->subtotal;
+        $tax = (float) $invoice->tax;
+
+        $invoice->addBalance(round((float) $invoice->total / 2, 2));
+        $invoice->refresh();
+
+        $this->assertEqualsWithDelta($subtotal, (float) $invoice->subtotal, 0.01, 'the subtotal is the sum of the lines and an instalment does not change it');
+        $this->assertEqualsWithDelta($tax, (float) $invoice->tax, 0.01, 'the tax owed is the tax on the lines: an instalment does not reduce it');
+        $this->assertEqualsWithDelta(100.0, $subtotal, 0.01, 'sanity check on the fixture');
+    }
+
+    public function test_the_customer_pays_the_full_invoice_across_instalments(): void
+    {
+        [$customer, $invoice] = $this->invoiceOf(100.0, 500.0);
+        $total = (float) $invoice->total;
+
+        $invoice->addBalance(round($total / 2, 2));
+        $invoice->refresh();
+        $invoice->addBalance((float) $invoice->total);
+
+        $this->assertEqualsWithDelta(500.0 - $total, (float) $customer->fresh()->balance, 0.01, 'paying in instalments must cost exactly the invoice total, tax included');
     }
 
     public function test_paying_more_than_what_is_left_never_overcharges(): void
