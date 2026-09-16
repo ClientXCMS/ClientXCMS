@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Mail\Auth\ResetPasswordEmail;
 use App\Models\Account\Customer;
 use Database\Seeders\EmailTemplateSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class CustomerControllerTest extends TestCase
@@ -296,12 +298,13 @@ class CustomerControllerTest extends TestCase
             'password' => 'password',
         ]);
         $id = $customer->id;
+        Notification::fake();
 
         $response = $this->performAdminAction('get', route('admin.customers.send_password', ['customer' => $id], false));
         // send_password kept GET intentionally; not part of CSRF migration batch.
         $response->assertStatus(302);
         $response->assertSessionHas('success');
-        $this->assertDatabaseCount('email_messages', 1);
+        Notification::assertSentTo($customer, ResetPasswordEmail::class);
     }
 
     public function test_admin_customer_autologin()
