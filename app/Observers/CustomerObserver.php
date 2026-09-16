@@ -21,6 +21,7 @@ namespace App\Observers;
 
 use App\Models\Account\Customer;
 use App\Models\ActionLog;
+use App\Models\Store\Basket\Basket;
 
 class CustomerObserver
 {
@@ -40,6 +41,11 @@ class CustomerObserver
         $customer->emails()->delete();
         $customer->tickets()->delete();
         $customer->getLogsAction()->delete();
+        // The cascade declared on these tables never fires: the customer row is only soft deleted.
+        $customer->ownedAccountAccesses()->delete();
+        $customer->receivedAccountAccesses()->delete();
+        $customer->accountInvitations()->delete();
+        Basket::where('user_id', (string) $customer->id)->update(['user_id' => null, 'ip_address' => null]);
         $customer->update([
             'email' => 'deleted-'.$customer->id.'@clientxcms.com',
             'phone' => null,
