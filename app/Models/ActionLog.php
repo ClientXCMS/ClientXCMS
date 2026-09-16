@@ -421,9 +421,10 @@ class ActionLog extends Model
 
     public function createEntries(array $old, array $new): void
     {
+        $ignored = $this->ignoredAttributes();
         foreach ($old as $attribute => $oldValue) {
             $newValue = Arr::get($new, $attribute);
-            if ($oldValue != $newValue && ! in_array($attribute, self::$ignoreLogAttributes ?? [])) {
+            if ($oldValue != $newValue && ! in_array($attribute, $ignored, true)) {
                 if (in_array($attribute, (new Setting)->encrypt)) {
                     $oldValue = 'Encrypted';
                     $newValue = 'Encrypted';
@@ -435,5 +436,20 @@ class ActionLog extends Model
                 ]);
             }
         }
+    }
+
+    /**
+     * The audited model owns that list. ActionLog never declared it, and `??` hides the error on an
+     * undeclared static property, so the filter silently matched nothing.
+     */
+    private function ignoredAttributes(): array
+    {
+        $model = $this->model;
+
+        if (! is_string($model) || ! class_exists($model) || ! property_exists($model, 'ignoreLogAttributes')) {
+            return [];
+        }
+
+        return (array) $model::$ignoreLogAttributes;
     }
 }
