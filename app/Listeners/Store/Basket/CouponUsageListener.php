@@ -84,6 +84,8 @@ class CouponUsageListener
                             'customer_id' => $invoice->customer_id,
                             'invoice_id' => $invoice->id,
                         ]);
+                        // The global counter was incremented before this check: hand it back, since no usage row is recorded.
+                        Coupon::where('id', $locked->id)->update(['usages' => \DB::raw('GREATEST(usages - 1, 0)')]);
 
                         return;
                     }
