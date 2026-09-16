@@ -44,7 +44,7 @@ class Valid2FACodeRule implements ValidationRule
     {
         $google = new Google2FA;
         $user = auth('web')->user() ?? auth('admin')->user();
-        $secret = $this->secret ?: $user->getMetadata('2fa_secret');
+        $secret = $this->secret ?: $user->twoFactorSecret();
         try {
             if (! $google->verifyKey($secret, $value)) {
                 $fail(__('validation.2fa_code'));
