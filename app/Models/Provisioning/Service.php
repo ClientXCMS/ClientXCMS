@@ -21,6 +21,7 @@ namespace App\Models\Provisioning;
 
 use App\Abstracts\SupportRelateItemTrait;
 use App\Contracts\Notifications\HasNotifiableVariablesInterface;
+use App\Contracts\Notifications\ProvidesMailData;
 use App\Contracts\Store\ProductTypeInterface;
 use App\Core\NoneProductType;
 use App\DTO\Store\ConfigOptionDTO;
@@ -135,7 +136,7 @@ use Illuminate\Support\Str;
  *
  * @mixin \Eloquent
  */
-class Service extends Model implements HasNotifiableVariablesInterface
+class Service extends Model implements HasNotifiableVariablesInterface, ProvidesMailData
 {
     use HasFactory, HasMetadata, Loggable, SoftDeletes, SupportRelateItemTrait, Traits\ServerTypeTrait;
     use PricingInteractTrait {
@@ -1011,6 +1012,20 @@ class Service extends Model implements HasNotifiableVariablesInterface
             '%service_type%',
             '%service_server%',
             '%service_product%',
+        ];
+    }
+
+    public function toMailData(?string $locale = null): array
+    {
+        return [
+            'name' => $this->name,
+            'status' => $this->status,
+            'type' => $this->type,
+            'billing' => $this->billing,
+            'price' => formatted_price((float) $this->price, $this->currency),
+            'expires_at' => $this->expires_at?->format('d/m/Y'),
+            'server_name' => $this->server?->name,
+            'product_name' => $this->product?->name,
         ];
     }
 

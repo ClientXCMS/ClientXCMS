@@ -21,6 +21,7 @@ namespace App\Models\Provisioning;
 
 use App\Casts\EncryptCast;
 use App\Contracts\Notifications\HasNotifiableVariablesInterface;
+use App\Contracts\Notifications\ProvidesMailData;
 use App\Models\Traits\HasMetadata;
 use App\Models\Traits\Loggable;
 use App\Models\Traits\ModelStatutTrait;
@@ -90,7 +91,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @mixin \Eloquent
  */
-class Server extends Model implements HasNotifiableVariablesInterface
+class Server extends Model implements HasNotifiableVariablesInterface, ProvidesMailData
 {
     use HasFactory, HasMetadata,Loggable, ModelStatutTrait, softDeletes;
 
@@ -147,6 +148,17 @@ class Server extends Model implements HasNotifiableVariablesInterface
             '%server_username%' => $this->username,
             '%server_password%' => $this->password,
             '%server_type%' => $this->type,
+        ];
+    }
+
+    /** Credentials stay out: this feeds customer mail. */
+    public function toMailData(?string $locale = null): array
+    {
+        return [
+            'name' => $this->name,
+            'address' => $this->address,
+            'port' => $this->port,
+            'type' => $this->type,
         ];
     }
 

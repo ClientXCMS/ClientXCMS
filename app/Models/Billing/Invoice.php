@@ -21,6 +21,7 @@ namespace App\Models\Billing;
 
 use App\Abstracts\SupportRelateItemTrait;
 use App\Contracts\Helpdesk\SupportRelateItemInterface;
+use App\Contracts\Notifications\ProvidesMailData;
 use App\Core\Gateway\NoneGatewayType;
 use App\DTO\Admin\Invoice\AddProductToInvoiceDTO;
 use App\Exceptions\WrongPaymentException;
@@ -149,7 +150,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * @mixin \Eloquent
  */
-class Invoice extends Model implements SupportRelateItemInterface
+class Invoice extends Model implements ProvidesMailData, SupportRelateItemInterface
 {
     use HasFactory, HasMetadata, InvoiceStateTrait, Loggable, softDeletes, SupportRelateItemTrait;
 
@@ -259,6 +260,19 @@ class Invoice extends Model implements SupportRelateItemInterface
     public function addProduct(Product $product, array $validatedData, array $productData)
     {
         InvoiceService::appendProductOnExistingInvoice(new AddProductToInvoiceDTO($this, $product, $validatedData, $productData));
+    }
+
+    public function toMailData(?string $locale = null): array
+    {
+        return [
+            'id' => $this->id,
+            'identifier' => $this->identifier(),
+            'total' => formatted_price((float) $this->total, $this->currency),
+            'items' => $this->items->map(fn ($item) => [
+                'name' => $item->name,
+                'price' => formatted_price((float) $item->price(), $this->currency),
+            ])->values()->all(),
+        ];
     }
 
     public function items()
