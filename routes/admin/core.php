@@ -45,8 +45,10 @@ Route::post('/staffs/{staff}/avatar', [AdminController::class, 'uploadStaffAvata
 Route::delete('/staffs/{staff}/avatar', [AdminController::class, 'deleteStaffAvatar'])->name('staffs.avatar.delete');
 Route::resource('/roles', RoleController::class)->names('roles')->except('edit');
 
-Route::resource('/emails', EmailController::class)->names('emails')->except('edit');
-Route::get('/preview/emails', [EmailController::class, 'preview'])->name('emails.preview');
+Route::resource('/emails', EmailController::class)->names('emails')->except(['edit', 'show']);
+// Declared apart from the resource: the archived body needs its own policy.
+Route::get('/emails/{email}', [EmailController::class, 'show'])->middleware('untrusted.html')->name('emails.show');
+Route::get('/preview/emails', [EmailController::class, 'preview'])->middleware('untrusted.html')->name('emails.preview');
 Route::get('/intelligent-search', [DashboardController::class, 'intelligentSearch'])->name('intelligent_search');
 Route::post('/translations/settings', [TranslationController::class, 'storeSettingsTranslations'])->name('translations.settings');
 Route::post('/translations', [TranslationController::class, 'storeTranslations'])->name('translations.index');

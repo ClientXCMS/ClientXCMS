@@ -109,6 +109,7 @@ class Kernel extends HttpKernel
         'password.confirm.admin' => \App\Http\Middleware\RequireAdminPassword::class,
         'precognitive' => \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
         'signed' => \App\Http\Middleware\ValidateSignature::class,
+        'untrusted.html' => \App\Http\Middleware\IsolateUntrustedHtml::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
         'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
