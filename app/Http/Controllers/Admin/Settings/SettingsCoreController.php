@@ -78,8 +78,9 @@ class SettingsCoreController extends Controller
         $data = $this->validate($request, [
             'mail_from_address' => 'required|string|max:255',
             'mail_from_name' => 'required|string|max:255',
-            'mail_salutation' => 'required|string|max:255',
-            'mail_greeting' => 'required|string|max:255',
+            // Rendered like a template, so held to the same grammar as one.
+            'mail_salutation' => ['required', 'string', 'max:255', app(\App\Rules\RendersWithTemplateGrammar::class)],
+            'mail_greeting' => ['required', 'string', 'max:255', app(\App\Rules\RendersWithTemplateGrammar::class)],
             'mail_domain' => 'required|string|max:255',
             'mail_smtp_host' => [Rule::requiredIf($request->boolean('mail_smtp_enable')), 'nullable', 'string', 'max:1000', new \App\Rules\PublicSmtpHost],
             'mail_smtp_port' => [Rule::requiredIf($request->boolean('mail_smtp_enable')), 'nullable', 'integer', 'between:1,65535'],
