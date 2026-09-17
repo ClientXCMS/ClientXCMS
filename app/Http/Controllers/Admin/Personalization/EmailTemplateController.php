@@ -84,9 +84,6 @@ class EmailTemplateController extends AbstractCrudController
             'content' => 'required',
             'button_text' => 'required',
         ]);
-        if (has_dangerous_content($validated['content'])) {
-            return back()->with('error', __('personalization.email_templates.errors.dangerous_content'))->withInput();
-        }
         $validated['hidden'] = $request->has('hidden');
         $this->checkPermission('update');
         $emailTemplate->update($validated);
@@ -104,9 +101,6 @@ class EmailTemplateController extends AbstractCrudController
             'button_text' => 'required',
         ]);
 
-        if (has_dangerous_content($validated['content'])) {
-            return back()->with('error', __('personalization.email_templates.errors.dangerous_content'))->withInput();
-        }
         $this->checkPermission('create');
         $validated['hidden'] = $request->has('hidden');
         $emailTemplate = null;

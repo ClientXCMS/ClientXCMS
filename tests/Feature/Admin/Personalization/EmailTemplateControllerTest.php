@@ -74,7 +74,14 @@ class EmailTemplateControllerTest extends TestCase
         $response->assertStatus(302);
     }
 
-    public function test_email_template_store_rejects_dangerous_function_calls()
+    /**
+     * These used to assert a rejection. Nothing is rejected anymore because
+     * nothing is executed: the renderer has a closed grammar, so a function call
+     * is text like any other. Proof that it stays inert lives in
+     * TemplateIsNotExecutedTest, which goes through the real send path; here we
+     * only check the controller stores what it was handed.
+     */
+    public function test_email_template_store_keeps_a_function_call_as_text()
     {
         $data = [
             'name' => 'Test Template',
@@ -85,14 +92,12 @@ class EmailTemplateControllerTest extends TestCase
             'locale' => 'fr_FR',
         ];
 
-        $response = $this->performAdminAction('POST', route('admin.personalization.email_templates.store'), $data);
+        $this->performAdminAction('POST', route('admin.personalization.email_templates.store'), $data);
 
-        $response->assertStatus(302);
-        $response->assertSessionHas('error');
-        $this->assertDatabaseMissing('email_templates', ['name' => 'Test Template']);
+        $this->assertDatabaseHas('email_templates', ['name' => 'Test Template', 'content' => "{{ system('id') }}"]);
     }
 
-    public function test_email_template_update_rejects_dangerous_function_calls()
+    public function test_email_template_update_keeps_a_function_call_as_text()
     {
         $this->seed(EmailTemplateSeeder::class);
         $emailTemplate = EmailTemplate::first();
@@ -106,11 +111,9 @@ class EmailTemplateControllerTest extends TestCase
             'locale' => 'fr_FR',
         ];
 
-        $response = $this->performAdminAction('PUT', route('admin.personalization.email_templates.update', $emailTemplate), $data);
+        $this->performAdminAction('PUT', route('admin.personalization.email_templates.update', $emailTemplate), $data);
 
-        $response->assertStatus(302);
-        $response->assertSessionHas('error');
-        $this->assertDatabaseMissing('email_templates', ['id' => $emailTemplate->id, 'content' => "{{ file_get_contents('.env') }}"]);
+        $this->assertDatabaseHas('email_templates', ['id' => $emailTemplate->id, 'content' => "{{ file_get_contents('.env') }}"]);
     }
 
     public static function indirectInvocationPayloads(): array
@@ -126,7 +129,7 @@ class EmailTemplateControllerTest extends TestCase
     }
 
     #[DataProvider('indirectInvocationPayloads')]
-    public function test_email_template_store_rejects_indirect_function_calls(string $payload)
+    public function test_email_template_store_keeps_an_indirect_call_as_text(string $payload)
     {
         $data = [
             'name' => 'Test Indirect '.uniqid(),
@@ -136,29 +139,10 @@ class EmailTemplateControllerTest extends TestCase
             'hidden' => false,
             'locale' => 'fr_FR',
         ];
-        $response = $this->performAdminAction('POST', route('admin.personalization.email_templates.store'), $data);
-        $response->assertStatus(302);
-        $response->assertSessionHas('error');
-        $this->assertDatabaseMissing('email_templates', ['content' => $payload]);
-    }
 
-    #[DataProvider('indirectInvocationPayloads')]
-    public function test_email_template_update_rejects_indirect_function_calls(string $payload)
-    {
-        $this->seed(EmailTemplateSeeder::class);
-        $emailTemplate = EmailTemplate::first();
-        $data = [
-            'name' => 'Updated Indirect',
-            'subject' => 'Updated Subject',
-            'content' => $payload,
-            'button_text' => 'Updated Button',
-            'hidden' => true,
-            'locale' => 'fr_FR',
-        ];
-        $response = $this->performAdminAction('PUT', route('admin.personalization.email_templates.update', $emailTemplate), $data);
-        $response->assertStatus(302);
-        $response->assertSessionHas('error');
-        $this->assertDatabaseMissing('email_templates', ['id' => $emailTemplate->id, 'content' => $payload]);
+        $this->performAdminAction('POST', route('admin.personalization.email_templates.store'), $data);
+
+        $this->assertDatabaseHas('email_templates', ['content' => $payload]);
     }
 
     public function test_email_template_delete()
