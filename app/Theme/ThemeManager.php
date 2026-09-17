@@ -20,8 +20,8 @@
 namespace App\Theme;
 
 use App\DTO\Core\Extensions\ExtensionThemeDTO;
-use App\Extensions\ExtensionManager;
 use App\Exceptions\ThemeInvalidException;
+use App\Extensions\ExtensionManager;
 use App\Models\Admin\Setting;
 use App\Models\Personalization\MenuLink;
 use App\Models\Personalization\Section;
@@ -280,7 +280,7 @@ class ThemeManager
                 'sections_html' => Section::orderBy('order')->get()->mapWithKeys(function (Section $section) {
                     $this->setCurrentRenderingSection($section);
 
-                    return [$section->path => $section->toDTO()->render(false)];
+                    return [$section->id => $section->toDTO()->render(false)];
                 }),
             ]);
         });

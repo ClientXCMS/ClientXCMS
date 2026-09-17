@@ -38,6 +38,7 @@ class ThemeSectionDTO
         $api = (new Section(['uuid' => $section->uuid]))->api();
         $api['path'] = $section->path;
         $api['uuid'] = $section->uuid;
+        $api['id'] = $section->id;
 
         return new self($api);
     }
@@ -69,11 +70,14 @@ class ThemeSectionDTO
     public function render(bool $cache = true): string
     {
         $path = $this->json['path'];
+        $key = $this->json['id'] ?? null;
         try {
-            if ($cache && app()->isProduction()) {
+            // Keyed by section, not by file: two sections may share one theme
+            // file and differ only by their configuration.
+            if ($cache && $key !== null && app()->isProduction()) {
                 $cache = app('theme')->getSetting()['sections_html'] ?? collect();
-                if ($cache->has($path)) {
-                    return $cache->get($path);
+                if ($cache->has($key)) {
+                    return $cache->get($key);
                 }
             }
             if (! view()->exists($path)) {
