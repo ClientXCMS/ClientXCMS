@@ -53,6 +53,15 @@ class StoredTemplateMigrator
     public function __construct(private readonly TemplateConverter $converter) {}
 
     /**
+     * One template's worth of rewriting. Public because the seeder needs the same
+     * treatment for templates an extension ships, which no migration ever sees.
+     */
+    public function rewrite(string $content): string
+    {
+        return $this->applyShippedReplacements($this->converter->convert($content)->after);
+    }
+
+    /**
      * @return array{changed: int, pending: list<array{0: string, 1: string}>}
      */
     public function migrate(bool $apply = true): array

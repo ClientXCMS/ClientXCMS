@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Admin\EmailTemplate;
+use App\Services\Mail\StoredTemplateMigrator;
 use Illuminate\Database\Seeder;
 
 class EmailTemplateSeeder extends Seeder
@@ -24,15 +25,17 @@ class EmailTemplateSeeder extends Seeder
                 $templates = array_merge($templates, $extensionTemplates);
             }
         }
+        $migrator = app(StoredTemplateMigrator::class);
         foreach ($templates as $name => $localeTemplates) {
             foreach ($localeTemplates as $locale => $template) {
                 if (EmailTemplate::where('name', $name)->where('locale', $locale)->exists()) {
                     continue;
                 }
+                // Extensions ship Blade-era templates we cannot fix at the source.
                 EmailTemplate::firstOrCreate([
                     'name' => $name,
-                    'subject' => $template['subject'],
-                    'content' => $template['body'],
+                    'subject' => $migrator->rewrite($template['subject']),
+                    'content' => $migrator->rewrite($template['body']),
                     'button_text' => $template['button'] ?? null,
                     'locale' => $locale,
                 ]);
