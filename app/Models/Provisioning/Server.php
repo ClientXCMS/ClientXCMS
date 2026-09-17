@@ -141,11 +141,10 @@ class Server extends Model implements HasNotifiableVariablesInterface
     public function getNotificationVariables(): array
     {
         return [
+            // Credentials stay out: these variables end up in customer mail and in the sent-mail archive.
             '%server_name%' => $this->name,
             '%server_address%' => $this->address,
             '%server_port%' => $this->port,
-            '%server_username%' => $this->username,
-            '%server_password%' => $this->password,
             '%server_type%' => $this->type,
         ];
     }
@@ -153,7 +152,7 @@ class Server extends Model implements HasNotifiableVariablesInterface
     public static function getNotificationContextVariables(): array
     {
         return [
-            '%server_name%', '%server_address%', '%server_port%', '%server_username%', '%server_password%', '%server_type%',
+            '%server_name%', '%server_address%', '%server_port%', '%server_type%',
         ];
     }
 }
