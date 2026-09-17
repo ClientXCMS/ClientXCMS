@@ -20,6 +20,7 @@
 namespace Tests\Feature\Console;
 
 use App\Models\Admin\EmailTemplate;
+use App\Models\Personalization\Section;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -84,6 +85,43 @@ class AuditEditableContentCommandTest extends TestCase
     {
         $this->artisan('content:audit')
             ->expectsOutputToContain('No mail template stored.')
+            ->assertSuccessful();
+    }
+
+    public function test_says_so_when_no_section_was_edited(): void
+    {
+        $this->artisan('content:audit')
+            ->expectsOutputToContain('No section has been edited from the admin.')
+            ->assertSuccessful();
+    }
+
+    public function test_reports_an_edited_section_whose_file_is_gone(): void
+    {
+        Section::create([
+            'uuid' => 'hero',
+            'theme_uuid' => 'default',
+            'path' => 'sections_copy/99-hero',
+            'is_active' => true,
+            'url' => '/',
+        ]);
+
+        $this->artisan('content:audit')
+            ->expectsOutputToContain('file not found')
+            ->assertFailed();
+    }
+
+    public function test_ignores_a_section_still_served_from_the_theme(): void
+    {
+        Section::create([
+            'uuid' => 'hero',
+            'theme_uuid' => 'default',
+            'path' => 'sections/hero',
+            'is_active' => true,
+            'url' => '/',
+        ]);
+
+        $this->artisan('content:audit')
+            ->expectsOutputToContain('No section has been edited from the admin.')
             ->assertSuccessful();
     }
 }

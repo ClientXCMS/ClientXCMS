@@ -20,16 +20,19 @@
 namespace App\Console\Commands;
 
 use App\Models\Admin\EmailTemplate;
+use App\Models\Personalization\Section;
 use App\Services\Mail\LegacySyntaxReport;
 use App\Services\Mail\LegacySyntaxScanner;
+use App\Services\Personalization\SectionScriptScanner;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 
 class AuditEditableContentCommand extends Command
 {
     protected $signature = 'content:audit
                             {--details : List every item instead of only those needing a decision}';
 
-    protected $description = 'Report which stored mail templates the closed template grammar accepts';
+    protected $description = 'Report which stored mail templates and edited theme sections survive the closed template grammar';
 
     private const STATUS_LABELS = [
         'clean' => 'nothing to do',
@@ -37,20 +40,71 @@ class AuditEditableContentCommand extends Command
         'manual' => 'needs a decision',
     ];
 
-    public function handle(LegacySyntaxScanner $scanner): int
+    public function handle(LegacySyntaxScanner $scanner, SectionScriptScanner $scriptScanner): int
     {
         $rows = $this->scanTemplates($scanner);
 
         if ($rows === []) {
             $this->warn('No mail template stored. Nothing to audit.');
-
-            return self::SUCCESS;
+        } else {
+            $this->summarise($rows);
+            $this->detail($rows);
         }
 
-        $this->summarise($rows);
-        $this->detail($rows);
+        $sections = $this->reportSections($scanner, $scriptScanner);
 
-        return $this->countByStatus($rows, 'manual') > 0 ? self::FAILURE : self::SUCCESS;
+        return $this->countByStatus($rows, 'manual') > 0 || $sections > 0 ? self::FAILURE : self::SUCCESS;
+    }
+
+    /**
+     * Edited sections only. A section still served straight from the theme is
+     * code shipped by a developer, not content typed into the admin.
+     *
+     * @return int how many edited sections carry something that will change
+     */
+    private function reportSections(LegacySyntaxScanner $scanner, SectionScriptScanner $scriptScanner): int
+    {
+        $edited = Section::query()->where('path', 'like', 'sections_copy/%')->orderBy('path')->get();
+
+        $this->newLine();
+        $this->line('Theme sections');
+        if ($edited->isEmpty()) {
+            $this->info('No section has been edited from the admin.');
+
+            return 0;
+        }
+
+        $rows = [];
+        foreach ($edited as $section) {
+            $content = $this->sectionContent($section);
+            if ($content === null) {
+                $rows[] = [$section->path, $section->theme_uuid, 'file not found'];
+
+                continue;
+            }
+            foreach ([...$scriptScanner->scan($content), ...$scanner->scan($content)->manual] as $finding) {
+                $rows[] = [$section->path, $section->theme_uuid, $finding];
+            }
+        }
+
+        if ($rows === []) {
+            $this->info(sprintf('%d edited section(s), nothing that will change.', $edited->count()));
+
+            return 0;
+        }
+
+        $this->table(['Section', 'Theme', 'Finding'], $rows);
+
+        return count($rows);
+    }
+
+    private function sectionContent(Section $section): ?string
+    {
+        try {
+            return File::get(app('view')->getFinder()->find($section->path));
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**
