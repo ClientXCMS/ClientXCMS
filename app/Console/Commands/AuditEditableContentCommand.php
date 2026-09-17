@@ -19,18 +19,12 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Admin\EmailTemplate;
-use App\Models\Personalization\Section;
-use App\Services\Mail\LegacySyntaxReport;
-use App\Services\Mail\LegacySyntaxScanner;
-use App\Services\Personalization\SectionScriptScanner;
+use App\Services\Content\EditableContentAudit;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
 
 class AuditEditableContentCommand extends Command
 {
-    protected $signature = 'content:audit
-                            {--details : List every item instead of only those needing a decision}';
+    protected $signature = 'content:audit';
 
     protected $description = 'Report which stored mail templates and edited theme sections survive the closed template grammar';
 
@@ -40,87 +34,99 @@ class AuditEditableContentCommand extends Command
         'manual' => 'needs a decision',
     ];
 
-    public function handle(LegacySyntaxScanner $scanner, SectionScriptScanner $scriptScanner): int
+    public function handle(EditableContentAudit $audit): int
     {
-        $rows = $this->scanTemplates($scanner);
+        $templates = $audit->templates();
+        $this->reportTemplates($templates);
 
-        if ($rows === []) {
-            $this->warn('No mail template stored. Nothing to audit.');
-        } else {
-            $this->summarise($rows);
-            $this->detail($rows);
-        }
+        $pending = $this->countByStatus($templates, 'manual')
+            + $this->section(
+                'Variables nothing will fill',
+                ['Template', 'Locale', 'Field', 'Variable'],
+                $audit->unknownVariables(),
+                'Every variable used by a stored template is produced somewhere.',
+            )
+            + $this->section(
+                'Mail settings',
+                ['Setting', 'Finding'],
+                $audit->settings(),
+                'The opening and closing lines need nothing.',
+            )
+            + $this->section(
+                'Theme sections',
+                ['Section', 'Theme', 'Finding'],
+                $audit->sections(),
+                'No edited section carries anything that will change.',
+            );
 
-        $sections = $this->reportSections($scanner, $scriptScanner);
-
-        return $this->countByStatus($rows, 'manual') > 0 || $sections > 0 ? self::FAILURE : self::SUCCESS;
+        return $pending > 0 ? self::FAILURE : self::SUCCESS;
     }
 
     /**
-     * Edited sections only. A section still served straight from the theme is
-     * code shipped by a developer, not content typed into the admin.
-     *
-     * @return int how many edited sections carry something that will change
+     * @param  list<string>  $headers
+     * @param  list<list<string>>  $rows
+     * @return int how many findings the section holds
      */
-    private function reportSections(LegacySyntaxScanner $scanner, SectionScriptScanner $scriptScanner): int
+    private function section(string $title, array $headers, array $rows, string $emptyMessage): int
     {
-        $edited = Section::query()->where('path', 'like', 'sections_copy/%')->orderBy('path')->get();
-
         $this->newLine();
-        $this->line('Theme sections');
-        if ($edited->isEmpty()) {
-            $this->info('No section has been edited from the admin.');
-
-            return 0;
-        }
-
-        $rows = [];
-        foreach ($edited as $section) {
-            $content = $this->sectionContent($section);
-            if ($content === null) {
-                $rows[] = [$section->path, $section->theme_uuid, 'file not found'];
-
-                continue;
-            }
-            foreach ([...$scriptScanner->scan($content), ...$scanner->scan($content)->manual] as $finding) {
-                $rows[] = [$section->path, $section->theme_uuid, $finding];
-            }
-        }
-
+        $this->line($title);
         if ($rows === []) {
-            $this->info(sprintf('%d edited section(s), nothing that will change.', $edited->count()));
+            $this->info($emptyMessage);
 
             return 0;
         }
-
-        $this->table(['Section', 'Theme', 'Finding'], $rows);
+        $this->table($headers, $rows);
 
         return count($rows);
     }
 
-    private function sectionContent(Section $section): ?string
+    /**
+     * @param  list<array{name: string, locale: string, field: string, report: \App\Services\Mail\LegacySyntaxReport}>  $templates
+     */
+    private function reportTemplates(array $templates): void
     {
-        try {
-            return File::get(app('view')->getFinder()->find($section->path));
-        } catch (\Throwable) {
-            return null;
+        if ($templates === []) {
+            $this->warn('No mail template stored. Nothing to audit.');
+
+            return;
         }
+
+        $this->newLine();
+        $this->line('Mail templates');
+        $this->table(
+            ['Verdict', 'Items'],
+            array_map(
+                fn (string $status) => [self::STATUS_LABELS[$status], $this->countByStatus($templates, $status)],
+                array_keys(self::STATUS_LABELS),
+            ),
+        );
+
+        $rows = $this->manualConstructRows($templates);
+        if ($rows === []) {
+            $this->info('Every stored template converts on its own.');
+
+            return;
+        }
+        $this->table(['Template', 'Locale', 'Field', 'Construct'], $rows);
+        $this->line(sprintf(
+            '%d distinct constructs, %d occurrences, across %d fields.',
+            count(array_unique(array_column($rows, 3))),
+            count($rows),
+            $this->countByStatus($templates, 'manual'),
+        ));
     }
 
     /**
-     * @return list<array{name: string, locale: string, field: string, report: LegacySyntaxReport}>
+     * @param  list<array{name: string, locale: string, field: string, report: \App\Services\Mail\LegacySyntaxReport}>  $templates
+     * @return list<list<string>>
      */
-    private function scanTemplates(LegacySyntaxScanner $scanner): array
+    private function manualConstructRows(array $templates): array
     {
         $rows = [];
-        foreach (EmailTemplate::query()->orderBy('name')->orderBy('locale')->cursor() as $template) {
-            foreach (['subject' => $template->subject, 'content' => $template->content] as $field => $value) {
-                $rows[] = [
-                    'name' => $template->name,
-                    'locale' => $template->locale,
-                    'field' => $field,
-                    'report' => $scanner->scan((string) $value),
-                ];
+        foreach ($templates as $template) {
+            foreach ($template['report']->manual as $construct) {
+                $rows[] = [$template['name'], $template['locale'], $template['field'], $construct];
             }
         }
 
@@ -128,55 +134,10 @@ class AuditEditableContentCommand extends Command
     }
 
     /**
-     * @param  list<array{name: string, locale: string, field: string, report: LegacySyntaxReport}>  $rows
+     * @param  list<array{name: string, locale: string, field: string, report: \App\Services\Mail\LegacySyntaxReport}>  $templates
      */
-    private function summarise(array $rows): void
+    private function countByStatus(array $templates, string $status): int
     {
-        $this->newLine();
-        $this->line('Mail templates');
-        $this->table(
-            ['Verdict', 'Items'],
-            array_map(
-                fn (string $status) => [self::STATUS_LABELS[$status], $this->countByStatus($rows, $status)],
-                array_keys(self::STATUS_LABELS),
-            ),
-        );
-    }
-
-    /**
-     * @param  list<array{name: string, locale: string, field: string, report: LegacySyntaxReport}>  $rows
-     */
-    private function detail(array $rows): void
-    {
-        $needing = array_filter($rows, fn (array $row) => $row['report']->needsManualWork());
-        if ($needing === []) {
-            $this->info('Every stored template converts on its own.');
-
-            return;
-        }
-
-        $this->newLine();
-        $this->line('Needing a decision, one line per construct:');
-        $this->table(
-            ['Template', 'Locale', 'Field', 'Construct'],
-            array_merge(...array_map(
-                fn (array $row) => array_map(
-                    fn (string $construct) => [$row['name'], $row['locale'], $row['field'], $construct],
-                    $row['report']->manual,
-                ),
-                array_values($needing),
-            )),
-        );
-
-        $this->newLine();
-        $this->line(sprintf('%d distinct constructs across %d items.', count(array_unique(array_merge(...array_map(fn (array $row) => $row['report']->manual, array_values($needing))))), count($needing)));
-    }
-
-    /**
-     * @param  list<array{name: string, locale: string, field: string, report: LegacySyntaxReport}>  $rows
-     */
-    private function countByStatus(array $rows, string $status): int
-    {
-        return count(array_filter($rows, fn (array $row) => $row['report']->status() === $status));
+        return count(array_filter($templates, fn (array $row) => $row['report']->status() === $status));
     }
 }

@@ -91,7 +91,7 @@ class AuditEditableContentCommandTest extends TestCase
     public function test_says_so_when_no_section_was_edited(): void
     {
         $this->artisan('content:audit')
-            ->expectsOutputToContain('No section has been edited from the admin.')
+            ->expectsOutputToContain('No edited section carries anything that will change.')
             ->assertSuccessful();
     }
 
@@ -121,7 +121,7 @@ class AuditEditableContentCommandTest extends TestCase
         ]);
 
         $this->artisan('content:audit')
-            ->expectsOutputToContain('No section has been edited from the admin.')
+            ->expectsOutputToContain('No edited section carries anything that will change.')
             ->assertSuccessful();
     }
 }
