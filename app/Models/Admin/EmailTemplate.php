@@ -20,11 +20,14 @@
 namespace App\Models\Admin;
 
 use App\Contracts\Notifications\NotifiablePlaceholderInterface;
+use App\Contracts\Notifications\ProvidesMailData;
+use App\Services\Mail\TemplateRenderer;
 use App\Theme\ThemeManager;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\HtmlString;
 
 /**
@@ -81,7 +84,8 @@ class EmailTemplate extends Model
                 throw new \Exception(sprintf('Email template %s not found for locale %s', $name, $locale));
             }
         }
-        $content = self::bladeRender($template->content, $context);
+        $data = self::prepareData($context, $locale);
+        $content = self::render($template->content, $data);
         $parts = explode(PHP_EOL, $content);
         $parts = collect($parts)->map(function ($part) {
             if (empty($part)) {
@@ -91,10 +95,10 @@ class EmailTemplate extends Model
             return new HtmlString($part);
         });
         $mail = (new MailMessage)
-            ->greeting(self::replacePlaceholders(self::bladeRender(setting('mail_greeting'), $context), $notifiable))
-            ->subject(self::replacePlaceholders(self::bladeRender($template->subject, $context), $notifiable))
+            ->greeting(self::replacePlaceholders(self::render(setting('mail_greeting'), $data), $notifiable))
+            ->subject(self::replacePlaceholders(self::render($template->subject, $data), $notifiable))
             ->lines($parts)
-            ->salutation(self::replacePlaceholders(self::bladeRender(setting('mail_salutation'), $context), $notifiable));
+            ->salutation(self::replacePlaceholders(self::render(setting('mail_salutation'), $data), $notifiable));
 
         $hasCta = ! empty($url) && ! empty($template->button_text);
         if ($hasCta) {
@@ -182,17 +186,51 @@ class EmailTemplate extends Model
         return $config;
     }
 
-    private static function bladeRender(string $content, array $context = []): string
+    private static function render(string $content, array $data): string
     {
         if (str_contains($content, '%%')) {
             $content = str_replace('%%', '%', $content);
         }
-        $content = sanitize_content($content);
 
-        if (class_exists(\Illuminate\View\Component::class)) {
-            \Illuminate\View\Component::flushCache();
+        return app(TemplateRenderer::class)->render($content, $data);
+    }
+
+    /**
+     * Turns what a notification passes in into something a template may read.
+     *
+     * Models answer for themselves through the prepared-view contract. Anything
+     * else that is not a scalar or an array is dropped rather than handed over:
+     * an object in the context would put the template one property away from
+     * whatever that object can reach.
+     *
+     * @param  array<string, mixed>  $context
+     * @return array<string, mixed>
+     */
+    private static function prepareData(array $context, ?string $locale): array
+    {
+        $data = [];
+        foreach ($context as $key => $value) {
+            if ($value instanceof ProvidesMailData) {
+                $data[$key] = $value->toMailData($locale);
+
+                continue;
+            }
+            if (is_scalar($value) || $value === null) {
+                $data[$key] = $value;
+
+                continue;
+            }
+            if (is_array($value)) {
+                $data[$key] = self::prepareData($value, $locale);
+
+                continue;
+            }
+            Log::warning('Mail context entry dropped: a template may only read scalars and arrays.', [
+                'key' => $key,
+                'type' => get_debug_type($value),
+            ]);
         }
 
-        return \Blade::render($content, $context);
+        return $data;
     }
 }
