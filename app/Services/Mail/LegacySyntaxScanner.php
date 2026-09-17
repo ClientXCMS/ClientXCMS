@@ -92,17 +92,27 @@ class LegacySyntaxScanner
         preg_match_all(self::DIRECTIVE, $content, $matches, PREG_SET_ORDER);
 
         $found = [];
+        $open = [];
         foreach ($matches as $match) {
             $name = strtolower($match[1]);
             if (! in_array($name, self::BLADE_DIRECTIVES, true)) {
                 continue;
             }
             $arguments = trim($match[2] ?? '', '()');
-            $found[trim($match[0])] = match ($name) {
+            $convertible = match ($name) {
                 'if' => (bool) preg_match('/^\s*'.self::PATH.'\s*$/', $arguments),
                 'foreach' => (bool) preg_match('/^\s*'.self::PATH.'\s+as\s+\$[A-Za-z_]\w*\s*$/', $arguments),
-                default => in_array($name, self::TRANSLATABLE_DIRECTIVES, true),
+                // A closing tag can only be translated if its opening tag was.
+                default => in_array($name, self::TRANSLATABLE_DIRECTIVES, true) && (end($open) ?: false),
             };
+            if (in_array($name, ['if', 'foreach'], true)) {
+                $open[] = $convertible;
+            } elseif (in_array($name, ['endif', 'endforeach'], true)) {
+                array_pop($open);
+            }
+            // Same construct seen twice with different verdicts: keep the strict one.
+            $key = trim($match[0]);
+            $found[$key] = ($found[$key] ?? true) && $convertible;
         }
 
         return $found;
