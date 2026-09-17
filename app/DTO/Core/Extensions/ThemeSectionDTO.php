@@ -20,7 +20,6 @@
 namespace App\DTO\Core\Extensions;
 
 use App\Models\Personalization\Section;
-use File;
 
 class ThemeSectionDTO
 {
@@ -107,17 +106,6 @@ class ThemeSectionDTO
 
             return '';
         }
-    }
-
-    public function getContent(): string
-    {
-        $path = $this->json['path'];
-        $content = File::get(app('view')->getFinder()->find($path));
-        if (! $this->isProtected()) {
-            return sanitize_content($content);
-        }
-
-        return $content;
     }
 
     public function isDefault(): bool

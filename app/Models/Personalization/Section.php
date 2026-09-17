@@ -195,22 +195,6 @@ class Section extends Model
         return \App\DTO\Core\Extensions\ThemeSectionDTO::fromModel($this);
     }
 
-    public function saveContent(string $content)
-    {
-        if ($this->toDTO()->isProtected()) {
-            return;
-        }
-        $theme = app('theme')->getTheme();
-        $path = $theme->path.'/views/sections_copy/'.$this->id.'-'.$this->uuid.'.blade.php';
-        $this->path = 'sections_copy/'.$this->id.'-'.$this->uuid;
-        if (! file_exists($theme->path.'/views/sections_copy')) {
-            mkdir($theme->path.'/views/sections_copy', 0755, true);
-        }
-        $content = sanitize_content($content);
-        file_put_contents($path, $content);
-        $this->save();
-    }
-
     public function restore()
     {
         $theme = app('theme')->getTheme();
