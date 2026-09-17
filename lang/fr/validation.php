@@ -146,7 +146,6 @@ return [
   'url' => 'Le format de l\'URL de :attribute n\'est pas valide.',
   'uuid' => 'Le champ :attribute doit être un UUID valide.',
   'domain_is_registered' => 'Le domaine :attribute est déjà enregistré.',
-  'mail_template_grammar' => 'Le champ :attribute utilise l\'ancienne syntaxe et serait envoyé tel quel : :constructs',
   'attributes' => [
     'address' => 'adresse',
     'age' => 'âge',

@@ -46,8 +46,10 @@ class RendersWithTemplateGrammar implements ValidationRule
             return;
         }
 
-        $fail(__('validation.mail_template_grammar', [
-            'attribute' => $attribute,
+        // Full sentence as the key, like ValidHtmlWithoutBlade. A key added to
+        // lang/fr is overwritten by translations:import, which CI runs before the
+        // tests, so the message would come back raw.
+        $fail(__('This text uses the old template syntax and would be sent as-is: :constructs', [
             'constructs' => implode(', ', array_slice($found, 0, 3)),
         ]));
     }
