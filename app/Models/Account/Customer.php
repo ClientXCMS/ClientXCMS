@@ -22,6 +22,7 @@ namespace App\Models\Account;
 use App\Casts\CustomRawPhoneNumberCast;
 use App\Contracts\Notifications\HasNotifiableVariablesInterface;
 use App\Contracts\Notifications\NotifiablePlaceholderInterface;
+use App\Contracts\Notifications\ProvidesMailData;
 use App\Mail\Auth\ResetPasswordEmail;
 use App\Mail\Auth\VerifyEmail;
 use App\Models\ActionLog;
@@ -143,7 +144,7 @@ use Laravel\Sanctum\HasApiTokens;
  *
  * @mixin \Eloquent
  */
-class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\MustVerifyEmail, HasNotifiableVariablesInterface, NotifiablePlaceholderInterface, PasskeyUser
+class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\MustVerifyEmail, HasNotifiableVariablesInterface, NotifiablePlaceholderInterface, PasskeyUser, ProvidesMailData
 {
     public const TYPE_INDIVIDUAL = 'individual';
 
@@ -642,6 +643,21 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
             '%customer_locale%' => $this->locale,
             '%customer_firstname%' => $this->firstname,
             '%customer_lastname%' => $this->lastname,
+        ];
+    }
+
+    public function toMailData(?string $locale = null): array
+    {
+        return [
+            'firstname' => $this->firstname,
+            'lastname' => $this->lastname,
+            'full_name' => $this->fullname,
+            'email' => $this->email,
+            // Cast to an object by the model; a template may only receive a scalar.
+            'phone' => $this->phone ? (string) $this->phone : null,
+            'city' => $this->city,
+            'country' => $this->country,
+            'locale' => $this->locale,
         ];
     }
 

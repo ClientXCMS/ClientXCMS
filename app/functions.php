@@ -436,84 +436,13 @@ if (! function_exists('generate_uuid')) {
     }
 }
 
-if (! function_exists('dangerous_content_patterns')) {
-    /**
-     * Centralized list of regex patterns matching dangerous Blade/PHP
-     * constructs that must never appear in user-editable content
-     * (sections, email templates, etc.).
-     *
-     * @return array<string> PCRE patterns
-     */
-    function dangerous_content_patterns(): array
-    {
-        return [
-            '/<\?(?:php|=)?/i',
-            '/\?>/i',
-            '/@php\b/i',
-            '/@endphp\b/i',
-            '/@shell\b/i',
-            '/\{\!\!.*?\!\!\}/s',
-            '/@(include|extends|component|each|includeIf|includeWhen|includeFirst)\s*\(/i',
-            '/@(yield|section|stack|push|prepend)\s*\(/i',
-            '/\b(?:env|exec|shell_exec|system|passthru|proc_open|popen|pcntl_exec|eval|assert|preg_replace|create_function|require|unlink|fopen|file_get_contents|file_put_contents|file|readfile|base64_decode|gzinflate|gzuncompress|gzdecode|gzcompress|gzdeflate|gzencode|ini_set|set_time_limit|error_reporting|ini_get|ini_restore|ini_alter|unserialize|serialize|var_dump|print_r|debug_backtrace|debug_print_backtrace|dump|die|exit|phpinfo|php_uname|getenv|get_current_user|getmyuid|getmygid|getmypid|getmyinode|getlastmod|getprotobyname|getprotobynumber|getservbyname|getservbyport)\s*\(/i',
-            '/\b(?:call_user_func|call_user_func_array|array_map|array_filter|array_walk|array_walk_recursive|array_reduce|forward_static_call|forward_static_call_array|iterator_apply)\s*\(/i',
-            '/Closure::fromCallable/i',
-            '/\bReflection(?:Function|Method|Class)\b/i',
-            '/\)\s*\(/s',
-            '/\$\w+\s*\(/s',
-            '/\$(?:_ENV|_SERVER|_GET|_POST|_REQUEST|_SESSION|_COOKIE)\b/i',
-            '/\.env\b/i',
-        ];
-    }
-}
-
-if (! function_exists('sanitize_content')) {
-    /**
-     * Strip dangerous Blade/PHP constructs from user-editable content.
-     * Each pattern is replaced by an empty string (removal), preserving
-     * the rest of the content intact.
-     */
-    function sanitize_content(string $content): string
-    {
-        foreach (dangerous_content_patterns() as $pattern) {
-            $content = preg_replace($pattern, '', $content);
-        }
-
-        return $content;
-    }
-}
-
 if (! function_exists('current_locale')) {
     function current_locale(): string
     {
         return app(LocaleService::class)->fetchCurrentLocale();
     }
 }
-if (! function_exists('has_dangerous_content')) {
-    function has_dangerous_content(string $content): bool
-    {
-        foreach (dangerous_content_patterns() as $pattern) {
-            if (preg_match($pattern, $content)) {
-                return true;
-            }
-        }
 
-        return false;
-    }
-}
-
-if (! function_exists('is_sanitized')) {
-    function is_sanitized(string $content): bool
-    {
-        foreach (dangerous_content_patterns() as $pattern) {
-            if (preg_match($pattern, $content)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-}
 if (! function_exists('get_group_icon')) {
     function get_group_icon(string $name): string
     {

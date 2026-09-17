@@ -25,6 +25,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin\Permission;
 use App\Models\Admin\Setting;
 use App\Models\Personalization\MenuLink;
+use App\Services\Content\SafeHtml;
 use App\Theme\ThemeManager;
 use Illuminate\Http\Request;
 
@@ -117,17 +118,19 @@ class SettingsPersonalizationController extends Controller
         ];
     }
 
-    public function storeBottomMenu(Request $request)
+    public function storeBottomMenu(Request $request, SafeHtml $safeHtml)
     {
         staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $this->validate($request, [
-            'theme_footer_description' => ['required', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags],
-            'theme_footer_topheberg' => ['nullable', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags],
+            'theme_footer_description' => ['required', 'string', 'max:1000'],
+            'theme_footer_topheberg' => ['nullable', 'string', 'max:1000'],
         ]);
-        Setting::updateSettings([
+        // Both are rendered without escaping by the themes, so they are cleaned
+        // here rather than guarded by a list of things to forbid.
+        Setting::updateSettings($safeHtml->sanitizeKeys([
             'theme_footer_description' => $request->get('theme_footer_description'),
             'theme_footer_topheberg' => $request->get('theme_footer_topheberg'),
-        ]);
+        ], ['theme_footer_description', 'theme_footer_topheberg']));
 
         return redirect()->back();
     }

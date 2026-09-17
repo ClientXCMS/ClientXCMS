@@ -3,37 +3,36 @@
         "fr_FR": {
             "subject": "Votre compte a été banni",
             "button": "Contacter le support",
-            "body": "Votre compte a été banni pour la raison {{ $reason }}. Veuillez contacter le support pour plus d'informations."
+            "body": "Votre compte a été banni pour la raison {{ reason }}. Veuillez contacter le support pour plus d'informations."
         },
         "en_GB": {
             "subject": "Your account has been banned",
             "button": "Contact support",
-            "body": "Your account has been banned for the reason {{ $reason }}. Please contact support for more information."
+            "body": "Your account has been banned for the reason {{ reason }}. Please contact support for more information."
         },
         "es_ES": {
             "subject": "Su cuenta ha sido suspendida",
             "button": "Contactar soporte",
-            "body": "Su cuenta ha sido suspendida por la razón {{ $reason }}. Por favor, póngase en contacto con el soporte para obtener más información."
+            "body": "Su cuenta ha sido suspendida por la razón {{ reason }}. Por favor, póngase en contacto con el soporte para obtener más información."
         }
     },
     "customer_suspended": {
         "fr_FR": {
             "subject": "Votre compte a été suspendu",
             "button": "Contacter le support",
-            "body": "Votre compte a été suspendu pour la raison {{ $reason }}. Veuillez contacter le support pour plus d'informations."
+            "body": "Votre compte a été suspendu pour la raison {{ reason }}. Veuillez contacter le support pour plus d'informations."
         },
         "en_GB": {
             "subject": "Your account has been suspended",
             "button": "Contact support",
-            "body": "Your account has been suspended for the reason {{ $reason }}. Please contact support for more information."
+            "body": "Your account has been suspended for the reason {{ reason }}. Please contact support for more information."
         },
         "es_ES": {
             "subject": "Su cuenta ha sido suspendida",
             "button": "Contactar soporte",
-            "body": "Su cuenta ha sido suspendida por la razón {{ $reason }}. Por favor, póngase en contacto con el soporte para obtener más información."
+            "body": "Su cuenta ha sido suspendida por la razón {{ reason }}. Por favor, póngase en contacto con el soporte para obtener más información."
         }
     },
-
     "customer_reactivated": {
         "fr_FR": {
             "subject": "Votre compte a été réactivé",
@@ -53,104 +52,104 @@
     },
     "account_purge_reminder": {
         "fr_FR": {
-            "subject": "Compte inactif - suppression dans {{ $days }} jour(s)",
+            "subject": "Compte inactif - suppression dans {{ days }} jour(s)",
             "button": "Se connecter",
-            "body": "Votre compte {{ $app }} est inactif et sa suppression est planifiée dans {{ $days }} jour(s) afin de respecter notre politique de conservation des données.\nConnectez-vous avant cette date pour confirmer votre activité et annuler cette suppression."
+            "body": "Votre compte {{ app }} est inactif et sa suppression est planifiée dans {{ days }} jour(s) afin de respecter notre politique de conservation des données.\nConnectez-vous avant cette date pour confirmer votre activité et annuler cette suppression."
         },
         "en_GB": {
-            "subject": "Inactive account - deletion in {{ $days }} day(s)",
+            "subject": "Inactive account - deletion in {{ days }} day(s)",
             "button": "Log in",
-            "body": "Your {{ $app }} account has been inactive and is scheduled to be deleted in {{ $days }} day(s) to comply with our data-retention policy.\nLog in before this date to confirm your activity and cancel this deletion."
+            "body": "Your {{ app }} account has been inactive and is scheduled to be deleted in {{ days }} day(s) to comply with our data-retention policy.\nLog in before this date to confirm your activity and cancel this deletion."
         },
         "es_ES": {
-            "subject": "Cuenta inactiva - eliminación en {{ $days }} día(s)",
+            "subject": "Cuenta inactiva - eliminación en {{ days }} día(s)",
             "button": "Iniciar sesión",
-            "body": "Su cuenta {{ $app }} ha estado inactiva y está programada para eliminarse en {{ $days }} día(s) para cumplir con nuestra política de conservación de datos.\nInicie sesión antes de esta fecha para confirmar su actividad y cancelar esta eliminación."
+            "body": "Su cuenta {{ app }} ha estado inactiva y está programada para eliminarse en {{ days }} día(s) para cumplir con nuestra política de conservación de datos.\nInicie sesión antes de esta fecha para confirmar su actividad y cancelar esta eliminación."
         }
     },
     "customer_account_invitation": {
         "fr_FR": {
             "subject": "Invitation à accéder à un compte client",
             "button": "Accepter l'invitation",
-            "body": "Vous avez été invité à accéder au compte de {{ $owner->fullName }}. Si vous avez déjà un compte, cliquez sur le bouton ci-dessous pour vous connecter et accepter l'invitation. Sinon, créez votre compte ici : {{ $register_url }}"
+            "body": "Vous avez été invité à accéder au compte de {{ owner.fullName }}. Si vous avez déjà un compte, cliquez sur le bouton ci-dessous pour vous connecter et accepter l'invitation. Sinon, créez votre compte ici : {{ register_url }}"
         },
         "en_GB": {
             "subject": "Customer account access invitation",
             "button": "Accept invitation",
-            "body": "You have been invited to access {{ $owner->fullName }}'s account. If you already have an account, click the button below to sign in and accept the invitation. Otherwise, create your account here: {{ $register_url }}"
+            "body": "You have been invited to access {{ owner.fullName }}'s account. If you already have an account, click the button below to sign in and accept the invitation. Otherwise, create your account here: {{ register_url }}"
         },
         "es_ES": {
             "subject": "Invitación de acceso a una cuenta de cliente",
             "button": "Aceptar invitación",
-            "body": "Ha sido invitado a acceder a la cuenta de {{ $owner->fullName }}. Si ya tiene una cuenta, haga clic en el botón de abajo para iniciar sesión y aceptar la invitación. Si no, cree su cuenta aquí: {{ $register_url }}"
+            "body": "Ha sido invitado a acceder a la cuenta de {{ owner.fullName }}. Si ya tiene una cuenta, haga clic en el botón de abajo para iniciar sesión y aceptar la invitación. Si no, cree su cuenta aquí: {{ register_url }}"
         }
     },
     "customer_account_access_granted": {
         "fr_FR": {
             "subject": "Accès à un compte client accordé",
             "button": "Accéder à l'espace client",
-            "body": "Vous avez maintenant accès au compte de {{ $owner->fullName }}. Cliquez sur le bouton ci-dessous pour accéder à l'espace client."
+            "body": "Vous avez maintenant accès au compte de {{ owner.fullName }}. Cliquez sur le bouton ci-dessous pour accéder à l'espace client."
         },
         "en_GB": {
             "subject": "Customer account access granted",
             "button": "Open client area",
-            "body": "You now have access to {{ $owner->fullName }}'s account. Click the button below to open the client area."
+            "body": "You now have access to {{ owner.fullName }}'s account. Click the button below to open the client area."
         },
         "es_ES": {
             "subject": "Acceso a una cuenta de cliente concedido",
             "button": "Abrir área de cliente",
-            "body": "Ahora tiene acceso a la cuenta de {{ $owner->fullName }}. Haga clic en el botón de abajo para abrir el área de cliente."
+            "body": "Ahora tiene acceso a la cuenta de {{ owner.fullName }}. Haga clic en el botón de abajo para abrir el área de cliente."
         }
     },
     "invoice_paid": {
         "fr_FR": {
             "subject": "Votre facture a été payée",
             "button": "Voir la facture",
-            "body": "Veuillez cliquer sur le bouton ci-dessous pour afficher votre facture.<br/>\n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Nom</strong> : {{ $item->name }} <br/>\n<strong>Prix </strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach"
+            "body": "Veuillez cliquer sur le bouton ci-dessous pour afficher votre facture.<br/>\n<strong>Total</strong>: {{ invoice.total }} <br/>\n{{#invoice.items}}\n<strong>Nom</strong> : {{ name }} <br/>\n<strong>Prix </strong> : {{ price }} <br/>\n{{/invoice.items}}"
         },
         "en_GB": {
             "subject": "Your invoice has been paid",
             "button": "View invoice",
-            "body": "Please click on the button below to view your invoice.<br/>\n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Name</strong> : {{ $item->name }} <br/>\n<strong>Price </strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach"
+            "body": "Please click on the button below to view your invoice.<br/>\n<strong>Total</strong>: {{ invoice.total }} <br/>\n{{#invoice.items}}\n<strong>Name</strong> : {{ name }} <br/>\n<strong>Price </strong> : {{ price }} <br/>\n{{/invoice.items}}"
         },
         "es_ES": {
             "subject": "Su factura ha sido pagada",
             "button": "Ver factura",
-            "body": "Por favor, haga clic en el botón de abajo para ver su factura.<br/>\n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Nombre</strong> : {{ $item->name }} <br/>\n<strong>Precio</strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach"
+            "body": "Por favor, haga clic en el botón de abajo para ver su factura.<br/>\n<strong>Total</strong>: {{ invoice.total }} <br/>\n{{#invoice.items}}\n<strong>Nombre</strong> : {{ name }} <br/>\n<strong>Precio</strong> : {{ price }} <br/>\n{{/invoice.items}}"
         }
     },
     "notify_subscription_failed": {
         "fr_FR": {
             "subject": "Échec du paiement de votre abonnement",
             "button": "Voir mes méthodes de paiement",
-            "body": "Le paiement de votre abonnement a échoué avec la source {{ $source }} pour payer la facture {{ $invoice->id}}. Veuillez cliquer sur le bouton ci-dessous pour vérifier vos méthodes de paiement. \n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Nom</strong> : {{ $item->name }} <br/>\n<strong>Prix </strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach\n \n@if($retry) Le paiement sera réessayé dans 24 heures. @else Ceci est une notification, veuillez régler le paiement pour éviter la suspension de votre service. @endif"
+            "body": "Le paiement de votre abonnement a échoué avec la source {{ source }} pour payer la facture {{ invoice.id }}. Veuillez cliquer sur le bouton ci-dessous pour vérifier vos méthodes de paiement. \n<strong>Total</strong>: {{ invoice.total }} <br/>\n{{#invoice.items}}\n<strong>Nom</strong> : {{ name }} <br/>\n<strong>Prix </strong> : {{ price }} <br/>\n{{/invoice.items}}\n \n{{#retry}} Le paiement sera réessayé dans 24 heures. {{/retry}}{{^retry}} Ceci est une notification, veuillez régler le paiement pour éviter la suspension de votre service. {{/retry}}"
         },
         "en_GB": {
             "subject": "Failed to pay your subscription",
             "button": "View payment methods",
-            "body": "The payment of your subscription failed with the source {{ $source }} to pay the invoice {{ $invoice->id}}. Please click on the button below to check your payment methods. \n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Name</strong> : {{ $item->name }} <br/>\n<strong>Price </strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach\n \n@if($retry) The payment will be retried in 24 hours. @else This is a notification, please settle the payment to avoid the suspension of your service. @endif"
+            "body": "The payment of your subscription failed with the source {{ source }} to pay the invoice {{ invoice.id }}. Please click on the button below to check your payment methods. \n<strong>Total</strong>: {{ invoice.total }} <br/>\n{{#invoice.items}}\n<strong>Name</strong> : {{ name }} <br/>\n<strong>Price </strong> : {{ price }} <br/>\n{{/invoice.items}}\n \n{{#retry}} The payment will be retried in 24 hours. {{/retry}}{{^retry}} This is a notification, please settle the payment to avoid the suspension of your service. {{/retry}}"
         },
         "es_ES": {
             "subject": "Error en el pago de su suscripción",
             "button": "Ver métodos de pago",
-            "body": "El pago de su suscripción falló con la fuente {{ $source }} para pagar la factura {{ $invoice->id }}. Por favor, haga clic en el botón de abajo para verificar sus métodos de pago. \n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Nombre</strong> : {{ $item->name }} <br/>\n<strong>Precio</strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach\n@if($retry) El pago se volverá a intentar en 24 horas. @else Esta es una notificación, por favor, realice el pago para evitar la suspensión de su servicio. @endif"
+            "body": "El pago de su suscripción falló con la fuente {{ source }} para pagar la factura {{ invoice.id }}. Por favor, haga clic en el botón de abajo para verificar sus métodos de pago. \n<strong>Total</strong>: {{ invoice.total }} <br/>\n{{#invoice.items}}\n<strong>Nombre</strong> : {{ name }} <br/>\n<strong>Precio</strong> : {{ price }} <br/>\n{{/invoice.items}}\n{{#retry}} El pago se volverá a intentar en 24 horas. {{/retry}}{{^retry}} Esta es una notificación, por favor, realice el pago para evitar la suspensión de su servicio. {{/retry}}"
         }
     },
     "notify_expiration": {
         "fr_FR": {
             "subject": "Votre service expire bientôt",
             "button": "Renouveler le service",
-            "body": "Votre service {{ $service->name }} expire dans {{ $days }} jours. Veuillez cliquer sur le bouton ci-dessous pour renouveler votre service."
+            "body": "Votre service {{ service.name }} expire dans {{ days }} jours. Veuillez cliquer sur le bouton ci-dessous pour renouveler votre service."
         },
         "en_GB": {
             "subject": "Your service is about to expire",
             "button": "Renew service",
-            "body": "Your service {{ $service->name }} is about to expire in {{ $days }} days. Please click on the button below to renew your service."
+            "body": "Your service {{ service.name }} is about to expire in {{ days }} days. Please click on the button below to renew your service."
         },
         "es_ES": {
             "subject": "Su servicio está a punto de expirar",
             "button": "Renovar servicio",
-            "body": "Su servicio {{ $service->name }} está a punto de expirar en {{ $days }} días. Por favor, haga clic en el botón de abajo para renovar su servicio."
+            "body": "Su servicio {{ service.name }} está a punto de expirar en {{ days }} días. Por favor, haga clic en el botón de abajo para renovar su servicio."
         }
     },
     "custom": {
@@ -170,39 +169,38 @@
             "body": ""
         }
     },
-
     "service_suspended": {
         "fr_FR": {
             "subject": "Votre service a été suspendu",
             "button": "Voir le service",
-            "body": "Votre service {{ $service->name }} a été suspendu. @if($reason != null) Pour le motif suivant : {{ $reason }}@else Veuillez contacter le support pour plus d'informations. @endif"
+            "body": "Votre service {{ service.name }} a été suspendu. @if($reason != null) Pour le motif suivant : {{ reason }}@else Veuillez contacter le support pour plus d'informations. @endif"
         },
         "en_GB": {
             "subject": "Your service has been suspended",
             "button": "View service",
-            "body": "Your service {{ $service->name }} has been suspended. @if($reason != null) For the following reason : {{ $reason }}@else Please contact support for more information. @endif"
+            "body": "Your service {{ service.name }} has been suspended. @if($reason != null) For the following reason : {{ reason }}@else Please contact support for more information. @endif"
         },
         "es_ES": {
             "subject": "Su servicio ha sido suspendido",
             "button": "Ver servicio",
-            "body": "Su servicio {{ $service->name }} ha sido suspendido. @if($reason != null) Por la siguiente razón : {{ $reason }}@else Por favor, póngase en contacto con el soporte para obtener más información. @endif"
+            "body": "Su servicio {{ service.name }} ha sido suspendido. @if($reason != null) Por la siguiente razón : {{ reason }}@else Por favor, póngase en contacto con el soporte para obtener más información. @endif"
         }
     },
     "invoice_created": {
         "fr_FR": {
             "subject": "Nouvelle facture disponible",
             "button": "Voir la facture",
-            "body": "Veuillez cliquer sur le bouton ci-dessous pour afficher votre facture.<br/>\n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Nom</strong> : {{ $item->name }} <br/>\n<strong>Prix </strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach"
+            "body": "Veuillez cliquer sur le bouton ci-dessous pour afficher votre facture.<br/>\n<strong>Total</strong>: {{ invoice.total }} <br/>\n{{#invoice.items}}\n<strong>Nom</strong> : {{ name }} <br/>\n<strong>Prix </strong> : {{ price }} <br/>\n{{/invoice.items}}"
         },
         "en_GB": {
             "subject": "Your invoice has been created",
             "button": "View invoice",
-            "body": "Please click on the button below to view your invoice.<br/>\n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Name</strong> : {{ $item->name }} <br/>\n<strong>Price </strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach"
+            "body": "Please click on the button below to view your invoice.<br/>\n<strong>Total</strong>: {{ invoice.total }} <br/>\n{{#invoice.items}}\n<strong>Name</strong> : {{ name }} <br/>\n<strong>Price </strong> : {{ price }} <br/>\n{{/invoice.items}}"
         },
         "es_ES": {
             "subject": "Su factura ha sido creada",
             "button": "Ver factura",
-            "body": "Por favor, haga clic en el botón de abajo para ver su factura.<br/>\n<strong>Total</strong>: {{ formatted_price($invoice->total, $invoice->currency) }} <br/>\n@foreach($invoice->items as $item)\n<strong>Nombre</strong> : {{ $item->name }} <br/>\n<strong>Precio</strong> : {{ formatted_price($item->price(), $invoice->currency) }} <br/>\n@endforeach"
+            "body": "Por favor, haga clic en el botón de abajo para ver su factura.<br/>\n<strong>Total</strong>: {{ invoice.total }} <br/>\n{{#invoice.items}}\n<strong>Nombre</strong> : {{ name }} <br/>\n<strong>Precio</strong> : {{ price }} <br/>\n{{/invoice.items}}"
         }
     },
     "reset": {
@@ -243,68 +241,68 @@
         "fr_FR": {
             "subject": "Code de double authentification",
             "button": "Continuer la connexion",
-            "body": "Votre code de double authentification est : <strong>{{ $code }}</strong><br/>\nCe code est valide pendant {{ $expires_in }} minutes.<br/>\n@if($ip)<strong>Adresse IP</strong> : {{ $ip }}@endif"
+            "body": "Votre code de double authentification est : <strong>{{ code }}</strong><br/>\nCe code est valide pendant {{ expires_in }} minutes.<br/>\n{{#ip}}<strong>Adresse IP</strong> : {{ ip }}{{/ip}}"
         },
         "en_GB": {
             "subject": "Two-factor authentication code",
             "button": "Continue login",
-            "body": "Your two-factor authentication code is: <strong>{{ $code }}</strong><br/>\nThis code is valid for {{ $expires_in }} minutes.<br/>\n@if($ip)<strong>IP address</strong>: {{ $ip }}@endif"
+            "body": "Your two-factor authentication code is: <strong>{{ code }}</strong><br/>\nThis code is valid for {{ expires_in }} minutes.<br/>\n{{#ip}}<strong>IP address</strong>: {{ ip }}{{/ip}}"
         },
         "es_ES": {
             "subject": "Código de autenticación en dos factores",
             "button": "Continuar inicio de sesión",
-            "body": "Su código de autenticación en dos factores es: <strong>{{ $code }}</strong><br/>\nEste código es válido durante {{ $expires_in }} minutos.<br/>\n@if($ip)<strong>Dirección IP</strong>: {{ $ip }}@endif"
+            "body": "Su código de autenticación en dos factores es: <strong>{{ code }}</strong><br/>\nEste código es válido durante {{ expires_in }} minutos.<br/>\n{{#ip}}<strong>Dirección IP</strong>: {{ ip }}{{/ip}}"
         }
     },
     "support_admin_ticket_created": {
         "fr_FR": {
             "subject": "Nouveau ticket de support",
             "button": "Voir le ticket",
-            "body": "Un nouveau ticket de support a été créé dans un département où vous êtes attachés. Veuillez cliquer sur le bouton ci-dessous pour afficher le ticket.<br/>\n<strong>Sujet</strong>: {{ $ticket->subject }} <br/>\n<strong>Créé par</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Département</strong>: {{ $ticket->department->trans('name') }} <br/>\n<strong>Contenu</strong>: {{ $message }}"
+            "body": "Un nouveau ticket de support a été créé dans un département où vous êtes attachés. Veuillez cliquer sur le bouton ci-dessous pour afficher le ticket.<br/>\n<strong>Sujet</strong>: {{ ticket.subject }} <br/>\n<strong>Créé par</strong>: {{ ticket.customer.full_name }} <br/>\n<strong>Département</strong>: {{ ticket.department }} <br/>\n<strong>Contenu</strong>: {{ message }}"
         },
         "en_GB": {
             "subject": "New support ticket",
             "button": "View ticket",
-            "body": "A new support ticket has been created in a department where you are attached. Please click on the button below to view the ticket.<br/>\n<strong>Subject</strong>: {{ $ticket->subject }} <br/>\n<strong>Created by</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Department</strong>: {{ $ticket->department->trans('name') }} <br/>\n<strong>Content</strong>: {{ $message }}"
+            "body": "A new support ticket has been created in a department where you are attached. Please click on the button below to view the ticket.<br/>\n<strong>Subject</strong>: {{ ticket.subject }} <br/>\n<strong>Created by</strong>: {{ ticket.customer.full_name }} <br/>\n<strong>Department</strong>: {{ ticket.department }} <br/>\n<strong>Content</strong>: {{ message }}"
         },
         "es_ES": {
             "subject": "Nuevo ticket de soporte",
             "button": "Ver ticket",
-            "body": "Se ha creado un nuevo ticket de soporte en un departamento al que está adjunto. Por favor, haga clic en el botón de abajo para ver el ticket.<br/>\n<strong>Asunto</strong>: {{ $ticket->subject }} <br/>\n<strong>Creado por</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Departamento</strong>: {{ $ticket->department->trans('name') }} <br/>\n<strong>Contenido</strong>: {{ $message }}"
+            "body": "Se ha creado un nuevo ticket de soporte en un departamento al que está adjunto. Por favor, haga clic en el botón de abajo para ver el ticket.<br/>\n<strong>Asunto</strong>: {{ ticket.subject }} <br/>\n<strong>Creado por</strong>: {{ ticket.customer.full_name }} <br/>\n<strong>Departamento</strong>: {{ ticket.department }} <br/>\n<strong>Contenido</strong>: {{ message }}"
         }
     },
     "support_admin_ticket_reply": {
         "fr_FR": {
             "subject": "Nouvelle réponse à un ticket de support",
             "button": "Voir le ticket",
-            "body": "Une nouvelle réponse a été apportée à un ticket de support dans un département où vous êtes attachés. Veuillez cliquer sur le bouton ci-dessous pour afficher le ticket.<br/>\n<strong>Sujet</strong>: {{ $ticket->subject }} <br/>\n<strong>Créé par</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Département</strong>: {{ $ticket->department->trans('name') }} <br/>\n<strong>Contenu</strong>: {{ $message }}"
+            "body": "Une nouvelle réponse a été apportée à un ticket de support dans un département où vous êtes attachés. Veuillez cliquer sur le bouton ci-dessous pour afficher le ticket.<br/>\n<strong>Sujet</strong>: {{ ticket.subject }} <br/>\n<strong>Créé par</strong>: {{ ticket.customer.full_name }} <br/>\n<strong>Département</strong>: {{ ticket.department }} <br/>\n<strong>Contenu</strong>: {{ message }}"
         },
         "en_GB": {
             "subject": "New reply to a support ticket",
             "button": "View ticket",
-            "body": "A new reply has been made to a support ticket in a department where you are attached. Please click on the button below to view the ticket.<br/>\n<strong>Subject</strong>: {{ $ticket->subject }} <br/>\n<strong>Created by</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Department</strong>: {{ $ticket->department->trans('name') }} <br/>\n<strong>Content</strong>: {{ $message }}"
+            "body": "A new reply has been made to a support ticket in a department where you are attached. Please click on the button below to view the ticket.<br/>\n<strong>Subject</strong>: {{ ticket.subject }} <br/>\n<strong>Created by</strong>: {{ ticket.customer.full_name }} <br/>\n<strong>Department</strong>: {{ ticket.department }} <br/>\n<strong>Content</strong>: {{ message }}"
         },
         "es_ES": {
             "subject": "Nueva respuesta a un ticket de soporte",
             "button": "Ver ticket",
-            "body": "Se ha realizado una nueva respuesta a un ticket de soporte en un departamento al que está adjunto. Por favor, haga clic en el botón de abajo para ver el ticket.<br/>\n<strong>Asunto</strong>: {{ $ticket->subject }} <br/>\n<strong>Creado por</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Departamento</strong>: {{ $ticket->department->trans('name') }} <br/>\n<strong>Contenido</strong>: {{ $message }}"
+            "body": "Se ha realizado una nueva respuesta a un ticket de soporte en un departamento al que está adjunto. Por favor, haga clic en el botón de abajo para ver el ticket.<br/>\n<strong>Asunto</strong>: {{ ticket.subject }} <br/>\n<strong>Creado por</strong>: {{ ticket.customer.full_name }} <br/>\n<strong>Departamento</strong>: {{ ticket.department }} <br/>\n<strong>Contenido</strong>: {{ message }}"
         }
     },
     "support_customer_ticket_reply": {
         "fr_FR": {
             "subject": "Nouvelle réponse à votre ticket de support",
             "button": "Voir le ticket",
-            "body": "Une nouvelle réponse a été apportée à votre ticket de support. Veuillez cliquer sur le bouton ci-dessous pour afficher le ticket.<br/>\n<strong>Sujet</strong>: {{ $ticket->subject }} <br/>\n<strong>Créé par</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Département</strong>: {{ $ticket->department->trans('name') }} <br/>\n"
+            "body": "Une nouvelle réponse a été apportée à votre ticket de support. Veuillez cliquer sur le bouton ci-dessous pour afficher le ticket.<br/>\n<strong>Sujet</strong>: {{ ticket.subject }} <br/>\n<strong>Créé par</strong>: {{ ticket.customer.full_name }} <br/>\n<strong>Département</strong>: {{ ticket.department }} <br/>\n"
         },
         "en_GB": {
             "subject": "New reply to your support ticket",
             "button": "View ticket",
-            "body": "A new reply has been made to your support ticket. Please click on the button below to view the ticket.<br/>\n<strong>Subject</strong>: {{ $ticket->subject }} <br/>\n<strong>Created by</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Department</strong>: {{ $ticket->department->trans('name') }} <br/>\n"
+            "body": "A new reply has been made to your support ticket. Please click on the button below to view the ticket.<br/>\n<strong>Subject</strong>: {{ ticket.subject }} <br/>\n<strong>Created by</strong>: {{ ticket.customer.full_name }} <br/>\n<strong>Department</strong>: {{ ticket.department }} <br/>\n"
         },
         "es_ES": {
             "subject": "Nueva respuesta a su ticket de soporte",
             "button": "Ver ticket",
-            "body": "Se ha realizado una nueva respuesta a su ticket de soporte. Por favor, haga clic en el botón de abajo para ver el ticket.<br/>\n<strong>Asunto</strong>: {{ $ticket->subject }} <br/>\n<strong>Creado por</strong>: {{ $ticket->customer->fullName }} <br/>\n<strong>Departamento</strong>: {{ $ticket->department->trans('name') }} <br/>\n"
+            "body": "Se ha realizado una nueva respuesta a su ticket de soporte. Por favor, haga clic en el botón de abajo para ver el ticket.<br/>\n<strong>Asunto</strong>: {{ ticket.subject }} <br/>\n<strong>Creado por</strong>: {{ ticket.customer.full_name }} <br/>\n<strong>Departamento</strong>: {{ ticket.department }} <br/>\n"
         }
     }
 }

@@ -50,7 +50,8 @@
         "stancer/stancer": "^2.0",
         "stripe/stripe-php": "^13.7",
         "sumup/sumup-ecom-php-sdk": "^1.4",
-        "symfony/filesystem": "^7.3"
+        "symfony/filesystem": "^7.3",
+        "symfony/html-sanitizer": "^7.4"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.9",
