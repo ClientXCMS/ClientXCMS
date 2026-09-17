@@ -21,6 +21,7 @@ namespace App\Models\Helpdesk;
 
 use App\Models\Account\Customer;
 use App\Models\Admin\Admin;
+use App\Services\Content\SafeHtml;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -110,7 +111,9 @@ class SupportMessage extends Model
         $parser = new \Parsedown;
         $parser->setSafeMode(true);
 
-        return nl2br($parser->parse($this->message));
+        // Safe mode is the converter's own guard; the sanitizer is what this
+        // project relies on, since that converter has been unmaintained since 2019.
+        return app(SafeHtml::class)->sanitize(nl2br($parser->parse($this->message)));
     }
 
     public function containerClasses(string $view = 'customer')

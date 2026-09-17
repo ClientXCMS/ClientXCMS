@@ -20,6 +20,7 @@
 namespace App\Http\Requests\Store;
 
 use App\Models\Store\Pricing;
+use App\Services\Content\SafeHtml;
 use App\Services\Store\PricingService;
 use App\Traits\PricingRequestTrait;
 use Illuminate\Foundation\Http\FormRequest;
@@ -90,7 +91,7 @@ class UpdateProductRequest extends FormRequest
 
         return array_merge([
             'name' => 'string|max:255',
-            'description' => ['string', new \App\Rules\NoScriptOrPhpTags],
+            'description' => ['string'],
             'status' => 'string|in:active,hidden,unreferenced',
             'group_id' => 'integer|exists:groups,id',
             'stock' => 'integer',
@@ -119,6 +120,12 @@ class UpdateProductRequest extends FormRequest
             'pricing' => $convertedPricing,
             'pinned' => $this->pinned == 'true' ? '1' : '0',
         ]);
+
+        // Admin product cards render the description without escaping. Only
+        // touch it when it was sent: adding the key would fail its own rules.
+        if ($this->has('description')) {
+            $this->merge(['description' => app(SafeHtml::class)->sanitize($this->input('description'))]);
+        }
     }
 
     public function update()

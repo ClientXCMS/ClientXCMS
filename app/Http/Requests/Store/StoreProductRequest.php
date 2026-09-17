@@ -21,6 +21,7 @@ namespace App\Http\Requests\Store;
 
 use App\Models\Store\Pricing;
 use App\Models\Store\Product;
+use App\Services\Content\SafeHtml;
 use App\Services\Store\PricingService;
 use App\Traits\PricingRequestTrait;
 use Illuminate\Foundation\Http\FormRequest;
@@ -57,7 +58,7 @@ class StoreProductRequest extends FormRequest
 
         return array_merge([
             'name' => 'required|string|max:255',
-            'description' => ['string', 'required', 'max:65535', new \App\Rules\NoScriptOrPhpTags],
+            'description' => ['string', 'required', 'max:65535'],
             'status' => 'required|string|in:active,hidden,unreferenced',
             'group_id' => 'required|integer|exists:groups,id',
             'stock' => 'required|integer',
@@ -85,6 +86,12 @@ class StoreProductRequest extends FormRequest
             'pricing' => $convertedPricing,
             'pinned' => $this->pinned == 'true' ? '1' : '0',
         ]);
+
+        // Admin product cards render the description without escaping. Only
+        // touch it when it was sent: adding the key would fail its own rules.
+        if ($this->has('description')) {
+            $this->merge(['description' => app(SafeHtml::class)->sanitize($this->input('description'))]);
+        }
     }
 
     public function store()

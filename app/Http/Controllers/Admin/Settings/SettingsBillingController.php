@@ -73,7 +73,7 @@ class SettingsBillingController extends Controller
             'store_vat_enabled' => 'in:true,false',
             'store_currency' => ['required'],
             'invoice_terms' => 'string|max:1000',
-            'app_address' => ['required', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags],
+            'app_address' => ['required', 'string', 'max:1000'],
             'billing_invoice_prefix' => 'required|string|max:10',
             'billing_mode' => 'required|in:invoice,proforma',
             'remove_pending_invoice' => 'required|integer|min:0',
