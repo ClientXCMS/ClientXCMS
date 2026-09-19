@@ -279,6 +279,27 @@ class UpdaterManagerHardeningTest extends TestCase
         );
     }
 
+    public function test_updating_never_prunes_a_git_directory_cloned_directly_into_the_extension(): void
+    {
+        // No update archive ever ships a .git: if an extension's directory
+        // ever holds a real one (cloned in place instead of symlinked from
+        // outside), pruning must never read that as "removed upstream".
+        (new Filesystem)->mkdir($this->projectRoot.'/modules/demo/.git/objects');
+        file_put_contents($this->projectRoot.'/modules/demo/.git/HEAD', 'ref: refs/heads/main');
+        file_put_contents($this->projectRoot.'/modules/demo/.git/objects/deadbeef', 'binary object');
+        file_put_contents($this->projectRoot.'/modules/demo/module.json', '{"uuid":"demo"}');
+
+        $archive = $this->sandbox.'/package.zip';
+        $this->makeZip($archive, [
+            'package/modules/demo/module.json' => '{"uuid":"demo","version":"2"}',
+        ]);
+
+        (new UpdaterManager)->extractExtension($archive, $this->extractDir, ExtensionType::Module, 'demo');
+
+        $this->assertFileExists($this->projectRoot.'/modules/demo/.git/HEAD', 'pruning must never reach into .git');
+        $this->assertFileExists($this->projectRoot.'/modules/demo/.git/objects/deadbeef');
+    }
+
     public function test_updating_never_touches_a_file_outside_the_extension_directory_while_pruning(): void
     {
         (new Filesystem)->mkdir($this->projectRoot.'/modules/demo');

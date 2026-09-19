@@ -92,23 +92,52 @@ class UpdaterManager
 
     /**
      * Removes files the extension's own directory still has but the new
-     * archive no longer ships (renames, deletions upstream). mirror()'s
-     * delete option is only safe when origin and target are scoped to the
-     * very same directory tree: the outer mirror() call in extractArchive()
-     * confines *writes* to the extension via $confine, but Symfony reuses
-     * that same iterator to decide *deletions* against base_path() itself
-     * when delete=>true, which would reach far outside the extension. A
-     * second, self-contained mirror() 1:1 on the extension's own directory
-     * sidesteps that by letting Symfony's default (null iterator) scoping
-     * apply on both sides.
+     * archive no longer ships (renames, deletions upstream). This deliberately
+     * does NOT use mirror()'s built-in 'delete' option: Symfony reuses the
+     * same iterator for both the copy loop (walks the origin) and the delete
+     * loop (expects to walk the target), so it cannot be handed a filtered
+     * iterator without breaking one of the two. It also has no way to exclude
+     * a path from deletion - if an extension's directory ever holds an actual
+     * .git (cloned there directly instead of symlinked in from outside, which
+     * is how this project's own dev setup works), an upstream archive never
+     * ships one, so a blind mirror-delete would read that as "removed
+     * upstream" and erase the whole history one object at a time. Walking the
+     * target ourselves with ignoreVCS() lets us keep that path out of reach
+     * unconditionally, not just as a side effect of how it happens to be laid
+     * out on disk.
      */
     private function pruneFilesRemovedUpstream(string $root, ExtensionType $type, string $uuid): void
     {
         $source = $root.DIRECTORY_SEPARATOR.$type->path($uuid);
-        if (! is_dir($source)) {
+        $target = $type->absolutePath($uuid);
+        if (! is_dir($source) || ! is_dir($target)) {
             return;
         }
-        (new Filesystem)->mirror($source, $type->absolutePath($uuid), null, ['override' => true, 'delete' => true]);
+
+        $shipped = [];
+        foreach ((new Finder)->in($source)->files()->ignoreDotFiles(false)->ignoreVCS(false) as $file) {
+            $shipped[substr($file->getPathname(), strlen($source) + 1)] = true;
+        }
+
+        $fileSystem = new Filesystem;
+        $obsoleteDirs = [];
+        foreach ((new Finder)->in($target)->ignoreDotFiles(false)->ignoreVCS(true) as $entry) {
+            $relative = substr($entry->getPathname(), strlen($target) + 1);
+            if ($entry->isDir()) {
+                $obsoleteDirs[] = $entry->getPathname();
+            } elseif (! isset($shipped[$relative])) {
+                $fileSystem->remove($entry->getPathname());
+            }
+        }
+
+        // Deepest paths first, so a directory only left empty by the removals
+        // above is itself removed once nothing references it any more.
+        usort($obsoleteDirs, static fn (string $a, string $b): int => strlen($b) <=> strlen($a));
+        foreach ($obsoleteDirs as $dir) {
+            if (is_dir($dir) && (new Finder)->in($dir)->depth('== 0')->hasResults() === false) {
+                $fileSystem->remove($dir);
+            }
+        }
     }
 
     private function extractArchive(string $file, string $to, ?\Closure $confine, ?\Closure $afterMirror = null)
