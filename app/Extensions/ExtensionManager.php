@@ -274,14 +274,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         if ($api == null) {
             throw new ExtensionException('Extension not found in the API');
         }
-        $extensions[$type] = collect($extensions[$type] ?? [])->map(function ($item) use ($extension, $api) {
-            if ($item['uuid'] == $extension) {
-                $item['version'] = $api['version'];
-                $item['api'] = $api;
-            }
-
-            return $item;
-        })->toArray();
+        $extensions[$type] = self::upsertLocalEntry($extensions[$type] ?? [], $type, $extension, $api);
 
         try {
             (new UpdaterManager)->update($extension, ExtensionType::fromAny($type));
@@ -289,6 +282,40 @@ class ExtensionManager extends ExtensionCollectionsManager
         } catch (\Exception $e) {
             throw new ExtensionException('Error in UpdaterManager: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Updates the matching local entry if one exists, otherwise registers a
+     * new one - so an extension already present on disk but never installed
+     * through the app (cloned in by a dev tool, or left behind by a failed
+     * previous install) gets picked up by its first successful update
+     * instead of staying unregistered forever, one map() over an entry that
+     * was never there to match.
+     */
+    private static function upsertLocalEntry(array $entries, string $type, string $uuid, array $api): array
+    {
+        $matched = false;
+        $entries = collect($entries)->map(function ($item) use ($uuid, $api, &$matched) {
+            if ($item['uuid'] == $uuid) {
+                $matched = true;
+                $item['version'] = $api['version'];
+                $item['api'] = $api;
+            }
+
+            return $item;
+        });
+        if (! $matched) {
+            $entries->push([
+                'uuid' => $uuid,
+                'version' => $api['version'],
+                'type' => $type,
+                'enabled' => false,
+                'installed' => true,
+                'api' => $api,
+            ]);
+        }
+
+        return $entries->values()->toArray();
     }
 
     public function checkPrerequisitesForEnable(string $type, string $extension): array
