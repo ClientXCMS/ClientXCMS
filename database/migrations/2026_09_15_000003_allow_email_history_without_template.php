@@ -9,11 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if ($this->templateForeignKeyExists()) {
-            Schema::table('email_messages', function (Blueprint $table) {
-                $table->dropForeign(['template']);
-            });
-        }
+        $this->dropTemplateForeignKey();
 
         Schema::table('email_messages', function (Blueprint $table) {
             $table->unsignedBigInteger('template')->nullable()->change();
@@ -26,11 +22,7 @@ return new class extends Migration
         // Rows archived without a template have no equivalent in the old shape.
         DB::table('email_messages')->whereNull('template')->delete();
 
-        if ($this->templateForeignKeyExists()) {
-            Schema::table('email_messages', function (Blueprint $table) {
-                $table->dropForeign(['template']);
-            });
-        }
+        $this->dropTemplateForeignKey();
 
         Schema::table('email_messages', function (Blueprint $table) {
             $table->unsignedBigInteger('template')->nullable(false)->change();
@@ -38,14 +30,15 @@ return new class extends Migration
         });
     }
 
-    private function templateForeignKeyExists(): bool
+    // Drops by the name the database reports: dropForeign(['template']) rebuilds a conventional name that a restored dump may not use.
+    private function dropTemplateForeignKey(): void
     {
         foreach (Schema::getForeignKeys('email_messages') as $foreignKey) {
             if ($foreignKey['columns'] === ['template'] && $foreignKey['foreign_table'] === 'email_templates') {
-                return true;
+                Schema::table('email_messages', function (Blueprint $table) use ($foreignKey) {
+                    $table->dropForeign($foreignKey['name']);
+                });
             }
         }
-
-        return false;
     }
 };
