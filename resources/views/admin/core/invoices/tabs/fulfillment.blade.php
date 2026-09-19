@@ -79,7 +79,7 @@
                         <form method="POST" action="{{ route($routePath . '.cancelitem', ['invoiceItem' => $item, 'invoice' => $invoice]) }}"
                             class="confirmation-popup" data-text="{{ __($translatePrefix .'.show.fulfillment.confirmation.cancel_title') }}" data-cancel-button-text="{{ __($translatePrefix .'.show.fulfillment.confirmation.cancel') }}" data-confirm-button-text="{{ __($translatePrefix .'.show.fulfillment.confirmation.confirm') }}">
                             @csrf
-                            <button class="inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-semibold bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            <button class="btn btn-danger btn-xs inline-flex items-center">
                                 <i class="bi bi-x-circle me-1"></i> {{ __('global.cancel') }}
                             </button>
                         </form>
@@ -156,7 +156,7 @@
                 <form method="POST" action="{{ route($routePath . '.cancelitem', ['invoiceItem' => $item, 'invoice' => $invoice]) }}"
                     onsubmit="return confirm('{{ __($translatePrefix .'.fulfillment.confirm_cancel') }}');">
                     @csrf
-                    <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-xs font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    <button class="btn btn-danger btn-xs inline-flex w-full items-center justify-center gap-2">
                         <i class="bi bi-x-circle"></i> {{ __('global.cancel') }}
                     </button>
                 </form>

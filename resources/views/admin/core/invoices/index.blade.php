@@ -46,7 +46,7 @@
                                 </p>
                             </div>
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                @include('admin/shared/mass_actions/header', [
+                                @include('admin/shared/mass-actions/header', [
                                     'searchFields' => $searchFields,
                                     'search' => $search,
                                     'searchField' => $searchField,
@@ -264,7 +264,7 @@
                         </div>
 
                         <div>
-                            @include('admin/shared/mass_actions/select', [
+                            @include('admin/shared/mass-actions/select', [
                                 'mass_actions' => $mass_actions,
                                 'items' => $items,
                             ])
@@ -333,6 +333,6 @@
             </div>
         </div>
     @endif
-    @include('admin/shared/mass_actions/modal')
+    @include('admin/shared/mass-actions/modal')
 
 @endsection

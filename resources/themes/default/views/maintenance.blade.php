@@ -28,7 +28,7 @@
     {!! app('seo')->head() !!}
     {!! app('seo')->favicon() !!}
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body class="{{is_darkmode() ? 'dark' : '' }} flex flex-col h-full">
 

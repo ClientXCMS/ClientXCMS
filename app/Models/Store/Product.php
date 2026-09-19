@@ -34,6 +34,7 @@ use App\Services\Domain\DomainPricingService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 /**
  * @OA\Schema (
@@ -333,8 +334,17 @@ class Product extends Model
     {
         if ($this->type === ProductTypeInterface::DOMAIN) {
             $tld = request('tld');
+            if ($tld !== null && ! is_string($tld)) {
+                return [];
+            }
             if ($tld === null) {
-                $tld = DomainTld::where('status', 'active')->orderBy('extension')->value('extension');
+                $tld = DomainTld::where('status', 'active')
+                    ->whereHas('prices', function ($query) use ($currency) {
+                        $query->where('action', DomainPricingService::ACTION_REGISTER);
+                        if ($currency !== null) {
+                            $query->where('currency', $currency);
+                        }
+                    })->orderBy('extension')->value('extension');
             }
 
             return $tld ? app(DomainPricingService::class)->availableForTld($tld, $currency) : [];
@@ -347,6 +357,7 @@ class Product extends Model
     {
         if ($this->type === ProductTypeInterface::DOMAIN) {
             return DomainTld::where('status', 'active')->whereHas('prices', function ($query) use ($currency) {
+                $query->where('action', DomainPricingService::ACTION_REGISTER);
                 if ($currency !== null) {
                     $query->where('currency', $currency);
                 }
@@ -359,10 +370,17 @@ class Product extends Model
     public function getPriceByCurrency(string $currency, ?string $recurring = null): \App\DTO\Store\ProductPriceDTO
     {
         if ($this->type === ProductTypeInterface::DOMAIN) {
-            $tld = request('tld') ?? DomainTld::where('status', 'active')->orderBy('extension')->value('extension');
-            $price = $tld ? app(DomainPricingService::class)->priceFor($tld, $currency, $recurring ?? 'annually') : null;
+            $tld = request('tld');
+            if ($tld !== null && ! is_string($tld)) {
+                throw new \UnexpectedValueException('Invalid domain extension.');
+            }
+            $tld ??= DomainTld::where('status', 'active')
+                ->whereHas('prices', fn ($query) => $query->where('action', DomainPricingService::ACTION_REGISTER)->where('currency', $currency))
+                ->orderBy('extension')->value('extension');
+            // domain products are always billed annually, so we can ignore the $recurring parameter here
+            $price = $tld ? app(DomainPricingService::class)->priceFor($tld, $currency, 'annually') : null;
 
-            return $price ?? new \App\DTO\Store\ProductPriceDTO(0, 0, $currency, $recurring ?? 'annually');
+            return $price ?? throw new \UnexpectedValueException('No exact domain price is available for this product.');
         }
 
         return $this->traitGetPriceByCurrency($currency, $recurring);
@@ -410,13 +428,140 @@ class Product extends Model
 
     public function getMetadataLines(): array
     {
-        $lines = explode('[--]', $this->getMetadata('product_description'));
-        $lines = array_merge($lines, explode('[--]', $this->group->getMetadata('group_description') ?? ''));
-        $lines = array_map(function ($line) {
-            return trim($line);
-        }, $lines);
+        return array_values(array_filter(array_map(
+            fn (array $item) => trim($item['text'] ?? ''),
+            $this->getProductDescriptionItems()
+        )));
+    }
 
-        return array_filter($lines);
+    /**
+     * Return the short product description as structured, localized items.
+     * Legacy `[--]`, `v ` and `x ` metadata remains readable.
+     */
+    public function getProductDescriptionItems(?string $locale = null): array
+    {
+        $items = self::parseProductDescription($this->getMetadata('product_description'));
+        $translation = json_decode($this->trans('product_description', '', $locale), true);
+        $translatedItems = is_array($translation) && ($translation['version'] ?? null) === 2
+            ? ($translation['items'] ?? [])
+            : [];
+
+        foreach ($items as &$item) {
+            if (isset($translatedItems[$item['id']]) && trim((string) $translatedItems[$item['id']]) !== '') {
+                $item['text'] = trim((string) $translatedItems[$item['id']]);
+            }
+        }
+        unset($item);
+
+        if ($this->group) {
+            $groupItems = self::parseProductDescription($this->group->getMetadata('group_description'));
+            $items = array_merge($items, $groupItems);
+        }
+
+        return $items;
+    }
+
+    public static function parseProductDescription(?string $value): array
+    {
+        if ($value === null || trim($value) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+        if (is_array($decoded) && ($decoded['version'] ?? null) === 2 && is_array($decoded['items'] ?? null)) {
+            return array_values(array_filter(array_map(function ($item) {
+                if (! is_array($item) || trim((string) ($item['text'] ?? '')) === '') {
+                    return null;
+                }
+
+                return [
+                    'id' => (string) ($item['id'] ?? Str::uuid()),
+                    'icon' => self::validProductDescriptionIcon($item['icon'] ?? null),
+                    'text' => trim((string) $item['text']),
+                ];
+            }, $decoded['items'])));
+        }
+
+        return array_values(array_filter(array_map(function ($line) {
+            $line = trim($line);
+            if ($line === '') {
+                return null;
+            }
+
+            $icon = null;
+            if (str_starts_with($line, 'v ')) {
+                $icon = 'bi bi-check-lg';
+                $line = substr($line, 2);
+            } elseif (str_starts_with($line, 'x ')) {
+                $icon = 'bi bi-x-lg';
+                $line = substr($line, 2);
+            }
+
+            return ['id' => (string) Str::uuid(), 'icon' => $icon, 'text' => trim($line)];
+        }, explode('[--]', $value))));
+    }
+
+    public static function validProductDescriptionIcon(?string $icon): ?string
+    {
+        $icon = trim((string) $icon);
+
+        return preg_match('/^bi bi-[a-z0-9]+(?:-[a-z0-9]+)*$/', $icon) ? $icon : null;
+    }
+
+    public function syncProductDescriptions(array $items, array $translations = []): void
+    {
+        $normalized = [];
+        $usedIds = [];
+        foreach ($items as $item) {
+            $text = trim((string) ($item['text'] ?? ''));
+            if ($text === '') {
+                continue;
+            }
+            $id = trim((string) ($item['id'] ?? ''));
+            if (! preg_match('/^[A-Za-z0-9_-]{1,64}$/', $id) || isset($usedIds[$id])) {
+                $id = (string) Str::uuid();
+            }
+            $usedIds[$id] = true;
+            $normalized[] = [
+                'id' => $id,
+                'icon' => self::validProductDescriptionIcon($item['icon'] ?? null),
+                'text' => $text,
+            ];
+        }
+
+        $this->translations()->where('key', 'product_description')->delete();
+        \Cache::forget('translations_'.self::class.'_'.$this->id);
+        if ($normalized === []) {
+            $this->detachMetadata('product_description');
+
+            return;
+        }
+
+        $this->attachMetadata('product_description', json_encode([
+            'version' => 2,
+            'items' => $normalized,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        $ids = array_column($normalized, 'id');
+        foreach ($translations as $locale => $localizedItems) {
+            $contents = [];
+            foreach ((array) $localizedItems as $id => $text) {
+                if (in_array((string) $id, $ids, true) && trim((string) $text) !== '') {
+                    $contents[(string) $id] = trim((string) $text);
+                }
+            }
+            if ($contents !== []) {
+                $this->saveTranslation('product_description', (string) $locale, json_encode([
+                    'version' => 2,
+                    'items' => $contents,
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            }
+        }
+    }
+
+    public function formattedDescriptionLines(): array
+    {
+        return array_values(array_filter(array_map('trim', preg_split('/\R/u', $this->formattedDescription('')) ?: [])));
     }
 
     public function isNotValid(bool $canUnreferenced = false)
@@ -434,6 +579,6 @@ class Product extends Model
 
     public function formattedDescription(string $a = '- '): string
     {
-        return \App\Helpers\StringHTML::htmlToPlainLines($this->description, $a);
+        return \App\Helpers\StringHTML::htmlToPlainLines($this->description ?? '', $a);
     }
 }

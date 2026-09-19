@@ -58,8 +58,11 @@
                                 @include('admin/shared/select', ['name' => 'type', 'label' => __($translatePrefix . '.type'), 'options' => $types, 'value' => $item->type])
                             </div>
 
-                            <div class="flex flex-col">
-                                @include('admin/shared/input', ['name' => 'hostname', 'label' => __($translatePrefix . '.hostname'), 'value' => old('hostname', $item->hostname), 'attributes' => ['autocomplete' => 'off']])
+                            <div class="flex flex-col" id="hostname-input-container">
+                                @include('admin/shared/input', ['name' => 'hostname', 'label' => __($translatePrefix . '.hostname'), 'value' => old('hostname', $item->hostname), 'attributes' => ['autocomplete' => 'off', 'data-server-hostname-input' => true]])
+                            </div>
+                            <div class="flex-col hidden" id="registrar-select-container">
+                                @include('admin/shared/select', ['name' => 'hostname', 'id' => 'registrar-hostname', 'label' => 'Registrar', 'options' => $registrars, 'value' => old('hostname', $item->hostname), 'attributes' => ['data-server-registrar-select' => true, 'disabled' => true]])
                             </div>
 
                             <div class="flex flex-col">
@@ -69,8 +72,12 @@
                                 @include('admin/shared/status-select', ['value' => $item->status])
                             </div>
 
-                            <div class="flex flex-col">
+                            <div class="flex flex-col" id="port-container">
                                 @include('admin/shared/input', ['name' => 'port', 'label' => __($translatePrefix . '.port'), 'value' => old('port', $item->port), 'attributes' => ['autocomplete' => 'off']])
+                            </div>
+
+                            <div class="hidden flex-col justify-center" id="test-mode-container">
+                                @include('admin/shared/checkbox', ['name' => 'test_mode', 'label' => 'Test mode', 'checked' => old('test_mode', $item->isTestMode())])
                             </div>
 
                             <div class="flex flex-col">

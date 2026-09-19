@@ -60,9 +60,8 @@ class NewPasswordController extends Controller
         $status = $this->broker()->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user) use ($request) {
-                $hash = Hash::driver('bcrypt');
                 $user->forceFill([
-                    'password' => $hash->make($request->password),
+                    'password' => Hash::make($request->password),
                     'remember_token' => Str::random(60),
                 ])->save();
                 $user->revokeAllTwoFactorTrust();

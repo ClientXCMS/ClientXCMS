@@ -19,7 +19,6 @@
 
 namespace App\Http\Controllers\Admin\Personalization;
 
-use App\DTO\Core\Extensions\ThemeSectionDTO;
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Models\Admin\Permission;
 use App\Models\Personalization\Section;
@@ -65,7 +64,6 @@ class SectionController extends AbstractCrudController
 
             return back()->with('error', __('personalization.sections.errors.notfound'));
         }
-        $content = ThemeSectionDTO::fromModel($section)->getContent();
         $pages = collect($pages)->mapWithKeys(function ($item) {
             return [$item['url'] => $item['title']];
         })->toArray();
@@ -107,7 +105,6 @@ class SectionController extends AbstractCrudController
 
         return $this->showView([
             'item' => $section,
-            'content' => $content,
             'pages' => $pages,
             'themes' => $themes,
             'section' => $section,
@@ -129,17 +126,13 @@ class SectionController extends AbstractCrudController
     public function update(Request $request, Section $section)
     {
         staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
+        // Markup comes from the theme. The admin sets where a section shows and
+        // what its declared fields hold, never what it is made of.
         $validated = $request->validate([
-            'content' => ['nullable', 'string', new \App\Rules\ValidHtmlWithoutBlade],
             'url' => 'required',
             'theme_uuid' => 'required',
         ]);
         $validated['is_active'] = $request->has('is_active');
-        if (has_dangerous_content($request->get('content'))) {
-            return back()->with('error', __('personalization.sections.errors.sanitized_content'))->withInput();
-        }
-        unset($validated['content']);
-        $section->saveContent($request->get('content'));
         $section->update($validated);
         ThemeManager::clearCache();
 
@@ -153,7 +146,7 @@ class SectionController extends AbstractCrudController
         $section->save();
         ThemeManager::clearCache();
 
-        return back();
+        return $this->updateRedirect($section);
     }
 
     public function restore(Section $section)

@@ -86,7 +86,7 @@ class InstallController extends Controller
             'password' => 'required|string|min:8',
             'send_telemetry' => 'nullable',
         ]);
-        $data['password'] = bcrypt($data['password']);
+        $data['password'] = \Hash::make($data['password']);
         $data['username'] = $data['firstname'].' '.$data['lastname'];
         $data['role_id'] = Role::first()->id;
         $data['email'] = strtolower($data['email']);

@@ -21,20 +21,25 @@ namespace App\Models\Provisioning;
 
 use App\Abstracts\SupportRelateItemTrait;
 use App\Contracts\Notifications\HasNotifiableVariablesInterface;
+use App\Contracts\Notifications\ProvidesMailData;
+use App\Contracts\Store\ProductTypeInterface;
 use App\Core\NoneProductType;
 use App\DTO\Store\ConfigOptionDTO;
 use App\DTO\Store\ProductPriceDTO;
 use App\Mail\Service\NotifyExpirationEmail;
 use App\Models\Account\Customer;
 use App\Models\Billing\ConfigOption;
+use App\Models\Billing\InvoiceItem;
 use App\Models\Billing\Traits\PricingInteractTrait;
 use App\Models\Billing\Upgrade;
 use App\Models\Store\Basket\BasketRow;
 use App\Models\Store\Coupon;
+use App\Models\Store\DomainTld;
 use App\Models\Store\Pricing;
 use App\Models\Store\Product;
 use App\Models\Traits\HasMetadata;
 use App\Models\Traits\Loggable;
+use App\Services\Domain\DomainPricingService;
 use App\Services\Store\PricingService;
 use App\Services\Store\RecurringService;
 use Carbon\Carbon;
@@ -131,9 +136,15 @@ use Illuminate\Support\Str;
  *
  * @mixin \Eloquent
  */
-class Service extends Model implements HasNotifiableVariablesInterface
+class Service extends Model implements HasNotifiableVariablesInterface, ProvidesMailData
 {
-    use HasFactory, HasMetadata, Loggable, PricingInteractTrait, SoftDeletes, SupportRelateItemTrait, Traits\ServerTypeTrait;
+    use HasFactory, HasMetadata, Loggable, SoftDeletes, SupportRelateItemTrait, Traits\ServerTypeTrait;
+    use PricingInteractTrait {
+        pricingAvailable as private traitPricingAvailable;
+        getPriceByCurrency as private traitGetPriceByCurrency;
+        hasBilling as private traitHasBilling;
+        hasPricesForCurrency as private traitHasPricesForCurrency;
+    }
 
     const STATUS_ACTIVE = 'active';
 
@@ -389,9 +400,12 @@ class Service extends Model implements HasNotifiableVariablesInterface
 
     public static function getShouldExpire()
     {
+        $expireAfterDays = (int) setting('days_before_expiration', 7);
+
         return self::where('status', self::STATUS_SUSPENDED)
+            ->whereDoesntHave('metadata', fn ($query) => $query->where('key', 'disable_expiration'))
             ->whereNotNull('expires_at')
-            ->whereRaw('NOW() >= DATE_ADD(expires_at, INTERVAL ? DAY)', [setting('days_before_expiration')])
+            ->where('expires_at', '<=', now()->subDays($expireAfterDays))
             ->get();
     }
 
@@ -413,6 +427,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         $suspendAfterDays = (int) setting('services_suspend_after_unpaid_days', 0);
 
         return self::whereIn('status', [self::STATUS_ACTIVE, self::STATUS_CANCELLED])
+            ->whereDoesntHave('metadata', fn ($query) => $query->where('key', 'disable_suspension'))
             ->where(function ($query) {
                 $query->whereNull('cancelled_at')
                     ->orWhere('cancelled_at', '<=', now());
@@ -427,7 +442,7 @@ class Service extends Model implements HasNotifiableVariablesInterface
         return self::whereNotNull('cancelled_at')
             ->whereNotNull('cancelled_reason')
             ->where('is_cancelled', false)
-            ->whereRaw('NOW() >= cancelled_at')
+            ->where('cancelled_at', '<=', now())
             ->get();
     }
 
@@ -436,18 +451,20 @@ class Service extends Model implements HasNotifiableVariablesInterface
         $retentionDays = (int) setting('services_expire_and_delete_after_days', 90);
 
         return self::where('status', self::STATUS_EXPIRED)
-            ->whereRaw('NOW() >= DATE_ADD(expires_at, INTERVAL ? DAY)', [$retentionDays])
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', now()->subDays($retentionDays))
             ->get();
     }
 
     public static function getShouldNotifyExpiration(array $days)
     {
         return self::where('status', self::STATUS_ACTIVE)
+            ->whereDoesntHave('metadata', fn ($query) => $query->whereIn('key', ['disable_expiration', 'disable_notify_expiration']))
             ->whereNull('cancelled_at')
             ->whereNotNull('expires_at')
             ->where(function ($query) use ($days) {
                 foreach ($days as $day) {
-                    $query->orWhereRaw('DATEDIFF(expires_at, NOW()) = ?', [$day]);
+                    $query->orWhereDate('expires_at', now()->addDays((int) $day)->toDateString());
                 }
             })->get();
     }
@@ -475,10 +492,79 @@ class Service extends Model implements HasNotifiableVariablesInterface
         });
     }
 
+    public function pricingAvailable(?string $currency = null): array
+    {
+        if ($this->type !== ProductTypeInterface::DOMAIN) {
+            return $this->traitPricingAvailable($currency);
+        }
+        $extension = $this->domainPricingExtension();
+        if ($extension === null) {
+            return [];
+        }
+        $billings = ['annually', 'biennially', 'triennially'];
+
+        return collect(app(DomainPricingService::class)->availableForTld(
+            $extension, $currency ?? $this->currency, DomainPricingService::ACTION_RENEW
+        ))->filter(fn (ProductPriceDTO $price) => in_array($price->recurring, $billings, true))
+            ->sortBy(fn (ProductPriceDTO $price) => array_search($price->recurring, $billings, true))
+            ->values()->all();
+    }
+
+    public function getPriceByCurrency(string $currency, ?string $recurring = null): ProductPriceDTO
+    {
+        if ($this->type !== ProductTypeInterface::DOMAIN) {
+            return $this->traitGetPriceByCurrency($currency, $recurring);
+        }
+        $billing = $recurring ?? $this->billing;
+        $price = collect($this->pricingAvailable($currency))->first(
+            fn (ProductPriceDTO $price) => $price->recurring === $billing
+        );
+        if ($price === null) {
+            throw new \App\Exceptions\WrongPaymentException('Domain renewal price is not configured for this TLD, currency and billing period');
+        }
+
+        return $price;
+    }
+
+    public function hasBilling(string $billing): bool
+    {
+        if ($this->type !== ProductTypeInterface::DOMAIN) {
+            return $this->traitHasBilling($billing);
+        }
+
+        return collect($this->pricingAvailable($this->currency))->contains(
+            fn (ProductPriceDTO $price) => $price->recurring === $billing
+        );
+    }
+
+    public function hasPricesForCurrency(?string $currency = null): bool
+    {
+        return $this->type === ProductTypeInterface::DOMAIN
+            ? $this->pricingAvailable($currency ?? $this->currency) !== []
+            : $this->traitHasPricesForCurrency($currency);
+    }
+
+    private function domainPricingExtension(): ?string
+    {
+        $extension = trim((string) (($this->data ?? [])['tld'] ?? ''));
+        if ($extension !== '') {
+            return DomainPricingService::normalizeExtension($extension);
+        }
+        // Legacy services may only store the domain. Prefer the longest configured suffix.
+        $domain = strtolower(trim((string) (($this->data ?? [])['domain'] ?? $this->name), " .\t\n\r"));
+
+        return DomainTld::where('status', 'active')->pluck('extension')
+            ->filter(fn (string $tld) => str_ends_with($domain, $tld))
+            ->sortByDesc(fn (string $tld) => strlen($tld))->first();
+    }
+
     public function getBillingPrice(?string $billing = null): ProductPriceDTO
     {
         if ($billing == null) {
             $billing = $this->billing;
+        }
+        if ($this->type === ProductTypeInterface::DOMAIN) {
+            return $this->getPriceByCurrency($this->currency, $billing);
         }
         if ($this->product_id == null) {
             $pricing = $this->getPriceByCurrency($this->currency, $billing);
@@ -554,6 +640,25 @@ class Service extends Model implements HasNotifiableVariablesInterface
             return $this->product->getAllPricingCurrency($related_id, $this->pricing_key, $currency);
         }
         throw new \Exception('Service Pricing not found for #'.$this->id);
+    }
+
+    public function pendingInvoiceItems()
+    {
+        // Initial invoice items reference their services as a comma-separated list.
+        $id = (string) $this->id;
+
+        return InvoiceItem::query()
+            ->whereNull('delivered_at')
+            ->whereNull('cancelled_at')
+            ->whereHas('metadata', function ($query) use ($id) {
+                $query->where('key', 'services')
+                    ->where(function ($query) use ($id) {
+                        $query->where('value', $id)
+                            ->orWhere('value', 'like', $id.',%')
+                            ->orWhere('value', 'like', '%,'.$id)
+                            ->orWhere('value', 'like', '%,'.$id.',%');
+                    });
+            });
     }
 
     public function invoice()
@@ -907,6 +1012,20 @@ class Service extends Model implements HasNotifiableVariablesInterface
             '%service_type%',
             '%service_server%',
             '%service_product%',
+        ];
+    }
+
+    public function toMailData(?string $locale = null): array
+    {
+        return [
+            'name' => $this->name,
+            'status' => $this->status,
+            'type' => $this->type,
+            'billing' => $this->billing,
+            'price' => formatted_price((float) $this->price, $this->currency),
+            'expires_at' => $this->expires_at?->format('d/m/Y'),
+            'server_name' => $this->server?->name,
+            'product_name' => $this->product?->name,
         ];
     }
 

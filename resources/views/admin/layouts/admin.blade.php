@@ -32,17 +32,18 @@
     @yield('styles')
 </head>
 
-<body class="bg-gray-50 dark:bg-slate-900 {{ is_darkmode(true) ? 'dark' : '' }} h-full">
+@php($useVerticalLayout = auth('admin')->user()?->usesVerticalLayout() ?? false)
+<body class="bg-gray-50 dark:bg-slate-900 {{ is_darkmode(true) ? 'dark' : '' }} min-h-screen">
 <header class="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full bg-white border-b text-sm py-2.5 sm:py-4 dark:bg-slate-900 dark:border-gray-700">
-    <nav class="max-w-7xl flex basis-full items-center w-full mx-auto px-4 sm:px-6 lg:px-8" aria-label="Global">
+    <nav class="{{ $useVerticalLayout ? '' : 'max-w-7xl' }} flex basis-full items-center w-full mx-auto px-4 sm:px-6 lg:px-8" aria-label="Global">
 
   <a
     href="https://clientxcms.com/client/support"
     aria-label="CLIENTXCMS"
-    class="flex-none text-xl font-semibold dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+    class="flex-none text-base font-semibold sm:text-xl dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
   >
     CLIENTXCMS
-    <span class="bg-gray-100 text-xs text-gray-500 font-semibold rounded-full py-1 px-2 dark:bg-gray-700 dark:text-gray-400 hs-tooltip-toggle hs-tooltip inline-block relative">
+    <span class="bg-gray-100 text-xs text-gray-500 font-semibold rounded-full py-1 px-2 dark:bg-gray-700 dark:text-gray-300 hs-tooltip-toggle hs-tooltip hidden sm:inline-block relative">
       v{{ ctx_version() }}
         @if ($appIsGit)
     <span
@@ -58,8 +59,8 @@
   @endif
     </span>
   </a>
-        <div class="w-full flex items-center justify-end ms-auto sm:justify-between sm:gap-x-3 sm:order-3">
-            <div class="w-full flex items-center justify-end ms-auto sm:justify-between sm:gap-x-3 sm:order-3">
+        <div class="flex min-w-0 flex-1 items-center justify-end gap-x-2 ms-auto sm:justify-between sm:gap-x-3 sm:order-3">
+            <div class="flex min-w-0 flex-1 items-center justify-end gap-x-2 ms-auto sm:justify-between sm:gap-x-3 sm:order-3">
                 <div class="sm:hidden">
                     <button id="mobileSearchButton" type="button" class="w-[2.375rem] h-[2.375rem] inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
                         <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -98,7 +99,7 @@
                             </div>
                             <input type="text" id="searchBarDesktop" autocomplete="do-not-autofill" name="q" class="search Barpy-2 pe-4 ps-10 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600" placeholder="{{ __('global.search')  }}">
                             <div class="absolute inset-y-0 end-0 flex items-center pointer-events-none z-20 pe-4">
-                                <span class="text-gray-500">Ctrl + /</span>
+                                <span class="text-gray-500 dark:text-gray-400">Ctrl + /</span>
                             </div>
                             <div class="absolute z-50 w-full bg-white rounded-xl shadow-[0_10px_40px_10px_rgba(0,0,0,0.08)] dark:bg-slate-800" style="display: none;" data-hs-combo-box-output="">
                                 <div id="dropdownItemsDesktop" class="max-h-[300px] p-2 rounded-b-xl overflow-y-auto overflow-hidden [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-slate-700 dark:[&::-webkit-scrollbar-thumb]:bg-slate-500 dark:bg-slate-800"></div>
@@ -109,6 +110,13 @@
 
 
             <div class="flex flex-row items-center justify-end gap-2 searchIcons">
+
+                <form method="POST" action="{{ route('admin.profile.layout.toggle') }}" class="inline-flex">
+                    @csrf
+                    <button type="submit" class="w-[2.375rem] h-[2.375rem] inline-flex justify-center items-center rounded-full border border-transparent text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-600 dark:text-gray-400 dark:hover:bg-gray-700" title="{{ __('admin.admins.layout.toggle') }}" aria-label="{{ __('admin.admins.layout.toggle') }}">
+                        <i class="bi {{ $useVerticalLayout ? 'bi-layout-text-sidebar-reverse' : 'bi-layout-sidebar-inset' }}"></i>
+                    </button>
+                </form>
 
                 <button id="dark-mode-btn"  data-url="{{ route('admin.darkmode.switch') }}" class="hs-dropdown-toggle w-[2.375rem] h-[2.375rem] inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">
                     <svg class="@if (!is_darkmode()) hidden @endif flex-shrink-0 w-4 h-4" id="dark-mode-sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
@@ -174,8 +182,8 @@
 <!-- ========== END HEADER ========== -->
 
 <!-- ========== MAIN CONTENT ========== -->
-<main id="content" role="main" class="h-screen">
-    <!-- Nav -->
+<main id="content" role="main" class="min-h-screen">
+    @if (!$useVerticalLayout)
     <nav class="-top-px bg-white text-sm font-medium text-black ring-1 ring-gray-900 ring-opacity-5 border-t shadow-sm shadow-gray-100 pt-6 md:pb-6 -mt-px dark:bg-slate-900 dark:border-gray-800 dark:shadow-slate-700/[.7]" aria-label="Jump links">
         <div class="max-w-7xl snap-x w-full flex items-center overflow-x-auto px-4 sm:px-6 lg:px-8 pb-4 md:pb-0 mx-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-slate-700 dark:[&::-webkit-scrollbar-thumb]:bg-slate-500 dark:bg-slate-900">
 
@@ -188,10 +196,61 @@
     </nav>
 
     <div class="w-full pt-10 dark:bg-gray-900 dark:border-gray-700 dark:shadow-slate-700/[.7]">
-        <div class="max-w-[85rem] px-4 sm:px-6 lg:px-8 mx-auto">
-    @yield('content')
+        <div class="w-full max-w-none px-4 sm:px-6 lg:px-8 [&_.container]:max-w-none">
+            @yield('content')
+        </div>
     </div>
-    </div>
+    @else
+        <div class="flex min-h-[calc(100vh-71px)] bg-gray-50 dark:bg-slate-900">
+            <aside class="hidden w-72 shrink-0 flex-col border-e border-gray-200 bg-white/80 backdrop-blur lg:flex dark:border-gray-800 dark:bg-slate-900/80">
+                <div class="px-4">
+                    <div class="my-5 flex items-center gap-3 rounded-xl border border-gray-200 bg-white/60 p-3 shadow-sm dark:border-gray-800 dark:bg-slate-800/70">
+                        <x-avatar :user="auth('admin')->user()" size="md" class="!ring-0" />
+                        <div class="min-w-0 flex flex-col">
+                            <span class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ auth('admin')->user()->full_name }}</span>
+                            <span class="truncate text-xs text-gray-500 dark:text-gray-400">{{ auth('admin')->user()->email }}</span>
+                        </div>
+                    </div>
+                </div>
+                <nav class="flex-1 overflow-y-auto px-4 pb-6" aria-label="{{ __('admin.navigation.menu') }}">
+                    @include('admin.layouts.menu.vertical-list', ['menuInstance' => 'desktop'])
+                </nav>
+            </aside>
+
+            <div id="admin-mobile-sidebar" class="hs-overlay fixed start-0 top-0 z-[80] hidden h-[100dvh] w-full max-w-xs -translate-x-full transform flex-col overflow-hidden border-e bg-white transition-all duration-300 hs-overlay-open:translate-x-0 hs-overlay-open:flex lg:hidden dark:border-gray-700 dark:bg-slate-900" role="dialog" tabindex="-1" aria-label="{{ __('admin.navigation.menu') }}">
+                <div class="flex shrink-0 items-center justify-between border-b px-4 py-3 dark:border-gray-700">
+                    <h2 class="font-bold text-gray-800 dark:text-white">{{ __('admin.navigation.menu') }}</h2>
+                    <button type="button" class="inline-flex size-8 items-center justify-center rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-600" data-hs-overlay="#admin-mobile-sidebar" aria-label="{{ __('admin.navigation.close_menu') }}">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain p-4 pb-8 [-webkit-overflow-scrolling:touch]">
+                    <div class="mb-5 flex items-center gap-3 rounded-xl border border-gray-200 p-3 dark:border-gray-800 dark:bg-slate-800/70">
+                        <x-avatar :user="auth('admin')->user()" size="md" class="!ring-0" />
+                        <div class="min-w-0 flex flex-col">
+                            <span class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ auth('admin')->user()->full_name }}</span>
+                            <span class="truncate text-xs text-gray-500 dark:text-gray-400">{{ auth('admin')->user()->email }}</span>
+                        </div>
+                    </div>
+                    @include('admin.layouts.menu.vertical-list', ['menuInstance' => 'mobile'])
+                </div>
+            </div>
+
+            <div class="min-w-0 flex-1">
+                <div class="border-b border-gray-200 bg-white/80 px-4 py-3 backdrop-blur lg:hidden dark:border-gray-800 dark:bg-slate-900">
+                    <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800" aria-controls="admin-mobile-sidebar" data-hs-overlay="#admin-mobile-sidebar">
+                        <i class="bi bi-list"></i>
+                        <span>{{ __('admin.navigation.menu') }}</span>
+                    </button>
+                </div>
+                <div class="w-full px-4 pb-10 pt-8 sm:px-6 lg:px-8 [&_.container]:max-w-none">
+                    @yield('content')
+                </div>
+            </div>
+        </div>
+    @endif
+
+@include('admin.layouts.layout-prompt')
 
 <form method="POST" action="{{ route('admin.logout') }}" id="logout-form">
     @csrf

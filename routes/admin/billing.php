@@ -18,13 +18,17 @@
  */
 
 use App\Http\Controllers\Admin\Billing\CreditNoteController;
+use App\Http\Controllers\Admin\Billing\ElectronicInvoicingController;
 use App\Http\Controllers\Admin\Billing\InvoiceController;
 use App\Http\Controllers\Admin\Billing\SubscriptionController;
 use App\Http\Controllers\Admin\Core\DashboardController;
 use App\Http\Controllers\Admin\Settings\SettingsBillingController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/earn', [DashboardController::class, 'earn'])->name('earn')->middleware('password.confirm:admin.password.confirm');
+Route::get('/earn', [DashboardController::class, 'earn'])->name('earn')->middleware('password.confirm.admin');
+Route::get('/electronic-invoicing', [ElectronicInvoicingController::class, 'index'])->name('electronic-invoicing.index');
+Route::get('/electronic-invoicing/{kind}/{id}/download', [ElectronicInvoicingController::class, 'download'])->name('electronic-invoicing.download')->whereIn('kind', ['document', 'period']);
+Route::post('/electronic-invoicing/{kind}/{id}/retry', [ElectronicInvoicingController::class, 'retry'])->name('electronic-invoicing.retry')->whereIn('kind', ['document', 'period', 'accounting']);
 Route::resource('/invoices', InvoiceController::class)->names('invoices')->except('edit');
 Route::get('/invoices/{invoice}/notify', [InvoiceController::class, 'notify'])->name('invoices.notify');
 Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
@@ -40,7 +44,7 @@ Route::delete('invoices/{invoice}/delete/{invoiceItem}', [InvoiceController::cla
 Route::patch('invoices/{invoice}/update/{invoiceItem}', [InvoiceController::class, 'updateItem'])->name('invoices.updateitem');
 Route::post('invoices/{invoice}/cancel/{invoiceItem}', [InvoiceController::class, 'cancelItem'])->name('invoices.cancelitem');
 Route::post('invoices/export', [InvoiceController::class, 'export'])->name('invoices.export');
-Route::post('/invoices/mass_action', [InvoiceController::class, 'massAction'])->name('invoices.mass_action');
+Route::post('/invoices/mass-action', [InvoiceController::class, 'massAction'])->name('invoices.mass_action');
 Route::resource('/subscriptions', SubscriptionController::class)->names('subscriptions')->except('edit');
 
 Route::post('/customers/{customer}/credit-notes', [CreditNoteController::class, 'store'])->name('customers.credit_notes.store');

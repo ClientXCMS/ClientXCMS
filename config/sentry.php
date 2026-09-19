@@ -35,6 +35,10 @@ return [
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#send-default-pii
     'send_default_pii' => env('SENTRY_SEND_DEFAULT_PII', false),
 
+    // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#before-send
+    // A callable array rather than a closure, so `config:cache` keeps working.
+    'before_send' => [\App\Exceptions\SentryEventScrubber::class, 'handle'],
+
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#ignore-exceptions
     // 'ignore_exceptions' => [],
 

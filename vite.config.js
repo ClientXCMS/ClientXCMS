@@ -3,6 +3,9 @@ import laravel from 'laravel-vite-plugin';
 import { glob } from "glob";
 
 export default defineConfig({
+    resolve: {
+        preserveSymlinks: true,
+    },
     plugins: [
         laravel({
             input: [

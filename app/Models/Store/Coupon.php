@@ -229,7 +229,7 @@ class Coupon extends Model
 
             return false;
         }
-        if ($this->max_uses_per_customer > 0 && $this->usages()->where('customer_id', $basket->customer_id)->count() >= $this->max_uses_per_customer) {
+        if ($this->max_uses_per_customer > 0 && $this->usages()->where('customer_id', $basket->user_id)->count() >= $this->max_uses_per_customer) {
             if ($flash) {
                 Session::flash('error', __('coupon.coupon_max_use_per_customer'));
             }

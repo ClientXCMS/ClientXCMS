@@ -83,7 +83,7 @@
                 </div>
                 <label for="hs-log-delete" class="ms-3">
                     <span class="block text-sm font-semibold text-gray-800 dark:text-gray-300">{{ __('admin.settings.core.mail.disable_mail') }}</span>
-                    <span id="hs-log-description" class="block text-sm text-gray-600 dark:text-gray-500">{{ __('admin.settings.core.mail.disable_mail_help') }}</span>
+                    <span id="hs-log-description" class="block text-sm text-gray-600 dark:text-gray-400">{{ __('admin.settings.core.mail.disable_mail_help') }}</span>
                 </label>
             </div>
             <div class="relative flex items-start mr-3 mt-3">
@@ -92,7 +92,7 @@
                 </div>
                 <label for="hs-checkbox-delete" class="ms-3">
                     <span class="block text-sm font-semibold text-gray-800 dark:text-gray-300">{{ __('admin.settings.core.mail.smtp.enabled') }}</span>
-                    <span id="hs-smtp-description" class="block text-sm text-gray-600 dark:text-gray-500">{{ __('admin.settings.core.mail.smtp.description') }}</span>
+                    <span id="hs-smtp-description" class="block text-sm text-gray-600 dark:text-gray-400">{{ __('admin.settings.core.mail.smtp.description') }}</span>
                 </label>
             </div>
             <div class="grid md:grid-cols-3 gap-4">

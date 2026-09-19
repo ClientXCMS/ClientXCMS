@@ -29,7 +29,7 @@ class LicenseController
     public function return(Request $request)
     {
         // si la licence est déjà installée, on vérifie que l'utilisateur a la permission de gérer la licence sinon non
-        if(is_installed()) {
+        if (is_installed()) {
             staff_aborts_permission(Permission::MANAGE_LICENSE);
         }
         $code = $request->get('code');

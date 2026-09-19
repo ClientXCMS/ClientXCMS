@@ -21,6 +21,7 @@ namespace App\Models\Billing;
 
 use App\Abstracts\SupportRelateItemTrait;
 use App\Contracts\Helpdesk\SupportRelateItemInterface;
+use App\Contracts\Notifications\ProvidesMailData;
 use App\Core\Gateway\NoneGatewayType;
 use App\DTO\Admin\Invoice\AddProductToInvoiceDTO;
 use App\Exceptions\WrongPaymentException;
@@ -149,7 +150,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * @mixin \Eloquent
  */
-class Invoice extends Model implements SupportRelateItemInterface
+class Invoice extends Model implements ProvidesMailData, SupportRelateItemInterface
 {
     use HasFactory, HasMetadata, InvoiceStateTrait, Loggable, softDeletes, SupportRelateItemTrait;
 
@@ -177,6 +178,8 @@ class Invoice extends Model implements SupportRelateItemInterface
     protected $fillable = [
         'customer_id',
         'billing_address',
+        'billing_snapshot',
+        'issued_at',
         'due_date',
         'total',
         'subtotal',
@@ -202,6 +205,8 @@ class Invoice extends Model implements SupportRelateItemInterface
         'created_at' => 'datetime',
         'paid_at' => 'datetime',
         'billing_address' => 'array',
+        'billing_snapshot' => 'array',
+        'issued_at' => 'datetime',
     ];
 
     protected $attributes = [
@@ -257,6 +262,19 @@ class Invoice extends Model implements SupportRelateItemInterface
         InvoiceService::appendProductOnExistingInvoice(new AddProductToInvoiceDTO($this, $product, $validatedData, $productData));
     }
 
+    public function toMailData(?string $locale = null): array
+    {
+        return [
+            'id' => $this->id,
+            'identifier' => $this->identifier(),
+            'total' => formatted_price((float) $this->total, $this->currency),
+            'items' => $this->items->map(fn ($item) => [
+                'name' => $item->name,
+                'price' => formatted_price((float) $item->price(), $this->currency),
+            ])->values()->all(),
+        ];
+    }
+
     public function items()
     {
         return $this->hasMany(InvoiceItem::class);
@@ -303,6 +321,29 @@ class Invoice extends Model implements SupportRelateItemInterface
         return $this->hasMany(InvoiceLog::class);
     }
 
+    public function electronicDocuments()
+    {
+        return $this->morphMany(ElectronicDocument::class, 'documentable');
+    }
+
+    public function isElectronicallyLocked(): bool
+    {
+        return $this->issued_at !== null || $this->electronicDocuments()->exists();
+    }
+
+    public function issue(): void
+    {
+        if ($this->isDraft() || $this->issued_at !== null || blank($this->invoice_number)) {
+            return;
+        }
+
+        $this->forceFill([
+            'billing_snapshot' => app(\App\Services\Billing\FiscalProfileService::class)->snapshot($this),
+            'issued_at' => now(),
+        ])->saveQuietly();
+        event(new \App\Events\Core\Invoice\InvoiceIssued($this->fresh(['customer', 'items'])));
+    }
+
     public function pay(Gateway $gateway, Request $request)
     {
         if ($this->total == 0) {
@@ -332,6 +373,10 @@ class Invoice extends Model implements SupportRelateItemInterface
 
     public function canDelete()
     {
+        if ($this->isElectronicallyLocked()) {
+            return false;
+        }
+
         return $this->status == self::STATUS_DRAFT || $this->status == self::STATUS_CANCELLED || $this->status == self::STATUS_PENDING;
     }
 
@@ -401,6 +446,7 @@ class Invoice extends Model implements SupportRelateItemInterface
             'customer' => $this->customer,
             'color' => $color,
             'address' => $this->billing_address,
+            'fiscalParties' => $this->fiscalPartiesForPdf(),
             'logoSrc' => $logoSrc,
             'primaryColor' => $primaryColor,
         ]);
@@ -418,6 +464,54 @@ class Invoice extends Model implements SupportRelateItemInterface
         }
 
         return $pdf;
+    }
+
+    /**
+     * Return immutable seller and buyer details for invoice and credit-note PDFs.
+     * Historical invoices fall back to their frozen billing_address payload.
+     */
+    public function fiscalPartiesForPdf(): array
+    {
+        $snapshot = $this->billing_snapshot ?? [];
+        $legacyBuyer = $this->getBillingAddressArray();
+        $buyer = $snapshot['buyer'] ?? [];
+        $buyerAddress = $buyer['address'] ?? [];
+        $seller = $snapshot['seller'] ?? [];
+        // Snapshots store the seller address as an array, settings as a plain string
+        $sellerAddress = is_array($seller['address'] ?? null) ? $seller['address'] : [];
+
+        return [
+            'seller' => array_merge([
+                'legal_name' => setting('billing_legal_name', setting('app.name')),
+                'siren' => setting('billing_siren'),
+                'siret' => setting('billing_siret'),
+                'vat_number' => setting('billing_vat_number'),
+            ], $seller, [
+                'address' => $sellerAddress['address'] ?? ($seller['address'] ?? setting('app_address')),
+                'address2' => $sellerAddress['address2'] ?? null,
+                'zipcode' => $sellerAddress['zipcode'] ?? null,
+                'city' => $sellerAddress['city'] ?? null,
+                'country' => $sellerAddress['country'] ?? null,
+            ]),
+            'buyer' => [
+                'type' => $buyer['type'] ?? ($legacyBuyer['customer_type'] ?? Customer::TYPE_INDIVIDUAL),
+                'legal_name' => $buyer['legal_name'] ?? ($legacyBuyer['legal_name'] ?? $legacyBuyer['company_name'] ?? null),
+                'name' => trim(($legacyBuyer['firstname'] ?? '').' '.($legacyBuyer['lastname'] ?? '')),
+                'email' => $buyer['email'] ?? ($legacyBuyer['email'] ?? null),
+                'address' => $buyerAddress['address'] ?? ($legacyBuyer['address'] ?? null),
+                'address2' => $buyerAddress['address2'] ?? ($legacyBuyer['address2'] ?? null),
+                'zipcode' => $buyerAddress['zipcode'] ?? ($legacyBuyer['zipcode'] ?? null),
+                'city' => $buyerAddress['city'] ?? ($legacyBuyer['city'] ?? null),
+                'region' => $buyerAddress['region'] ?? ($legacyBuyer['region'] ?? null),
+                'country' => $buyerAddress['country'] ?? ($legacyBuyer['country'] ?? null),
+                'siren' => $buyer['siren'] ?? ($legacyBuyer['siren'] ?? null),
+                'siret' => $buyer['siret'] ?? ($legacyBuyer['siret'] ?? null),
+                'vat_number' => $buyer['vat_number'] ?? ($legacyBuyer['vat_number'] ?? null),
+                'tax_registration_number' => $buyer['tax_registration_number'] ?? ($legacyBuyer['tax_registration_number'] ?? null),
+                'rna_number' => $buyer['rna_number'] ?? ($legacyBuyer['rna_number'] ?? null),
+                'additional_details' => $buyer['additional_details'] ?? ($legacyBuyer['billing_details'] ?? null),
+            ],
+        ];
     }
 
     public function clearServiceAssociation()
@@ -463,9 +557,9 @@ class Invoice extends Model implements SupportRelateItemInterface
             $subtotal += $item->price() - $item->discountTotal();
             $setupfees += $item->unit_setup_ht * $item->quantity;
         }
-        $subtotal = $subtotal - $this->balance;
         $vat = TaxesService::getTaxAmount($subtotal, tax_percent());
-        $this->total = $subtotal + $vat;
+        // An instalment is money already paid, so it comes off the tax-inclusive amount: taking it off the subtotal used to drop the tax owed on it.
+        $this->total = $subtotal + $vat - $this->balance;
         $this->subtotal = $subtotal;
         $this->tax = $vat;
         $this->setupfees = $setupfees;
@@ -506,7 +600,7 @@ class Invoice extends Model implements SupportRelateItemInterface
      * (FR: CGI art. 289, EU: similar wording across member states).
      *
      * Signature is kept identical so callers do not need to change. The
-     * `$add` parameter is now ignored (no longer necessary — the
+     * `$add` parameter is now ignored (no longer necessary - the
      * counter already guarantees uniqueness) but preserved for source
      * compatibility with any extension that calls the method.
      */
@@ -538,23 +632,31 @@ class Invoice extends Model implements SupportRelateItemInterface
         return 'uuid';
     }
 
-    public function addBalance(float $amount)
+    public function addBalance(float $amount): bool
     {
         if ($amount <= 0 || ! $this->canPay()) {
-            return;
+            return false;
         }
-        if ($amount >= ($this->total - $this->balance)) {
-            $amount = $this->total - $this->balance;
-            $this->customer->addFund(-$amount, 'Invoice payment for '.$this->id);
+        // recalculate() already takes the applied balance out of the total, so what is left to pay IS the total.
+        $remaining = round((float) $this->total, 2);
+        $amount = min($amount, $remaining);
+
+        if ($amount <= 0 || ! $this->customer->tryDeductBalance($amount, 'Invoice payment for '.$this->id)) {
+            return false;
+        }
+
+        if ($amount >= $remaining) {
             $this->update(['paymethod' => 'balance']);
             $this->complete();
 
-            return;
+            return true;
         }
-        $this->customer->addFund(-$amount, 'Invoice payment for '.$this->id);
-        $this->balance = $amount;
+
+        $this->balance += $amount;
         $this->save();
         $this->recalculate();
+
+        return true;
     }
 
     public function getBillingAddressAttribute(): array

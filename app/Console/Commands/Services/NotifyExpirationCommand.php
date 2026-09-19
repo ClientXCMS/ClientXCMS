@@ -41,12 +41,13 @@ class NotifyExpirationCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
+        $successful = true;
         $this->info('Running services:notify-expiration at '.now()->format('Y-m-d H:i:s'));
         $days = explode(',', setting('notifications_expiration_days', '7,3,1'));
         if ($days == null) {
-            return;
+            return self::SUCCESS;
         }
         /** @var Service[] $services */
         $services = Service::getShouldNotifyExpiration($days);
@@ -55,6 +56,7 @@ class NotifyExpirationCommand extends Command
             if ($service->notifyExpiration()) {
                 $this->info("Service {$service->id} notified of expiration");
             } else {
+                $successful = false;
                 $this->error("Service {$service->id} was not notified of expiration");
             }
         }
@@ -75,6 +77,7 @@ class NotifyExpirationCommand extends Command
                 $service->detachMetadata('renewal_tries');
                 $service->detachMetadata('renewal_last_try');
             } catch (\Exception $e) {
+                $successful = false;
                 $service->attachMetadata('renewal_error', $e->getMessage().' | last tried at '.now()->format('Y-m-d H:i:s'));
                 $service->attachMetadata('renewal_tries', $service->getMetadata('renewal_tries', 0) + 1);
                 $service->attachMetadata('renewal_last_try', now()->format('Y-m-d H:i:s'));
@@ -86,5 +89,7 @@ class NotifyExpirationCommand extends Command
                 $this->error('Service '.$service->id.' failed to renew by subscription. : '.$e->getMessage());
             }
         }
+
+        return $successful ? self::SUCCESS : self::FAILURE;
     }
 }

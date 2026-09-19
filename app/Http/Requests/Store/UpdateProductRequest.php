@@ -20,6 +20,7 @@
 namespace App\Http\Requests\Store;
 
 use App\Models\Store\Pricing;
+use App\Services\Content\SafeHtml;
 use App\Services\Store\PricingService;
 use App\Traits\PricingRequestTrait;
 use Illuminate\Foundation\Http\FormRequest;
@@ -90,7 +91,7 @@ class UpdateProductRequest extends FormRequest
 
         return array_merge([
             'name' => 'string|max:255',
-            'description' => ['string', new \App\Rules\NoScriptOrPhpTags],
+            'description' => ['string'],
             'status' => 'string|in:active,hidden,unreferenced',
             'group_id' => 'integer|exists:groups,id',
             'stock' => 'integer',
@@ -98,6 +99,14 @@ class UpdateProductRequest extends FormRequest
             'pinned' => 'nullable|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'remove_image' => 'nullable|string|in:true,false',
+            'product_descriptions' => 'nullable|array|max:100',
+            'product_descriptions_present' => 'nullable|boolean',
+            'product_descriptions.*.id' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9_-]+$/'],
+            'product_descriptions.*.text' => 'required_with:product_descriptions|string|max:1000',
+            'product_descriptions.*.icon' => ['nullable', 'string', 'max:100', 'regex:/^bi bi-[a-z0-9]+(?:-[a-z0-9]+)*$/'],
+            'product_description_translations' => 'nullable|array',
+            'product_description_translations.*' => 'array|max:100',
+            'product_description_translations.*.*' => 'nullable|string|max:1000',
         ], $this->pricingRules());
     }
 
@@ -111,11 +120,18 @@ class UpdateProductRequest extends FormRequest
             'pricing' => $convertedPricing,
             'pinned' => $this->pinned == 'true' ? '1' : '0',
         ]);
+
+        // Admin product cards render the description without escaping. Only
+        // touch it when it was sent: adding the key would fail its own rules.
+        if ($this->has('description')) {
+            $this->merge(['description' => app(SafeHtml::class)->sanitize($this->input('description'))]);
+        }
     }
 
     public function update()
     {
         $product = $this->product;
+        $requestData = $this->validated();
         $validated = $this->only(['name', 'description', 'status', 'group_id', 'stock', 'type', 'pinned']);
         $product->update($validated);
         $pricing = Pricing::where('related_id', $product->id)->where('related_type', 'product')->first();
@@ -140,6 +156,12 @@ class UpdateProductRequest extends FormRequest
             $product->save();
         }
         PricingService::forgot();
+        if ($this->boolean('product_descriptions_present')) {
+            $product->syncProductDescriptions(
+                $requestData['product_descriptions'] ?? [],
+                $requestData['product_description_translations'] ?? []
+            );
+        }
 
         return $product;
     }

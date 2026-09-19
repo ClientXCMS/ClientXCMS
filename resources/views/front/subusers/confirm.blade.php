@@ -88,7 +88,7 @@
             </div>
         </dl>
 
-        <p class="text-xs text-gray-500 dark:text-gray-500">
+        <p class="text-xs text-gray-500 dark:text-gray-400">
             {{ __('client.subusers.confirm.warning') }}
         </p>
     </section>

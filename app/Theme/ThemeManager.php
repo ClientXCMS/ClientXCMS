@@ -20,6 +20,8 @@
 namespace App\Theme;
 
 use App\DTO\Core\Extensions\ExtensionThemeDTO;
+use App\Exceptions\ThemeInvalidException;
+use App\Extensions\ExtensionManager;
 use App\Models\Admin\Setting;
 use App\Models\Personalization\MenuLink;
 use App\Models\Personalization\Section;
@@ -41,6 +43,16 @@ class ThemeManager
 
     private ?Section $currentRenderingSection = null;
 
+    /**
+     * Menu links are kept separately from the full theme configuration because
+     * sections can request a menu while that configuration is being rendered.
+     * Reading them through getSetting() in that situation causes an endless
+     * Cache::remember() recursion and eventually an empty HTTP 500 response.
+     *
+     * @var array<string, Collection>
+     */
+    private array $menuLinks = [];
+
     private const CACHE_KEY_PREFIX = 'theme_configuration';
 
     public function __construct()
@@ -52,12 +64,27 @@ class ThemeManager
         if ($this->getTheme() != null) {
             app('view')->addLocation($this->themePath('views'));
             app('view')->addLocation($this->themePath());
-            if (File::exists($this->themePath('lang'))) {
-                app('translator')->addNamespace('theme', $this->themePath('lang'));
-            }
+            $this->registerTranslations();
             $this->registerThemeSeeders();
             $this->bootTheme();
         }
+    }
+
+    /**
+     * ThemeManager can be resolved while extension service providers are still
+     * registering. At that point Laravel's translator may not be bound yet, so
+     * defer the namespace registration instead of forcing an early resolution.
+     */
+    private function registerTranslations(): void
+    {
+        $langPath = $this->themePath('lang');
+        if (! File::exists($langPath)) {
+            return;
+        }
+
+        app()->booted(function () use ($langPath) {
+            app('translator')->addNamespace('theme', $langPath);
+        });
     }
 
     protected function bootTheme(): void
@@ -125,11 +152,15 @@ class ThemeManager
 
     public function setTheme(string $theme, bool $save = false): void
     {
-        $oldTheme = $this->theme;
-        $this->theme = collect($this->themes)->first(function ($item) use ($theme) {
-            return $item->uuid == $theme;
-        });
-        Setting::updateSettings(['theme' => $theme]);
+        $selectedTheme = collect($this->themes)->firstWhere('uuid', $theme);
+        if ($selectedTheme === null) {
+            throw new ThemeInvalidException("Theme [{$theme}] is not installed.");
+        }
+
+        $this->theme = $selectedTheme;
+        if ($save) {
+            Setting::updateSettings(['theme' => $theme]);
+        }
         $this->createAssetsLink($theme);
     }
 
@@ -195,7 +226,12 @@ class ThemeManager
             return collect();
         }
         $support = $this->getTheme()->supportOption('menu_dropdown');
-        $items = $this->getSetting()[$type.'_links'] ?? collect();
+        $items = $this->menuLinks[$type] ??= MenuLink::query()
+            ->with('children')
+            ->where('type', $type)
+            ->whereNull('parent_id')
+            ->orderBy('position')
+            ->get();
 
         return $items->filter(function (MenuLink $item) use ($support) {
             return $item->canShowed($support);
@@ -244,7 +280,7 @@ class ThemeManager
                 'sections_html' => Section::orderBy('order')->get()->mapWithKeys(function (Section $section) {
                     $this->setCurrentRenderingSection($section);
 
-                    return [$section->path => $section->toDTO()->render(false)];
+                    return [$section->id => $section->toDTO()->render(false)];
                 }),
             ]);
         });
@@ -283,18 +319,60 @@ class ThemeManager
             throw new \Exception('Default theme is missing');
         }
         array_unshift($this->themes, ExtensionThemeDTO::fromJson($this->themesPath.'/default/theme.json'));
-        if ($this->theme == null) {
-            $currentTheme = \setting('theme', 'default');
-            if ($currentTheme && ! empty($this->themes)) {
-                $this->theme = collect($this->themes)->first(function ($theme) use ($currentTheme) {
-                    return $theme->uuid == $currentTheme;
-                });
-                if ($this->theme == null) {
-                    $this->theme = collect($this->themes)->first();
-                }
-            }
+        if ($this->theme === null) {
+            $this->theme = $this->resolveCurrentTheme(
+                $this->themes,
+                \setting('theme'),
+                $this->enabledThemeUuids(),
+            );
         }
         $this->mergeWithExtensions();
+    }
+
+    /**
+     * Resolve the active theme from the extension state first, then fall back to
+     * the persisted setting. This prevents Default and another theme from being
+     * considered active at the same time when both stores temporarily diverge.
+     *
+     * @param  array<int, ExtensionThemeDTO>  $themes
+     * @param  array<int, string>  $enabledThemeUuids
+     */
+    private function resolveCurrentTheme(array $themes, ?string $configuredTheme, array $enabledThemeUuids): ExtensionThemeDTO
+    {
+        $availableThemes = collect($themes)->keyBy('uuid');
+        $enabledThemes = collect($enabledThemeUuids)
+            ->filter(fn (string $uuid) => $uuid !== 'default' && $availableThemes->has($uuid))
+            ->unique()
+            ->values();
+
+        if ($enabledThemes->count() === 1) {
+            return $availableThemes->get($enabledThemes->first());
+        }
+
+        if ($configuredTheme !== null && $availableThemes->has($configuredTheme)) {
+            return $availableThemes->get($configuredTheme);
+        }
+
+        if ($enabledThemes->isNotEmpty()) {
+            return $availableThemes->get($enabledThemes->first());
+        }
+
+        return $availableThemes->get('default') ?? $availableThemes->first();
+    }
+
+    /** @return array<int, string> */
+    private function enabledThemeUuids(): array
+    {
+        try {
+            return collect(ExtensionManager::readExtensionJson()['themes'] ?? [])
+                ->filter(fn (array $theme) => ($theme['enabled'] ?? false) === true)
+                ->pluck('uuid')
+                ->filter(fn ($uuid) => is_string($uuid))
+                ->values()
+                ->all();
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     public function getThemes(): array
@@ -406,7 +484,7 @@ class ThemeManager
 
     public static function getContrastColor($hexColor): string
     {
-        if (!is_string($hexColor) || empty($hexColor)) {
+        if (! is_string($hexColor) || empty($hexColor)) {
             return 'black';
         }
         if (str_starts_with($hexColor, 'rgb')) {

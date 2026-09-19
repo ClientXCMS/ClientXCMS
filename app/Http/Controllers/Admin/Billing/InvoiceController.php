@@ -304,6 +304,7 @@ class InvoiceController extends AbstractCrudController
         $params['invoice'] = $invoice;
         $params['customer'] = $invoice->customer;
         $params['address'] = $invoice->billing_address;
+        $params['fiscalParties'] = $invoice->fiscalPartiesForPdf();
         $params['gateways'] = $this->gateways();
         $params['countries'] = Countries::names();
         $params['logs'] = $invoice->logs;

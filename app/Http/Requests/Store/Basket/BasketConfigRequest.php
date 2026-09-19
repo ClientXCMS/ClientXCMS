@@ -20,6 +20,8 @@
 namespace App\Http\Requests\Store\Basket;
 
 use App\Contracts\Store\ProductTypeInterface;
+use App\Core\Domain\Nameserver;
+use App\Models\Store\DomainTld;
 use App\Services\Domain\DomainPricingService;
 use App\Services\Store\CurrencyService;
 use Illuminate\Contracts\Validation\Validator;
@@ -33,6 +35,20 @@ class BasketConfigRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->product?->type === ProductTypeInterface::DOMAIN && is_string($this->input('domain'))) {
+            $domain = strtolower(trim($this->input('domain')));
+            $tld = DomainTld::where('status', 'active')->orderByRaw('LENGTH(extension) DESC')->get()
+                ->first(fn (DomainTld $candidate) => str_ends_with($domain, $candidate->extension)
+                    && strlen($domain) > strlen($candidate->extension));
+            $this->merge(['domain' => $domain, 'tld' => $tld?->extension]);
+        }
+        if ($this->has('nameservers')) {
+            $this->merge(['nameservers' => Nameserver::normalizeAll($this->input('nameservers'))]);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -40,8 +56,11 @@ class BasketConfigRequest extends FormRequest
      */
     public function rules(): array
     {
-        if ($this->product->type === ProductTypeInterface::DOMAIN && $this->input('tld')) {
-            $authorizedBilling = app(DomainPricingService::class)->billingsFor($this->input('tld'))->toArray();
+        if ($this->product->type === ProductTypeInterface::DOMAIN && is_string($this->input('tld')) && $this->input('tld') !== '') {
+            $currency = $this->input('currency');
+            $authorizedBilling = is_string($currency)
+                ? app(DomainPricingService::class)->billingsFor($this->input('tld'), $currency, $this->input('operation') === 'transfer' ? DomainPricingService::ACTION_TRANSFER : DomainPricingService::ACTION_REGISTER)->toArray()
+                : [];
         } else {
             $authorizedBilling = collect($this->product->pricingAvailable())->map(function ($price) {
                 return $price->recurring;
@@ -54,10 +73,7 @@ class BasketConfigRequest extends FormRequest
             'currency' => ['required', 'string', Rule::in(app(CurrencyService::class)->getCurrenciesKeys())],
         ];
         if ($this->product->type === ProductTypeInterface::DOMAIN) {
-            // D1 - pin the tld to the active catalog. Without it, the
-            // basket row stores whatever label the user posted and
-            // priceFor() falls back to the product default, opening a
-            // pricing-manipulation window for any unknown tld.
+            // A domain must use an active catalog entry and an exact tariff.
             $rules['tld'] = ['required', 'string', function ($attribute, $value, $fail) {
                 if (app(DomainPricingService::class)->findTld($value) === null) {
                     $fail(__('validation.exists', ['attribute' => $attribute]));

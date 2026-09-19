@@ -73,6 +73,8 @@ use Laravel\Sanctum\HasApiTokens;
  * @property \Illuminate\Support\Carbon|null $expires_at
  * @property string|null $signature
  * @property int $dark_mode
+ * @property string $admin_layout
+ * @property \Illuminate\Support\Carbon|null $admin_layout_prompted_at
  * @property string $role_id
  * @property string $locale
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -116,6 +118,10 @@ use Laravel\Sanctum\HasApiTokens;
  */
 class Admin extends Authenticatable implements NotifiablePlaceholderInterface
 {
+    public const LAYOUT_HORIZONTAL = 'horizontal';
+
+    public const LAYOUT_VERTICAL = 'vertical';
+
     use CanUse2FA, HasApiTokens, HasFactory, HasMetadata, Loggable, Notifiable, softDeletes;
 
     protected static function booted(): void
@@ -137,6 +143,8 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
         'last_login_ip',
         'signature',
         'dark_mode',
+        'admin_layout',
+        'admin_layout_prompted_at',
         'expires_at',
         'role_id',
         'locale',
@@ -156,12 +164,19 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
         'expires_at' => 'datetime',
         'created_at' => 'datetime',
         'last_login' => 'datetime',
+        'admin_layout_prompted_at' => 'datetime',
     ];
 
     protected $attributes = [
         'dark_mode' => false,
+        'admin_layout' => self::LAYOUT_HORIZONTAL,
         'locale' => 'fr_FR',
     ];
+
+    public function usesVerticalLayout(): bool
+    {
+        return $this->admin_layout === self::LAYOUT_VERTICAL;
+    }
 
     public function sendPasswordResetNotification($token)
     {

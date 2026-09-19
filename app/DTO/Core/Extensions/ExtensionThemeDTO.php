@@ -28,6 +28,8 @@ use Vite;
 
 class ExtensionThemeDTO
 {
+    private const MAX_MENUS_FILE_SIZE = 1_048_576;
+
     public string $path;
 
     public string $theme_file;
@@ -298,6 +300,55 @@ class ExtensionThemeDTO
     public function supportOption(string $key)
     {
         return $this->json['supported_options'][$key] ?? false;
+    }
+
+    /**
+     * Get the custom menus provided by the theme.
+     */
+    public function menus(): array
+    {
+        $path = $this->path.'/menus.json';
+        if (! is_readable($path)) {
+            return [];
+        }
+
+        $size = filesize($path);
+        if ($size === false || $size > self::MAX_MENUS_FILE_SIZE) {
+            return [];
+        }
+
+        $contents = file_get_contents($path);
+        if ($contents === false) {
+            return [];
+        }
+
+        try {
+            $menus = json_decode($contents, true, 32, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return [];
+        }
+
+        return is_array($menus) && ! array_is_list($menus) ? $menus : [];
+    }
+
+    public function supportsMenus(): bool
+    {
+        return $this->menuTypes() !== [];
+    }
+
+    /**
+     * Get the valid menu types exposed by the theme.
+     */
+    public function menuTypes(): array
+    {
+        return array_keys(array_filter(
+            $this->menus(),
+            fn (mixed $menus, mixed $type): bool => is_string($type)
+                && preg_match('/^[A-Za-z0-9_-]{1,64}$/', $type) === 1
+                && is_array($menus)
+                && array_is_list($menus),
+            ARRAY_FILTER_USE_BOTH
+        ));
     }
 
     private function getTranslates()

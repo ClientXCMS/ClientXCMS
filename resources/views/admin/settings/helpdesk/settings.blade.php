@@ -77,7 +77,7 @@
                         </div>
                         <label for="hs-checkbox-delete" class="ms-3">
                             <span class="block text-sm font-semibold text-gray-800 dark:text-gray-300">{{ __('helpdesk.admin.settings.fields.allow_attachments') }}</span>
-                            <span id="hs-smtp-description" class="block text-sm text-gray-600 dark:text-gray-500">{{ __('helpdesk.admin.settings.fields.allow_attachments_help') }}</span>
+                            <span id="hs-smtp-description" class="block text-sm text-gray-600 dark:text-gray-400">{{ __('helpdesk.admin.settings.fields.allow_attachments_help') }}</span>
                         </label>
                     </div>
                     <div>

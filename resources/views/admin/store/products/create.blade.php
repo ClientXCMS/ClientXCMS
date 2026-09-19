@@ -95,7 +95,7 @@
                             </div>
 
                             <div class="col-span-2">
-                                @include('admin/shared/editor', ['name' => 'description', 'label' => __('global.description') . '<a href="#" id="toggle-btn" class="ml-5 btn btn-outline-primary btn-sm mb-2">HTML</a>', 'value' => old('description', $item->description), 'translatable' => true])
+                                @include('admin/shared/editor', ['name' => 'description', 'label' => __('global.description') . '<a href="#" id="toggle-btn" class="ml-5 btn btn-outline-primary btn-sm mb-2">HTML</a><button type="button" data-hs-overlay="#product-description-overlay" class="ml-2 btn btn-outline-primary btn-sm mb-2">'.__('admin.products.short_description.button').'</button>', 'value' => old('description', $item->description), 'translatable' => true])
 
                                 <div id="monaco-editor" style="height: 400px;display:none;"></div>
                                 <input type="hidden" name="description_html" value="{{ old('description', $item->description) }}">
@@ -120,6 +120,7 @@
                 @endif
             </div>
         </div>
+        @include('admin/store/products/description-overlay')
         </form>
     </div>
     @include('admin/shared/pricing/collapse')

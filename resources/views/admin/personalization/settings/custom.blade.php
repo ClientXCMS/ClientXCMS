@@ -34,6 +34,7 @@
         <div>
             <button type="button" class="btn btn-primary text-sm w-full max-w-md sm:w-auto" id="saveButton" {{ $menus->count() == 0 ? 'disabled' : '' }}>{{ __('global.save') }}</button>
             <a class="btn btn-secondary mt-2 text-sm sm:ml-1 sm:mt-0 w-full max-w-md sm:w-auto" href="{{ route('admin.personalization.menulinks.create', ['type' => $type]) }}">{{ __('personalization.addelement') }}</a>
+            <button type="button" class="btn btn-warning text-sm w-full max-w-md sm:w-auto sm:ml-1 sm:mt-0  " id="resetButton" onclick="window.close()">{{ __('global.back') }}</button>
         </div>
     </div>
 

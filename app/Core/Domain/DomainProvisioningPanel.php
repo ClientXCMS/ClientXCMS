@@ -70,8 +70,11 @@ class DomainProvisioningPanel implements PanelProvisioningInterface
     public function renderNameservers(Service $service)
     {
         $nameservers = app(DomainRegistrarManager::class)->fromService($service)?->getNameservers($service) ?? [];
+        $tld = \App\Models\Store\DomainTld::where('extension', $service->data['tld'] ?? null)->first();
+        $recommendedNameservers = $tld?->default_nameservers ?? [];
+        $recommendedNameserverIps = $tld?->default_nameserver_ips ?? [];
 
-        return view('front.provisioning.domains.nameservers', compact('service', 'nameservers'));
+        return view('front.provisioning.domains.nameservers', compact('service', 'nameservers', 'recommendedNameservers', 'recommendedNameserverIps'));
     }
 
     public function renderDns(Service $service)

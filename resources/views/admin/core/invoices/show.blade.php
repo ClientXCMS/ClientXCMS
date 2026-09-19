@@ -239,7 +239,7 @@
                                         value="{{ route('front.invoices.show', ['invoice' => $invoice->uuid]) }}">
                                     <button type="button" data-clipboard-target="#invoice_url" data-clipboard-action="copy"
                                         data-clipboard-success-text="Copied"
-                                        class=" js-clipboard w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-e-md border border-transparent bg-blue-600 text-white hover:bg-blue-700  dark:focus:ring-1 dark:focus:ring-gray-600">
+                                        class=" js-clipboard btn-addon">
                                         <svg class="js-clipboard-default w-4 h-4 group-hover:rotate-6 transition"
                                             xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -367,7 +367,7 @@
                                 ])
                             </div>
 
-                            <button type="submit" class="w-full btn btn-indigo-600">
+                            <button type="submit" class="w-full btn btn-primary">
                                 {{ __('global.create') }}
                             </button>
                         </form>

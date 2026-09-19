@@ -5,6 +5,7 @@ namespace Tests;
 use App\Models\Account\Customer;
 use App\Models\Admin\Admin;
 use App\Models\Admin\Permission;
+use App\Models\Billing\ConfigOption;
 use App\Models\Billing\Gateway;
 use App\Models\Store\Basket\Basket;
 use App\Models\Store\Coupon;
@@ -19,6 +20,29 @@ use Illuminate\Testing\TestResponse;
 abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
+
+    private ?string $environmentFileSnapshot = null;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $contents = @file_get_contents($this->app->environmentFilePath());
+        $this->environmentFileSnapshot = $contents === false ? null : $contents;
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->environmentFileSnapshot !== null) {
+            $path = $this->app->environmentFilePath();
+
+            if (@file_get_contents($path) !== $this->environmentFileSnapshot) {
+                file_put_contents($path, $this->environmentFileSnapshot);
+            }
+        }
+
+        parent::tearDown();
+    }
 
     protected function performAction(string $method, string $url, array $abbilities = ['*'], array $data = []): TestResponse
     {
@@ -194,7 +218,7 @@ abstract class TestCase extends BaseTestCase
         $option->type = $type;
         $option->hidden = 0;
         $option->save();
-        if ($type == 'select' || $type == 'radio' || $type == 'checkbox') {
+        if (in_array($type, [ConfigOption::TYPE_DROPDOWN, ConfigOption::TYPE_RADIO, ConfigOption::TYPE_CHECKBOX], true)) {
             $this->createOptionValueModel($option->id, ['monthly' => 10]);
         }
         $this->createPriceModel($option->id, 'USD', $prices, 'config_option');
@@ -205,7 +229,7 @@ abstract class TestCase extends BaseTestCase
     protected function createOptionValueModel(int $option_id, array $prices = ['monthly' => 10])
     {
         $optionValue = new \App\Models\Billing\ConfigOptionsOption;
-        $optionValue->option_id = $option_id;
+        $optionValue->config_option_id = $option_id;
         $optionValue->value = 'test';
         $optionValue->friendly_name = 'Test Value';
         $optionValue->hidden = false;

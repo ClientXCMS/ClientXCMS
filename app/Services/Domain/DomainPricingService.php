@@ -55,22 +55,24 @@ class DomainPricingService
             ->first();
 
         if ($price === null) {
-            $price = $tld->prices()->where('action', $action)->where('billing', $billing)->first();
-        }
-        if ($price === null) {
             return null;
         }
 
         return new ProductPriceDTO($price->price, $price->setup, $price->currency, $price->billing);
     }
 
-    public function billingsFor(string $extension, string $action = self::ACTION_REGISTER): Collection
+    public function billingsFor(string $extension, ?string $currency = null, string $action = self::ACTION_REGISTER): Collection
     {
         $tld = $this->findTld($extension);
         if ($tld === null) {
             return collect();
         }
 
-        return $tld->prices()->where('action', $action)->pluck('billing')->unique()->values();
+        $query = $tld->prices()->where('action', $action);
+        if ($currency !== null) {
+            $query->where('currency', $currency);
+        }
+
+        return $query->pluck('billing')->unique()->values();
     }
 }

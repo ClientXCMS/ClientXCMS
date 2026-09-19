@@ -44,7 +44,7 @@ class NotifySlaBreachCommand extends Command
         foreach ($breaches as $ticket) {
             /** @var SupportTicket $ticket */
             $this->line(sprintf(
-                '[SLA] #%d "%s" — first_response_at=%s, due=%s, resolution_due=%s',
+                '[SLA] #%d "%s" - first_response_at=%s, due=%s, resolution_due=%s',
                 $ticket->id,
                 $ticket->subject,
                 $ticket->first_response_at?->toIso8601String() ?? '-',

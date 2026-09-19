@@ -73,7 +73,7 @@ class InvoiceSequenceServiceTest extends TestCase
         $invoice = InvoiceSequenceService::nextNumber('2026-05', true);
         $this->assertStringContainsString('-2026-05-0001', $invoice);
 
-        // PRO_FORMA billing prepends "-PROFORMA" — separate counter.
+        // PRO_FORMA billing prepends "-PROFORMA" - separate counter.
         \App\Models\Admin\Setting::updateSettings(['billing_mode' => 'proforma']);
         $proforma = InvoiceSequenceService::nextNumber('2026-05', true);
         $this->assertStringContainsString('PROFORMA-2026-05-0001', $proforma);

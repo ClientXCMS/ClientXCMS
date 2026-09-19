@@ -42,12 +42,14 @@ class PurgeMetadataCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $this->info('Fixing special characters in the database...');
 
         $this->purgeMetadata();
         $this->info('Special characters fixed successfully.');
+
+        return self::SUCCESS;
     }
 
     private function purgeMetadata()

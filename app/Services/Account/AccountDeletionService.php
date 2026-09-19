@@ -67,7 +67,9 @@ class AccountDeletionService
         return $reasons;
     }
 
-    public function delete(Customer $customer, bool $force = false): bool
+    public const REASON_MANUAL = 'manual';
+
+    public function delete(Customer $customer, bool $force = false, string $reason = self::REASON_MANUAL): bool
     {
         if (! $force && ! $this->canDelete($customer)) {
             throw new AccountDeletionException(
@@ -78,15 +80,9 @@ class AccountDeletionService
 
         $this->cancelScheduledServices($customer);
 
-        return DB::transaction(function () use ($customer) {
-            ActionLog::log(
-                ActionLog::ACCOUNT_DELETED,
-                Customer::class,
-                $customer->id,
-                auth('admin')->id(),
-                $customer->id,
-                ['email' => $customer->email, 'name' => $customer->fullName]
-            );
+        return DB::transaction(function () use ($customer, $reason) {
+            $customerId = $customer->id;
+            $staffId = auth('admin')->id();
 
             $customer->tickets()
                 ->where('status', 'open')
@@ -106,8 +102,19 @@ class AccountDeletionService
             }
             Cache::forget('payment_methods_'.$customer->id);
             $customer->tokens()->delete();
+            $customer->passkeys()->delete();
             $customer->metadata()->delete();
             $customer->delete();
+
+            // Logged after the deletion: the observer wipes the logs of the account it is deleting.
+            ActionLog::log(
+                ActionLog::ACCOUNT_DELETED,
+                Customer::class,
+                $customerId,
+                $staffId,
+                $customerId,
+                ['reason' => $reason]
+            );
 
             return true;
         });

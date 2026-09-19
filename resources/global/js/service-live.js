@@ -19,7 +19,7 @@ function startWidget(root) {
     let timer = null
 
     const tick = async () => {
-        // Pause polling when the tab is hidden — saves bandwidth and
+        // Pause polling when the tab is hidden - saves bandwidth and
         // CPU on the customer side, and traffic on ours.
         if (document.hidden) {
             timer = setTimeout(tick, POLL_INTERVAL_MS)
@@ -47,7 +47,7 @@ function startWidget(root) {
     }
     tick()
 
-    // Visibility — when the tab comes back, refresh immediately.
+    // Visibility - when the tab comes back, refresh immediately.
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden && timer) {
             clearTimeout(timer)

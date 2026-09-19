@@ -35,7 +35,7 @@ class MenuLinkController extends AbstractCrudController
 
     protected string $translatePrefix = 'personalization.menu_links';
 
-    protected string $viewPath = 'admin.personalization.menu_links';
+    protected string $viewPath = 'admin.personalization.menu-links';
 
     protected string $routePath = 'admin.personalization.menulinks';
 

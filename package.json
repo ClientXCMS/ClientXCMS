@@ -1,4 +1,5 @@
 {
+    "name": "clientxcms",
     "private": true,
     "type": "module",
     "scripts": {
@@ -17,9 +18,10 @@
     },
     "dependencies": {
         "@grafikart/drop-files-element": "^1.0.9",
+        "@laravel/passkeys": "^0.4.0",
         "@preline/accordion": "^4.2.0",
         "@preline/collapse": "2.0.2",
-        "@preline/combobox": "^4.2.0",
+        "@preline/combobox": "^5.0.0",
         "@preline/select": "^3.0.0",
         "@tailwindcss/forms": "^0.5.11",
         "@tiptap/pm": "^2.1.16",

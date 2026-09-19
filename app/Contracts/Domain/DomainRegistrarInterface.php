@@ -20,6 +20,13 @@ interface DomainRegistrarInterface
 
     public function checkAvailability(string $domain): DomainAvailabilityDTO;
 
+    /** @param string[] $domains @return array<string, DomainAvailabilityDTO> */
+    public function checkAvailabilityBatch(array $domains): array;
+
+    public function supportsTransfer(): bool;
+
+    public function transfer(Service $service): ServiceStateChangeDTO;
+
     public function register(Service $service): ServiceStateChangeDTO;
 
     public function renew(Service $service, int $years): ServiceStateChangeDTO;

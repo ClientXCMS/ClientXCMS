@@ -195,22 +195,6 @@ class Section extends Model
         return \App\DTO\Core\Extensions\ThemeSectionDTO::fromModel($this);
     }
 
-    public function saveContent(string $content)
-    {
-        if ($this->toDTO()->isProtected()) {
-            return;
-        }
-        $theme = app('theme')->getTheme();
-        $path = $theme->path.'/views/sections_copy/'.$this->id.'-'.$this->uuid.'.blade.php';
-        $this->path = 'sections_copy/'.$this->id.'-'.$this->uuid;
-        if (! file_exists($theme->path.'/views/sections_copy')) {
-            mkdir($theme->path.'/views/sections_copy', 0755, true);
-        }
-        $content = sanitize_content($content);
-        file_put_contents($path, $content);
-        $this->save();
-    }
-
     public function restore()
     {
         $theme = app('theme')->getTheme();
@@ -361,21 +345,10 @@ class Section extends Model
             }
         }
 
-        $theme = app('theme')->getTheme();
-        if (! file_exists($theme->path.'/views/sections_copy')) {
-            mkdir($theme->path.'/views/sections_copy', 0755, true);
-        }
-        $path = $theme->path.'/views/sections_copy/'.$clone->id.'-'.$clone->uuid.'.blade.php';
-        $clone->path = 'sections_copy/'.$clone->id.'-'.$clone->uuid;
-        $clone->save();
-        if (file_exists($theme->path.'/views/'.$this->path.'.blade.php')) {
-            $content = file_get_contents($theme->path.'/views/'.$this->path.'.blade.php');
-        } else {
-            $content = file_get_contents(app('view')->getFinder()->find($this->path));
-        }
-        $content = sanitize_content($content);
-        file_put_contents($path, $content);
-
+        // A copy points at the same theme file: what makes it a different
+        // section is its configuration, not a duplicated file. Copying used to
+        // run the markup through a filter that stripped its directives, which
+        // is why cloned sections came out broken.
         return $clone;
     }
 

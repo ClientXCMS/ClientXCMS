@@ -24,6 +24,29 @@ class CouponTest extends TestCase
         $this->assertEquals(Session::get('error'), __('coupon.coupon_max_uses'));
     }
 
+    public function test_coupon_max_usages_per_customer()
+    {
+        $customer = $this->createCustomerModel();
+        $coupon = Coupon::factory()->create(['max_uses_per_customer' => 1]);
+        $basket = $this->createBasketForCustomer($customer);
+
+        $coupon->usages()->create(['customer_id' => $customer->id, 'used_at' => now(), 'amount' => 10]);
+
+        $this->assertFalse($coupon->isValid($basket));
+        $this->assertEquals(Session::get('error'), __('coupon.coupon_max_use_per_customer'));
+    }
+
+    public function test_coupon_max_usages_per_customer_ignores_other_customers()
+    {
+        $other = $this->createCustomerModel();
+        $coupon = Coupon::factory()->create(['max_uses_per_customer' => 1]);
+        $coupon->usages()->create(['customer_id' => $other->id, 'used_at' => now(), 'amount' => 10]);
+
+        $basket = $this->createBasketForCustomer($this->createCustomerModel());
+
+        $this->assertTrue($coupon->isValid($basket), 'another customer having used the coupon must not block this one');
+    }
+
     public function test_coupon_first_order_only()
     {
         $customer = $this->createCustomerModel();

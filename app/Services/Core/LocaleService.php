@@ -26,7 +26,14 @@ use Illuminate\Support\Facades\Cookie;
 
 class LocaleService
 {
-    const DOWNLOAD_ENDPOINT = 'https://api.github.com/repos/ClientXCMS/ctx-translations/contents/';
+    /**
+     * Raw file hosting, not the REST API: the latter caps unauthenticated
+     * callers at 60 requests per hour and per IP, which a shared host burns
+     * through on its own, and it wraps every file in base64.
+     */
+    const DOWNLOAD_ENDPOINT = 'https://raw.githubusercontent.com/ClientXCMS/ctx-translations/main/';
+
+    const DOWNLOAD_TIMEOUT = 15;
 
     const DEFAULT_ENABLED_LOCALES = '["en_GB"]';
 
@@ -119,11 +126,14 @@ class LocaleService
             throw new \Exception('The locale file could not be downloaded. The locale is not available.');
         }
         [$locale, $country] = explode('_', $locale);
-        $http = \Http::get(self::DOWNLOAD_ENDPOINT."/translations/{$locale}.json");
+        $http = \Http::timeout(self::DOWNLOAD_TIMEOUT)->get(self::DOWNLOAD_ENDPOINT."translations/{$locale}.json");
         if ($http->status() !== 200) {
-            throw new \Exception('The locale file could not be downloaded. Status code: '.$http->status());
+            throw new \Exception("The locale file could not be downloaded. Status code: {$http->status()}");
         }
-        \Storage::put("{$locale}.json", base64_decode($http->json()['content']));
+        if (! self::isTranslationPayload($http->body())) {
+            throw new \Exception('The locale file could not be downloaded. The server did not return a translation file.');
+        }
+        \Storage::put("{$locale}.json", $http->body());
         \Artisan::call('translations:import-file', ['--path' => "app/{$locale}.json"]);
         \Storage::delete("{$locale}.json");
         \Cache::forget('locales');
@@ -134,11 +144,13 @@ class LocaleService
     public static function getLocalesFromAPI()
     {
         return Cache::rememberForever('locales', function () {
-            $http = \Http::get(self::DOWNLOAD_ENDPOINT.'/locales.json');
-            if ($http->status() !== 200) {
+            try {
+                $http = \Http::timeout(self::DOWNLOAD_TIMEOUT)->get(self::DOWNLOAD_ENDPOINT.'locales.json');
+                $content = $http->status() === 200 && self::isTranslationPayload($http->body())
+                    ? json_decode($http->body(), true)
+                    : json_decode(self::getLocalesFromLocal(), true);
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
                 $content = json_decode(self::getLocalesFromLocal(), true);
-            } else {
-                $content = json_decode(base64_decode($http->json()['content']), true);
             }
 
             return collect($content)->mapWithKeys(function ($locale, $key) {
@@ -220,6 +232,15 @@ class LocaleService
     private static function getLocalesFromLocal()
     {
         return file_get_contents(resource_path('locales.json'));
+    }
+
+    /**
+     * A proxy or an error page answering 200 with HTML would otherwise be
+     * written to disk and only fail later, during the import.
+     */
+    private static function isTranslationPayload(string $body): bool
+    {
+        return json_decode($body, true) !== null && json_last_error() === JSON_ERROR_NONE;
     }
 
     public static function isValideLocale(string $locale)

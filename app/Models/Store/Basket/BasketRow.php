@@ -101,14 +101,25 @@ class BasketRow extends Model
     public function getUnitPrice(?string $billing = null): ProductPriceDTO
     {
         $billing = $billing ?? $this->billing;
-        if ($this->product && $this->product->type === ProductTypeInterface::DOMAIN && ! empty($this->data['tld'])) {
-            $price = app(DomainPricingService::class)->priceFor($this->data['tld'], $this->currency, $billing);
-            if ($price !== null) {
-                return $price;
-            }
+        if ($this->product && $this->product->type === ProductTypeInterface::DOMAIN) {
+            $price = ! empty($this->data['tld'])
+                ? app(DomainPricingService::class)->priceFor($this->data['tld'], $this->currency, $billing, $this->data['operation'] ?? DomainPricingService::ACTION_REGISTER)
+                : null;
+
+            return $price ?? throw new \UnexpectedValueException('No exact domain price is available for this basket row.');
         }
 
         return $this->product->getPriceByCurrency($this->currency, $billing);
+    }
+
+    public function hasValidDomainPricing(?string $billing = null): bool
+    {
+        if (! $this->product || $this->product->type !== ProductTypeInterface::DOMAIN) {
+            return true;
+        }
+
+        return ! empty($this->data['tld'])
+            && app(DomainPricingService::class)->priceFor($this->data['tld'], $this->currency, $billing ?? $this->billing, $this->data['operation'] ?? DomainPricingService::ACTION_REGISTER) !== null;
     }
 
     public function applyCoupon(float $price, string $type)

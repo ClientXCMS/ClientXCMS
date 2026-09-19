@@ -58,7 +58,7 @@ class CreateAdminCommand extends Command
         Admin::insert([
             'username' => $username,
             'email' => $this->option('email') ?? $this->ask('Admin email'),
-            'password' => bcrypt($this->option('password') ?? $this->secret('Admin password')),
+            'password' => \Hash::make($this->option('password') ?? $this->secret('Admin password')),
             'firstname' => $this->option('firstname') ?? $this->ask('Admin firstname'),
             'lastname' => $this->option('lastname') ?? $this->ask('Admin lastname'),
             'role_id' => $role->id,

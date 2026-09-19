@@ -46,8 +46,11 @@ class StoreController extends Controller
         $subtitle = trans('store.subtitle');
         $title = trans('store.title');
         $products = collect();
+        $domainSearchAvailable = config('features.domain_management') && setting('domain_search_enabled', true)
+            && Product::where('type', 'domain')->where('status', 'active')->get()
+                ->contains(fn (Product $product) => $product->hasPricesForCurrency(currency()));
 
-        return view('front.store.index', compact('products', 'groups', 'title', 'subtitle'));
+        return view('front.store.index', compact('products', 'groups', 'title', 'subtitle', 'domainSearchAvailable'));
     }
 
     public function group($group)

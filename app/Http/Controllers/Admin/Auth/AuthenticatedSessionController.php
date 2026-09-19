@@ -20,6 +20,7 @@
 namespace App\Http\Controllers\Admin\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\RequireAdminPassword;
 use App\Http\Requests\Admin\Auth\LoginRequest;
 use App\Models\Admin\Admin;
 use Illuminate\Http\RedirectResponse;
@@ -48,6 +49,9 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
+        if ($request->user('admin')->admin_layout_prompted_at === null) {
+            $request->session()->put('show_admin_layout_prompt', true);
+        }
         if ($request->has('redirect')) {
             return secure_redirect($request->get('redirect'));
         }
@@ -79,13 +83,12 @@ class AuthenticatedSessionController extends Controller
         $request->validate([
             'password' => 'required',
         ]);
-        $hash = \Hash::driver('bcrypt');
-        if (! $hash->check($request->password, $request->user('admin')->password)) {
+        if (! \Hash::check($request->password, $request->user('admin')->password)) {
             return back()->withErrors([
                 'password' => [__('auth.password')],
             ]);
         }
-        $request->session()->passwordConfirmed();
+        RequireAdminPassword::confirm($request->session());
 
         return redirect()->intended();
     }
@@ -117,6 +120,9 @@ class AuthenticatedSessionController extends Controller
         }
         \Session::put('autologin', true);
         Auth::guard('admin')->login($admin);
+        if ($admin->admin_layout_prompted_at === null) {
+            $request->session()->put('show_admin_layout_prompt', true);
+        }
 
         return redirect()->route('admin.dashboard')->with('success', __('admin.dashboard.autologin_success', ['name' => $admin->name]));
     }
