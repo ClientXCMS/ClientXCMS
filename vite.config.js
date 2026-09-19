@@ -13,6 +13,8 @@ export default defineConfig({
                 ...glob.sync('resources/themes/*/js/*.js'),
                 ...glob.sync('resources/global/js/*.js'),
                 ...glob.sync('resources/global/**/*.png'),
+                ...glob.sync('resources/global/**/*.jpg'),
+                ...glob.sync('resources/global/**/*.jpeg'),
                 ...glob.sync('resources/global/css/*.css'),
                 ...glob.sync('resources/global/css/*.scss'),
                 ...glob.sync('resources/global/js/admin/*.js'),
