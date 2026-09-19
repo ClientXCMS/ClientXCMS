@@ -109,6 +109,19 @@ enum ExtensionType: string
     }
 
     /**
+     * Whether this type owns a dedicated directory (safe to prune obsolete
+     * files 1:1 against). Templates share a directory with unrelated files,
+     * so pruning them is out of scope.
+     */
+    public function ownsDirectory(): bool
+    {
+        return match ($this) {
+            self::Module, self::Addon, self::Theme => true,
+            self::EmailTemplate, self::InvoiceTemplate => false,
+        };
+    }
+
+    /**
      * Whether a path extracted from an archive belongs to this extension. Sole
      * authority for update confinement: anything else is never written.
      */

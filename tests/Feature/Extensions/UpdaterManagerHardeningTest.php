@@ -255,4 +255,66 @@ class UpdaterManagerHardeningTest extends TestCase
         $this->assertFileExists($this->projectRoot.'/app/Providers/AppServiceProvider.php');
         $this->assertFileExists($this->projectRoot.'/config/app.php');
     }
+
+    public function test_updating_removes_a_file_the_new_archive_no_longer_ships(): void
+    {
+        (new Filesystem)->mkdir($this->projectRoot.'/modules/demo/src');
+        file_put_contents($this->projectRoot.'/modules/demo/module.json', '{"uuid":"demo","version":"1.0"}');
+        file_put_contents($this->projectRoot.'/modules/demo/src/Removed.php', '<?php // renamed upstream');
+
+        $archive = $this->sandbox.'/package.zip';
+        $this->makeZip($archive, [
+            'package/modules/demo/module.json' => '{"uuid":"demo","version":"1.1"}',
+        ]);
+
+        (new UpdaterManager)->extractExtension($archive, $this->extractDir, ExtensionType::Module, 'demo');
+
+        $this->assertFileDoesNotExist(
+            $this->projectRoot.'/modules/demo/src/Removed.php',
+            'a file dropped from the new archive must not linger on disk'
+        );
+        $this->assertStringContainsString(
+            '1.1',
+            (string) file_get_contents($this->projectRoot.'/modules/demo/module.json')
+        );
+    }
+
+    public function test_updating_never_touches_a_file_outside_the_extension_directory_while_pruning(): void
+    {
+        (new Filesystem)->mkdir($this->projectRoot.'/modules/demo');
+        file_put_contents($this->projectRoot.'/modules/demo/module.json', '{"uuid":"demo"}');
+        (new Filesystem)->mkdir($this->projectRoot.'/app/Http/Middleware');
+        file_put_contents($this->projectRoot.'/app/Http/Middleware/Authenticate.php', '<?php // untouched');
+
+        $archive = $this->sandbox.'/package.zip';
+        $this->makeZip($archive, [
+            'package/modules/demo/module.json' => '{"uuid":"demo","version":"2"}',
+        ]);
+
+        (new UpdaterManager)->extractExtension($archive, $this->extractDir, ExtensionType::Module, 'demo');
+
+        $this->assertFileExists(
+            $this->projectRoot.'/app/Http/Middleware/Authenticate.php',
+            'pruning the extension directory must never reach outside it'
+        );
+    }
+
+    public function test_updating_an_email_template_does_not_prune_the_shared_directory(): void
+    {
+        $folder = 'resources/views/vendor/notifications';
+        (new Filesystem)->mkdir($this->projectRoot.'/'.$folder);
+        file_put_contents($this->projectRoot."/{$folder}/other.blade.php", 'someone else template');
+
+        $archive = $this->sandbox.'/template.zip';
+        $this->makeZip($archive, [
+            "package/{$folder}/wave.blade.php" => 'template',
+        ]);
+
+        (new UpdaterManager)->extractExtension($archive, $this->extractDir, ExtensionType::EmailTemplate, 'wave');
+
+        $this->assertFileExists(
+            $this->projectRoot."/{$folder}/other.blade.php",
+            'templates share a directory: pruning must stay out of scope for this type'
+        );
+    }
 }

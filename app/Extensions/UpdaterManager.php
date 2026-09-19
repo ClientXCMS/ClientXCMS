@@ -49,33 +49,40 @@ class UpdaterManager
     {
         ExtensionType::assertValidUuid($uuid);
 
-        $this->extractArchive($file, $to, function (string $root) use ($type, $uuid): \ArrayIterator {
-            $owned = [];
-            $dropped = [];
-            foreach ((new Finder)->in($root)->files()->ignoreDotFiles(false)->ignoreVCS(false) as $candidate) {
-                $relative = substr($candidate->getPathname(), strlen($root) + 1);
-                if ($type->owns($relative, $uuid)) {
-                    $owned[] = $candidate;
-                } else {
-                    $dropped[] = $relative;
+        $this->extractArchive(
+            $file,
+            $to,
+            function (string $root) use ($type, $uuid): \ArrayIterator {
+                $owned = [];
+                $dropped = [];
+                foreach ((new Finder)->in($root)->files()->ignoreDotFiles(false)->ignoreVCS(false) as $candidate) {
+                    $relative = substr($candidate->getPathname(), strlen($root) + 1);
+                    if ($type->owns($relative, $uuid)) {
+                        $owned[] = $candidate;
+                    } else {
+                        $dropped[] = $relative;
+                    }
                 }
-            }
 
-            if ($dropped !== []) {
-                // Silently dropping them would turn a mispackaged archive into an unexplainable bug
-                Log::warning('extensions.update.files_outside_extension_dropped', [
-                    'uuid' => $uuid,
-                    'type' => $type->value,
-                    'dropped' => count($dropped),
-                    'sample' => array_slice($dropped, 0, 10),
-                ]);
-            }
-            if ($owned === []) {
-                throw new \RuntimeException("Archive does not contain {$type->path($uuid)}");
-            }
+                if ($dropped !== []) {
+                    // Silently dropping them would turn a mispackaged archive into an unexplainable bug
+                    Log::warning('extensions.update.files_outside_extension_dropped', [
+                        'uuid' => $uuid,
+                        'type' => $type->value,
+                        'dropped' => count($dropped),
+                        'sample' => array_slice($dropped, 0, 10),
+                    ]);
+                }
+                if ($owned === []) {
+                    throw new \RuntimeException("Archive does not contain {$type->path($uuid)}");
+                }
 
-            return new \ArrayIterator($owned);
-        });
+                return new \ArrayIterator($owned);
+            },
+            $type->ownsDirectory()
+                ? fn (string $root) => $this->pruneFilesRemovedUpstream($root, $type, $uuid)
+                : null
+        );
     }
 
     public function extract(string $file, string $to)
@@ -83,7 +90,28 @@ class UpdaterManager
         $this->extractArchive($file, $to, null);
     }
 
-    private function extractArchive(string $file, string $to, ?\Closure $confine)
+    /**
+     * Removes files the extension's own directory still has but the new
+     * archive no longer ships (renames, deletions upstream). mirror()'s
+     * delete option is only safe when origin and target are scoped to the
+     * very same directory tree: the outer mirror() call in extractArchive()
+     * confines *writes* to the extension via $confine, but Symfony reuses
+     * that same iterator to decide *deletions* against base_path() itself
+     * when delete=>true, which would reach far outside the extension. A
+     * second, self-contained mirror() 1:1 on the extension's own directory
+     * sidesteps that by letting Symfony's default (null iterator) scoping
+     * apply on both sides.
+     */
+    private function pruneFilesRemovedUpstream(string $root, ExtensionType $type, string $uuid): void
+    {
+        $source = $root.DIRECTORY_SEPARATOR.$type->path($uuid);
+        if (! is_dir($source)) {
+            return;
+        }
+        (new Filesystem)->mirror($source, $type->absolutePath($uuid), null, ['override' => true, 'delete' => true]);
+    }
+
+    private function extractArchive(string $file, string $to, ?\Closure $confine, ?\Closure $afterMirror = null)
     {
         self::rejectZipSlip($file);
         $fileSystem = new Filesystem;
@@ -105,6 +133,7 @@ class UpdaterManager
                 self::METADATA_FILES
             ));
             $fileSystem->mirror($root, base_path(), $confine === null ? null : $confine($root), ['override' => true]);
+            $afterMirror?->__invoke($root);
         } finally {
             $zip->close();
             $fileSystem->remove([$file, $to]);
