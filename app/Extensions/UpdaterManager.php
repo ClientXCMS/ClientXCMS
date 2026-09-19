@@ -49,33 +49,40 @@ class UpdaterManager
     {
         ExtensionType::assertValidUuid($uuid);
 
-        $this->extractArchive($file, $to, function (string $root) use ($type, $uuid): \ArrayIterator {
-            $owned = [];
-            $dropped = [];
-            foreach ((new Finder)->in($root)->files()->ignoreDotFiles(false)->ignoreVCS(false) as $candidate) {
-                $relative = substr($candidate->getPathname(), strlen($root) + 1);
-                if ($type->owns($relative, $uuid)) {
-                    $owned[] = $candidate;
-                } else {
-                    $dropped[] = $relative;
+        $this->extractArchive(
+            $file,
+            $to,
+            function (string $root) use ($type, $uuid): \ArrayIterator {
+                $owned = [];
+                $dropped = [];
+                foreach ((new Finder)->in($root)->files()->ignoreDotFiles(false)->ignoreVCS(false) as $candidate) {
+                    $relative = substr($candidate->getPathname(), strlen($root) + 1);
+                    if ($type->owns($relative, $uuid)) {
+                        $owned[] = $candidate;
+                    } else {
+                        $dropped[] = $relative;
+                    }
                 }
-            }
 
-            if ($dropped !== []) {
-                // Silently dropping them would turn a mispackaged archive into an unexplainable bug
-                Log::warning('extensions.update.files_outside_extension_dropped', [
-                    'uuid' => $uuid,
-                    'type' => $type->value,
-                    'dropped' => count($dropped),
-                    'sample' => array_slice($dropped, 0, 10),
-                ]);
-            }
-            if ($owned === []) {
-                throw new \RuntimeException("Archive does not contain {$type->path($uuid)}");
-            }
+                if ($dropped !== []) {
+                    // Silently dropping them would turn a mispackaged archive into an unexplainable bug
+                    Log::warning('extensions.update.files_outside_extension_dropped', [
+                        'uuid' => $uuid,
+                        'type' => $type->value,
+                        'dropped' => count($dropped),
+                        'sample' => array_slice($dropped, 0, 10),
+                    ]);
+                }
+                if ($owned === []) {
+                    throw new \RuntimeException("Archive does not contain {$type->path($uuid)}");
+                }
 
-            return new \ArrayIterator($owned);
-        });
+                return new \ArrayIterator($owned);
+            },
+            $type->ownsDirectory()
+                ? fn (string $root) => $this->pruneFilesRemovedUpstream($root, $type, $uuid)
+                : null
+        );
     }
 
     public function extract(string $file, string $to)
@@ -83,7 +90,57 @@ class UpdaterManager
         $this->extractArchive($file, $to, null);
     }
 
-    private function extractArchive(string $file, string $to, ?\Closure $confine)
+    /**
+     * Removes files the extension's own directory still has but the new
+     * archive no longer ships (renames, deletions upstream). This deliberately
+     * does NOT use mirror()'s built-in 'delete' option: Symfony reuses the
+     * same iterator for both the copy loop (walks the origin) and the delete
+     * loop (expects to walk the target), so it cannot be handed a filtered
+     * iterator without breaking one of the two. It also has no way to exclude
+     * a path from deletion - if an extension's directory ever holds an actual
+     * .git (cloned there directly instead of symlinked in from outside, which
+     * is how this project's own dev setup works), an upstream archive never
+     * ships one, so a blind mirror-delete would read that as "removed
+     * upstream" and erase the whole history one object at a time. Walking the
+     * target ourselves with ignoreVCS() lets us keep that path out of reach
+     * unconditionally, not just as a side effect of how it happens to be laid
+     * out on disk.
+     */
+    private function pruneFilesRemovedUpstream(string $root, ExtensionType $type, string $uuid): void
+    {
+        $source = $root.DIRECTORY_SEPARATOR.$type->path($uuid);
+        $target = $type->absolutePath($uuid);
+        if (! is_dir($source) || ! is_dir($target)) {
+            return;
+        }
+
+        $shipped = [];
+        foreach ((new Finder)->in($source)->files()->ignoreDotFiles(false)->ignoreVCS(false) as $file) {
+            $shipped[substr($file->getPathname(), strlen($source) + 1)] = true;
+        }
+
+        $fileSystem = new Filesystem;
+        $obsoleteDirs = [];
+        foreach ((new Finder)->in($target)->ignoreDotFiles(false)->ignoreVCS(true) as $entry) {
+            $relative = substr($entry->getPathname(), strlen($target) + 1);
+            if ($entry->isDir()) {
+                $obsoleteDirs[] = $entry->getPathname();
+            } elseif (! isset($shipped[$relative])) {
+                $fileSystem->remove($entry->getPathname());
+            }
+        }
+
+        // Deepest paths first, so a directory only left empty by the removals
+        // above is itself removed once nothing references it any more.
+        usort($obsoleteDirs, static fn (string $a, string $b): int => strlen($b) <=> strlen($a));
+        foreach ($obsoleteDirs as $dir) {
+            if (is_dir($dir) && (new Finder)->in($dir)->depth('== 0')->hasResults() === false) {
+                $fileSystem->remove($dir);
+            }
+        }
+    }
+
+    private function extractArchive(string $file, string $to, ?\Closure $confine, ?\Closure $afterMirror = null)
     {
         self::rejectZipSlip($file);
         $fileSystem = new Filesystem;
@@ -105,6 +162,7 @@ class UpdaterManager
                 self::METADATA_FILES
             ));
             $fileSystem->mirror($root, base_path(), $confine === null ? null : $confine($root), ['override' => true]);
+            $afterMirror?->__invoke($root);
         } finally {
             $zip->close();
             $fileSystem->remove([$file, $to]);

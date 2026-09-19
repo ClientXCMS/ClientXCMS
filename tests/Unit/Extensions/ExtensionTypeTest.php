@@ -42,6 +42,15 @@ class ExtensionTypeTest extends TestCase
         $this->assertSame(base_path('modules/demo'), ExtensionType::Module->absolutePath('demo'));
     }
 
+    public function test_only_types_with_a_dedicated_directory_are_safe_to_prune(): void
+    {
+        $this->assertTrue(ExtensionType::Module->ownsDirectory());
+        $this->assertTrue(ExtensionType::Addon->ownsDirectory());
+        $this->assertTrue(ExtensionType::Theme->ownsDirectory());
+        $this->assertFalse(ExtensionType::EmailTemplate->ownsDirectory());
+        $this->assertFalse(ExtensionType::InvoiceTemplate->ownsDirectory());
+    }
+
     public function test_an_extension_only_owns_files_inside_its_own_directory(): void
     {
         $type = ExtensionType::Module;
