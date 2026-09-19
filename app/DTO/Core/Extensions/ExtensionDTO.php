@@ -116,6 +116,26 @@ class ExtensionDTO implements Arrayable
         return null;
     }
 
+    /**
+     * Whether an "update available" badge should show. An unknown local
+     * version (installed but never registered locally) can never be proven
+     * up to date, so it defaults to flagging an update rather than staying
+     * silent about it - but null must never reach version_compare(), that's
+     * a deprecation warning on every render, not a comparison.
+     */
+    public function hasUpdateAvailable(): bool
+    {
+        if (! $this->isInstalled()) {
+            return false;
+        }
+        $latest = $this->getLatestVersion();
+        if ($latest === null) {
+            return false;
+        }
+
+        return $this->version === null || version_compare($this->version, $latest, '<');
+    }
+
     public function type()
     {
         return $this->type.'s';

@@ -37,7 +37,7 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
             @endif
         </div>
 
-        @if ($extension->isInstalled() && $extension->getLatestVersion() && version_compare($extension->version, $extension->getLatestVersion(), '<'))
+        @if ($extension->hasUpdateAvailable())
             <div class="absolute top-3 left-3">
             <span class="inline-flex items-center py-1.5 px-2.5 rounded-lg text-xs font-medium bg-amber-500 text-white shadow-lg animate-pulse">
                 <i class="bi bi-arrow-up-circle-fill mr-1"></i>{{ $extension->getLatestVersion() }}
@@ -62,7 +62,7 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
     </p>
 
     <div class="flex flex-col gap-2">
-        @if ($extension->isInstalled() && $extension->getLatestVersion() && version_compare($extension->version, $extension->getLatestVersion(), '<'))
+        @if ($extension->hasUpdateAvailable())
             <form action="{{ route('admin.settings.extensions.update', [$extension->type(), $extension->uuid]) }}" method="POST" class="ajax-extension-form">
             @csrf
             <button class="w-full btn btn-warning btn-sm flex items-center justify-center gap-1">

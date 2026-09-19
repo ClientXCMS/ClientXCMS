@@ -46,7 +46,7 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
             @endif
         </div>
 
-        @if ($extension->isInstalled() && $extension->getLatestVersion() && version_compare($extension->version, $extension->getLatestVersion(), '<'))
+        @if ($extension->hasUpdateAvailable())
             <div class="absolute top-2.5 left-2.5" style="{{ $extension->isActivable() ? 'left: 2.5rem;' : '' }}">
             <span class="inline-flex items-center py-1 px-2 rounded-lg text-xs font-medium bg-amber-500 text-white shadow-lg animate-pulse" title="{{ __('extensions.settings.update_available') }}">
                 <i class="bi bi-arrow-up-circle-fill mr-1"></i>{{ $extension->getLatestVersion() }}
@@ -110,7 +110,7 @@ $tagSlugs = $tags->pluck('slug')->implode(',');
     </div>
 
     <div class="flex flex-col gap-2 extension-actions">
-        @if ($extension->isInstalled() && $extension->getLatestVersion() && version_compare($extension->version, $extension->getLatestVersion(), '<'))
+        @if ($extension->hasUpdateAvailable())
             <button type="button" class="ajax-action-btn w-full btn btn-warning btn-sm flex items-center justify-center gap-1" data-action="update" data-type="{{ $extension->type() }}" data-uuid="{{ $extension->uuid }}">
             <i class="bi bi-download"></i>{{ __('extensions.settings.update') }}
             </button>
