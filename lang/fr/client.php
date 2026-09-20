@@ -135,7 +135,7 @@ return [
     ],
     'renewals' => [
       'test_auto_translation' => 'Ceci est une deuxième clé de test pour vérifier que DeepL fonctionne bien',
-      'test_auto_translation_fresh' => 'Cette phrase a changé, on vérifie la retraduction et le log du moteur choisi',
+      'test_auto_translation_fresh' => 'Nouvelle modification pour vérifier que DeepL est bien utilisé, maintenant que FR est seul source de vérité',
       'index' => 'Renouvellement du service',
       'title' => 'Gestion des renouvellements',
       'period' => 'Période',
