@@ -99,7 +99,12 @@ jobs:
 
       - name: Install translation pipeline dependencies
         working-directory: ctx-translations
-        run: pip install translators
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install translators
+          fi
 
       - name: Machine-translate any new key into the remaining locales
         working-directory: ctx-translations
