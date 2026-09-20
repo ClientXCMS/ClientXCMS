@@ -180,15 +180,29 @@ return [
         'subheading' => 'Here are the sections for the page :name',
         'description' => 'Customize the sections of the customer area',
         'content' => 'Content',
+        'edit_of' => 'Edit the :name section',
+        'more_actions_for' => 'More actions for the :name section',
+        'toggle_preview_for' => 'Show or hide the preview of the :name section',
+        'premium_locked' => 'This section requires a premium extension that is not enabled to be edited.',
         'show' => [
             'title' => 'Editing a section',
             'protected_content' => 'This section is protected and cannot be modified.',
             'subheading' => 'You can edit the content of your section as you wish',
         ],
+        'settings' => [
+            'title' => 'Section settings',
+            'subheading' => 'Theme and location of this section',
+        ],
+        'security_notice' => [
+            'title' => 'Content customization only',
+            'description' => 'This page edits the section\'s content (text, images, links). Since version 2.17, it is no longer possible to edit a section\'s layout or style directly from the admin: we removed that capability for security reasons. To change how this section looks, a developer needs to edit the theme\'s source file.',
+        ],
+        'back_to_page' => 'Back to the list of sections for this page',
         'config' => [
             'btn' => 'Configure section',
             'title' => 'Section configuration',
-            'subheading' => 'You can modify your section content as you wish',
+            'subheading' => 'Content of the :name section',
+            'no_fields' => 'This section has no customizable fields.',
             'fields' => [
                 'badge' => 'Badge',
                 'title' => 'Title',

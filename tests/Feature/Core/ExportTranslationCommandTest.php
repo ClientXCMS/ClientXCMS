@@ -27,50 +27,59 @@ use Tests\TestCase;
 class ExportTranslationCommandTest extends TestCase
 {
     /**
-     * @return iterable<string, array{0: string, 1: string}>
+     * @return iterable<string, array{0: string}>
      */
     public static function provideLocales(): iterable
     {
-        yield 'fr' => ['fr', 'Français'];
-        yield 'en' => ['en', 'English'];
+        yield 'fr' => ['fr'];
+        yield 'en' => ['en'];
     }
 
     #[DataProvider('provideLocales')]
-    public function test_export_produces_the_requested_locale_with_converted_placeholders(string $locale, string $languageName): void
+    public function test_export_produces_one_json_file_per_module_with_converted_placeholders(string $locale): void
     {
-        $path = "export-test-{$locale}.json";
-        $storagePath = storage_path($path);
+        $outputDirectory = storage_path("export-test-{$locale}");
 
         try {
-            Artisan::call('translations:export', ['--locale' => $locale, '--path' => $path]);
+            Artisan::call('translations:export', ['--locale' => $locale, '--path' => $outputDirectory]);
 
-            $this->assertFileExists($storagePath);
+            $this->assertFileExists("{$outputDirectory}/provisioning.json");
 
-            $content = json_decode(File::get($storagePath), true);
+            $content = json_decode(File::get("{$outputDirectory}/provisioning.json"), true);
+            $this->assertArrayNotHasKey('language', $content, 'per-module files carry no locale metadata, only content');
 
-            $this->assertSame($languageName, $content['language']);
-            $this->assertArrayHasKey("lang.{$locale}.provisioning", $content);
-
-            $nameserver = $content["lang.{$locale}.provisioning"]['domain_manager']['nameserver'];
+            $nameserver = $content['domain_manager']['nameserver'];
             $this->assertStringNotContainsString(':number', $nameserver, 'the laravel placeholder must be converted');
             $this->assertStringContainsString('{_number}', $nameserver);
         } finally {
-            File::delete($storagePath);
+            File::deleteDirectory($outputDirectory);
         }
     }
 
     public function test_export_defaults_to_french(): void
     {
-        $storagePath = storage_path('fr.json');
+        $outputDirectory = storage_path('fr');
 
         try {
             Artisan::call('translations:export');
 
-            $content = json_decode(File::get($storagePath), true);
-
-            $this->assertSame('Français', $content['language']);
+            $this->assertFileExists("{$outputDirectory}/global.json");
         } finally {
-            File::delete($storagePath);
+            File::deleteDirectory($outputDirectory);
+        }
+    }
+
+    public function test_export_reports_an_error_for_an_unknown_locale(): void
+    {
+        $outputDirectory = storage_path('export-test-xx');
+
+        try {
+            Artisan::call('translations:export', ['--locale' => 'xx', '--path' => $outputDirectory]);
+
+            $this->assertStringContainsString('No xx translations found', Artisan::output());
+            $this->assertDirectoryDoesNotExist($outputDirectory);
+        } finally {
+            File::deleteDirectory($outputDirectory);
         }
     }
 }

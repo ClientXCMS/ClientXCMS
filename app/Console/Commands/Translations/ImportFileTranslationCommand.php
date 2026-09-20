@@ -24,47 +24,82 @@ use Illuminate\Console\Command;
 
 class ImportFileTranslationCommand extends Command
 {
-    protected $signature = 'translations:import-file {--path=fr.json}';
+    protected $signature = 'translations:import-file {--path=} {--locale=} {--prune : Remove lang/<locale>/*.php modules not present in the imported set}';
 
-    protected $description = 'Import translations from a json and replace them in the project in PHP format';
+    protected $description = 'Import a directory of per-module JSON files into lang/<locale>/*.php';
 
     public function handle(): void
     {
-        $jsonFilePath = storage_path($this->option('path'));
-        if (! File::exists($jsonFilePath)) {
-            $this->error("The JSON file does not exist: {$jsonFilePath}");
+        $directory = storage_path($this->option('path'));
+        $locale = $this->option('locale') ?: basename($directory);
+
+        if (! File::isDirectory($directory)) {
+            $this->error("The translations directory does not exist: {$directory}");
 
             return;
         }
-        $locale = basename($jsonFilePath, '.json');
+
         $this->info("Processing locale: {$locale}");
-        $translations = json_decode(File::get($jsonFilePath), true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->error("Error while decoding JSON file: {$jsonFilePath}");
+        $imported = [];
 
-            return;
+        foreach (File::files($directory) as $file) {
+            if ($file->getExtension() !== 'json') {
+                continue;
+            }
+
+            $translations = json_decode(File::get($file->getRealPath()), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->error("Error while decoding JSON file: {$file->getFilename()}");
+
+                continue;
+            }
+
+            $module = $file->getFilenameWithoutExtension();
+            $this->writeModule($locale, $module, $translations);
+            $imported[] = $module;
         }
-        unset($translations['language']);
-        $this->processTranslations($translations, $locale);
+
+        $this->info(count($imported)." {$locale} module(s) imported.");
+
+        if ($this->option('prune')) {
+            $this->pruneStaleModules($locale, $imported);
+        }
     }
 
-    protected function processTranslations($translations, $locale): void
+    /**
+     * Removes lang/<locale>/*.php files that fr no longer has, so a target
+     * locale stays a strict mirror of fr's own module list.
+     */
+    protected function pruneStaleModules(string $locale, array $importedModules): void
     {
-        foreach ($translations as $path => $translationData) {
-            $baseDir = base_path(str_replace('.', '/', $path));
-            $baseDir = str_replace('/fr/', "/{$locale}/", $baseDir);
-            $langDirectory = pathinfo($baseDir, PATHINFO_DIRNAME);
-            if (! File::exists($langDirectory)) {
-                File::makeDirectory($langDirectory, 0755, true);
-                $this->info('Folder created: '.$langDirectory);
-            }
-            $phpFilePath = "{$baseDir}.php";
-            $processedTranslationData = $this->restoreLaravelVariables($translationData);
-
-            $phpContent = "<?php\n\nreturn ".$this->varExport($processedTranslationData, true).";\n";
-            File::put($phpFilePath, $phpContent);
-            $this->info('File created: '.$phpFilePath);
+        $langDirectory = base_path("lang/{$locale}");
+        if (! File::isDirectory($langDirectory)) {
+            return;
         }
+
+        foreach (File::files($langDirectory) as $file) {
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
+
+            $module = $file->getFilenameWithoutExtension();
+            if (! in_array($module, $importedModules, true)) {
+                File::delete($file->getRealPath());
+                $this->info("Removed stale module: {$module}.php");
+            }
+        }
+    }
+
+    protected function writeModule(string $locale, string $module, array $translations): void
+    {
+        $langDirectory = base_path("lang/{$locale}");
+        if (! File::exists($langDirectory)) {
+            File::makeDirectory($langDirectory, 0755, true);
+        }
+
+        $processed = $this->restoreLaravelVariables($translations);
+        $phpContent = "<?php\n\nreturn ".$this->varExport($processed, true).";\n";
+        File::put("{$langDirectory}/{$module}.php", $phpContent);
     }
 
     protected function restoreLaravelVariables(array $translations): array

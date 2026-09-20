@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Core;
 
+use App\Providers\AppServiceProvider;
 use App\Services\Core\LocaleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -48,15 +49,12 @@ class LocaleDownloadTest extends TestCase
 
     private function payload(): string
     {
-        return json_encode([
-            'language' => 'English',
-            'lang.fr.a11y' => ['skip_to_content' => 'Skip to content'],
-        ]);
+        return json_encode(['skip_to_content' => 'Skip to content']);
     }
 
     /**
-     * locales.json and the translation files live on the same host, so they
-     * have to be faked apart or the locale list gets a translation file.
+     * The per-module download hits translations/<locale>/<module>.json for
+     * every module fr has, so the fake must answer any of them the same way.
      */
     private function fakeHosting(mixed $translations): void
     {
@@ -68,14 +66,16 @@ class LocaleDownloadTest extends TestCase
         ]);
     }
 
-    public function test_it_downloads_translations_from_raw_hosting_not_the_rest_api(): void
+    public function test_it_downloads_from_the_version_branch_not_the_rest_api(): void
     {
         $this->fakeHosting(Http::response($this->payload(), 200));
 
         LocaleService::downloadFiles('en_GB');
 
+        $expectedBranch = 'v'.AppServiceProvider::VERSION;
         Http::assertSent(fn ($request) => str_contains($request->url(), 'raw.githubusercontent.com')
-            && str_contains($request->url(), 'translations/en.json'));
+            && str_contains($request->url(), "/{$expectedBranch}/translations/en/")
+        );
         Http::assertNotSent(fn ($request) => str_contains($request->url(), 'api.github.com'));
     }
 
@@ -86,6 +86,21 @@ class LocaleDownloadTest extends TestCase
         LocaleService::downloadFiles('en_GB');
 
         $this->assertSame('Skip to content', __('a11y.skip_to_content', [], 'en'));
+    }
+
+    public function test_it_prunes_a_module_en_has_that_fr_no_longer_does(): void
+    {
+        $staleModule = base_path('lang/en/__stale_test_module.php');
+        file_put_contents($staleModule, "<?php\n\nreturn ['x' => 'y'];\n");
+
+        try {
+            $this->fakeHosting(Http::response($this->payload(), 200));
+            LocaleService::downloadFiles('en_GB');
+
+            $this->assertFileDoesNotExist($staleModule);
+        } finally {
+            @unlink($staleModule);
+        }
     }
 
     public function test_it_refuses_a_response_that_is_not_a_translation_file(): void
