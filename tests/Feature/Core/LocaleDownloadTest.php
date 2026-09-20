@@ -59,6 +59,7 @@ class LocaleDownloadTest extends TestCase
     private function fakeHosting(mixed $translations): void
     {
         Cache::forget('locales');
+        Cache::forget('ctx_translations_branch');
         Http::fake([
             '*/locales.json' => Http::response(file_get_contents(resource_path('locales.json')), 200),
             '*/translations/*' => $translations,
@@ -124,10 +125,29 @@ class LocaleDownloadTest extends TestCase
     public function test_the_locale_list_falls_back_to_the_bundled_file_when_the_host_is_unreachable(): void
     {
         Cache::forget('locales');
+        Cache::forget('ctx_translations_branch');
         Http::fake(['*' => Http::response('<html>error</html>', 200)]);
 
         $locales = LocaleService::getLocalesFromAPI();
 
         $this->assertArrayHasKey('en_GB', $locales->toArray());
+    }
+
+    public function test_it_falls_back_to_the_default_branch_when_the_version_branch_does_not_exist_yet(): void
+    {
+        Cache::forget('locales');
+        Cache::forget('ctx_translations_branch');
+        $versionBranch = 'v'.AppServiceProvider::VERSION;
+        Http::fake([
+            "*/{$versionBranch}/locales.json" => Http::response('', 404),
+            '*/main/locales.json' => Http::response(file_get_contents(resource_path('locales.json')), 200),
+            '*/main/translations/*' => Http::response($this->payload(), 200),
+            'api.github.com/*' => Http::response('should not be called', 500),
+        ]);
+
+        LocaleService::downloadFiles('en_GB');
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/main/translations/en/'));
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), "/{$versionBranch}/translations/"));
     }
 }

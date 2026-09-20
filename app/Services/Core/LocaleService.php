@@ -34,6 +34,8 @@ class LocaleService
      */
     const DOWNLOAD_HOST = 'https://raw.githubusercontent.com/ClientXCMS/ctx-translations/';
 
+    const DOWNLOAD_DEFAULT_BRANCH = 'main';
+
     const DOWNLOAD_TIMEOUT = 15;
 
     const DEFAULT_ENABLED_LOCALES = '["en_GB"]';
@@ -121,15 +123,22 @@ class LocaleService
     }
 
     /**
-     * The structure below (one JSON file per module) only exists on the
-     * ctx-translations branch matching this instance's own version. The
-     * default branch keeps the pre-2.17 single-file-per-locale format for
-     * instances that have not upgraded yet, so it is never a valid fallback
-     * here: reading it with this format would silently misparse it.
+     * Prefers the ctx-translations branch matching this instance's own
+     * version. ctx-translations regenerates the per-module structure on its
+     * default branch too (not only the legacy single-file format kept there
+     * for pre-2.17 instances), so falling back to it when the version branch
+     * doesn't exist yet is safe: a key too new to be on the default branch
+     * simply renders as its raw key until the version branch is created or
+     * merged there, rather than failing the whole download.
      */
     public static function downloadBranch(): string
     {
-        return 'v'.ctx_version();
+        return Cache::remember('ctx_translations_branch', now()->addHour(), function () {
+            $versionBranch = 'v'.ctx_version();
+            $probe = \Http::timeout(self::DOWNLOAD_TIMEOUT)->get(self::DOWNLOAD_HOST."{$versionBranch}/locales.json");
+
+            return $probe->successful() ? $versionBranch : self::DOWNLOAD_DEFAULT_BRANCH;
+        });
     }
 
     /**
@@ -164,7 +173,7 @@ class LocaleService
                 ->get(self::DOWNLOAD_HOST."{$branch}/translations/{$locale}/{$module}.json");
             if ($http->status() !== 200) {
                 File::deleteDirectory($tempDirectory);
-                throw new \Exception("Translations are not available yet for this version ({$branch}). Status code: {$http->status()}");
+                throw new \Exception("The locale file could not be downloaded from {$branch}. Status code: {$http->status()}");
             }
             if (! self::isTranslationPayload($http->body())) {
                 File::deleteDirectory($tempDirectory);
