@@ -7,7 +7,12 @@ on:
       - "v2*"
     paths:
       - "lang/**"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      force_translation_budget:
+        description: "Bypass the daily translation cost cap for this run"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -44,11 +49,11 @@ jobs:
           echo "$LOCALES" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
-      - name: Export every tracked reference locale
+      - name: Export every tracked reference locale, one JSON file per module
         run: |
           while read -r locale; do
             [ -z "$locale" ] && continue
-            php artisan translations:export --locale="$locale" --path="${locale}.json"
+            php artisan translations:export --locale="$locale" --path="storage/${locale}"
           done <<< "${{ steps.locales.outputs.locales }}"
 
       - name: Checkout ctx-translations
@@ -90,7 +95,9 @@ jobs:
         run: |
           while read -r locale; do
             [ -z "$locale" ] && continue
-            cp "storage/${locale}.json" "ctx-translations/translations/${locale}.json"
+            mkdir -p "ctx-translations/translations/${locale}"
+            rm -f "ctx-translations/translations/${locale}"/*.json
+            cp "storage/${locale}"/*.json "ctx-translations/translations/${locale}/"
           done <<< "${{ steps.locales.outputs.locales }}"
 
       - name: Set up Python
@@ -104,11 +111,15 @@ jobs:
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           else
-            pip install translators
+            pip install translators requests
           fi
 
       - name: Machine-translate any new key into the remaining locales
         working-directory: ctx-translations
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_AI_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN }}
+          TRANSLATION_FORCE_BUDGET: ${{ github.event.inputs.force_translation_budget }}
         run: python3 auto_translate.py
 
       - name: Commit and push if the reference locales changed
@@ -116,7 +127,7 @@ jobs:
         run: |
           git config user.name "clientxcms-bot"
           git config user.email "bot@clientxcms.com"
-          git add translations/
+          git add translations/ .translation_budget.json
           if git diff --cached --quiet; then
             echo "No translation change to push."
           else
