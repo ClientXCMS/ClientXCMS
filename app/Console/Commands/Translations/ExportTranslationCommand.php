@@ -19,18 +19,17 @@
 
 namespace App\Console\Commands\Translations;
 
+use App\Services\Core\LocaleService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
 class ExportTranslationCommand extends Command
 {
-    protected $signature = 'translations:export {--path=fr.json}';
+    protected $signature = 'translations:export {--path=fr.json} {--locale=fr}';
 
-    protected $description = 'Export French translations to a JSON file and convert PHP arrays to JSON';
+    protected $description = 'Export a reference locale to a JSON file and convert PHP arrays to JSON';
 
-    protected array $languageNames = [
-        'fr' => 'Français',
-    ];
+    protected array $languageNames = [];
 
     public function handle(): void
     {
@@ -38,6 +37,7 @@ class ExportTranslationCommand extends Command
             base_path('lang'),
         ];
 
+        $locale = $this->option('locale');
         $translationsByLocale = [];
 
         if (File::exists(storage_path($this->option('path')))) {
@@ -46,21 +46,21 @@ class ExportTranslationCommand extends Command
 
         foreach ($directories as $dir) {
             if (File::exists($dir)) {
-                $this->processBaseDirectory($dir, $translationsByLocale);
+                $this->processBaseDirectory($dir, $locale, $translationsByLocale);
             }
         }
 
-        if (isset($translationsByLocale['fr'])) {
-            $this->exportToJson($translationsByLocale['fr']);
+        if (isset($translationsByLocale[$locale])) {
+            $this->exportToJson($translationsByLocale[$locale]);
         } else {
-            $this->error('No French translations found.');
+            $this->error("No {$locale} translations found.");
         }
     }
 
-    protected function processBaseDirectory($baseDir, &$translationsByLocale): void
+    protected function processBaseDirectory($baseDir, string $locale, &$translationsByLocale): void
     {
         if ($baseDir === base_path('lang')) {
-            $this->processLangDirectory($baseDir, 'lang', $translationsByLocale);
+            $this->processLangDirectory($baseDir, 'lang', $locale, $translationsByLocale);
         } else {
             $baseFolder = basename($baseDir);
             $moduleDirectories = File::directories($baseDir);
@@ -69,24 +69,24 @@ class ExportTranslationCommand extends Command
                 $moduleName = basename($moduleDirectory);
                 $langDirectory = $moduleDirectory.'/lang';
                 if (File::exists($langDirectory)) {
-                    $this->processLangDirectory($langDirectory, "{$baseFolder}.{$moduleName}.lang", $translationsByLocale);
+                    $this->processLangDirectory($langDirectory, "{$baseFolder}.{$moduleName}.lang", $locale, $translationsByLocale);
                 }
             }
         }
     }
 
-    protected function processLangDirectory($langDirectory, $modulePrefix, &$translationsByLocale): void
+    protected function processLangDirectory($langDirectory, $modulePrefix, string $locale, &$translationsByLocale): void
     {
         $localeDirectories = File::directories($langDirectory);
 
         foreach ($localeDirectories as $localeDirectory) {
-            $locale = basename($localeDirectory);
-            if ($locale === 'fr') {
+            $directoryLocale = basename($localeDirectory);
+            if ($directoryLocale === $locale) {
                 $files = File::files($localeDirectory);
 
                 foreach ($files as $file) {
                     if ($file->getExtension() === 'php') {
-                        $this->collectTranslations($file->getRealPath(), $locale, $modulePrefix, $file->getFilename(), $translationsByLocale);
+                        $this->collectTranslations($file->getRealPath(), $directoryLocale, $modulePrefix, $file->getFilename(), $translationsByLocale);
                     }
                 }
             }
@@ -99,12 +99,23 @@ class ExportTranslationCommand extends Command
         if (is_array($translations)) {
             if (! isset($translationsByLocale[$locale])) {
                 $translationsByLocale[$locale] = [];
-                $translationsByLocale[$locale]['language'] = $this->languageNames[$locale] ?? $locale;
+                $translationsByLocale[$locale]['language'] = $this->languageName($locale);
             }
             $fileKey = basename($fileName, '.php');
             $modulePrefix .= '.'.$locale.'.'.$fileKey;
             $translationsByLocale[$locale][$modulePrefix] = $this->replaceLaravelVariables($translations);
         }
+    }
+
+    protected function languageName(string $locale): string
+    {
+        if (empty($this->languageNames)) {
+            $this->languageNames = collect(LocaleService::getLocales(onlyEnabled: false))
+                ->mapWithKeys(fn ($localeData, $localeCode) => [$localeData['key'] => $localeData['name']])
+                ->toArray();
+        }
+
+        return $this->languageNames[$locale] ?? $locale;
     }
 
     protected function replaceLaravelVariables(array $translations): array
@@ -126,6 +137,6 @@ class ExportTranslationCommand extends Command
         $jsonContent = json_encode($translations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         File::put($storagePath, $jsonContent);
 
-        $this->info('French translations have been successfully exported to '.$storagePath);
+        $this->info("{$this->option('locale')} translations have been successfully exported to ".$storagePath);
     }
 }
