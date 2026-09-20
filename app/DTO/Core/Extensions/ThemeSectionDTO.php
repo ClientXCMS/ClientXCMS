@@ -67,6 +67,11 @@ class ThemeSectionDTO
         return $this->json['thumbnail'] ?? 'https://via.placeholder.com/1000x250';
     }
 
+    public function formattedName(): string
+    {
+        return \Str::headline($this->json['name'] ?? $this->uuid);
+    }
+
     public function render(bool $cache = true): string
     {
         $path = $this->json['path'];
