@@ -2,23 +2,38 @@
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class ReferenceTranslationsTest extends TestCase
 {
+    private const REFERENCE_LOCALES = ['fr', 'en'];
+
     /**
      * @return array<int, string>
      */
-    private function referenceFiles(): array
+    private function referenceFiles(string $locale): array
     {
-        return glob(dirname(__DIR__, 2).'/lang/fr/*.php') ?: [];
+        return glob(dirname(__DIR__, 2)."/lang/{$locale}/*.php") ?: [];
     }
 
-    public function test_every_reference_file_returns_a_non_empty_array(): void
+    /**
+     * @return iterable<string, array{0: string}>
+     */
+    public static function provideReferenceLocales(): iterable
     {
-        $this->assertNotEmpty($this->referenceFiles(), 'the french reference translations are missing');
+        foreach (self::REFERENCE_LOCALES as $locale) {
+            yield $locale => [$locale];
+        }
+    }
 
-        foreach ($this->referenceFiles() as $file) {
+    #[DataProvider('provideReferenceLocales')]
+    public function test_every_reference_file_returns_a_non_empty_array(string $locale): void
+    {
+        $files = $this->referenceFiles($locale);
+        $this->assertNotEmpty($files, "the {$locale} reference translations are missing");
+
+        foreach ($files as $file) {
             $content = require $file;
             $this->assertIsArray($content, basename($file).' must return an array');
             $this->assertNotEmpty($content, basename($file).' must not be empty');
@@ -30,14 +45,15 @@ class ReferenceTranslationsTest extends TestCase
      * converts them to Laravel's :name. A file committed without that step
      * would render the placeholder literally to the user.
      */
-    public function test_no_placeholder_is_left_in_the_translation_repository_format(): void
+    #[DataProvider('provideReferenceLocales')]
+    public function test_no_placeholder_is_left_in_the_translation_repository_format(string $locale): void
     {
         $offenders = [];
 
-        foreach ($this->referenceFiles() as $file) {
+        foreach ($this->referenceFiles($locale) as $file) {
             foreach (explode("\n", (string) file_get_contents($file)) as $number => $line) {
                 if (preg_match('/\{_\w+\}/', $line)) {
-                    $offenders[] = 'lang/fr/'.basename($file).':'.($number + 1);
+                    $offenders[] = "lang/{$locale}/".basename($file).':'.($number + 1);
                 }
             }
         }

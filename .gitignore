@@ -32,6 +32,7 @@ yarn-error.log
 /lang/*/*
 !/lang/*/install.php
 !/lang/fr/*
+!/lang/en/*
 /resources/views/vendor/notifications/*
 /data/*
 /src/CTX*
