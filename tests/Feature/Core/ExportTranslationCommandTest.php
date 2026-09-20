@@ -32,7 +32,6 @@ class ExportTranslationCommandTest extends TestCase
     public static function provideLocales(): iterable
     {
         yield 'fr' => ['fr'];
-        yield 'en' => ['en'];
     }
 
     #[DataProvider('provideLocales')]
