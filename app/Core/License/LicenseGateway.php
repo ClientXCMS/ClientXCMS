@@ -58,8 +58,7 @@ class LicenseGateway
     private const ALLOWED_LICENSE_HOSTS = [
         'clientxcms.com',
         'www.clientxcms.com',
-        'staging.clientxcms.com',
-        'api.clientxcms.com',
+        'staging-web.clientxcms.com',
     ];
 
     public static function getDomain()
