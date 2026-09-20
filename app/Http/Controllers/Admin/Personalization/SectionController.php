@@ -64,6 +64,7 @@ class SectionController extends AbstractCrudController
 
             return back()->with('error', __('personalization.sections.errors.notfound'));
         }
+        $activePageKey = collect($pages)->search(fn ($page) => $page['url'] === $section->url);
         $pages = collect($pages)->mapWithKeys(function ($item) {
             return [$item['url'] => $item['title']];
         })->toArray();
@@ -111,6 +112,7 @@ class SectionController extends AbstractCrudController
             'fields' => $fields,
             'values' => $values,
             'locales' => $locales,
+            'activePageKey' => $activePageKey !== false ? $activePageKey : null,
         ]);
     }
 
