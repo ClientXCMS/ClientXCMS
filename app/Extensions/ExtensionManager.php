@@ -170,15 +170,18 @@ class ExtensionManager extends ExtensionCollectionsManager
     public function getAllExtensions(bool $withTheme = true, bool $withUnofficial = true)
     {
         $installed = $this->fetchInstalledExtensions();
-        $versions = collect($installed)->pluck('version')->toArray();
-        $uuids = collect($installed)->pluck('uuid')->toArray();
+        // Keyed by uuid, not two parallel arrays: array_search() returns false
+        // on a miss, and PHP casts that false into the array key 0, so
+        // $versions[array_search(...)] silently reads a *different*
+        // extension's version instead of ever falling through to null.
+        $versionsByUuid = collect($installed)->pluck('version', 'uuid');
         $bootErrors = collect($installed)
             ->filter(fn (array $extension) => isset($extension['boot_error']))
             ->mapWithKeys(fn (array $extension) => [($extension['type'] ?? '').'/'.$extension['uuid'] => $extension['boot_error']]);
         $enabled = $this->fetchEnabledExtensions();
         $theme = app('theme')->getTheme();
         $enabled = array_merge($enabled, [$theme->uuid]);
-        $versions = array_merge($versions, [$theme->version]);
+        $versionsByUuid->put($theme->uuid, $theme->version);
         if (setting('email_template_name') != null) {
             $enabled = array_merge($enabled, [\setting('email_template_name')]);
         }
@@ -186,14 +189,14 @@ class ExtensionManager extends ExtensionCollectionsManager
             $allowedTypes = array_diff(ExtensionType::singularValues(), $withTheme ? [] : [ExtensionType::Theme->value]);
 
             return in_array($extensionDTO['type'], $allowedTypes);
-        })->map(function ($extension) use ($uuids, $enabled, $versions, $bootErrors) {
+        })->map(function ($extension) use ($versionsByUuid, $enabled, $bootErrors) {
             $extension['enabled'] = in_array($extension['uuid'], $enabled);
             $extension['api'] = $extension;
             $bootErrorKey = $extension['type'].'s/'.$extension['uuid'];
             if ($bootErrors->has($bootErrorKey)) {
                 $extension['api']['boot_error'] = $bootErrors->get($bootErrorKey);
             }
-            $extension['version'] = $versions[array_search($extension['uuid'], $uuids)] ?? null;
+            $extension['version'] = $versionsByUuid->get($extension['uuid']);
 
             return ExtensionDTO::fromArray($extension);
         });
@@ -271,14 +274,7 @@ class ExtensionManager extends ExtensionCollectionsManager
         if ($api == null) {
             throw new ExtensionException('Extension not found in the API');
         }
-        $extensions[$type] = collect($extensions[$type] ?? [])->map(function ($item) use ($extension, $api) {
-            if ($item['uuid'] == $extension) {
-                $item['version'] = $api['version'];
-                $item['api'] = $api;
-            }
-
-            return $item;
-        })->toArray();
+        $extensions[$type] = self::upsertLocalEntry($extensions[$type] ?? [], $type, $extension, $api);
 
         try {
             (new UpdaterManager)->update($extension, ExtensionType::fromAny($type));
@@ -286,6 +282,40 @@ class ExtensionManager extends ExtensionCollectionsManager
         } catch (\Exception $e) {
             throw new ExtensionException('Error in UpdaterManager: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Updates the matching local entry if one exists, otherwise registers a
+     * new one - so an extension already present on disk but never installed
+     * through the app (cloned in by a dev tool, or left behind by a failed
+     * previous install) gets picked up by its first successful update
+     * instead of staying unregistered forever, one map() over an entry that
+     * was never there to match.
+     */
+    private static function upsertLocalEntry(array $entries, string $type, string $uuid, array $api): array
+    {
+        $matched = false;
+        $entries = collect($entries)->map(function ($item) use ($uuid, $api, &$matched) {
+            if ($item['uuid'] == $uuid) {
+                $matched = true;
+                $item['version'] = $api['version'];
+                $item['api'] = $api;
+            }
+
+            return $item;
+        });
+        if (! $matched) {
+            $entries->push([
+                'uuid' => $uuid,
+                'version' => $api['version'],
+                'type' => $type,
+                'enabled' => false,
+                'installed' => true,
+                'api' => $api,
+            ]);
+        }
+
+        return $entries->values()->toArray();
     }
 
     public function checkPrerequisitesForEnable(string $type, string $extension): array
