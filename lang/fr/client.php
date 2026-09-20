@@ -135,7 +135,7 @@ return [
     ],
     'renewals' => [
       'test_auto_translation' => 'Ceci est une deuxième clé de test pour vérifier que DeepL fonctionne bien',
-      'test_auto_translation_fresh' => 'Nouvelle modification pour vérifier que DeepL est bien utilisé, maintenant que FR est seul source de vérité',
+      'test_auto_translation_fresh' => 'Encore une modification pour vérifier que Cloudflare est bien utilisé maintenant, et que l’estimation du backlog est correcte',
       'index' => 'Renouvellement du service',
       'title' => 'Gestion des renouvellements',
       'period' => 'Période',
