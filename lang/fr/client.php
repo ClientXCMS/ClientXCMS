@@ -134,7 +134,7 @@ return [
       ],
     ],
     'renewals' => [
-      'test_auto_translation' => 'Ceci est une clé de test pour vérifier la traduction automatique',
+      'test_auto_translation' => 'Ceci est une deuxième clé de test pour vérifier que DeepL fonctionne bien',
       'index' => 'Renouvellement du service',
       'title' => 'Gestion des renouvellements',
       'period' => 'Période',
