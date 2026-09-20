@@ -102,7 +102,8 @@ class ExportTranslationCommand extends Command
                 $translationsByLocale[$locale]['language'] = $this->languageName($locale);
             }
             $fileKey = basename($fileName, '.php');
-            $modulePrefix .= '.'.$locale.'.'.$fileKey;
+            // ctx-translations keys every locale under "fr" in the path; ImportFileTranslationCommand rewrites it back on import.
+            $modulePrefix .= '.fr.'.$fileKey;
             $translationsByLocale[$locale][$modulePrefix] = $this->replaceLaravelVariables($translations);
         }
     }

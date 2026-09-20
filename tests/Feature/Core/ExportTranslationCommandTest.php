@@ -49,9 +49,12 @@ class ExportTranslationCommandTest extends TestCase
             $content = json_decode(File::get($storagePath), true);
 
             $this->assertSame($languageName, $content['language']);
-            $this->assertArrayHasKey("lang.{$locale}.provisioning", $content);
+            $this->assertArrayHasKey('lang.fr.provisioning', $content, 'ctx-translations keys every locale under "fr" in the module path');
+            if ($locale !== 'fr') {
+                $this->assertArrayNotHasKey("lang.{$locale}.provisioning", $content);
+            }
 
-            $nameserver = $content["lang.{$locale}.provisioning"]['domain_manager']['nameserver'];
+            $nameserver = $content['lang.fr.provisioning']['domain_manager']['nameserver'];
             $this->assertStringNotContainsString(':number', $nameserver, 'the laravel placeholder must be converted');
             $this->assertStringContainsString('{_number}', $nameserver);
         } finally {
