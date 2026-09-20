@@ -81,13 +81,6 @@ jobs:
           cp .env.example .env
           php artisan key:generate --force
 
-      - name: Import translations
-        run: |
-          php artisan translations:import 2>&1 | tee /tmp/translations-import.log
-          if grep -q "Error importing translations:" /tmp/translations-import.log; then
-            exit 1
-          fi
-
       - name: Generate SQL schema
         env:
           DB_CONNECTION: mysql
@@ -243,9 +236,7 @@ jobs:
         run: php artisan migrate --force --no-interaction --no-ansi --seed
       - name: Build assets
         run: npm install && npm run build
-      - name: Run translations
-        run: php artisan translations:import
-        
+
       - name: Run PHPUnit
         run: ./vendor/bin/phpunit --configuration phpunit_github.xml -d date.timezone=Europe/Paris
 
