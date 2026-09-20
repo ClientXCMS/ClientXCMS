@@ -146,7 +146,7 @@ return [
             'twitter_handle' => 'Compte Twitter',
             'twitter_handle_help' => '@nomdutilisateur',
         ],
-        'social_section' => 'Reseaux sociaux / Open Graph',
+        'social_section' => 'Réseaux sociaux / Open Graph',
         'success' => 'Les paramètres SEO ont été enregistrés avec succès.',
     ],
     'primary' => [
