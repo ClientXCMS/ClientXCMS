@@ -135,7 +135,7 @@ return [
         ],
         'renewals' => [
             'test_auto_translation' => 'This is a second test key to verify that DeepL works properly',
-            'test_auto_translation_fresh' => 'This is a brand new key never translated before',
+            'test_auto_translation_fresh' => 'This sentence changed, verifying retranslation and the selected engine log',
             'index' => 'Service Renewals',
             'title' => 'Renewal Management',
             'period' => 'Period',
