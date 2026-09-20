@@ -134,6 +134,7 @@ return [
             ],
         ],
         'renewals' => [
+            'test_auto_translation' => 'This is a test key to verify automatic translation',
             'index' => 'Service Renewals',
             'title' => 'Renewal Management',
             'period' => 'Period',
