@@ -91,6 +91,12 @@ jobs:
             git checkout -b "$BRANCH" "origin/${DEFAULT_BRANCH}"
           fi
 
+      - name: Keep the pipeline scripts current with the default branch
+        working-directory: ctx-translations
+        run: |
+          DEFAULT_BRANCH="${{ steps.default_branch.outputs.branch }}"
+          git checkout "origin/${DEFAULT_BRANCH}" -- '*.py' requirements.txt
+
       - name: Copy exported reference locales
         run: |
           while read -r locale; do
@@ -130,10 +136,10 @@ jobs:
         run: |
           git config user.name "clientxcms-bot"
           git config user.email "bot@clientxcms.com"
-          git add translations/ .translation_budget.json
+          git add translations/ .translation_budget.json '*.py' requirements.txt
           if git diff --cached --quiet; then
-            echo "No translation change to push."
+            echo "No translation or pipeline script change to push."
           else
-            git commit -m "chore: sync reference locales from ClientXCMS/ClientXCMS@${{ github.sha }}"
+            git commit -m "chore: sync reference locales and pipeline scripts from ClientXCMS/ClientXCMS@${{ github.sha }}"
             git push origin "${{ steps.target.outputs.branch }}"
           fi
