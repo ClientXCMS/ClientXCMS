@@ -37,7 +37,7 @@ jobs:
       - name: Discover tracked reference locales
         id: locales
         run: |
-          LOCALES=$(git ls-tree -d --name-only HEAD lang | xargs -n1 basename | sort)
+          LOCALES=$(grep -oP '^!/lang/\K[a-z]+(?=/\*$)' .gitignore | sort)
           echo "Tracked locales: ${LOCALES}"
           echo "locales<<EOF" >> "$GITHUB_OUTPUT"
           echo "$LOCALES" >> "$GITHUB_OUTPUT"
