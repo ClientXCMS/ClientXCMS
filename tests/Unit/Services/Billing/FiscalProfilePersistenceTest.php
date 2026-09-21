@@ -30,6 +30,9 @@ class FiscalProfilePersistenceTest extends TestCase
             $table->boolean('gdpr_compliment')->default(false);
             $table->string('customer_type')->default('individual');
             $table->string('tax_subject_status')->default('unknown');
+            $table->boolean('is_public_entity')->default(false);
+            $table->string('chorus_service_code', 100)->nullable();
+            $table->string('chorus_commitment_number', 100)->nullable();
             $table->boolean('fiscal_profile_completed')->default(false);
             $table->string('company_name')->nullable();
             $table->string('legal_name')->nullable();
