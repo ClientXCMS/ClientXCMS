@@ -15,5 +15,8 @@ class ElectronicProviderRegistryTest extends TestCase
         $registry->register($provider);
         $this->assertSame($provider, $registry->get('local'));
         $this->assertContains('simulation', $provider->capabilities());
+        $this->assertTrue($registry->has('local'));
+        $this->assertTrue($registry->supports('local', 'b2b'));
+        $this->assertFalse($registry->supports('local', 'unknown'));
     }
 }

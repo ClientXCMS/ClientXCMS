@@ -34,6 +34,7 @@ use App\Models\Billing\Invoice;
 use App\Models\Billing\Subscription;
 use App\Services\Billing\AccountingProviderRegistry;
 use App\Services\Billing\ElectronicProviderRegistry;
+use App\Services\Billing\ElectronicProviderResolver;
 use App\Services\Billing\EReportingScheduleService;
 use App\Services\Billing\FacturXRenderer;
 use App\Services\Billing\FiscalProfileExtensionRegistry;
@@ -50,6 +51,7 @@ class BillingServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentTypeService::class);
         $this->app->singleton(FiscalProfileExtensionRegistry::class);
         $this->app->singleton(ElectronicProviderRegistry::class);
+        $this->app->singleton(ElectronicProviderResolver::class);
         $this->app->singleton(AccountingProviderRegistry::class);
         $this->app->singleton(LocalElectronicExchangeProvider::class);
         $this->app->bind(ElectronicInvoiceRendererInterface::class, FacturXRenderer::class);
@@ -131,20 +133,17 @@ class BillingServiceProvider extends ServiceProvider
                 return;
             }
             $routing = data_get($invoice->billing_snapshot, 'tax.electronic_routing', app(\App\Services\Billing\FiscalProfileService::class)->electronicRouting($invoice->customer));
-            if ($routing === \App\Services\Billing\FiscalProfileService::ROUTING_EINVOICING) {
-                \App\Jobs\Billing\SubmitElectronicInvoice::dispatch($invoice);
+            if (in_array($routing, [\App\Services\Billing\FiscalProfileService::ROUTING_EINVOICING, \App\Services\Billing\FiscalProfileService::ROUTING_B2G], true)) {
+                $provider = app(ElectronicProviderResolver::class)->forDocument($invoice);
+                if ($provider !== null) {
+                    \App\Jobs\Billing\SubmitElectronicInvoice::dispatch($invoice, $provider);
+                } else {
+                    $this->recordManualReview($invoice, 'Aucun provider compatible n’est configuré pour cette destination.');
+                }
             } elseif ($routing === \App\Services\Billing\FiscalProfileService::ROUTING_EREPORTING) {
                 app(\App\Services\Billing\EReportingService::class)->recordInvoice($invoice);
             } else {
-                $hash = hash('sha256', json_encode($invoice->billing_snapshot, JSON_THROW_ON_ERROR));
-                \App\Models\Billing\ElectronicDocument::firstOrCreate([
-                    'idempotency_key' => \App\Models\Billing\ElectronicDocument::idempotencyKey($invoice, 'manual', $hash),
-                ], [
-                    'documentable_type' => $invoice::class, 'documentable_id' => $invoice->id, 'provider' => 'manual',
-                    'format' => 'manual-review', 'status' => \App\Models\Billing\ElectronicDocument::STATUS_FAILED,
-                    'payload_sha256' => $hash, 'last_error_code' => 'manual_review',
-                    'last_error_message' => 'Le profil fiscal exige une revue manuelle avant transmission.',
-                ]);
+                $this->recordManualReview($invoice, 'Le profil fiscal exige une revue manuelle avant transmission.');
             }
         });
         Event::listen(\App\Events\Core\Invoice\InvoiceCompleted::class, function ($event) {
@@ -170,10 +169,28 @@ class BillingServiceProvider extends ServiceProvider
             if (! $this->electronicInvoicingApplies($creditNote->created_at)) {
                 return;
             }
-            if (data_get($creditNote->invoice->billing_snapshot, 'tax.electronic_routing') === \App\Services\Billing\FiscalProfileService::ROUTING_EINVOICING) {
-                \App\Jobs\Billing\SubmitElectronicInvoice::dispatch($creditNote);
+            if (in_array(data_get($creditNote->invoice->billing_snapshot, 'tax.electronic_routing'), [\App\Services\Billing\FiscalProfileService::ROUTING_EINVOICING, \App\Services\Billing\FiscalProfileService::ROUTING_B2G], true)) {
+                $provider = app(ElectronicProviderResolver::class)->forDocument($creditNote);
+                if ($provider !== null) {
+                    \App\Jobs\Billing\SubmitElectronicInvoice::dispatch($creditNote, $provider);
+                } else {
+                    $this->recordManualReview($creditNote, 'Aucun provider compatible n’est configuré pour cette destination.');
+                }
             }
         });
+    }
+
+    private function recordManualReview($document, string $message): void
+    {
+        $invoice = $document instanceof \App\Models\Billing\CreditNote ? $document->invoice : $document;
+        $hash = hash('sha256', json_encode($invoice->billing_snapshot, JSON_THROW_ON_ERROR));
+        \App\Models\Billing\ElectronicDocument::firstOrCreate([
+            'idempotency_key' => \App\Models\Billing\ElectronicDocument::idempotencyKey($document, 'manual', $hash),
+        ], [
+            'documentable_type' => $document::class, 'documentable_id' => $document->id, 'provider' => 'manual',
+            'format' => 'manual-review', 'status' => \App\Models\Billing\ElectronicDocument::STATUS_FAILED,
+            'payload_sha256' => $hash, 'last_error_code' => 'manual_review', 'last_error_message' => $message,
+        ]);
     }
 
     private function electronicInvoicingApplies($date): bool

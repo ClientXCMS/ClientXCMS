@@ -302,6 +302,9 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'company_name',
         'customer_type',
         'tax_subject_status',
+        'is_public_entity',
+        'chorus_service_code',
+        'chorus_commitment_number',
         'fiscal_profile_completed',
         'legal_name',
         'siren',
@@ -346,6 +349,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
         'locale' => 'fr_FR',
         'gdpr_compliment' => false,
         'tax_subject_status' => self::TAX_STATUS_UNKNOWN,
+        'is_public_entity' => false,
     ];
 
     /**
@@ -368,6 +372,7 @@ class Customer extends Authenticatable implements \Illuminate\Contracts\Auth\Mus
      */
     protected $casts = [
         'fiscal_profile_completed' => 'boolean',
+        'is_public_entity' => 'boolean',
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'last_login' => 'datetime',

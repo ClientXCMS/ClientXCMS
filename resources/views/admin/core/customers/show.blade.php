@@ -22,6 +22,7 @@
 @section('scripts')
     <script src="{{ Vite::asset('resources/global/js/clipboard.js') }}" type="module"></script>
     <script src="{{ Vite::asset('resources/global/js/admin/filter.js') }}" type="module"></script>
+    <script src="{{ Vite::asset('resources/global/js/flatpickr.js') }}" type="module"></script>
 @endsection
 @section('content')
     <div class="container mx-auto">

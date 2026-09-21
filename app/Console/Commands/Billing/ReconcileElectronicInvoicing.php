@@ -29,7 +29,7 @@ class ReconcileElectronicInvoicing extends Command
                 }
             }
         });
-        ElectronicDocument::with('documentable')->where('status', ElectronicDocument::STATUS_FAILED)->where('provider', '!=', 'manual')->where('updated_at', '<=', now()->subMinutes(5))->each(fn ($document) => SubmitElectronicInvoice::dispatch($document->documentable));
+        ElectronicDocument::with('documentable')->where('status', ElectronicDocument::STATUS_FAILED)->where('provider', '!=', 'manual')->where('updated_at', '<=', now()->subMinutes(5))->each(fn ($document) => SubmitElectronicInvoice::dispatch($document->documentable, $document->provider));
         EReportingPeriod::where('status', 'failed')->where('due_at', '<=', now())->each(fn ($period) => SubmitEReportingPeriod::dispatch($period));
 
         return self::SUCCESS;

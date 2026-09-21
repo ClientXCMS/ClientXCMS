@@ -109,6 +109,9 @@ class ProfileController extends Controller
                     'vat_number' => $customer->vat_number,
                     'tax_registration_number' => $customer->tax_registration_number,
                     'rna_number' => $customer->rna_number,
+                    'is_public_entity' => (bool) $customer->is_public_entity,
+                    'chorus_service_code' => $customer->chorus_service_code,
+                    'chorus_commitment_number' => $customer->chorus_commitment_number,
                     'billing_details' => $customer->billing_details,
                     'electronic_routing' => $fiscalProfiles->electronicRouting($customer),
                     'evidence' => $fiscalProfiles->evidence($customer),
@@ -205,7 +208,7 @@ class ProfileController extends Controller
         $customer = $service->update($customer, $request->all());
 
         return response()->json(['message' => __('einvoicing.profile.saved'), 'data' => [
-            ...$customer->only(['customer_type', 'tax_subject_status', 'legal_name', 'siren', 'siret', 'vat_number', 'tax_registration_number', 'rna_number', 'billing_details', 'address', 'address2', 'zipcode', 'city', 'region', 'country']),
+            ...$customer->only(['customer_type', 'tax_subject_status', 'legal_name', 'siren', 'siret', 'vat_number', 'tax_registration_number', 'rna_number', 'is_public_entity', 'chorus_service_code', 'chorus_commitment_number', 'billing_details', 'address', 'address2', 'zipcode', 'city', 'region', 'country']),
             'company_name' => $customer->legal_name,
             'completed' => $customer->hasCompleteFiscalProfile(),
             'status' => $service->status($customer),

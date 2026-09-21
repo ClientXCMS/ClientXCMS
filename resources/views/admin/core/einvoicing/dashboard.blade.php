@@ -35,7 +35,7 @@ default => 'bi-clock-fill',
         </div>
     </div>
 
-    @if (setting('einvoicing_provider', 'local') === 'local')
+    @if (setting('einvoicing_provider', 'local') === 'local' || setting('einvoicing_b2g_provider', 'local') === 'local')
     <div class="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300" role="alert">
         <i class="bi bi-shield-exclamation mt-0.5 text-xl"></i>
         <div>

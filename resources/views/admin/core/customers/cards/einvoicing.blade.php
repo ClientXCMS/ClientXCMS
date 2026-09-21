@@ -42,6 +42,15 @@ $profileStatus = $profileService->status($customer);
                 <div id="admin-fiscal-siret">
                     @include('admin/shared/input', ['name'=>'siret','label'=>__('einvoicing.profile.siret'),'value'=>old('siret', $customer->siret),'optional'=>true])
                 </div>
+                <div id="admin-fiscal-public" class="md:col-span-3">
+                    @include('admin/shared/checkbox', ['name'=>'is_public_entity','label'=>__('einvoicing.profile.is_public_entity'),'value'=>old('is_public_entity', $customer->is_public_entity)])
+                </div>
+                <div id="admin-fiscal-chorus-service">
+                    @include('admin/shared/input', ['name'=>'chorus_service_code','label'=>__('einvoicing.profile.chorus_service_code'),'value'=>old('chorus_service_code', $customer->chorus_service_code),'optional'=>true])
+                </div>
+                <div id="admin-fiscal-chorus-commitment">
+                    @include('admin/shared/input', ['name'=>'chorus_commitment_number','label'=>__('einvoicing.profile.chorus_commitment_number'),'value'=>old('chorus_commitment_number', $customer->chorus_commitment_number),'optional'=>true])
+                </div>
                 <div id="admin-fiscal-vat">
                     @include('admin/shared/input', ['name'=>'vat_number','label'=>__('einvoicing.profile.vat_number'),'value'=>old('vat_number', $customer->vat_number),'optional'=>true])
                 </div>
@@ -91,6 +100,7 @@ $profileStatus = $profileService->status($customer);
         const type = document.querySelector('#tabs-einvoicing [name="customer_type"]');
         const taxStatus = document.querySelector('#tabs-einvoicing [name="tax_subject_status"]');
         const country = document.querySelector('#tabs-einvoicing [name="country"]');
+        const publicEntity = document.querySelector('#tabs-einvoicing [name="is_public_entity"]');
         const fields = document.getElementById('admin-fiscal-business-fields');
         if (type && fields) {
             const toggle = () => {
@@ -104,10 +114,14 @@ $profileStatus = $profileService->status($customer);
                 document.getElementById('admin-fiscal-siret').style.display = isOrganization && isFrench ? '' : 'none';
                 document.getElementById('admin-fiscal-tax-registration').style.display = isOrganization && !isFrench ? '' : 'none';
                 document.getElementById('admin-fiscal-vat').style.display = isOrganization && (!isAssociation || taxStatus?.value !== 'non_taxable') ? '' : 'none';
+                document.getElementById('admin-fiscal-public').style.display = isOrganization && isFrench ? '' : 'none';
+                document.getElementById('admin-fiscal-chorus-service').style.display = isOrganization && isFrench && publicEntity?.checked ? '' : 'none';
+                document.getElementById('admin-fiscal-chorus-commitment').style.display = isOrganization && isFrench && publicEntity?.checked ? '' : 'none';
             };
             type.addEventListener('change', toggle);
             taxStatus?.addEventListener('change', toggle);
             country?.addEventListener('change', toggle);
+            publicEntity?.addEventListener('change', toggle);
             toggle();
         }
     });

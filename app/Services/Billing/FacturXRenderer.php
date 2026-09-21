@@ -35,8 +35,13 @@ class FacturXRenderer implements ElectronicInvoiceRendererInterface
             $builder->doCreateInvoice($invoice->identifier(), $issuedAt->toDateTime(), strtoupper($invoice->currency));
         }
 
+        $buyerReference = ($buyer['is_public_entity'] ?? false) ? ($buyer['chorus_service_code'] ?? null) : null;
+        $buyerId = $buyer['siret'] ?? $invoice->customer->uuid ?? null;
         $builder->doSetSeller((string) $seller['legal_name'], (string) $sellerAddress['zipcode'], (string) $sellerAddress['city'], $this->street($sellerAddress), strtoupper((string) $sellerAddress['country']), $seller['siret'] ?? $seller['siren'] ?? null)
-            ->doSetBuyer((string) ($buyer['legal_name'] ?: trim($invoice->customer->firstname.' '.$invoice->customer->lastname)), (string) $buyerAddress['zipcode'], (string) $buyerAddress['city'], $this->street($buyerAddress), strtoupper((string) $buyerAddress['country']), $invoice->customer->uuid ?? null);
+            ->doSetBuyer((string) ($buyer['legal_name'] ?: trim($invoice->customer->firstname.' '.$invoice->customer->lastname)), (string) $buyerAddress['zipcode'], (string) $buyerAddress['city'], $this->street($buyerAddress), strtoupper((string) $buyerAddress['country']), $buyerReference, $buyerId);
+        if (filled($buyer['chorus_commitment_number'] ?? null)) {
+            $builder->setDocumentBuyerOrderReferencedDocument((string) $buyer['chorus_commitment_number']);
+        }
         if (filled($seller['vat_number'] ?? null)) {
             $builder->doAddSellerTaxRegistration((string) $seller['vat_number'], 'VA');
         }

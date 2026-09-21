@@ -55,7 +55,10 @@ class EReportingService
     {
         $regime = (string) setting('einvoicing_vat_regime', 'real_normal_monthly');
         $timezone = (string) setting('einvoicing_timezone', 'Europe/Paris');
-        $provider = (string) setting('einvoicing_provider', 'local');
+        $provider = app(ElectronicProviderResolver::class)->forReporting();
+        if ($provider === null) {
+            throw new \RuntimeException('Aucun provider compatible avec l’e-reporting n’est configuré.');
+        }
         $window = $this->schedule->periodFor($type, $date, $regime, $timezone);
         $period = EReportingPeriod::firstOrCreate([
             'type' => $type, 'provider' => $provider, 'period_start' => $window['start'], 'period_end' => $window['end'],

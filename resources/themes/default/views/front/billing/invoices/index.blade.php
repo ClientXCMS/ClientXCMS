@@ -21,14 +21,17 @@
 @section('title', __('client.invoices.index'))
 @section('scripts')
     <script src="{{ Vite::asset('resources/themes/default/js/filter.js') }}"></script>
+    <script src="{{ Vite::asset('resources/themes/default/js/invoice-stats.js') }}" type="module"></script>
+    <script src="{{ Vite::asset('resources/global/js/flatpickr.js') }}" type="module"></script>
 @endsection
 @section('content')
     <div class="{{ theme_metadata('layout_classes', 'max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto') }}">
         @include('shared/alerts')
+        @include('front.billing.invoices.dashboard')
         <div class="flex flex-col">
             <div class="-m-1.5 overflow-x-auto">
                 <div class="p-1.5 min-w-full inline-block align-middle">
-            @include('front/billing/invoices/card', ['invoices' => $invoices, 'filter' => $filter, 'filters' => $filters])
+            @include('front/billing/invoices/card', ['invoices' => $invoices, 'filter' => $filter, 'filters' => $filters, 'exportEnabled' => true])
                 </div>
             </div>
         </div>

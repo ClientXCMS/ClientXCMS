@@ -21,6 +21,16 @@ class ElectronicProviderRegistry
         return $this->providers[$key] ?? throw new InvalidArgumentException("Unknown electronic invoicing provider [{$key}].");
     }
 
+    public function has(string $key): bool
+    {
+        return isset($this->providers[$key]);
+    }
+
+    public function supports(string $key, string $capability): bool
+    {
+        return $this->has($key) && in_array($capability, $this->providers[$key]->capabilities(), true);
+    }
+
     public function all(): array
     {
         return $this->providers;

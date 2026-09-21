@@ -22,7 +22,7 @@ class LocalElectronicExchangeProvider implements ElectronicExchangeProviderInter
 
     public function capabilities(): array
     {
-        return ['einvoicing', 'transaction_reporting', 'payment_reporting', 'simulation'];
+        return ['einvoicing', 'b2b', 'b2g', 'transaction_reporting', 'payment_reporting', 'status_tracking', 'simulation'];
     }
 
     public function submitInvoice(ElectronicDocument $document, GeneratedElectronicInvoice $artifact): ProviderSubmissionResult

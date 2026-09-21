@@ -21,39 +21,56 @@ namespace App\Http\Controllers\Front\Billing;
 
 use App\Exceptions\WrongPaymentException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Billing\ClientInvoiceExportRequest;
 use App\Models\Billing\Invoice;
+use App\Services\Billing\InvoiceFilterService;
+use App\Services\Billing\InvoiceStatisticsService;
+use App\Services\InvoiceExporterService;
 use App\Services\Store\GatewayService;
 use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, InvoiceFilterService $filterService, InvoiceStatisticsService $statisticsService)
     {
-        if ($request->has('filter')) {
-            $filter = $request->get('filter');
-            if (! in_array($filter, array_keys(Invoice::FILTERS))) {
-                return redirect()->route('front.invoices.index');
-            }
-            $invoices = Invoice::accessibleBy(auth()->user())
-                ->where('status', '!=', Invoice::STATUS_DRAFT)
-                ->when($filter !== 'all', function ($query) use ($filter) {
-                    $query->where('status', $filter);
-                })
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-        } else {
-            $filter = null;
-            $invoices = Invoice::accessibleBy(auth()->user())
-                ->where('status', '!=', Invoice::STATUS_DRAFT)
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+        $validated = $request->validate([
+            'date_from' => 'nullable|date|before_or_equal:date_to',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+            'status' => 'nullable|array',
+            'status.*' => 'string|in:'.implode(',', array_keys(Invoice::FILTERS)),
+            'currency' => 'nullable|string|size:3',
+            'filter' => 'nullable|string|in:'.implode(',', array_keys(Invoice::FILTERS)),
+        ]);
+        if (! empty($validated['filter']) && empty($validated['status']) && $validated['filter'] !== 'all') {
+            $validated['status'] = [$validated['filter']];
         }
+        $invoices = $filterService->apply(Invoice::accessibleBy($request->user()), $validated, false)
+            ->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $statistics = $statisticsService->forCustomer($request->user(), $validated['currency'] ?? null);
 
         return view('front.billing.invoices.index', [
             'invoices' => $invoices,
-            'filter' => $filter,
             'filters' => Invoice::FILTERS,
+            'filter' => $validated['filter'] ?? null,
+            'invoiceFilters' => $validated,
+            'invoiceStatistics' => $statistics,
         ]);
+    }
+
+    public function export(ClientInvoiceExportRequest $request, InvoiceFilterService $filterService)
+    {
+        $invoices = $filterService->apply(
+            Invoice::accessibleBy($request->user(), 'invoice.download'),
+            $request->validated(),
+            false
+        )->orderBy('created_at')->get();
+        if ($invoices->isEmpty()) {
+            return back()->with('error', __('global.no_results'));
+        }
+
+        $path = InvoiceExporterService::exportInvoices($invoices, $request->validated('format'), InvoiceExporterService::PROFILE_CLIENT);
+
+        return response()->download($path)->deleteFileAfterSend(true);
     }
 
     public function show(Invoice $invoice)

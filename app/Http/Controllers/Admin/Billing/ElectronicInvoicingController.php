@@ -57,7 +57,9 @@ class ElectronicInvoicingController extends Controller
         } elseif ($kind === 'period') {
             SubmitEReportingPeriod::dispatch(EReportingPeriod::findOrFail($id));
         } else {
-            SubmitElectronicInvoice::dispatch(ElectronicDocument::findOrFail($id)->documentable);
+            $document = ElectronicDocument::findOrFail($id);
+            abort_if($document->provider === 'manual' || ! $document->documentable, 422);
+            SubmitElectronicInvoice::dispatch($document->documentable, $document->provider);
         }
 
         return back()->with('success', 'Nouvelle tentative planifiée.');

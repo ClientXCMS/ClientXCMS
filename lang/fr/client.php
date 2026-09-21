@@ -22,6 +22,23 @@ return [
     'paymethod' => 'Moyen de paiement',
     'index_description' => 'Vous trouverez ci-dessous la liste de vos factures.',
     'identifier' => 'Identifiant de la facture',
+    'filters' => [
+      'date_from' => 'Date de début',
+      'date_to' => 'Date de fin',
+      'currency' => 'Devise',
+      'apply' => 'Appliquer',
+      'reset' => 'Réinitialiser',
+    ],
+    'export' => [
+      'button' => 'Exporter',
+      'title' => 'Exporter les factures',
+      'format' => 'Format d’export',
+    ],
+    'stats' => [
+      'outstanding' => 'À régler',
+      'paid_this_month' => 'Payé ce mois-ci',
+      'yearly_paid' => 'Paiements mensuels de l’année en cours',
+    ],
     'terms' => 'Conditions de paiement',
     'banktransfer' => [
       'title' => 'Nos informations bancaires',

@@ -18,6 +18,8 @@ class FiscalProfileService
 
     public const ROUTING_MANUAL_REVIEW = 'manual_review';
 
+    public const ROUTING_B2G = 'b2g';
+
     public function update(Customer $customer, array $input): Customer
     {
         $legalName = array_key_exists('legal_name', $input)
@@ -31,6 +33,9 @@ class FiscalProfileService
         $input = array_merge([
             'customer_type' => $customerType,
             'tax_subject_status' => $customer->tax_subject_status ?? Customer::TAX_STATUS_UNKNOWN,
+            'is_public_entity' => $customer->is_public_entity ?? false,
+            'chorus_service_code' => $customer->chorus_service_code,
+            'chorus_commitment_number' => $customer->chorus_commitment_number,
             'legal_name' => $legalName,
             'siren' => $customer->siren,
             'siret' => $customer->siret,
@@ -55,6 +60,9 @@ class FiscalProfileService
                 Customer::TAX_STATUS_TAXABLE_NOT_VAT_LIABLE,
                 Customer::TAX_STATUS_VAT_LIABLE,
             ])],
+            'is_public_entity' => ['nullable', 'boolean'],
+            'chorus_service_code' => ['nullable', 'string', 'max:100', 'regex:/^[^<>]*$/'],
+            'chorus_commitment_number' => ['nullable', 'string', 'max:100', 'regex:/^[^<>]*$/'],
             'legal_name' => ['nullable', Rule::requiredIf(fn () => in_array($input['customer_type'] ?? null, [Customer::TYPE_BUSINESS, Customer::TYPE_ASSOCIATION], true)), 'string', 'max:255', 'regex:/^[^<>]*$/'],
             'siren' => ['nullable', Rule::requiredIf(fn () => $this->requiresFrenchSiren($input, $country)), 'regex:/^\d{9}$/'],
             'siret' => ['nullable', 'regex:/^\d{14}$/'],
@@ -69,6 +77,7 @@ class FiscalProfileService
             'country' => ['required', 'string', Rule::in(array_keys(Countries::names()))],
             'billing_details' => ['nullable', 'string', 'max:255', 'regex:/^[^<>]*$/'],
         ])->validate();
+        $data['is_public_entity'] = filter_var($data['is_public_entity'] ?? false, FILTER_VALIDATE_BOOL);
 
         if ($data['customer_type'] === Customer::TYPE_INDIVIDUAL) {
             $data = array_merge($data, [
@@ -79,6 +88,9 @@ class FiscalProfileService
                 'vat_number' => null,
                 'tax_registration_number' => null,
                 'rna_number' => null,
+                'is_public_entity' => false,
+                'chorus_service_code' => null,
+                'chorus_commitment_number' => null,
             ]);
         } elseif ($data['customer_type'] === Customer::TYPE_BUSINESS) {
             $data['tax_subject_status'] = Customer::TAX_STATUS_UNKNOWN;
@@ -129,6 +141,10 @@ class FiscalProfileService
             }
         }
 
+        if ($customer->is_public_entity && preg_match('/^\d{14}$/', (string) $customer->siret) !== 1) {
+            return false;
+        }
+
         return strtoupper($customer->country) === 'FR'
             ? preg_match('/^\d{9}$/', (string) $customer->siren) === 1
             : filled($customer->tax_registration_number) || filled($customer->vat_number);
@@ -136,6 +152,11 @@ class FiscalProfileService
 
     public function electronicRouting(Customer $customer): string
     {
+        if ($customer->is_public_entity) {
+            return strtoupper((string) $customer->country) === 'FR' && preg_match('/^\d{14}$/', (string) $customer->siret) === 1
+                ? self::ROUTING_B2G
+                : self::ROUTING_MANUAL_REVIEW;
+        }
         if ($customer->customer_type === Customer::TYPE_INDIVIDUAL) {
             return self::ROUTING_EREPORTING;
         }
@@ -195,6 +216,9 @@ class FiscalProfileService
                 'tax_registration_number' => $customer->tax_registration_number,
                 'rna_number' => $customer->rna_number,
                 'tax_subject_status' => $customer->tax_subject_status,
+                'is_public_entity' => (bool) $customer->is_public_entity,
+                'chorus_service_code' => $customer->chorus_service_code,
+                'chorus_commitment_number' => $customer->chorus_commitment_number,
                 'additional_details' => $address['billing_details'] ?? $customer->billing_details,
                 'address' => Arr::only($address, ['address', 'address2', 'zipcode', 'city', 'region', 'country']),
                 'email' => $address['email'] ?? $customer->email,

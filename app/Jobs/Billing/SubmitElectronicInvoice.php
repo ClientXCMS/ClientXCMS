@@ -22,14 +22,14 @@ class SubmitElectronicInvoice implements ShouldQueue
 
     public array $backoff = [300, 900, 3600];
 
-    public function __construct(public Invoice|CreditNote $source)
+    public function __construct(public Invoice|CreditNote $source, public ?string $providerKey = null)
     {
         $this->afterCommit();
     }
 
     public function handle(ElectronicInvoiceRendererInterface $renderer, ElectronicProviderRegistry $registry): void
     {
-        $provider = $registry->get();
+        $provider = $registry->get($this->providerKey);
         try {
             $artifact = $renderer->render($this->source);
             $key = ElectronicDocument::idempotencyKey($this->source, $provider->key(), $artifact->sha256);

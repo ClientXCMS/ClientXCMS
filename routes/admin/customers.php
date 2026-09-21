@@ -24,6 +24,7 @@ Route::get('/customers/{customer}/send-password', [CustomerController::class, 's
 Route::post('/customers/{customer}/resend-confirmation', [CustomerController::class, 'resendConfirmation'])->name('customers.resend_confirmation');
 Route::post('/customers/{customer}/confirm', [CustomerController::class, 'confirm'])->name('customers.confirm');
 Route::put('/customers/{customer}/fiscal-profile', [CustomerController::class, 'updateFiscalProfile'])->name('customers.fiscal-profile.update');
+Route::post('/customers/{customer}/invoices/export', [CustomerController::class, 'exportInvoices'])->name('customers.invoices.export');
 Route::resource('/customers', CustomerController::class)->names('customers')->except('edit');
 Route::post('/customers/{customer}/autologin', [CustomerController::class, 'autologin'])->name('customers.autologin');
 Route::post('/customers/{customer}/action/{action}', [CustomerController::class, 'action'])->name('customers.action');

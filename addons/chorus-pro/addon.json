@@ -1,0 +1,8 @@
+{
+    "name": "Chorus Pro",
+    "description": "Transmission des factures B2G CLIENTXCMS vers Chorus Pro via PISTE.",
+    "uuid": "chorus-pro",
+    "version": "1.0.0",
+    "author": {"name": "ClientXCMS", "email": "contact@clientxcms.com"},
+    "providers": ["App\\Addons\\ChorusPro\\ChorusProServiceProvider"]
+}
