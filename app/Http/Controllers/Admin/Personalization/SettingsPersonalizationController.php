@@ -251,6 +251,7 @@ class SettingsPersonalizationController extends Controller
         Setting::updateSettings([
             'theme_switch_mode' => $request->get('theme_switch_mode'),
         ]);
+
         // No Tailwind rebuild needed: colors resolve at request time via shared.theme-color-vars.
         return redirect()->back()->with('success', __('personalization.config.success'));
     }
