@@ -111,6 +111,13 @@ if (! function_exists('is_darkmode')) {
     }
 }
 
+if (! function_exists('darkmode_html_class')) {
+    function darkmode_html_class(bool $admin = false): string
+    {
+        return is_darkmode($admin) ? 'dark' : '';
+    }
+}
+
 if (! function_exists('is_gdpr_compliment')) {
     function is_gdpr_compliment(): bool
     {
