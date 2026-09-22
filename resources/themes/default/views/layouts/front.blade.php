@@ -24,6 +24,7 @@
     <title>@yield('title') {{ translated_setting('seo_site_title') }}</title>
     @yield('styles')
     @vite('resources/themes/default/css/app.scss')
+    @include('shared.theme-color-vars')
     @vite('resources/themes/default/js/app.js')
     @include('shared.a11y-styles')
     {!! app('seo')->head('front', $meta_append ?? null) !!}
