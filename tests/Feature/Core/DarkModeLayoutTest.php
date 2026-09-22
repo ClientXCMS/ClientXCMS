@@ -42,6 +42,56 @@ class DarkModeLayoutTest extends TestCase
         $this->assertDarkClassOnHtmlOnly($response->getContent());
     }
 
+    public function test_admin_dark_mode_button_icon_reflects_actual_admin_state(): void
+    {
+        $this->seed(AdminSeeder::class);
+        $admin = \App\Models\Admin\Admin::firstOrFail();
+        $admin->dark_mode = true;
+        $admin->save();
+
+        $response = $this->actingAs($admin, 'admin')->get(route('admin.dashboard'));
+
+        $response->assertOk();
+        $this->assertSunIconVisible($response->getContent());
+    }
+
+    public function test_admin_light_mode_button_icon_reflects_actual_admin_state(): void
+    {
+        $this->seed(AdminSeeder::class);
+        $admin = \App\Models\Admin\Admin::firstOrFail();
+        $admin->dark_mode = false;
+        $admin->save();
+
+        $response = $this->actingAs($admin, 'admin')->get(route('admin.dashboard'));
+
+        $response->assertOk();
+        $this->assertMoonIconVisible($response->getContent());
+    }
+
+    private function assertSunIconVisible(string $html): void
+    {
+        [$sunClasses, $moonClasses] = $this->extractIconClasses($html);
+
+        $this->assertStringNotContainsString('hidden', $sunClasses, 'In dark mode, the sun icon (switch to light) must be visible.');
+        $this->assertStringContainsString('hidden', $moonClasses, 'In dark mode, the moon icon must stay hidden.');
+    }
+
+    private function assertMoonIconVisible(string $html): void
+    {
+        [$sunClasses, $moonClasses] = $this->extractIconClasses($html);
+
+        $this->assertStringContainsString('hidden', $sunClasses, 'In light mode, the sun icon must stay hidden.');
+        $this->assertStringNotContainsString('hidden', $moonClasses, 'In light mode, the moon icon (switch to dark) must be visible.');
+    }
+
+    private function extractIconClasses(string $html): array
+    {
+        preg_match('/class="([^"]*)"\s+id="dark-mode-sun"/i', $html, $sunMatch);
+        preg_match('/class="([^"]*)"\s+id="dark-mode-moon"/i', $html, $moonMatch);
+
+        return [$sunMatch[1] ?? '', $moonMatch[1] ?? ''];
+    }
+
     private function assertDarkClassOnHtmlOnly(string $html): void
     {
         preg_match('/<html\b[^>]*class="([^"]*)"/i', $html, $htmlMatch);
