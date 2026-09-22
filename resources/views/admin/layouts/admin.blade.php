@@ -24,6 +24,7 @@
 
     @vite('resources/themes/default/js/app.js')
     @vite('resources/themes/default/css/app.scss')
+    @include('shared.theme-color-vars')
     @include('shared.a11y-styles')
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

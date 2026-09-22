@@ -5,6 +5,21 @@
 @import 'provisioning.css';
 @import 'bootstrap-icons/font/bootstrap-icons.min.css';
 @import 'flatpickr/dist/flatpickr.min.css';
+@layer base {
+    /* Build-time fallback, overridden per-request by shared.theme-color-vars once an admin saves a custom color. */
+    :root {
+        --color-primary-50: 240 245 255;
+        --color-primary-100: 229 237 255;
+        --color-primary-200: 205 219 254;
+        --color-primary-300: 180 198 252;
+        --color-primary-400: 141 162 251;
+        --color-primary-500: 104 117 245;
+        --color-primary-600: 39 133 73;
+        --color-primary-700: 29 122 72;
+        --color-primary-800: 22 102 60;
+        --color-primary-900: 12 63 46;
+    }
+}
 #mobile-menu {
     --tab-accessibility-limited: false;
 }

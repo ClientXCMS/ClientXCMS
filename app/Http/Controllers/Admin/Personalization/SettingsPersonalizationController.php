@@ -19,7 +19,6 @@
 
 namespace App\Http\Controllers\Admin\Personalization;
 
-use App\Exceptions\LicenseInvalidException;
 use App\Http\Controllers\Concerns\ManagesSettingUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Permission;
@@ -244,7 +243,7 @@ class SettingsPersonalizationController extends Controller
             '400' => $request->get('theme_secondary'),
             '500' => '#6875f5',
             '600' => $request->get('theme_primary'),
-            '700' => $request->get('theme_primary'),
+            '700' => $this->darkenHex($request->get('theme_primary'), 0.15),
             '800' => '#42389d',
             '900' => '#362f78',
         ];
@@ -252,12 +251,15 @@ class SettingsPersonalizationController extends Controller
         Setting::updateSettings([
             'theme_switch_mode' => $request->get('theme_switch_mode'),
         ]);
-        try {
-            app('license')->restartNPM();
-        } catch (LicenseInvalidException $e) {
-            \Session::flash('error', 'Error in restart NPM : '.$e->getMessage());
-        }
-
+        // No Tailwind rebuild needed: colors resolve at request time via shared.theme-color-vars.
         return redirect()->back()->with('success', __('personalization.config.success'));
+    }
+
+    private function darkenHex(string $hex, float $percent): string
+    {
+        [$r, $g, $b] = sscanf($hex, '#%02x%02x%02x');
+        $darken = fn (int $channel) => (int) max(0, round($channel * (1 - $percent)));
+
+        return sprintf('#%02x%02x%02x', $darken($r), $darken($g), $darken($b));
     }
 }
