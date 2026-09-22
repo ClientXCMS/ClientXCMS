@@ -116,7 +116,7 @@
                                         @foreach ($servicePermissions as $permission)
                                         <div>
                                             <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                                <input type="checkbox" name="permissions[]" value="{{ $permission }}" class="rounded border-gray-300 text-indigo-600" @checked($permission==='service.show' )>
+                                                <input type="checkbox" name="permissions[]" value="{{ $permission }}" class="rounded border-gray-300 text-primary" @checked($permission==='service.show' )>
                                                 {{ __('permissions.subusers.' . str_replace('.', '_', $permission)) }}
                                             </label>
                                             @if (in_array($permission, \App\Models\Account\CustomerAccountAccess::SERVICE_PERMISSIONS_REQUIRING_INVOICES, true))
@@ -214,7 +214,7 @@
                 <div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-800">
                     <div class="p-4 pb-0 md:p-5 md:pb-2 flex gap-x-4">
                         <div>
-                            <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-indigo-100 rounded-lg dark:bg-gray-800">
+                            <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-primary-light rounded-lg dark:bg-gray-800">
                                 <svg class="flex-shrink-0 w-5 h-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
                                     <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
@@ -246,7 +246,7 @@
                 @if ($service->server_id != null)
                 <div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-800 mt-2">
                     <div class="p-4 md:p-5 flex gap-x-4">
-                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-indigo-100 rounded-lg dark:bg-gray-800">
+                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-primary-light rounded-lg dark:bg-gray-800">
                             <svg class="flex-shrink-0 w-5 h-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
                                 <circle cx="12" cy="10" r="3" />
@@ -272,7 +272,7 @@
 
                 <div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-800 mt-2">
                     <div class="p-4 md:p-5 flex gap-x-4">
-                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-indigo-100 rounded-lg dark:bg-gray-800">
+                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-primary-light rounded-lg dark:bg-gray-800">
                             <svg class="flex-shrink-0 w-5 h-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
                             </svg>
@@ -296,7 +296,7 @@
 
                 <div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-800 mt-2">
                     <div class="p-4 md:p-5 flex gap-x-4">
-                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-indigo-100 rounded-lg dark:bg-gray-800">
+                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-primary-light rounded-lg dark:bg-gray-800">
                             <svg class="flex-shrink-0 w-5 h-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="12" y1="1" x2="12" y2="23"></line>
                                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>

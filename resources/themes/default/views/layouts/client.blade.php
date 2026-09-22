@@ -58,17 +58,17 @@
                         </div>
                         <div class="flex flex-col gap-y-1 gap-x-0 mt-2 px-2 sm:flex-row sm:items-center sm:justify-end sm:gap-y-0 sm:mt-0 sm:px-0 sm:ps-7">
                             @foreach (app('theme')->getFrontLinks() as $link)
-                                <a class="flex min-h-11 items-center rounded-lg px-3 font-medium hover:bg-gray-100 sm:min-h-0 sm:px-2 sm:mr-3 sm:hover:bg-transparent dark:hover:bg-gray-700 sm:dark:hover:bg-transparent {{ is_subroute($link) ? 'text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}" href="{{ $link->trans('url') }}">
+                                <a class="flex min-h-11 items-center rounded-lg px-3 font-medium hover:bg-gray-100 sm:min-h-0 sm:px-2 sm:mr-3 sm:hover:bg-transparent dark:hover:bg-gray-700 sm:dark:hover:bg-transparent {{ is_subroute($link) ? 'text-primary hover:text-primary-dark dark:text-primary dark:hover:text-primary' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}" href="{{ $link->trans('url') }}">
                                     <i class="{{ $link->trans('icon') }}  mr-1"></i> {{ $link->trans('name') }}
                                     @if (isset($link->badge))
-                                        <span class="inline ms-1 font-medium text-xs bg-indigo-600 text-white py-1 px-2 rounded full">{{ $link->trans('badge') }}</span>
+                                        <span class="inline ms-1 font-medium text-xs bg-primary text-white py-1 px-2 rounded full">{{ $link->trans('badge') }}</span>
                                     @endif
                                 </a>
                             @endforeach
                         </div>
                         <div class="mt-2 border-t px-2 pt-2 sm:hidden dark:border-gray-700">
                             @foreach(\App\Http\Navigation\ClientNavigationMenu::getItems() as $item)
-                                <a class="flex min-h-11 items-center gap-x-3.5 rounded-lg px-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 {{ is_subroute(route($item['route'])) && $item['route'] != 'front.client.index' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-800 dark:text-gray-300' }}" href="{{ route($item['route']) }}">
+                                <a class="flex min-h-11 items-center gap-x-3.5 rounded-lg px-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 {{ is_subroute(route($item['route'])) && $item['route'] != 'front.client.index' ? 'text-primary dark:text-primary' : 'text-gray-800 dark:text-gray-300' }}" href="{{ route($item['route']) }}">
                                     <i class="{{ $item['icon'] }}"></i> {{ $item['name'] }}
                                 </a>
                             @endforeach
@@ -108,7 +108,7 @@
         <div class="max-w-7xl snap-x w-full flex items-center overflow-x-auto px-4 sm:px-6 lg:px-8 pb-4 md:pb-0 mx-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-slate-700 dark:[&::-webkit-scrollbar-thumb]:bg-gray-700 dark:bg-gray-700">
             @foreach(\App\Http\Navigation\ClientNavigationMenu::getItems() as $item)
                 <div class="snap-center shrink-0 pe-5 sm:pe-8 sm:last:pe-0">
-                    <a class="inline-flex items-center gap-x-2 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600 {{ is_subroute(route($item['route'])) && $item['route'] != 'front.client.index' ? 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-600' : '' }}" href="{{ route($item['route'])  }}"> <i class="{{ $item['icon'] }}"></i> {{ $item['name'] }}</a>
+                    <a class="inline-flex items-center gap-x-2 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600 {{ is_subroute(route($item['route'])) && $item['route'] != 'front.client.index' ? 'text-primary dark:text-primary hover:text-primary dark:hover:text-primary' : '' }}" href="{{ route($item['route'])  }}"> <i class="{{ $item['icon'] }}"></i> {{ $item['name'] }}</a>
                 </div>
             @endforeach
         </div>

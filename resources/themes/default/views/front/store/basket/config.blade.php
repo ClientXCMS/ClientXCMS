@@ -39,11 +39,11 @@
                         <h2 class="text-lg font-semibold mb-4 dark:text-white/50">{{ __('store.config.billing') }}</h2>
                     </div>
                     @foreach ($pricings as $pricing)
-                    <label for="billing-{{ $pricing->recurring }}-{{ $pricing->currency }}" class="col-span-3 md:col-span-1 p-3 block w-full bg-white border border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400">
+                    <label for="billing-{{ $pricing->recurring }}-{{ $pricing->currency }}" class="col-span-3 md:col-span-1 p-3 block w-full bg-white border border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400">
                         <span class="dark:text-gray-400 font-semibold">@if ($pricing->isFree()){{ __('global.free') }} @else {{ $pricing->getPriceByDisplayMode() }} {{ $pricing->getSymbol() }} @endif {{ $pricing->recurring()['translate'] }}
                             <p class="text-gray-500">{{ $pricing->pricingMessage() }} @if ($pricing->hasDiscountOnRecurring($product->getFirstPrice()))<span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-800/30 dark:text-teal-500">-{{ $pricing->getDiscountOnRecurring($product->getFirstPrice()) }}%</span>@endif</p>
                         </span>
-                        <input type="radio" name="billing" value="{{ $pricing->recurring }}" {{ ($billing == $pricing->recurring) || $loop->first ? 'checked' : '' }} data-pricing="{{ $pricing->toJson()  }}" class="shrink-0 ms-auto mt-0.5 border-gray-200 rounded-full text-indigo-600 focus:ring-indigo-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-indigo-600 dark:checked:border-indigo-600 dark:focus:ring-offset-gray-800" id="billing-{{ $pricing->recurring }}-{{ $pricing->currency }}">
+                        <input type="radio" name="billing" value="{{ $pricing->recurring }}" {{ ($billing == $pricing->recurring) || $loop->first ? 'checked' : '' }} data-pricing="{{ $pricing->toJson()  }}" class="shrink-0 ms-auto mt-0.5 border-gray-200 rounded-full text-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-primary dark:checked:border-primary dark:focus:ring-offset-gray-800" id="billing-{{ $pricing->recurring }}-{{ $pricing->currency }}">
                     </label>
                     @endforeach
                 </div>

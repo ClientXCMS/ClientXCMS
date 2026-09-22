@@ -88,7 +88,7 @@
                             <button type="button" class="btn btn-primary hs-collapse-toggle inline-flex items-center gap-x-2 rounded-lg px-4 py-3" id="login-collapse-collapse" data-hs-collapse="#login-collapse-heading">
                                 {{ __('auth.login.btn') }}
                             </button>
-                            <button type="button" class="block hs-collapse-toggle btn-primary-soft dark:hover:bg-indigo-900 dark:text-indigo-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" id="register-collapse-collapse" data-hs-collapse="#register-collapse-heading">
+                            <button type="button" class="block hs-collapse-toggle btn-primary-soft dark:hover:bg-primary/30 dark:text-primary dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" id="register-collapse-collapse" data-hs-collapse="#register-collapse-heading">
                                 {{ __('auth.register.btn') }}
                             </button>
                             <div id="login-collapse-heading" class="hs-collapse hidden w-full overflow-hidden transition-[height] duration-300" aria-labelledby="login-collapse">
@@ -152,7 +152,7 @@
                                         <section class="mt-5 rounded-xl">
                                     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                         <div class="flex items-start gap-3">
-                                            <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300">
+                                            <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-light text-primary dark:bg-primary/20 dark:text-primary">
                                                 <i class="bi bi-receipt text-lg"></i>
                                             </span>
                                             <div>
@@ -268,10 +268,10 @@
                                         @if (setting('checkout.toslink'))
                                             <div class="sm:col-span-3 flex gap-x-6 mb-2 mt-3">
                                                 <div class="flex h-6 items-center">
-                                                    <input id="accept_tos" name="accept_tos" type="checkbox" class="h-4 w-4 rounded border-gray-300 @error("accept_tos") border-red-300 @enderror text-indigo-600 focus:ring-indigo-600">
+                                                    <input id="accept_tos" name="accept_tos" type="checkbox" class="h-4 w-4 rounded border-gray-300 @error("accept_tos") border-red-300 @enderror text-primary focus:ring-primary">
                                                 </div>
                                                 <div class="text-sm leading-6">
-                                                    <label for="accept_tos" class="font-medium @error("accept_tos") text-red-300 dark:text-red-500 @else text-gray-900 dark:text-white @enderror">{{ __('auth.register.accept') }} <a href="{{ setting('checkout.toslink') }}" class="text-indigo-600">{{ __('store.checkout.terms') }}</a></label>
+                                                    <label for="accept_tos" class="font-medium @error("accept_tos") text-red-300 dark:text-red-500 @else text-gray-900 dark:text-white @enderror">{{ __('auth.register.accept') }} <a href="{{ setting('checkout.toslink') }}" class="text-primary">{{ __('store.checkout.terms') }}</a></label>
                                                 </div>
                                             </div>
                                         @endif
@@ -297,7 +297,7 @@
 
                                 @foreach ($gateways as $gateway)
                                         <label for="gateway-{{ $gateway->uuid }}" class="{{ $loop->last ? 'gateway-selected' : '' }} flex flex-col group bg-white border shadow-sm rounded-xl overflow-hidden hover:shadow-lg transition dark:shadow-slate-700/[.7] dark:bg-gray-700 dark:text-white dark:text-gray-400 border-b border-gray-900/10">
-                                            <input type="radio" name="gateway" value="{{ $gateway->uuid }}" {{ $loop->last ? 'checked' : '' }} class="gateway-input hidden shrink-0 ms-auto mt-0.5 border-gray-200 rounded-full text-indigo-600 focus:ring-indigo-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-indigo-500 dark:checked:border-indigo-500 dark:focus:ring-offset-gray-800" id="gateway-{{ $gateway->uuid }}">
+                                            <input type="radio" name="gateway" value="{{ $gateway->uuid }}" {{ $loop->last ? 'checked' : '' }} class="gateway-input hidden shrink-0 ms-auto mt-0.5 border-gray-200 rounded-full text-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-primary dark:checked:border-primary dark:focus:ring-offset-gray-800" id="gateway-{{ $gateway->uuid }}">
 
                                             <div class="relative rounded-t-xl overflow-hidden">
                                                 <img class="transition-transform mx-auto justify-duration-500 ease-in-out rounded-t-xl mt-3 mb-3" src="{{ $gateway->paymentType()->image() }}" alt="{{ $gateway->name }}" height="128" width="128">

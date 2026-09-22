@@ -302,7 +302,7 @@
                             <dl class="grid gap-x-3">
                                 <dt class="col-span-5">
                                     @if ($invoice->total == 0)
-                                        <a class="paymentmethod-btn2 hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none" href="{{ route('front.invoices.pay', ['invoice' => $invoice, 'gateway' => 'none']) }}">
+                                        <a class="paymentmethod-btn2 hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-primary-light text-primary-dark hover:bg-primary/20 disabled:opacity-50 disabled:pointer-events-none" href="{{ route('front.invoices.pay', ['invoice' => $invoice, 'gateway' => 'none']) }}">
                                             <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h0M2 9.5h20"/></svg>
                                             {{ __('client.invoices.pay') }}
                                         </a>
@@ -316,7 +316,7 @@
                                                     <div class="col-span-4">
                                                         @include('shared/input', ['name' => 'amount', 'value' => auth('web')->user()->balance > $invoice->total ? $invoice->total : auth('web')->user()->balance])
                                                     </div>
-                                                <button type="submit" class="mt-3 hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none">
+                                                <button type="submit" class="mt-3 hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-primary-light text-primary-dark hover:bg-primary/20 disabled:opacity-50 disabled:pointer-events-none">
                                                     <i class="bi bi-plus"></i>
                                                     {{ __('global.add') }}
                                                 </button>
@@ -332,7 +332,7 @@
                                                             'options' => auth('web')->user()->getPaymentMethodsArray()->merge(['none' => __('store.checkout.not_use_payment_method')]),
                                                             'value' => 'none'
                                                         ])
-                                                <button type="submit" class="paymentmethod-btn1 mt-3 hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none">
+                                                <button type="submit" class="paymentmethod-btn1 mt-3 hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-primary-light text-primary-dark hover:bg-primary/20 disabled:opacity-50 disabled:pointer-events-none">
                                                     <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h0M2 9.5h20"/></svg>
                                                     {{ __('client.invoices.pay') }}
                                                 </button>
@@ -340,7 +340,7 @@
                                         @endif
                                     <div class="hs-dropdown relative inline-flex">
 
-                                        <button class="paymentmethod-btn2 hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200 disabled:opacity-50 disabled:pointer-events-none">
+                                        <button class="paymentmethod-btn2 hs-dropdown-toggle py-2 px-3 inline-flex items-center rounded-lg gap-x-2 text-sm font-semibold border border-transparent bg-primary-light text-primary-dark hover:bg-primary/20 disabled:opacity-50 disabled:pointer-events-none">
                                             <svg class="flex-shrink-0 w-4 h-4"  xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h0M2 9.5h20"/></svg>
                                             {{ __('client.invoices.pay') }}
                                             <svg class="hs-dropdown-open:rotate-180 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -388,7 +388,7 @@
                     <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                     {{ __('client.invoices.download') }}
                 </a>
-                <a target="_blank" href="{{ route('front.invoices.pdf', ['invoice' => $invoice]) }}" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#">
+                <a target="_blank" href="{{ route('front.invoices.pdf', ['invoice' => $invoice]) }}" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-dark disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#">
                     <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
                     {{ __('client.invoices.print') }}
                 </a>

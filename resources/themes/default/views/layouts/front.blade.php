@@ -58,10 +58,10 @@
                         </div>
                         <div class="flex flex-col gap-y-1 gap-x-0 mt-2 px-2 pb-4 sm:flex-row sm:items-center sm:justify-end sm:gap-y-0 sm:mt-0 sm:px-0 sm:pb-0 sm:ps-7">
                             @foreach (app('theme')->getFrontLinks() as $link)
-                                <a class="flex min-h-11 items-center rounded-lg px-3 font-medium hover:bg-gray-100 sm:min-h-0 sm:px-2 sm:mr-3 sm:hover:bg-transparent dark:hover:bg-gray-700 sm:dark:hover:bg-transparent {{ is_subroute($link->trans('url')) ? 'text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}" href="{{ $link->trans('url') }}">
+                                <a class="flex min-h-11 items-center rounded-lg px-3 font-medium hover:bg-gray-100 sm:min-h-0 sm:px-2 sm:mr-3 sm:hover:bg-transparent dark:hover:bg-gray-700 sm:dark:hover:bg-transparent {{ is_subroute($link->trans('url')) ? 'text-primary hover:text-primary-dark dark:text-primary dark:hover:text-primary' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}" href="{{ $link->trans('url') }}">
                                     {!! $link->getHtmlIcon() !!} {{ $link->trans('name') }}
                                     @if (isset($link->badge))
-                                        <span class="inline ms-1 font-medium text-xs bg-indigo-600 text-white py-1 px-2 rounded full">{{ $link->trans('badge') }}</span>
+                                        <span class="inline ms-1 font-medium text-xs bg-primary text-white py-1 px-2 rounded full">{{ $link->trans('badge') }}</span>
                                     @endif
                                 </a>
                             @endforeach
