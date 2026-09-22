@@ -18,7 +18,7 @@
 ?>
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ is_darkmode(true) ? 'dark' : '' }}">
 <head>
     <title>@yield('title') - CLIENTXCMS</title>
 
@@ -33,7 +33,7 @@
 </head>
 
 @php($useVerticalLayout = auth('admin')->user()?->usesVerticalLayout() ?? false)
-<body class="bg-gray-50 dark:bg-slate-900 {{ is_darkmode(true) ? 'dark' : '' }} min-h-screen">
+<body class="bg-gray-50 dark:bg-slate-900 min-h-screen">
 <header class="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full bg-white border-b text-sm py-2.5 sm:py-4 dark:bg-slate-900 dark:border-gray-700">
     <nav class="{{ $useVerticalLayout ? '' : 'max-w-7xl' }} flex basis-full items-center w-full mx-auto px-4 sm:px-6 lg:px-8" aria-label="Global">
 

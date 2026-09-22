@@ -17,8 +17,8 @@
  */
 ?>
 
-    <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full ">
+<!doctype html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full {{ is_darkmode() ? 'dark' : '' }}">
 <head>
     {{-- ... --}}
     <title>@yield('title') {{ translated_setting('seo_site_title') }}</title>
@@ -31,7 +31,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
-<body class="{{is_darkmode() ? 'dark' : '' }} flex flex-col h-full">
+<body class="flex flex-col h-full">
     <a href="#content" class="a11y-skip-link">{{ __('a11y.skip_to_content') }}</a>
     {!! app('seo')->header() !!}
 

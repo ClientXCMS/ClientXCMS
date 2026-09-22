@@ -18,7 +18,7 @@
 ?>
 
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ is_darkmode() ? 'dark' : '' }}">
 <head>
     {{-- ... --}}
     <title>@yield('title') {{ translated_setting('seo_site_title') }}</title>
@@ -32,7 +32,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
-<body class="bg-gray-50  {{is_darkmode() ? 'dark' : '' }}">
+<body class="bg-gray-50">
     {!! method_exists(app('seo'), 'header') ? app('seo')->header() : '' !!}
 <div class="dark:bg-gray-900 min-h-screen">
     <main id="content" role="main">
