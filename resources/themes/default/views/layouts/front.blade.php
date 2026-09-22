@@ -18,7 +18,7 @@
 ?>
 
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full {{ is_darkmode() ? 'dark' : '' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full {{ darkmode_html_class() }}">
 <head>
     {{-- ... --}}
     <title>@yield('title') {{ translated_setting('seo_site_title') }}</title>

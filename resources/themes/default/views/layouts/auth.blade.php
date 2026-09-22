@@ -20,7 +20,7 @@
 @php($container = $container ?? 'max-w-md')
 
     <!doctype html>
-<html class="{{is_darkmode() ? 'dark' : '' }}" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html class="{{ darkmode_html_class() }}" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     {{-- ... --}}
     <title>@yield('title') {{ setting('seo_site_title') }}</title>

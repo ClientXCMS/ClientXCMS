@@ -18,7 +18,7 @@
 ?>
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ is_darkmode(true) ? 'dark' : '' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ darkmode_html_class(true) }}">
 <head>
     <title>@yield('title') - CLIENTXCMS</title>
 
