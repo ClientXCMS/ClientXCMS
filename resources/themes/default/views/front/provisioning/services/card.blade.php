@@ -107,7 +107,7 @@
                             <p class="mt-5 text-sm text-gray-800 dark:text-gray-400">
                                 {{ __('client.services.noservices') }}
                             </p>
-                            <a href="{{ route('front.store.index') }}" class="mt-3 inline-flex items-center gap-x-1 text-sm font-semibold rounded-lg border border-transparent text-indigo-600 hover:text-indigo-800 disabled:opacity-50 disabled:pointer-events-none dark:text-indigo-500 dark:hover:text-indigo-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">{{ __('client.services.startorder') }}</a>
+                            <a href="{{ route('front.store.index') }}" class="mt-3 inline-flex items-center gap-x-1 text-sm font-semibold rounded-lg border border-transparent text-primary hover:text-primary-dark disabled:opacity-50 disabled:pointer-events-none dark:text-primary dark:hover:text-primary dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">{{ __('client.services.startorder') }}</a>
                         </div>
                     </td>
                 </tr>

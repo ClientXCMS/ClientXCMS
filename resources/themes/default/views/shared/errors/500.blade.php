@@ -19,7 +19,7 @@
 
     <div class="{{ theme_metadata('layout_classes', 'max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto') }}">
         <div class="max-w-2xl mx-auto text-center mb-10 lg:mb-14">
-            <h2 class="text-indigo-600 font-bold text-7xl dark:text-white">500</h2>
+            <h2 class="text-primary font-bold text-7xl dark:text-white">500</h2>
             <h2 class="font-bold text-3xl xl:text-7xl lg:text-6xl md:text-5xl mt-5 dark:text-white">{{ __('errors.500.title') }}</h2>
             <p class="text-gray-400 font-medium text-sm md:text-xl lg:text-2xl mt-8">{{ __('errors.500.description') }}</p>
         </div>

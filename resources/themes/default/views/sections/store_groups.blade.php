@@ -12,7 +12,7 @@
             @foreach($row as $group)
                 <div class="group flex flex-col h-full bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-700 dark:shadow-slate-700/[.7]">
                     @if ($group->image)
-                        <div class="h-52 flex flex-col justify-center items-center bg-indigo-600 rounded-t-xl">
+                        <div class="h-52 flex flex-col justify-center items-center bg-primary rounded-t-xl">
                             <img src="{{ Storage::url($group->image) }}" class="{{ $group->useImageAsBackground() ? 'h-full w-full object-cover rounded-t-xl' : 'h-32 w-32' }}" alt="{{ $group->trans('name') }}">
                         </div>
                     @endif

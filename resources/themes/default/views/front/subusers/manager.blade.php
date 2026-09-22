@@ -13,7 +13,7 @@
                 <p class="truncate font-semibold text-gray-800 dark:text-gray-200">{{ $user->fullName }}</p>
                 <p class="truncate text-sm text-gray-500">{{ $user->email }}</p>
             </div>
-            <span class="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">{{ __('client.subusers.owner_badge') }}</span>
+            <span class="rounded-full bg-primary-light px-2.5 py-1 text-xs font-semibold text-primary-dark dark:bg-primary/20 dark:text-primary">{{ __('client.subusers.owner_badge') }}</span>
         </div>
 
         @forelse ($ownedAccountAccesses as $access)
@@ -54,13 +54,13 @@
         </div>
         <div class="mt-4">
             <label class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                <input type="checkbox" name="all_services" value="1" class="rounded border-gray-300 text-indigo-600">
+                <input type="checkbox" name="all_services" value="1" class="rounded border-gray-300 text-primary">
                 {{ __('client.subusers.all_services') }}
             </label>
             <div class="mt-3 grid gap-2 sm:grid-cols-2">
                 @foreach ($subuserServices as $service)
                     <label class="flex items-start gap-2 rounded-lg border border-gray-200 p-3 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
-                        <input type="checkbox" name="services[]" value="{{ $service->id }}" class="mt-0.5 rounded border-gray-300 text-indigo-600">
+                        <input type="checkbox" name="services[]" value="{{ $service->id }}" class="mt-0.5 rounded border-gray-300 text-primary">
                         <span>{{ $service->excerptName() }}<span class="block text-xs text-gray-500">{{ $service->expires_at?->format('d/m/Y') ?? __('global.onetime') }}</span></span>
                     </label>
                 @endforeach
@@ -73,7 +73,7 @@
                     <div class="space-y-2">
                         @foreach ($permissions as $permission)
                             <label class="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                <input type="checkbox" name="permissions[]" value="{{ $permission }}" class="mt-0.5 rounded border-gray-300 text-indigo-600">
+                                <input type="checkbox" name="permissions[]" value="{{ $permission }}" class="mt-0.5 rounded border-gray-300 text-primary">
                                 <span>{{ __('permissions.subusers.'.str_replace('.', '_', $permission)) }}
                                     @if (in_array($permission, \App\Models\Account\CustomerAccountAccess::SERVICE_PERMISSIONS_REQUIRING_INVOICES, true))
                                         <span class="block text-xs text-gray-500">{{ __('client.subusers.invoice_permissions_auto_granted') }}</span>
@@ -132,7 +132,7 @@
             sectionButtons.forEach((button) => {
                 const active = highlightActiveSection && button.dataset.subuserSectionTarget === currentSection;
                 button.classList.toggle('bg-white', active);
-                button.classList.toggle('text-indigo-600', active);
+                button.classList.toggle('text-primary', active);
                 button.classList.toggle('shadow-sm', active);
                 button.classList.toggle('dark:bg-gray-700', active);
                 button.setAttribute('aria-current', active ? 'page' : 'false');

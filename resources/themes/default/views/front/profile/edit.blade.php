@@ -126,56 +126,56 @@
                 <div class="w-full md:w-1/4 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 p-4">
                     <nav class="flex flex-col space-y-1.5" aria-label="Tabs" role="tablist" aria-orientation="vertical">
                         <button type="button"
-                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 active text-left w-full"
+                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-primary/20 dark:hs-tab-active:text-primary py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-primary focus:outline-none focus:text-primary active text-left w-full"
                             id="tab-profile-item" data-hs-tab="#pane-profile" aria-controls="pane-profile" role="tab">
                             <i class="bi bi-person text-lg"></i>
                             {{ __('client.profile.index') }}
                         </button>
                         <button type="button"
-                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 text-left w-full"
+                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-primary/20 dark:hs-tab-active:text-primary py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-primary focus:outline-none focus:text-primary text-left w-full"
                             id="tab-einvoicing-item" data-hs-tab="#pane-einvoicing" aria-controls="pane-einvoicing" role="tab">
                             <i class="bi bi-receipt text-lg"></i>
                             {{ __('einvoicing.profile.title') }}
                         </button>
                         <button type="button"
-                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 text-left w-full"
+                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-primary/20 dark:hs-tab-active:text-primary py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-primary focus:outline-none focus:text-primary text-left w-full"
                             id="tab-security-item" data-hs-tab="#pane-security" aria-controls="pane-security" role="tab">
                             <i class="bi bi-shield-lock text-lg"></i>
                             {{ __('client.profile.security.index') }}
                         </button>
                         <button type="button"
-                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 text-left w-full"
+                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-primary/20 dark:hs-tab-active:text-primary py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-primary focus:outline-none focus:text-primary text-left w-full"
                             id="tab-subusers-item" data-hs-tab="#pane-subusers" aria-controls="pane-subusers" role="tab">
                             <i class="bi bi-people text-lg"></i>
                             {{ __('client.subusers.account_access') }}
                         </button>
                         <div class="ms-5 border-s border-gray-200 ps-3 dark:border-gray-700" aria-label="{{ __('client.subusers.account_access') }}">
-                            <button type="button" data-subuser-section-target="accesses" class="subuser-section-button flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-gray-700">
+                            <button type="button" data-subuser-section-target="accesses" class="subuser-section-button flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-primary dark:text-gray-400 dark:hover:bg-gray-700">
                                 <span>{{ __('client.subusers.active_accesses') }}</span>
                                 <span class="rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] text-gray-700 dark:bg-gray-600 dark:text-gray-200">{{ $ownedAccountAccesses->count() }}</span>
                             </button>
-                            <button type="button" data-subuser-section-target="invite" class="subuser-section-button flex w-full items-center rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-gray-700">
+                            <button type="button" data-subuser-section-target="invite" class="subuser-section-button flex w-full items-center rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-primary dark:text-gray-400 dark:hover:bg-gray-700">
                                 {{ __('client.subusers.invite.title') }}
                             </button>
-                            <button type="button" data-subuser-section-target="invitations" class="subuser-section-button flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-gray-700">
+                            <button type="button" data-subuser-section-target="invitations" class="subuser-section-button flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-primary dark:text-gray-400 dark:hover:bg-gray-700">
                                 <span>{{ __('client.subusers.pending_invitations') }}</span>
                                 <span class="rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] text-gray-700 dark:bg-gray-600 dark:text-gray-200">{{ $accountInvitations->count() }}</span>
                             </button>
-                            <button type="button" data-subuser-section-target="received" class="subuser-section-button flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-gray-700">
+                            <button type="button" data-subuser-section-target="received" class="subuser-section-button flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-primary dark:text-gray-400 dark:hover:bg-gray-700">
                                 <span>{{ __('client.subusers.received_accesses') }}</span>
                                 <span class="rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] text-gray-700 dark:bg-gray-600 dark:text-gray-200">{{ $receivedAccountAccesses->count() }}</span>
                             </button>
                         </div>
                         @if (isset($providers) && count($providers) > 0)
                             <button type="button"
-                                class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 text-left w-full"
+                                class="hs-tab-active:text-primary dark:hs-tab-active:bg-primary/20 dark:hs-tab-active:text-primary py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-primary focus:outline-none focus:text-primary text-left w-full"
                                 id="tab-social-item" data-hs-tab="#pane-social" aria-controls="pane-social" role="tab">
                                 <i class="bi bi-link-45deg text-lg"></i>
                                 {{ __('client.profile.connected_accounts') }}
                             </button>
                         @endif
                         <button type="button"
-                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 text-left w-full"
+                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-primary/20 dark:hs-tab-active:text-primary py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-primary focus:outline-none focus:text-primary text-left w-full"
                             id="tab-export-item" data-hs-tab="#pane-export" aria-controls="pane-export" role="tab">
                             <i class="bi bi-download text-lg"></i>
                             {{ __('client.gdpr.export.title') }}
@@ -594,7 +594,7 @@
                             class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
                             <div class="flex items-start gap-4">
                                 <div
-                                    class="flex-shrink-0 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 p-3 rounded-lg">
+                                    class="flex-shrink-0 bg-primary-light dark:bg-primary/20 text-primary dark:text-primary p-3 rounded-lg">
                                     <i class="bi bi-file-earmark-zip text-2xl"></i>
                                 </div>
                                 <div>
