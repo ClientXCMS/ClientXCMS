@@ -96,9 +96,6 @@
                 </p>
             </div>
             <div class="col-span-3">
-                <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('billing.admin.settings.tax') }}</h3>
-            </div>
-            <div class="col-span-3">
                 <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('einvoicing.settings.legal_entity') }}</h3>
             </div>
             <div>@include('admin/shared/input', ['name' => 'billing_legal_name', 'label' => __('einvoicing.profile.legal_name'), 'value' => setting('billing_legal_name')])</div>
@@ -119,6 +116,10 @@
             <div>@include('admin/shared/select', ['name' => 'einvoicing_vat_regime', 'label' => __('einvoicing.settings.vat_regime'), 'options' => collect(['real_normal_monthly', 'real_normal_quarterly', 'simplified', 'franchise_base'])->mapWithKeys(fn ($regime) => [$regime => __('einvoicing.settings.regimes.'.$regime)])->all(), 'value' => setting('einvoicing_vat_regime', 'real_normal_monthly')])</div>
             <div>@include('admin/shared/input', ['name' => 'einvoicing_timezone', 'label' => __('einvoicing.settings.timezone'), 'value' => setting('einvoicing_timezone', 'Europe/Paris')])</div>
             <div>@include('admin/shared/input', ['name' => 'einvoicing_activation_date', 'label' => __('einvoicing.settings.activation_date'), 'help' => __('einvoicing.settings.activation_date_help'), 'type' => 'date', 'value' => setting('einvoicing_activation_date'), 'optional' => true])</div>
+            
+            <div class="col-span-3">
+                <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400">{{ __('billing.admin.settings.tax') }}</h3>
+            </div>
             <div class="col-span-3">
                 @include('admin/shared/checkbox', ['label' => __('billing.admin.settings.fields.store_vat_enabled'), 'name' => 'store_vat_enabled', 'value' => setting('store_vat_enabled')])
             </div>
