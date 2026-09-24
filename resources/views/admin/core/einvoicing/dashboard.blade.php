@@ -45,18 +45,23 @@ default => 'bi-clock-fill',
     </div>
     @endif
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         @foreach ([
         ['icon' => 'bi-diagram-3', 'label' => __('einvoicing.admin.dashboard.provider'), 'value' => strtoupper(setting('einvoicing_provider', 'local'))],
         ['icon' => 'bi-calendar3', 'label' => __('einvoicing.admin.dashboard.regime'), 'value' => __('einvoicing.settings.regimes.'.setting('einvoicing_vat_regime', 'real_normal_monthly'))],
         ['icon' => 'bi-globe2', 'label' => __('einvoicing.admin.dashboard.timezone'), 'value' => setting('einvoicing_timezone', 'Europe/Paris')],
         ['icon' => 'bi-power', 'label' => __('einvoicing.admin.dashboard.activation'), 'value' => setting('einvoicing_activation_date') ? \Carbon\Carbon::parse(setting('einvoicing_activation_date'))->isoFormat('LL') : __('einvoicing.admin.dashboard.disabled')],
         ] as $metric)
-        <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-            <div class="flex items-center gap-3"><span class="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"><i class="bi {{ $metric['icon'] }}"></i></span>
-                <div class="min-w-0">
-                    <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ $metric['label'] }}</p>
-                    <p class="mt-0.5 truncate text-sm font-semibold text-gray-800 dark:text-gray-200" title="{{ $metric['value'] }}">{{ $metric['value'] }}</p>
+        <div class="flex flex-col shadow-sm rounded-xl dark:bg-gray-800 bg-gray-100">
+            <div class="p-4 md:p-5 flex gap-x-4">
+                <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-gray-100 rounded-lg dark:bg-slate-900 dark:border-gray-800">
+                    <i class="bi {{ $metric['icon'] }} text-black dark:text-white"></i>
+                </div>
+                <div class="grow min-w-0">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">{{ $metric['label'] }}</p>
+                </div>
+                <div class="mt-1 flex min-w-0 items-center gap-x-2">
+                    <h3 class="truncate text-sm sm:text-2sm font-medium text-gray-800 dark:text-gray-200" title="{{ $metric['value'] }}">{{ $metric['value'] }}</h3>
                 </div>
             </div>
         </div>
@@ -68,8 +73,8 @@ default => 'bi-clock-fill',
     ['key' => 'periods', 'items' => $periods, 'icon' => 'bi-calendar-range', 'columns' => 5],
     ['key' => 'payments', 'items' => $payments, 'icon' => 'bi-cash-stack', 'columns' => 4],
     ] as $section)
-    <div class="card p-0 overflow-hidden">
-        <div class="flex items-center justify-between gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+    <div class="card">
+        <div class="card-heading">
             <div class="flex items-center gap-3"><span class="inline-flex size-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"><i class="bi {{ $section['icon'] }}"></i></span>
                 <div>
                     <h2 class="font-semibold text-gray-800 dark:text-gray-200">{{ __('einvoicing.admin.dashboard.'.$section['key']) }}</h2>
@@ -77,7 +82,7 @@ default => 'bi-clock-fill',
                 </div>
             </div><span class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-700 dark:text-gray-300">{{ $section['items']->count() }}</span>
         </div>
-        <div class="overflow-x-auto">
+        <div class="border rounded-lg overflow-x-auto dark:border-gray-700 mt-4">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-800/60">
                     <tr>
@@ -123,12 +128,12 @@ default => 'bi-clock-fill',
                 </tbody>
             </table>
         </div>
-        @if($section['key'] === 'documents' && $documents->hasPages())<div class="border-t border-gray-200 px-4 py-3 dark:border-gray-700">{{ $documents->links('admin.shared.layouts.pagination') }}</div>@endif
+        @if($section['key'] === 'documents' && $documents->hasPages())<div class="pt-4">{{ $documents->links('admin.shared.layouts.pagination') }}</div>@endif
     </div>
     @endforeach
 
-    <div class="card p-0 overflow-hidden">
-        <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+    <div class="card">
+        <div class="card-heading">
             <div class="flex items-center gap-3"><span class="inline-flex size-9 items-center justify-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"><i class="bi bi-journal-check"></i></span>
                 <div>
                     <h2 class="font-semibold text-gray-800 dark:text-gray-200">{{ __('einvoicing.admin.dashboard.accounting_exports') }}</h2>
@@ -136,7 +141,7 @@ default => 'bi-clock-fill',
                 </div>
             </div><span class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold dark:bg-gray-700">{{ $accountingExports->count() }}</span>
         </div>
-        <div class="overflow-x-auto">
+        <div class="border rounded-lg overflow-x-auto dark:border-gray-700 mt-4">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-800/60">
                     <tr>@foreach(['document', 'provider_column', 'event', 'status', 'external_id', 'error', 'actions'] as $heading)<th class="px-5 py-3 text-start text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">{{ __('einvoicing.admin.dashboard.'.$heading) }}</th>@endforeach</tr>

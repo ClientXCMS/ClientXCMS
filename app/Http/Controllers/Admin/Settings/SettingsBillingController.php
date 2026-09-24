@@ -49,6 +49,7 @@ class SettingsBillingController extends Controller
             'invoice_terms' => 'textarea',
         ];
         $tmpcountries = Countries::names();
+        $billingCountries = $tmpcountries;
         $countries = collect(TaxesService::arrayVatPercents())->filter(function ($item, $key) use ($tmpcountries) {
             return isset($tmpcountries[$key]);
         })->mapWithKeys(function ($item, $key) use ($tmpcountries) {
@@ -59,7 +60,7 @@ class SettingsBillingController extends Controller
             TaxesService::VAT_RATE_FIXED => __('billing.admin.settings.fields.rates.vat_rate_fixed'),
         ];
 
-        return view('admin/settings/billing/billing', compact('countries', 'billing_modes', 'options', 'currencies', 'keys', 'rates', 'options2'));
+        return view('admin/settings/billing/billing', compact('countries', 'billingCountries', 'billing_modes', 'options', 'currencies', 'keys', 'rates', 'options2'));
     }
 
     public function saveBilling(Request $request)
@@ -96,7 +97,7 @@ class SettingsBillingController extends Controller
             'billing_address2' => ['nullable', 'string', 'max:255'],
             'billing_zipcode' => ['required', 'string', 'max:20'],
             'billing_city' => ['required', 'string', 'max:100'],
-            'billing_country' => ['required', 'string', 'size:2'],
+            'billing_country' => ['required', 'string', 'size:2', \Illuminate\Validation\Rule::in(array_keys(Countries::names()))],
             'einvoicing_enabled' => ['in:true,false'],
             'einvoicing_provider' => ['required', \Illuminate\Validation\Rule::in(collect(app(\App\Services\Billing\ElectronicProviderRegistry::class)->all())->filter(fn ($provider) => in_array('b2b', $provider->capabilities(), true))->keys()->all())],
             'einvoicing_b2g_provider' => ['required', \Illuminate\Validation\Rule::in(collect(app(\App\Services\Billing\ElectronicProviderRegistry::class)->all())->filter(fn ($provider) => in_array('b2g', $provider->capabilities(), true))->keys()->all())],

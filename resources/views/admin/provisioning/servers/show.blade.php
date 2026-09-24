@@ -81,11 +81,11 @@
                             </div>
 
                             <div class="flex flex-col">
-                                @include('admin/shared/input', ['name' => 'username', 'label' => $labels[$item->type][0] ?? __('global.username'), 'value' => old('username'), 'help' => __('admin.blanktochange'), 'attributes' => ['autocomplete' => 'off']])
+                                @include('admin/shared/input', ['name' => 'username', 'label' => $labels[$item->type][0] ?? __('global.username'), 'value' => old('username', $item->username), 'help' => __('admin.blanktochange'), 'attributes' => ['autocomplete' => 'off']])
                             </div>
 
                             <div class="flex flex-col">
-                                @include('admin/shared/password', ['name' => 'password', 'label' =>  $labels[$item->type][1] ?? __('global.password'), 'value' => old('password'), 'help' => __('admin.blanktochange'), 'attributes' => ['autocomplete' => 'off']])
+                                @include('admin/shared/password', ['name' => 'password', 'label' =>  $labels[$item->type][1] ?? __('global.password'), 'value' => old('password', $item->password), 'help' => __('admin.blanktochange'), 'attributes' => ['autocomplete' => 'off']])
                             </div>
                             <input type="hidden" name="id" value="{{ $item->id }}">
                         </div>
