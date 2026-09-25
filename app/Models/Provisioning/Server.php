@@ -21,6 +21,7 @@ namespace App\Models\Provisioning;
 
 use App\Casts\EncryptCast;
 use App\Contracts\Notifications\HasNotifiableVariablesInterface;
+use App\Contracts\Notifications\ProvidesMailData;
 use App\Models\Traits\HasMetadata;
 use App\Models\Traits\Loggable;
 use App\Models\Traits\ModelStatutTrait;
@@ -90,9 +91,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @mixin \Eloquent
  */
-class Server extends Model implements HasNotifiableVariablesInterface
+class Server extends Model implements HasNotifiableVariablesInterface, ProvidesMailData
 {
     use HasFactory, HasMetadata,Loggable, ModelStatutTrait, softDeletes;
+
+    public const TEST_MODE_METADATA_KEY = 'test_mode';
 
     protected $fillable = [
         'name',
@@ -105,6 +108,8 @@ class Server extends Model implements HasNotifiableVariablesInterface
         'maxaccounts',
         'status',
     ];
+
+    protected $hidden = ['username', 'password'];
 
     protected $attributes = [
         'status' => 'active',
@@ -129,22 +134,37 @@ class Server extends Model implements HasNotifiableVariablesInterface
         return $this->hasMany(Service::class);
     }
 
+    public function isTestMode(): bool
+    {
+        return $this->getMetadata(self::TEST_MODE_METADATA_KEY) === 'true';
+    }
+
     public function getNotificationVariables(): array
     {
         return [
+            // Credentials stay out: these variables end up in customer mail and in the sent-mail archive.
             '%server_name%' => $this->name,
             '%server_address%' => $this->address,
             '%server_port%' => $this->port,
-            '%server_username%' => $this->username,
-            '%server_password%' => $this->password,
             '%server_type%' => $this->type,
+        ];
+    }
+
+    /** Credentials stay out: this feeds customer mail. */
+    public function toMailData(?string $locale = null): array
+    {
+        return [
+            'name' => $this->name,
+            'address' => $this->address,
+            'port' => $this->port,
+            'type' => $this->type,
         ];
     }
 
     public static function getNotificationContextVariables(): array
     {
         return [
-            '%server_name%', '%server_address%', '%server_port%', '%server_username%', '%server_password%', '%server_type%',
+            '%server_name%', '%server_address%', '%server_port%', '%server_type%',
         ];
     }
 }

@@ -27,20 +27,14 @@
             let defaultTabId = null;
             @if (old('_subuser_form') && $errors->any())
                 defaultTabId = '#pane-subusers';
+            @elseif (old('_fiscal_profile_form') && $errors->any())
+                defaultTabId = '#pane-einvoicing';
             @elseif (
                 $errors->hasAny([
                     'firstname',
                     'lastname',
-                    'company_name',
-                    'address',
-                    'address2',
-                    'zipcode',
                     'phone',
-                    'country',
-                    'city',
-                    'region',
                     'locale',
-                    'billing_details',
                 ]))
                 defaultTabId = '#pane-profile';
             @elseif (
@@ -96,6 +90,29 @@
                     this.closest('form').submit();
                 });
             }
+
+            const fiscalType = document.querySelector('#pane-einvoicing [name="customer_type"]');
+            const fiscalTaxStatus = document.querySelector('#pane-einvoicing [name="tax_subject_status"]');
+            const fiscalCountry = document.querySelector('#pane-einvoicing [name="country"]');
+            const fiscalBusinessFields = document.getElementById('front-fiscal-business-fields');
+            if (fiscalType && fiscalBusinessFields) {
+                const toggleFiscalBusinessFields = () => {
+                    const isOrganization = ['business', 'association'].includes(fiscalType.value);
+                    const isAssociation = fiscalType.value === 'association';
+                    const isFrench = fiscalCountry?.value === 'FR';
+                    fiscalBusinessFields.style.display = isOrganization ? '' : 'none';
+                    document.getElementById('front-fiscal-association-status').style.display = isAssociation ? '' : 'none';
+                    document.getElementById('front-fiscal-rna').style.display = isAssociation ? '' : 'none';
+                    document.getElementById('front-fiscal-siren').style.display = isOrganization && isFrench ? '' : 'none';
+                    document.getElementById('front-fiscal-siret').style.display = isOrganization && isFrench ? '' : 'none';
+                    document.getElementById('front-fiscal-tax-registration').style.display = isOrganization && !isFrench ? '' : 'none';
+                    document.getElementById('front-fiscal-vat').style.display = isOrganization && (!isAssociation || fiscalTaxStatus?.value !== 'non_taxable') ? '' : 'none';
+                };
+                fiscalType.addEventListener('change', toggleFiscalBusinessFields);
+                fiscalTaxStatus?.addEventListener('change', toggleFiscalBusinessFields);
+                fiscalCountry?.addEventListener('change', toggleFiscalBusinessFields);
+                toggleFiscalBusinessFields();
+            }
         });
     </script>
 @endsection
@@ -109,50 +126,56 @@
                 <div class="w-full md:w-1/4 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 p-4">
                     <nav class="flex flex-col space-y-1.5" aria-label="Tabs" role="tablist" aria-orientation="vertical">
                         <button type="button"
-                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 active text-left w-full"
+                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-primary/20 dark:hs-tab-active:text-primary py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-primary focus:outline-none focus:text-primary active text-left w-full"
                             id="tab-profile-item" data-hs-tab="#pane-profile" aria-controls="pane-profile" role="tab">
                             <i class="bi bi-person text-lg"></i>
                             {{ __('client.profile.index') }}
                         </button>
                         <button type="button"
-                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 text-left w-full"
+                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-primary/20 dark:hs-tab-active:text-primary py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-primary focus:outline-none focus:text-primary text-left w-full"
+                            id="tab-einvoicing-item" data-hs-tab="#pane-einvoicing" aria-controls="pane-einvoicing" role="tab">
+                            <i class="bi bi-receipt text-lg"></i>
+                            {{ __('einvoicing.profile.title') }}
+                        </button>
+                        <button type="button"
+                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-primary/20 dark:hs-tab-active:text-primary py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-primary focus:outline-none focus:text-primary text-left w-full"
                             id="tab-security-item" data-hs-tab="#pane-security" aria-controls="pane-security" role="tab">
                             <i class="bi bi-shield-lock text-lg"></i>
                             {{ __('client.profile.security.index') }}
                         </button>
                         <button type="button"
-                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 text-left w-full"
+                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-primary/20 dark:hs-tab-active:text-primary py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-primary focus:outline-none focus:text-primary text-left w-full"
                             id="tab-subusers-item" data-hs-tab="#pane-subusers" aria-controls="pane-subusers" role="tab">
                             <i class="bi bi-people text-lg"></i>
                             {{ __('client.subusers.account_access') }}
                         </button>
                         <div class="ms-5 border-s border-gray-200 ps-3 dark:border-gray-700" aria-label="{{ __('client.subusers.account_access') }}">
-                            <button type="button" data-subuser-section-target="accesses" class="subuser-section-button flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-gray-700">
+                            <button type="button" data-subuser-section-target="accesses" class="subuser-section-button flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-primary dark:text-gray-400 dark:hover:bg-gray-700">
                                 <span>{{ __('client.subusers.active_accesses') }}</span>
                                 <span class="rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] text-gray-700 dark:bg-gray-600 dark:text-gray-200">{{ $ownedAccountAccesses->count() }}</span>
                             </button>
-                            <button type="button" data-subuser-section-target="invite" class="subuser-section-button flex w-full items-center rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-gray-700">
+                            <button type="button" data-subuser-section-target="invite" class="subuser-section-button flex w-full items-center rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-primary dark:text-gray-400 dark:hover:bg-gray-700">
                                 {{ __('client.subusers.invite.title') }}
                             </button>
-                            <button type="button" data-subuser-section-target="invitations" class="subuser-section-button flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-gray-700">
+                            <button type="button" data-subuser-section-target="invitations" class="subuser-section-button flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-primary dark:text-gray-400 dark:hover:bg-gray-700">
                                 <span>{{ __('client.subusers.pending_invitations') }}</span>
                                 <span class="rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] text-gray-700 dark:bg-gray-600 dark:text-gray-200">{{ $accountInvitations->count() }}</span>
                             </button>
-                            <button type="button" data-subuser-section-target="received" class="subuser-section-button flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-gray-700">
+                            <button type="button" data-subuser-section-target="received" class="subuser-section-button flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-medium text-gray-500 hover:bg-white hover:text-primary dark:text-gray-400 dark:hover:bg-gray-700">
                                 <span>{{ __('client.subusers.received_accesses') }}</span>
                                 <span class="rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] text-gray-700 dark:bg-gray-600 dark:text-gray-200">{{ $receivedAccountAccesses->count() }}</span>
                             </button>
                         </div>
                         @if (isset($providers) && count($providers) > 0)
                             <button type="button"
-                                class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 text-left w-full"
+                                class="hs-tab-active:text-primary dark:hs-tab-active:bg-primary/20 dark:hs-tab-active:text-primary py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-primary focus:outline-none focus:text-primary text-left w-full"
                                 id="tab-social-item" data-hs-tab="#pane-social" aria-controls="pane-social" role="tab">
                                 <i class="bi bi-link-45deg text-lg"></i>
                                 {{ __('client.profile.connected_accounts') }}
                             </button>
                         @endif
                         <button type="button"
-                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-indigo-950/40 dark:hs-tab-active:text-indigo-300 py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-indigo-600 focus:outline-none focus:text-indigo-600 text-left w-full"
+                            class="hs-tab-active:text-primary dark:hs-tab-active:bg-primary/20 dark:hs-tab-active:text-primary py-3 px-4 inline-flex items-center gap-x-3 rounded-lg text-sm font-medium text-gray-500 hover:text-primary focus:outline-none focus:text-primary text-left w-full"
                             id="tab-export-item" data-hs-tab="#pane-export" aria-controls="pane-export" role="tab">
                             <i class="bi bi-download text-lg"></i>
                             {{ __('client.gdpr.export.title') }}
@@ -208,34 +231,6 @@
                                     ])
                                 </div>
 
-                                <div class="sm:col-span-2">
-                                    @include('shared/input', [
-                                        'name' => 'company_name',
-                                        'label' => __('global.company_name') . ' (' . __('global.optional') . ')',
-                                        'value' => auth('web')->user()->company_name ?? old('company_name'),
-                                    ])
-                                </div>
-                                <div class="sm:col-span-3">
-                                    @include('shared.input', [
-                                        'name' => 'address',
-                                        'label' => __('global.address'),
-                                        'value' => auth('web')->user()->address ?? old('address'),
-                                    ])
-                                </div>
-                                <div class="sm:col-span-2">
-                                    @include('shared.input', [
-                                        'name' => 'address2',
-                                        'label' => __('global.address2'),
-                                        'value' => auth('web')->user()->address2 ?? old('address2'),
-                                    ])
-                                </div>
-                                <div class="sm:col-span-1">
-                                    @include('shared.input', [
-                                        'name' => 'zipcode',
-                                        'label' => __('global.zip'),
-                                        'value' => auth('web')->user()->zipcode ?? old('zipcode'),
-                                    ])
-                                </div>
                                 <div class="sm:col-span-3">
                                     @include('shared.input', [
                                         'name' => 'email',
@@ -254,28 +249,6 @@
                                     ])
                                 </div>
                                 <div class="sm:col-span-2">
-                                    @include('shared.select', [
-                                        'name' => 'country',
-                                        'label' => __('global.country'),
-                                        'options' => $countries,
-                                        'value' => auth('web')->user()->country ?? old('country'),
-                                    ])
-                                </div>
-                                <div class="sm:col-span-2">
-                                    @include('shared.input', [
-                                        'name' => 'city',
-                                        'label' => __('global.city'),
-                                        'value' => auth('web')->user()->city ?? old('city'),
-                                    ])
-                                </div>
-                                <div class="sm:col-span-2">
-                                    @include('shared.input', [
-                                        'name' => 'region',
-                                        'label' => __('global.region'),
-                                        'value' => auth('web')->user()->region ?? old('region'),
-                                    ])
-                                </div>
-                                <div class="sm:col-span-2">
                                     @include('shared/select', [
                                         'name' => 'locale',
                                         'label' => __('global.locale'),
@@ -283,17 +256,15 @@
                                         'value' => auth('web')->user()->locale ?? old('locale'),
                                     ])
                                 </div>
-                                <div class="sm:col-span-4">
-                                    @include('shared/textarea', [
-                                        'name' => 'billing_details',
-                                        'label' => __('global.billing_details'),
-                                        'value' => auth('web')->user()->billing_details ?? old('billing_details'),
-                                        'help' => __('global.billing_details_help'),
-                                    ])
-                                </div>
                             </div>
-                            <button class="btn btn-primary mt-4">{{ __('global.save') }}</button>
+                            <div class="flex flex-wrap gap-3 mt-4">
+                                <button class="btn btn-primary">{{ __('global.save') }}</button>
+                            </div>
                         </form>
+                    </div>
+
+                    <div id="pane-einvoicing" class="hidden" role="tabpanel" aria-labelledby="tab-einvoicing-item">
+                        @include('front.profile.partials.fiscal-profile')
                     </div>
 
                     <!-- Security Panel -->
@@ -442,7 +413,7 @@
                                             ])
                                         @endif
                                         <button
-                                            class="btn {{ auth('web')->user()->twoFactorEnabled() ? 'bg-red-600 text-white hover:bg-red-700' : 'btn-primary' }} mt-4">
+                                            class="btn {{ auth('web')->user()->twoFactorEnabled() ? 'btn-danger' : 'btn-primary' }} mt-4">
                                             {{ __(auth('web')->user()->twoFactorEnabled() ? 'global.delete' : 'global.save') }}
                                         </button>
                                     </form>
@@ -485,7 +456,7 @@
                                         </p>
 
                                         @if (count($trustedDevices) === 0)
-                                            <p class="mt-4 text-sm italic text-gray-500 dark:text-gray-500">
+                                            <p class="mt-4 text-sm italic text-gray-500 dark:text-gray-400">
                                                 {{ __('client.profile.2fa.trusted_devices_empty') }}
                                             </p>
                                         @else
@@ -537,6 +508,9 @@
                                 </div>
                             </div>
                         </div>
+                        @if($passkeysEnabled ?? false)
+                            @include('front.profile.passkeys')
+                        @endif
                     </div>
 
                     <!-- Subusers Panel -->
@@ -620,7 +594,7 @@
                             class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
                             <div class="flex items-start gap-4">
                                 <div
-                                    class="flex-shrink-0 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 p-3 rounded-lg">
+                                    class="flex-shrink-0 bg-primary-light dark:bg-primary/20 text-primary dark:text-primary p-3 rounded-lg">
                                     <i class="bi bi-file-earmark-zip text-2xl"></i>
                                 </div>
                                 <div>

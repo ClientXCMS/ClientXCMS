@@ -1,8 +1,8 @@
 <div class="{{ theme_metadata('layout_classes', 'max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto') }}">
 
     <div class="max-w-2xl mx-auto text-center mb-10 lg:mb-14">
-        <h2 class="text-2xl font-bold md:text-4xl md:leading-tight dark:text-white">{{ __('store.store_subheading') }}</h2>
-        <p class="mt-1 text-gray-600 dark:text-gray-400">{{ __('store.subtitle') }}</p>
+        <h2 class="text-2xl font-bold md:text-4xl md:leading-tight dark:text-white">{{ section_config('title', __('store.store_subheading')) }}</h2>
+        <p class="mt-1 text-gray-600 dark:text-gray-400">{{ section_config('subtitle', __('store.subtitle')) }}</p>
     </div>
 
     @foreach($groups->chunk(3) as $row)
@@ -12,7 +12,7 @@
             @foreach($row as $group)
                 <div class="group flex flex-col h-full bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-700 dark:shadow-slate-700/[.7]">
                     @if ($group->image)
-                        <div class="h-52 flex flex-col justify-center items-center bg-indigo-600 rounded-t-xl">
+                        <div class="h-52 flex flex-col justify-center items-center bg-primary rounded-t-xl">
                             <img src="{{ Storage::url($group->image) }}" class="{{ $group->useImageAsBackground() ? 'h-full w-full object-cover rounded-t-xl' : 'h-32 w-32' }}" alt="{{ $group->trans('name') }}">
                         </div>
                     @endif

@@ -22,6 +22,7 @@ namespace App\Http\Controllers\Admin\Security;
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Models\Admin\Permission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rules\RequiredIf;
 
 class ApiKeysController extends AbstractCrudController
@@ -120,6 +121,11 @@ class ApiKeysController extends AbstractCrudController
         ];
     }
 
+    public static function allowedAbilities(): array
+    {
+        return collect(self::getAbilities())->flatMap(fn (array $group) => array_keys($group))->all();
+    }
+
     public function index(Request $request)
     {
         staff_aborts_permission(Permission::MANAGE_API_KEYS);
@@ -162,16 +168,20 @@ class ApiKeysController extends AbstractCrudController
         $validated = $request->validate([
             'name' => 'required|max:200',
             'permissions' => [new RequiredIf(! array_key_exists('is_admin', $request->all())), 'array'],
-            'expires_at' => 'nullable|date',
+            'expires_at' => 'nullable|date|after:now',
             'is_admin' => 'nullable',
         ]);
         if (array_key_exists('is_admin', $validated)) {
             abort_if(! auth('admin')->user()->role?->is_admin, 403);
             $validated['permissions'] = ['*'];
         } else {
-            $validated['permissions'] = array_merge(array_keys($validated['permissions']), ['hearth', 'license']);
+            $requested = array_keys($validated['permissions']);
+            // The abilities are the submitted array keys, so they are checked against the offered list: the wildcard is not one of them and must not enter through here.
+            abort_if(array_diff($requested, self::allowedAbilities()) !== [], 403);
+            $validated['permissions'] = array_merge($requested, ['health', 'license']);
         }
-        $token = auth('admin')->user()->createToken($validated['name'], $validated['permissions']);
+        $expiresAt = isset($validated['expires_at']) ? Carbon::parse($validated['expires_at']) : null;
+        $token = auth('admin')->user()->createToken($validated['name'], $validated['permissions'], $expiresAt);
 
         return redirect()->route('admin.api-keys.index')->with('success', __('admin.api_keys.created', ['name' => $validated['name'], 'key' => $token->plainTextToken]));
     }
@@ -192,7 +202,7 @@ class ApiKeysController extends AbstractCrudController
         if (in_array('*', (array) $token->abilities, true)) {
             abort_if(! auth('admin')->user()->role?->is_admin, 403);
         }
-        $newToken = auth('admin')->user()->createToken($token->name, $token->abilities);
+        $newToken = auth('admin')->user()->createToken($token->name, $token->abilities, $token->expires_at);
         $token->delete();
 
         return redirect()->route('admin.api-keys.index')->with('success', __('admin.api_keys.created', ['name' => $token->name, 'key' => $newToken->plainTextToken]));

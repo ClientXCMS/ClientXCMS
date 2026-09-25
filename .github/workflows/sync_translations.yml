@@ -1,0 +1,145 @@
+name: Sync reference translations to ctx-translations
+
+on:
+  push:
+    branches:
+      - master
+      - "v2*"
+    paths:
+      - "lang/**"
+  workflow_dispatch:
+    inputs:
+      force_translation_budget:
+        description: "Bypass the daily translation cost cap for this run"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Push reference locales
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ClientXCMS
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: json, zip, sodium, pcntl, bcmath, pdo_mysql
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: /tmp/composer-cache
+          key: ${{ runner.os }}-${{ hashFiles('composer.lock') }}
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-dev
+
+      - name: Discover tracked reference locales
+        id: locales
+        run: |
+          LOCALES=$(grep -oP '^!/lang/\K[a-z]+(?=/\*$)' .gitignore | sort)
+          echo "Tracked locales: ${LOCALES}"
+          echo "locales<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$LOCALES" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Export every tracked reference locale, one JSON file per module
+        run: |
+          while read -r locale; do
+            [ -z "$locale" ] && continue
+            php artisan translations:export --locale="$locale" --path="storage/${locale}"
+          done <<< "${{ steps.locales.outputs.locales }}"
+
+      - name: Checkout ctx-translations
+        uses: actions/checkout@v4
+        with:
+          repository: ClientXCMS/ctx-translations
+          token: ${{ secrets.CTX_TRANSLATIONS_TOKEN }}
+          path: ctx-translations
+          fetch-depth: 0
+
+      - name: Determine ctx-translations default branch
+        id: default_branch
+        working-directory: ctx-translations
+        run: |
+          DEFAULT_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
+          echo "branch=${DEFAULT_BRANCH}" >> "$GITHUB_OUTPUT"
+
+      - name: Determine target branch
+        id: target
+        run: |
+          if [ "${{ github.ref_name }}" = "master" ]; then
+            echo "branch=${{ steps.default_branch.outputs.branch }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout or create the target branch
+        working-directory: ctx-translations
+        run: |
+          BRANCH="${{ steps.target.outputs.branch }}"
+          DEFAULT_BRANCH="${{ steps.default_branch.outputs.branch }}"
+          if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
+            git checkout "$BRANCH"
+          else
+            git checkout -b "$BRANCH" "origin/${DEFAULT_BRANCH}"
+          fi
+
+      - name: Keep the pipeline scripts current with the default branch
+        working-directory: ctx-translations
+        run: |
+          DEFAULT_BRANCH="${{ steps.default_branch.outputs.branch }}"
+          git checkout "origin/${DEFAULT_BRANCH}" -- '*.py' requirements.txt
+
+      - name: Copy exported reference locales
+        run: |
+          while read -r locale; do
+            [ -z "$locale" ] && continue
+            mkdir -p "ctx-translations/translations/${locale}"
+            rm -f "ctx-translations/translations/${locale}"/*.json
+            cp "storage/${locale}"/*.json "ctx-translations/translations/${locale}/"
+          done <<< "${{ steps.locales.outputs.locales }}"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install translation pipeline dependencies
+        working-directory: ctx-translations
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install translators requests
+          fi
+
+      - name: Machine-translate any new key into the remaining locales
+        working-directory: ctx-translations
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_AI_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN }}
+          AZURE_TRANSLATOR_KEY: ${{ secrets.AZURE_TRANSLATOR_KEY }}
+          AZURE_TRANSLATOR_REGION: ${{ secrets.AZURE_TRANSLATOR_REGION }}
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
+          TRANSLATION_FORCE_BUDGET: ${{ github.event.inputs.force_translation_budget }}
+        run: python3 auto_translate.py
+
+      - name: Commit and push if the reference locales changed
+        working-directory: ctx-translations
+        run: |
+          git config user.name "clientxcms-bot"
+          git config user.email "bot@clientxcms.com"
+          git add translations/ .translation_budget.json '*.py' requirements.txt
+          if git diff --cached --quiet; then
+            echo "No translation or pipeline script change to push."
+          else
+            git commit -m "chore: sync reference locales and pipeline scripts from ClientXCMS/ClientXCMS@${{ github.sha }}"
+            git push origin "${{ steps.target.outputs.branch }}"
+          fi

@@ -37,7 +37,7 @@
                             </div>
                             <div>
                                 <a href="{{ $oauth }}"
-                                   class="btn bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-700">
+                                   class="btn btn-primary">
                                     {{ __('admin.license.force') }}
                                 </a>
                             </div>

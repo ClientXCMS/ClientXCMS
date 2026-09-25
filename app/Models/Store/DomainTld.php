@@ -18,17 +18,29 @@ class DomainTld extends Model
         'server_id',
         'dns_management',
         'whois_privacy',
+        'default_nameservers',
+        'default_nameserver_ips',
+        'default_dns_records',
+        'apply_default_dns',
     ];
 
     protected $casts = [
         'dns_management' => 'boolean',
         'whois_privacy' => 'boolean',
+        'default_nameservers' => 'array',
+        'default_nameserver_ips' => 'array',
+        'default_dns_records' => 'array',
+        'apply_default_dns' => 'boolean',
     ];
 
     protected $attributes = [
         'status' => 'active',
         'dns_management' => true,
         'whois_privacy' => false,
+        'default_nameservers' => '[]',
+        'default_nameserver_ips' => '[]',
+        'default_dns_records' => '[]',
+        'apply_default_dns' => true,
     ];
 
     public function prices()

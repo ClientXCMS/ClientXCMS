@@ -20,29 +20,158 @@
 namespace App\Extensions;
 
 use GuzzleHttp\Psr7\Utils;
+use Illuminate\Support\Facades\Log;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use ZipArchive;
 
 class UpdaterManager
 {
-    /**
-     * Sub-directories under base_path() that an extension archive is allowed
-     * to write into. Any file outside this list is treated as a supply-chain
-     * attempt (overwriting app/Http/Controllers, bootstrap/, vendor/, .env, ...).
-     */
-    private const ALLOWED_PREFIXES = [
-        'modules/',
-        'addons/',
-        'resources/themes/',
-        'resources/views/vendor/notifications/',
-    ];
+    private const METADATA_FILES = ['README.md', 'LICENSE.txt', 'CHANGELOG.md', '.gitignore', 'LICENSE'];
 
-    public function update(string $uuid)
+    public function update(string $uuid, ExtensionType $type)
     {
+        ExtensionType::assertValidUuid($uuid);
+        $this->extractExtension($this->download($uuid, $type->value), storage_path("app/extracts/{$uuid}"), $type, $uuid);
+    }
 
+    public function updateCore()
+    {
+        $this->extract($this->download('core', 'core'), storage_path('app/extracts/core'));
+    }
+
+    /**
+     * Only ever writes the files the extension owns. The destination comes from
+     * the type and uuid the product asked for, never from the archive itself.
+     */
+    public function extractExtension(string $file, string $to, ExtensionType $type, string $uuid)
+    {
+        ExtensionType::assertValidUuid($uuid);
+
+        $this->extractArchive(
+            $file,
+            $to,
+            function (string $root) use ($type, $uuid): \ArrayIterator {
+                $owned = [];
+                $dropped = [];
+                foreach ((new Finder)->in($root)->files()->ignoreDotFiles(false)->ignoreVCS(false) as $candidate) {
+                    $relative = substr($candidate->getPathname(), strlen($root) + 1);
+                    if ($type->owns($relative, $uuid)) {
+                        $owned[] = $candidate;
+                    } else {
+                        $dropped[] = $relative;
+                    }
+                }
+
+                if ($dropped !== []) {
+                    // Silently dropping them would turn a mispackaged archive into an unexplainable bug
+                    Log::warning('extensions.update.files_outside_extension_dropped', [
+                        'uuid' => $uuid,
+                        'type' => $type->value,
+                        'dropped' => count($dropped),
+                        'sample' => array_slice($dropped, 0, 10),
+                    ]);
+                }
+                if ($owned === []) {
+                    throw new \RuntimeException("Archive does not contain {$type->path($uuid)}");
+                }
+
+                return new \ArrayIterator($owned);
+            },
+            $type->ownsDirectory()
+                ? fn (string $root) => $this->pruneFilesRemovedUpstream($root, $type, $uuid)
+                : null
+        );
+    }
+
+    public function extract(string $file, string $to)
+    {
+        $this->extractArchive($file, $to, null);
+    }
+
+    /**
+     * Removes files the extension's own directory still has but the new
+     * archive no longer ships (renames, deletions upstream). This deliberately
+     * does NOT use mirror()'s built-in 'delete' option: Symfony reuses the
+     * same iterator for both the copy loop (walks the origin) and the delete
+     * loop (expects to walk the target), so it cannot be handed a filtered
+     * iterator without breaking one of the two. It also has no way to exclude
+     * a path from deletion - if an extension's directory ever holds an actual
+     * .git (cloned there directly instead of symlinked in from outside, which
+     * is how this project's own dev setup works), an upstream archive never
+     * ships one, so a blind mirror-delete would read that as "removed
+     * upstream" and erase the whole history one object at a time. Walking the
+     * target ourselves with ignoreVCS() lets us keep that path out of reach
+     * unconditionally, not just as a side effect of how it happens to be laid
+     * out on disk.
+     */
+    private function pruneFilesRemovedUpstream(string $root, ExtensionType $type, string $uuid): void
+    {
+        $source = $root.DIRECTORY_SEPARATOR.$type->path($uuid);
+        $target = $type->absolutePath($uuid);
+        if (! is_dir($source) || ! is_dir($target)) {
+            return;
+        }
+
+        $shipped = [];
+        foreach ((new Finder)->in($source)->files()->ignoreDotFiles(false)->ignoreVCS(false) as $file) {
+            $shipped[substr($file->getPathname(), strlen($source) + 1)] = true;
+        }
+
+        $fileSystem = new Filesystem;
+        $obsoleteDirs = [];
+        foreach ((new Finder)->in($target)->ignoreDotFiles(false)->ignoreVCS(true) as $entry) {
+            $relative = substr($entry->getPathname(), strlen($target) + 1);
+            if ($entry->isDir()) {
+                $obsoleteDirs[] = $entry->getPathname();
+            } elseif (! isset($shipped[$relative])) {
+                $fileSystem->remove($entry->getPathname());
+            }
+        }
+
+        // Deepest paths first, so a directory only left empty by the removals
+        // above is itself removed once nothing references it any more.
+        usort($obsoleteDirs, static fn (string $a, string $b): int => strlen($b) <=> strlen($a));
+        foreach ($obsoleteDirs as $dir) {
+            if (is_dir($dir) && (new Finder)->in($dir)->depth('== 0')->hasResults() === false) {
+                $fileSystem->remove($dir);
+            }
+        }
+    }
+
+    private function extractArchive(string $file, string $to, ?\Closure $confine, ?\Closure $afterMirror = null)
+    {
+        self::rejectZipSlip($file);
+        $fileSystem = new Filesystem;
+        $zip = new ZipArchive;
+
+        if ($zip->open($file, ZipArchive::CHECKCONS) !== true) {
+            $fileSystem->remove($file);
+
+            throw new \RuntimeException("Unable to open zip file: {$file}");
+        }
+
+        try {
+            if (! $zip->extractTo($to)) {
+                throw new \RuntimeException("Failed to extract zip file: {$file}");
+            }
+            $root = $to.DIRECTORY_SEPARATOR.self::archiveRootDirectory($to);
+            $fileSystem->remove(array_map(
+                static fn (string $metadata): string => $root.DIRECTORY_SEPARATOR.$metadata,
+                self::METADATA_FILES
+            ));
+            $fileSystem->mirror($root, base_path(), $confine === null ? null : $confine($root), ['override' => true]);
+            $afterMirror?->__invoke($root);
+        } finally {
+            $zip->close();
+            $fileSystem->remove([$file, $to]);
+        }
+    }
+
+    private function download(string $uuid, string $type): string
+    {
         $filename = storage_path("app/updates/{$uuid}.zip");
-        $to = storage_path("app/extracts/{$uuid}");
         if (! is_dir(dirname($filename))) {
             mkdir(dirname($filename), 0755, true);
         }
@@ -50,50 +179,38 @@ class UpdaterManager
         if (! $resource) {
             throw new \RuntimeException("Unable to open file for writing: {$filename}");
         }
-        app('license')->download($uuid, $resource);
+        $response = app('license')->download($uuid, $resource);
         if (! file_exists($filename)) {
             throw new \RuntimeException("File not found after download: {$filename}");
         }
         self::checkIfValidZip($filename);
-        $this->extract($filename, $to);
+        (new ArchiveVerifier)->verify(
+            $filename,
+            ArchiveProof::fromResponse($response instanceof ResponseInterface ? $response : null),
+            $uuid,
+            $type
+        );
+
+        return $filename;
     }
 
-    public function extract(string $file, string $to)
+    /**
+     * Vendor archives wrap everything in a single root directory, whose name is
+     * the repository name and not the extension identifier.
+     */
+    private static function archiveRootDirectory(string $to): string
     {
-        self::rejectZipSlip($file);
-        $zip = new ZipArchive;
-        $finder = new Finder;
+        $root = collect((new Finder)->in($to)->directories()->depth('== 0'))->first();
+        if ($root === null) {
+            throw new \RuntimeException("Archive has no root directory: {$to}");
+        }
 
-        $res = $zip->open($file, ZipArchive::CHECKCONS);
-        if ($res) {
-            if (! $zip->extractTo($to)) {
-                throw new \RuntimeException("Failed to extract zip file: {$file}");
-            }
-            $path = (basename(collect($finder->in($to)->directories()->depth('== 0'))->first()->getPathname()));
-            $fileSystem = new Filesystem;
-            $removedFiles = ['README.md', 'LICENSE.txt', 'CHANGELOG.md', '.gitignore', 'LICENSE'];
-            foreach ($removedFiles as $file) {
-                if (file_exists($to.DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$file)) {
-                    unlink($to.DIRECTORY_SEPARATOR.$path.DIRECTORY_SEPARATOR.$file);
-                }
-            }
-            //self::assertExtractedTreeStaysInExtensionDirs($to.DIRECTORY_SEPARATOR.$path);
-            $fileSystem->mirror($to.DIRECTORY_SEPARATOR.$path, base_path(), null, ['override' => true]);
-        }
-        $zip->close();
-        if (file_exists($file)) {
-            unlink($file);
-        }
-        if (is_dir($to)) {
-            $fileSystem = new Filesystem;
-            $fileSystem->remove($to);
-        }
+        return basename($root->getPathname());
     }
 
     /**
      * Walk the ZIP entries before extracting and refuse any entry whose name
-     * either escapes the destination (.., absolute path, Windows drive) or
-     * targets a path under a non-extension prefix at the project root.
+     * escapes the destination: .. segment, absolute path or Windows drive.
      */
     public static function rejectZipSlip(string $file): void
     {
@@ -116,30 +233,6 @@ class UpdaterManager
             }
         } finally {
             $zip->close();
-        }
-    }
-
-    /**
-     * Refuse to mirror anything outside the whitelisted extension directories.
-     * The vendor archive layout is `<root>/<prefix>/<extension>/...` where
-     * <prefix> is one of ALLOWED_PREFIXES; files at any other location are
-     * a supply-chain payload trying to overwrite app/, bootstrap/, etc.
-     */
-    public static function assertExtractedTreeStaysInExtensionDirs(string $root): void
-    {
-        $finder = (new Finder)->in($root)->files()->ignoreDotFiles(false);
-        foreach ($finder as $file) {
-            $rel = ltrim(str_replace('\\', '/', $file->getRelativePathname()), '/');
-            $allowed = false;
-            foreach (self::ALLOWED_PREFIXES as $prefix) {
-                if (str_starts_with($rel, $prefix)) {
-                    $allowed = true;
-                    break;
-                }
-            }
-            if (! $allowed) {
-                throw new \RuntimeException("Extension archive contains a file outside the allowed extension directories: {$rel}");
-            }
         }
     }
 

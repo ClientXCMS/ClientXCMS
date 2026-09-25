@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Provisioning;
 
+use App\Models\Billing\InvoiceItem;
 use App\Models\Provisioning\Server;
 use Database\Seeders\AdminSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,6 +13,40 @@ class ServiceControllerTest extends TestCase
     const API_URL = 'admin/services';
 
     use RefreshDatabase;
+
+    public function test_delete_service_can_cancel_only_linked_pending_invoice_items(): void
+    {
+        $service = $this->createServiceModel($this->createCustomerModel()->id);
+        $pending = InvoiceItem::factory()->create();
+        $pending->attachMetadata('services', '999999,'.$service->id.',999998');
+        $delivered = InvoiceItem::factory()->create(['delivered_at' => now()]);
+        $delivered->attachMetadata('services', (string) $service->id);
+        $unrelated = InvoiceItem::factory()->create();
+        $unrelated->attachMetadata('services', $service->id.'0');
+
+        $this->performAdminAction('DELETE', self::API_URL.'/'.$service->id, [
+            'cancel_invoice_item_delivery' => '1',
+        ])->assertRedirect();
+
+        $this->assertSoftDeleted($service);
+        $this->assertNotNull($pending->fresh()->cancelled_at);
+        $this->assertNull($delivered->fresh()->cancelled_at);
+        $this->assertNull($unrelated->fresh()->cancelled_at);
+    }
+
+    public function test_delete_service_can_keep_invoice_item_delivery(): void
+    {
+        $service = $this->createServiceModel($this->createCustomerModel()->id);
+        $item = InvoiceItem::factory()->create();
+        $item->attachMetadata('services', (string) $service->id);
+
+        $this->performAdminAction('DELETE', self::API_URL.'/'.$service->id, [
+            'cancel_invoice_item_delivery' => '0',
+        ])->assertRedirect();
+
+        $this->assertSoftDeleted($service);
+        $this->assertNull($item->fresh()->cancelled_at);
+    }
 
     public function test_admin_service_index(): void
     {

@@ -40,7 +40,7 @@ class HelpdeskCloseCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $this->info('Running services:expire at '.now()->format('Y-m-d H:i:s'));
         $this->info('Closing helpdesk tickets...');
@@ -48,7 +48,7 @@ class HelpdeskCloseCommand extends Command
         if ($days <= 0) {
             $this->info('Auto close is disabled.');
 
-            return;
+            return self::SUCCESS;
         }
         $date = now()->subDays($days);
         $tickets = \App\Models\Helpdesk\SupportTicket::whereIn('status', ['answered', 'open'])->where('updated_at', '<', $date)->get();
@@ -57,5 +57,7 @@ class HelpdeskCloseCommand extends Command
             $this->info('Ticket #'.$ticket->id.' closed.');
         }
         $this->info('Helpdesk tickets closed.');
+
+        return self::SUCCESS;
     }
 }

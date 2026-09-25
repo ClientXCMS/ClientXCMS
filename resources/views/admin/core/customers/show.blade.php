@@ -22,6 +22,7 @@
 @section('scripts')
     <script src="{{ Vite::asset('resources/global/js/clipboard.js') }}" type="module"></script>
     <script src="{{ Vite::asset('resources/global/js/admin/filter.js') }}" type="module"></script>
+    <script src="{{ Vite::asset('resources/global/js/flatpickr.js') }}" type="module"></script>
 @endsection
 @section('content')
     <div class="container mx-auto">
@@ -33,8 +34,8 @@
                     <div>
                         <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
                             {{ $item->fullname }}
-                            @if ($item->company_name)
-                                <span class="text-sm font-normal text-gray-500">- {{ $item->company_name }}</span>
+                            @if ($item->legal_name ?: $item->company_name)
+                                <span class="text-sm font-normal text-gray-500">- {{ $item->legal_name ?: $item->company_name }}</span>
                             @endif
                         </h2>
                         <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -44,7 +45,7 @@
                                 <i class="bi bi-telephone mr-1"></i>{{ $item->phone }}
                             @endif
                         </p>
-                        <p class="text-xs text-gray-500 dark:text-gray-500">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
                             {{ __($translatePrefix . '.show.subheading', ['date' => $item->created_at->format('d/m/Y')]) }}
                         </p>
                         @if ($item->isBlocked())
@@ -214,6 +215,19 @@
                             <i class="bi bi-person-vcard text-lg"></i>
                             {{ __($translatePrefix . '.show.details') }}
                         </button>
+                        @if (staff_has_permission('admin.manage_customers'))
+                            @php($fiscalStatus = app(\App\Services\Billing\FiscalProfileService::class)->status($item))
+                            <button type="button"
+                                class="hs-tab-active:bg-indigo-600/10 hs-tab-active:text-indigo-600 hs-tab-active:border-l-indigo-600 py-3 px-4 inline-flex items-center justify-between gap-x-3 border-l-2 border-transparent text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700/50 focus:outline-none rounded-r-lg"
+                                id="tabs-einvoicing-item" aria-selected="false" data-hs-tab="#tabs-einvoicing"
+                                aria-controls="tabs-einvoicing" role="tab">
+                                <span class="inline-flex items-center gap-x-3">
+                                    <i class="bi bi-receipt-cutoff text-lg"></i>
+                                    {{ __('billing.admin.title') }}
+                                </span>
+                                <span class="inline-flex size-2 rounded-full {{ $fiscalStatus === 'complete' ? 'bg-green-500' : ($fiscalStatus === 'pending' ? 'bg-amber-500' : 'bg-red-500') }}" title="{{ __('einvoicing.status.'.$fiscalStatus) }}"></span>
+                            </button>
+                        @endif
                         @if (staff_has_permission('admin.show_services'))
                             <button type="button"
                                 class="hs-tab-active:bg-indigo-600/10 hs-tab-active:text-indigo-600 hs-tab-active:border-l-indigo-600 py-3 px-4 inline-flex items-center justify-between gap-x-3 border-l-2 border-transparent text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700/50 focus:outline-none rounded-r-lg"
@@ -361,19 +375,19 @@
                                     </div>
                                     <div>
                                         @include('admin/shared/input', [
-                                            'name' => 'company_name',
-                                            'label' => __('global.company_name'),
-                                            'value' => old('company_name', $item->company_name),
-                                        ])
-                                    </div>
-                                    <div>
-                                        @include('admin/shared/input', [
                                             'name' => 'balance',
                                             'label' => __('global.balance'),
                                             'value' => old('balance', $item->balance),
                                             'type' => 'number',
                                             'step' => '0.01',
                                             'min' => 0,
+                                        ])
+                                    </div>
+                                    <div>
+                                        @include('admin/shared/input', [
+                                            'name' => 'phone',
+                                            'label' => __('global.phone'),
+                                            'value' => old('phone', $item->phone),
                                         ])
                                     </div>
                                 </div>
@@ -387,61 +401,8 @@
                                         ])
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-3 gap-4 mt-4">
-                                    <div>
-                                        @include('admin/shared/input', [
-                                            'name' => 'address',
-                                            'label' => __('global.address'),
-                                            'value' => old('address', $item->address),
-                                        ])
-                                    </div>
-                                    <div>
-                                        @include('admin/shared/input', [
-                                            'name' => 'address2',
-                                            'label' => __('global.address2'),
-                                            'value' => old('address2', $item->address2),
-                                        ])
-                                    </div>
-                                    <div>
-                                        @include('admin/shared/input', [
-                                            'name' => 'zipcode',
-                                            'label' => __('global.zip'),
-                                            'value' => old('zipcode', $item->zipcode),
-                                        ])
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-3 gap-4 mt-4">
-                                    <div>
-                                        @include('admin/shared/select', [
-                                            'name' => 'country',
-                                            'label' => __('global.country'),
-                                            'options' => $countries,
-                                            'value' => old('country', $item->country),
-                                        ])
-                                    </div>
-                                    <div>
-                                        @include('admin/shared/input', [
-                                            'name' => 'city',
-                                            'label' => __('global.city'),
-                                            'value' => old('city', $item->city),
-                                        ])
-                                    </div>
-                                    <div>
-                                        @include('admin/shared/input', [
-                                            'name' => 'region',
-                                            'label' => __('global.region'),
-                                            'value' => old('region', $item->region),
-                                        ])
-                                    </div>
-                                </div>
                                 <div class="grid grid-cols-2 gap-4 mt-4">
-                                    <div>
-                                        @include('admin/shared/input', [
-                                            'name' => 'phone',
-                                            'label' => __('global.phone'),
-                                            'value' => old('phone', $item->phone),
-                                        ])
-                                    </div>
+
                                     <div>
                                         @include('admin/shared/select', [
                                             'name' => 'locale',
@@ -474,17 +435,6 @@
                                         ])
                                     </div>
                                 </div>
-                                <div class="mt-4">
-                                    <div>
-                                        @include('admin/shared/textarea', [
-                                            'name' => 'billing_details',
-                                            'label' => __('global.billing_details'),
-                                            'value' => old('billing_details', $item->billing_details),
-                                            'help' => __('global.billing_details_help'),
-                                        ])
-                                    </div>
-                                </div>
-
                                 <h5 class="text-md font-semibold text-gray-800 dark:text-gray-200 mt-6 mb-2">
                                     {{ __('client.profile.security.index') }}</h5>
                                 <div>
@@ -505,7 +455,7 @@
                                                 value="{{ $item->getConfirmationUrl() }}">
                                             <button type="button" data-clipboard-target="#confirmation_url"
                                                 data-clipboard-action="copy"
-                                                class="js-clipboard w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-e-md border border-transparent bg-blue-600 text-white hover:bg-blue-700">
+                                                class="js-clipboard btn-addon">
                                                 <i class="bi bi-clipboard js-clipboard-default"></i>
                                                 <i class="bi bi-check js-clipboard-success hidden"></i>
                                             </button>
@@ -530,6 +480,12 @@
                         @endif
                     </form>
                 </div>
+
+                @if (staff_has_permission('admin.manage_customers'))
+                    <div id="tabs-einvoicing" class="hidden" role="tabpanel" aria-labelledby="tabs-einvoicing-item">
+                        @include('admin/core/customers/cards/einvoicing', ['customer' => $item, 'countries' => $countries])
+                    </div>
+                @endif
 
                 @if (staff_has_permission('admin.show_services'))
                     <div id="tabs-services" class="hidden" role="tabpanel" aria-labelledby="tabs-services-item">

@@ -111,6 +111,13 @@ if (! function_exists('is_darkmode')) {
     }
 }
 
+if (! function_exists('darkmode_html_class')) {
+    function darkmode_html_class(bool $admin = false): string
+    {
+        return is_darkmode($admin) ? 'dark' : '';
+    }
+}
+
 if (! function_exists('is_gdpr_compliment')) {
     function is_gdpr_compliment(): bool
     {
@@ -443,9 +450,13 @@ if (! function_exists('dangerous_content_patterns')) {
      * (sections, email templates, etc.).
      *
      * @return array<string> PCRE patterns
+     *
+     * @deprecated since 2.17, use `\App\Services\Content\SafeHtml` instead.
      */
     function dangerous_content_patterns(): array
     {
+        trigger_error('dangerous_content_patterns() is deprecated since 2.17, use \App\Services\Content\SafeHtml instead.', E_USER_DEPRECATED);
+
         return [
             '/<\?(?:php|=)?/i',
             '/\?>/i',
@@ -472,9 +483,13 @@ if (! function_exists('sanitize_content')) {
      * Strip dangerous Blade/PHP constructs from user-editable content.
      * Each pattern is replaced by an empty string (removal), preserving
      * the rest of the content intact.
+     *
+     * @deprecated since 2.17, use `\App\Services\Content\SafeHtml` instead.
      */
     function sanitize_content(string $content): string
     {
+        trigger_error('sanitize_content() is deprecated since 2.17, use \App\Services\Content\SafeHtml instead.', E_USER_DEPRECATED);
+
         foreach (dangerous_content_patterns() as $pattern) {
             $content = preg_replace($pattern, '', $content);
         }
@@ -489,9 +504,15 @@ if (! function_exists('current_locale')) {
         return app(LocaleService::class)->fetchCurrentLocale();
     }
 }
+
 if (! function_exists('has_dangerous_content')) {
+    /**
+     * @deprecated since 2.17, use `\App\Services\Content\SafeHtml` instead.
+     */
     function has_dangerous_content(string $content): bool
     {
+        trigger_error('has_dangerous_content() is deprecated since 2.17, use \App\Services\Content\SafeHtml instead.', E_USER_DEPRECATED);
+
         foreach (dangerous_content_patterns() as $pattern) {
             if (preg_match($pattern, $content)) {
                 return true;
@@ -503,8 +524,15 @@ if (! function_exists('has_dangerous_content')) {
 }
 
 if (! function_exists('is_sanitized')) {
+    /**
+     * Returns true when the content IS dangerous, the opposite of what the name says.
+     *
+     * @deprecated since 2.17, use `\App\Services\Content\SafeHtml` instead.
+     */
     function is_sanitized(string $content): bool
     {
+        trigger_error('is_sanitized() is deprecated since 2.17 and returns true when the content IS dangerous, use \App\Services\Content\SafeHtml instead.', E_USER_DEPRECATED);
+
         foreach (dangerous_content_patterns() as $pattern) {
             if (preg_match($pattern, $content)) {
                 return true;
@@ -514,6 +542,7 @@ if (! function_exists('is_sanitized')) {
         return false;
     }
 }
+
 if (! function_exists('get_group_icon')) {
     function get_group_icon(string $name): string
     {

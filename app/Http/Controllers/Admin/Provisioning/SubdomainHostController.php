@@ -32,7 +32,7 @@ class SubdomainHostController extends AbstractCrudController
 {
     protected string $model = SubdomainHost::class;
 
-    protected string $viewPath = 'admin.provisioning.subdomains_hosts';
+    protected string $viewPath = 'admin.provisioning.subdomains-hosts';
 
     protected string $routePath = 'admin.subdomains_hosts';
 

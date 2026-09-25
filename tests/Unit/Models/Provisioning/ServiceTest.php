@@ -26,16 +26,8 @@ class ServiceTest extends TestCase
         $service = $this->createServiceModel(Customer::first()->id);
         $service->update(['billing' => 'monthly']);
         $invoice = InvoiceService::createInvoiceFromService($service);
-        /** @var Customer $user */
-        $user = $service->customer;
-        $invoice->items[0]->type = 'renewal';
-        $invoice->items[0]->related_id = $service->id;
-        $invoice->items[0]->data = [
-            'months' => 1,
-        ];
         // 1 initial + 3 supplémentaires
         $now = $service->expires_at->addMonth();
-        $invoice->items[0]->save();
         $service->status = 'active';
         $service->renewals = 1;
         $service->max_renewals = 10;
@@ -61,14 +53,6 @@ class ServiceTest extends TestCase
         $invoice = InvoiceService::createInvoiceFromService($service);
         // 3 months renewal instead of 1
         $now = (clone $service->expires_at)->addMonths(3);
-        /** @var Customer $user */
-        $user = $service->customer;
-        $invoice->items[0]->type = 'renewal';
-        $invoice->items[0]->related_id = $service->id;
-        $invoice->items[0]->data = [
-            'months' => 3,
-        ];
-        $invoice->items[0]->save();
         $service->status = 'active';
         $service->renewals = 1;
         $service->max_renewals = 10;
@@ -91,16 +75,8 @@ class ServiceTest extends TestCase
         $service = $this->createServiceModel(Customer::first()->id);
         $service->update(['billing' => 'quarterly', 'expires_at' => Carbon::now()->subMonth(), 'status' => 'expired']);
         $invoice = InvoiceService::createInvoiceFromService($service);
-        /** @var Customer $user */
-        $user = $service->customer;
-        $invoice->items[0]->type = 'renewal';
-        $invoice->items[0]->related_id = $service->id;
-        $invoice->items[0]->data = [
-            'months' => 3,
-        ];
         // 3 initial + 3 supplémentaires
         $now = $service->expires_at->addMonths(3);
-        $invoice->items[0]->save();
         $service->renewals = 1;
         $service->max_renewals = 10;
         $service->save();

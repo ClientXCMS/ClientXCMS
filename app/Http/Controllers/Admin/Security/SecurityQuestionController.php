@@ -26,7 +26,7 @@ use Illuminate\Http\Request;
 
 class SecurityQuestionController extends AbstractCrudController
 {
-    protected string $viewPath = 'admin.security.security_questions';
+    protected string $viewPath = 'admin.security.security-questions';
 
     protected string $routePath = 'admin.security_questions';
 

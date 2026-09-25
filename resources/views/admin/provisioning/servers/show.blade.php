@@ -58,8 +58,11 @@
                                 @include('admin/shared/select', ['name' => 'type', 'label' => __($translatePrefix . '.type'), 'options' => $types, 'value' => $item->type])
                             </div>
 
-                            <div class="flex flex-col">
-                                @include('admin/shared/input', ['name' => 'hostname', 'label' => __($translatePrefix . '.hostname'), 'value' => old('hostname', $item->hostname), 'attributes' => ['autocomplete' => 'off']])
+                            <div class="flex flex-col" id="hostname-input-container">
+                                @include('admin/shared/input', ['name' => 'hostname', 'label' => __($translatePrefix . '.hostname'), 'value' => old('hostname', $item->hostname), 'attributes' => ['autocomplete' => 'off', 'data-server-hostname-input' => true]])
+                            </div>
+                            <div class="flex-col hidden" id="registrar-select-container">
+                                @include('admin/shared/select', ['name' => 'hostname', 'id' => 'registrar-hostname', 'label' => 'Registrar', 'options' => $registrars, 'value' => old('hostname', $item->hostname), 'attributes' => ['data-server-registrar-select' => true, 'disabled' => true]])
                             </div>
 
                             <div class="flex flex-col">
@@ -69,16 +72,20 @@
                                 @include('admin/shared/status-select', ['value' => $item->status])
                             </div>
 
-                            <div class="flex flex-col">
+                            <div class="flex flex-col" id="port-container">
                                 @include('admin/shared/input', ['name' => 'port', 'label' => __($translatePrefix . '.port'), 'value' => old('port', $item->port), 'attributes' => ['autocomplete' => 'off']])
                             </div>
 
-                            <div class="flex flex-col">
-                                @include('admin/shared/input', ['name' => 'username', 'label' => $labels[$item->type][0] ?? __('global.username'), 'value' => old('username'), 'help' => __('admin.blanktochange'), 'attributes' => ['autocomplete' => 'off']])
+                            <div class="hidden flex-col justify-center" id="test-mode-container">
+                                @include('admin/shared/checkbox', ['name' => 'test_mode', 'label' => 'Test mode', 'checked' => old('test_mode', $item->isTestMode())])
                             </div>
 
                             <div class="flex flex-col">
-                                @include('admin/shared/password', ['name' => 'password', 'label' =>  $labels[$item->type][1] ?? __('global.password'), 'value' => old('password'), 'help' => __('admin.blanktochange'), 'attributes' => ['autocomplete' => 'off']])
+                                @include('admin/shared/input', ['name' => 'username', 'label' => $labels[$item->type][0] ?? __('global.username'), 'value' => old('username', $item->username), 'help' => __('admin.blanktochange'), 'attributes' => ['autocomplete' => 'off']])
+                            </div>
+
+                            <div class="flex flex-col">
+                                @include('admin/shared/password', ['name' => 'password', 'label' =>  $labels[$item->type][1] ?? __('global.password'), 'value' => old('password', $item->password), 'help' => __('admin.blanktochange'), 'attributes' => ['autocomplete' => 'off']])
                             </div>
                             <input type="hidden" name="id" value="{{ $item->id }}">
                         </div>

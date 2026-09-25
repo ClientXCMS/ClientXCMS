@@ -31,7 +31,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class CreditNoteController extends AbstractCrudController
 {
-    protected string $viewPath = 'admin.core.credit_notes';
+    protected string $viewPath = 'admin.core.credit-notes';
 
     protected string $routePath = 'admin.credit_notes';
 

@@ -38,6 +38,7 @@ class ThemeController extends Controller
         $context = [
             'configHTML' => $theme->configView(['errors' => $errors]),
             'currentTheme' => $theme,
+            'customMenus' => $theme->menuTypes(),
             'modes' => [
                 'light' => __('personalization.theme.fields.theme_switch_mode.light'),
                 'dark' => __('personalization.theme.fields.theme_switch_mode.dark'),

@@ -40,7 +40,26 @@
 
 
         <form method="POST" action="{{ route('admin.personalization.config_theme', ['theme' => $currentTheme->uuid]) }}" class="card mt-3" enctype="multipart/form-data">
-
+        @if ($customMenus !== [])
+                <h4 class="font-semibold uppercase text-gray-600 dark:text-gray-400">
+                    {{ __('personalization.custom_menu.title') }}
+                </h4>
+                <div class="flex items-end gap-2 mb-4">
+                    <div class="grow">
+                        @include('admin/shared/select', [
+                            'name' => 'theme_custom_menu',
+                            'label' => null,
+                            'value' => '',
+                            'options' => collect($customMenus)->mapWithKeys(fn ($type) => [
+                                route('admin.personalization.menulinks.custom', ['type' => $type]) => str($type)->replace('_', ' ')->headline(),
+                            ])->prepend(__('personalization.custom_menu.title'), '')->all(),
+                        ])
+                    </div>
+                    <span class="btn btn-secondary h-full" aria-hidden="true">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                    </span>
+                </div>
+        @endif
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     @include('admin/shared/input', ['name' => 'theme_home_title', 'label' => __('personalization.home.fields.theme_home_title'), 'value' => setting('theme_home_title', setting('app.name')), 'translatable' => setting_is_saved('theme_home_title')])
@@ -69,4 +88,15 @@
         'theme_home_subtitle' => 'text',
         'theme_home_title_meta' => 'text',
     ], 'class' => \App\Models\Admin\Setting::class, 'id' => 0])
+
+    @if ($customMenus !== [])
+        <script>
+            document.querySelector('#theme_custom_menu')?.addEventListener('change', function () {
+                if (!this.value) return;
+
+                window.open(this.value, '_blank', 'noopener,noreferrer');
+                this.value = '';
+            });
+        </script>
+    @endif
 @endsection

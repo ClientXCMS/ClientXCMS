@@ -21,6 +21,7 @@ namespace App\Http\Requests\Store;
 
 use App\Models\Store\Pricing;
 use App\Models\Store\Product;
+use App\Services\Content\SafeHtml;
 use App\Services\Store\PricingService;
 use App\Traits\PricingRequestTrait;
 use Illuminate\Foundation\Http\FormRequest;
@@ -57,13 +58,21 @@ class StoreProductRequest extends FormRequest
 
         return array_merge([
             'name' => 'required|string|max:255',
-            'description' => ['string', 'required', 'max:65535', new \App\Rules\NoScriptOrPhpTags],
+            'description' => ['string', 'required', 'max:65535'],
             'status' => 'required|string|in:active,hidden,unreferenced',
             'group_id' => 'required|integer|exists:groups,id',
             'stock' => 'required|integer',
             'type' => ['required', 'string', Rule::in($types)],
             'pinned' => 'nullable|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'product_descriptions' => 'nullable|array|max:100',
+            'product_descriptions_present' => 'nullable|boolean',
+            'product_descriptions.*.id' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9_-]+$/'],
+            'product_descriptions.*.text' => 'required_with:product_descriptions|string|max:1000',
+            'product_descriptions.*.icon' => ['nullable', 'string', 'max:100', 'regex:/^bi bi-[a-z0-9]+(?:-[a-z0-9]+)*$/'],
+            'product_description_translations' => 'nullable|array',
+            'product_description_translations.*' => 'array|max:100',
+            'product_description_translations.*.*' => 'nullable|string|max:1000',
         ], $this->pricingRules());
     }
 
@@ -77,6 +86,12 @@ class StoreProductRequest extends FormRequest
             'pricing' => $convertedPricing,
             'pinned' => $this->pinned == 'true' ? '1' : '0',
         ]);
+
+        // Admin product cards render the description without escaping. Only
+        // touch it when it was sent: adding the key would fail its own rules.
+        if ($this->has('description')) {
+            $this->merge(['description' => app(SafeHtml::class)->sanitize($this->input('description'))]);
+        }
     }
 
     public function store()
@@ -91,6 +106,10 @@ class StoreProductRequest extends FormRequest
             $product->image = 'products/'.$filename;
             $product->save();
         }
+        $product->syncProductDescriptions(
+            $validated['product_descriptions'] ?? [],
+            $validated['product_description_translations'] ?? []
+        );
 
         return $product;
     }

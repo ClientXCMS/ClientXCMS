@@ -76,7 +76,13 @@ class DomainManagerTest extends TestCase
         $product->type = 'domain';
         $product->save();
 
-        $tld = DomainTld::create(['extension' => '.com', 'status' => 'active']);
+        $tld = DomainTld::create([
+            'extension' => '.com',
+            'status' => 'active',
+            'default_nameservers' => ['ns1.example.net', 'ns2.example.net'],
+            'default_dns_records' => [['type' => 'A', 'name' => '@', 'value' => '192.0.2.10', 'ttl' => 3600]],
+            'apply_default_dns' => false,
+        ]);
         DomainTldPrice::create([
             'domain_tld_id' => $tld->id,
             'currency' => 'USD',
@@ -98,6 +104,82 @@ class DomainManagerTest extends TestCase
 
         $this->assertSame('example.com', $row->data['domain']);
         $this->assertSame('.com', $row->data['tld']);
+        $this->assertSame(['ns1.example.net', 'ns2.example.net'], $row->data['nameservers']);
+        $this->assertSame('192.0.2.10', $row->data['default_dns_records'][0]['value']);
         $this->assertEquals(10, $row->recurringPayment(false));
+
+        $tld->update(['default_nameservers' => ['ns3.example.net', 'ns4.example.net']]);
+        $this->assertSame(['ns1.example.net', 'ns2.example.net'], $row->fresh()->data['nameservers']);
+    }
+
+    public function test_domain_order_rejects_a_billing_without_a_price_in_the_selected_currency(): void
+    {
+        $product = $this->createProductModel('active', 10, []);
+        $product->type = 'domain';
+        $product->save();
+        $tld = DomainTld::create(['extension' => '.com', 'status' => 'active', 'default_nameservers' => ['ns1.example.net', 'ns2.example.net']]);
+        DomainTldPrice::create(['domain_tld_id' => $tld->id, 'currency' => 'EUR', 'action' => 'register', 'billing' => 'annually', 'price' => 10, 'setup' => 0]);
+
+        $response = $this->post(route('front.store.basket.config', $product), [
+            'currency' => 'USD', 'billing' => 'annually', 'domain' => 'example.com', 'tld' => '.com',
+        ]);
+
+        $response->assertSessionHas('error');
+        $this->assertSame(0, Basket::getBasket()->rows()->count());
+        $this->assertNull(app(\App\Services\Domain\DomainPricingService::class)->priceFor('.com', 'USD', 'annually'));
+    }
+
+    public function test_domain_basket_row_does_not_fall_back_when_its_tld_price_is_removed(): void
+    {
+        $product = $this->createProductModel('active', 10, []);
+        $product->type = 'domain';
+        $product->save();
+        $tld = DomainTld::create(['extension' => '.com', 'status' => 'active', 'default_nameservers' => ['ns1.example.net', 'ns2.example.net']]);
+        $price = DomainTldPrice::create(['domain_tld_id' => $tld->id, 'currency' => 'USD', 'action' => 'register', 'billing' => 'annually', 'price' => 10, 'setup' => 0]);
+        $row = Basket::getBasket()->rows()->create([
+            'product_id' => $product->id, 'currency' => 'USD', 'billing' => 'annually',
+            'data' => ['domain' => 'example.com', 'tld' => '.com'],
+        ]);
+
+        $this->assertTrue($row->hasValidDomainPricing());
+        $price->delete();
+        $this->assertFalse($row->hasValidDomainPricing());
+        $this->expectException(\UnexpectedValueException::class);
+        $row->getUnitPrice();
+    }
+
+    public function test_customer_can_choose_custom_nameservers_for_a_domain(): void
+    {
+        $product = $this->createProductModel('active', 10, []);
+        $product->type = 'domain';
+        $product->save();
+
+        $tld = DomainTld::create([
+            'extension' => '.com',
+            'status' => 'active',
+            'default_nameservers' => ['ns1.managed.test', 'ns2.managed.test'],
+        ]);
+        DomainTldPrice::create([
+            'domain_tld_id' => $tld->id,
+            'currency' => 'USD',
+            'action' => 'register',
+            'billing' => 'annually',
+            'price' => 10,
+            'setup' => 0,
+        ]);
+
+        $response = $this->post(route('front.store.basket.config', $product), [
+            'currency' => 'USD',
+            'billing' => 'annually',
+            'domain' => 'example.com',
+            'tld' => '.com',
+            'nameserver_mode' => 'custom',
+            'nameservers' => ['NS1.EXTERNAL.TEST.', 'ns2.external.test'],
+        ]);
+
+        $response->assertRedirect(route('front.store.basket.show'));
+        $row = Basket::getBasket()->rows()->first();
+        $this->assertSame('custom', $row->data['nameserver_mode']);
+        $this->assertSame(['ns1.external.test', 'ns2.external.test'], $row->data['nameservers']);
     }
 }

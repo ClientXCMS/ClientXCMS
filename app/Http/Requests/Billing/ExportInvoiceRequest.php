@@ -19,7 +19,6 @@
 
 namespace App\Http\Requests\Billing;
 
-use App\Models\Billing\Invoice;
 use App\Services\InvoiceExporterService;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -74,39 +73,28 @@ class ExportInvoiceRequest extends FormRequest
     {
         return [
             'format' => 'required|string|in:'.implode(',', array_keys(InvoiceExporterService::getAvailableFormats())),
-            'date_from' => 'nullable|date',
-            'date_to' => 'nullable|date',
-            'status' => 'nullable|array|in:'.implode(',', array_keys($this->getIndexFilters())),
+            'date_from' => 'nullable|date|before_or_equal:date_to',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+            'status' => 'nullable|array',
+            'status.*' => 'string|in:'.implode(',', array_keys($this->getIndexFilters())),
+            'currency' => 'nullable|string|size:3',
             'customer_id' => 'nullable|integer|exists:customers,id',
         ];
     }
 
-    private function getIndexFilters()
+    private function getIndexFilters(): array
     {
-        return Invoice::FILTERS + [Invoice::STATUS_DRAFT => Invoice::STATUS_DRAFT];
+        return \App\Models\Billing\Invoice::FILTERS + [\App\Models\Billing\Invoice::STATUS_DRAFT => \App\Models\Billing\Invoice::STATUS_DRAFT];
     }
 
     public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
     {
         $validatedData = $this->validated();
-        $invoices = Invoice::query()
+        $query = \App\Models\Billing\Invoice::query()
             ->when($validatedData['customer_id'] ?? null, function ($query) use ($validatedData) {
                 return $query->where('customer_id', $validatedData['customer_id']);
-            })
-            ->when($validatedData['date_from'] ?? null, function ($query) use ($validatedData) {
-                return $query->where('created_at', '>=', $validatedData['date_from']);
-            })
-            ->when($validatedData['date_to'] ?? null, function ($query) use ($validatedData) {
-                return $query->where('created_at', '<=', $validatedData['date_to']);
-            })
-            ->when($validatedData['status'] ?? null, function ($query) use ($validatedData) {
-                if (in_array('all', $validatedData['status'])) {
-                    return $query;
-                }
-
-                return $query->whereIn('status', $validatedData['status']);
-            })
-            ->get();
+            });
+        $invoices = app(\App\Services\Billing\InvoiceFilterService::class)->apply($query, $validatedData)->get();
         if ($invoices->isEmpty()) {
             return back()->with('error', __('global.no_results'));
         }

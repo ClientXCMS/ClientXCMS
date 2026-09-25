@@ -1,19 +1,18 @@
 const showmorepricingbtn = document.getElementById('showmorepricingbtn');
 const calculatorBtn = document.getElementById('calculatorBtn');
 const table = document.getElementById('pricingtable');
-if (table) {
+const collapsiblePricing = table ? Array.from(table.querySelectorAll('.hidden')) : [];
+
+if (table && showmorepricingbtn) {
     showmorepricingbtn.addEventListener('click', function (e) {
         e.preventDefault();
-        Array.from(table.querySelectorAll('.hidden')).map((el) => el.classList.toggle('hidden'));
+        collapsiblePricing.forEach((el) => el.classList.toggle('hidden'));
+        showmorepricingbtn.setAttribute('aria-expanded', showmorepricingbtn_hidden() ? 'false' : 'true');
     });
 }
 
 function showmorepricingbtn_hidden() {
-    const filter = Array.from(table.querySelectorAll('.hidden')).filter((el) => el.classList.contains('hidden'));
-    if (filter.length > 0) {
-        return true;
-    }
-    return false;
+    return collapsiblePricing.some((el) => el.classList.contains('hidden'));
 }
 if (calculatorBtn) {
     calculatorBtn.addEventListener('click', function (e) {

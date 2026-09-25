@@ -49,7 +49,7 @@ class DeleteAccountRequest extends FormRequest
             $rules['2fa_code'] = [
                 'required',
                 'string',
-                new Valid2FACodeRule($this->user('web')->getMetadata('2fa_secret')),
+                new Valid2FACodeRule($this->user('web')->twoFactorSecret()),
             ];
         }
 

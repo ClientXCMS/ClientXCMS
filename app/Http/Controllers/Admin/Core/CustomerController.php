@@ -22,6 +22,7 @@ namespace App\Http\Controllers\Admin\Core;
 use App\Addons\SupportID\SupportIdHelper;
 use App\Helpers\Countries;
 use App\Http\Controllers\Admin\AbstractCrudController;
+use App\Http\Requests\Billing\ExportInvoiceRequest;
 use App\Http\Requests\Customer\StoreCustomerRequest;
 use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Models\Account\Customer;
@@ -30,10 +31,14 @@ use App\Models\Billing\Invoice;
 use App\Models\Helpdesk\SupportTicket;
 use App\Models\Provisioning\Service;
 use App\Providers\RouteServiceProvider;
+use App\Services\Billing\FiscalProfileService;
+use App\Services\Billing\InvoiceFilterService;
+use App\Services\InvoiceExporterService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\ValidationException;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class CustomerController extends AbstractCrudController
@@ -82,15 +87,27 @@ class CustomerController extends AbstractCrudController
         return $fields;
     }
 
-    public function show(Customer $customer)
+    public function show(Customer $customer, InvoiceFilterService $invoiceFilterService)
     {
         $this->checkPermission('show', $customer);
+        request()->validate([
+            'invoice_date_from' => 'nullable|date|before_or_equal:invoice_date_to',
+            'invoice_date_to' => 'nullable|date|after_or_equal:invoice_date_from',
+            'invoice_status' => 'nullable|array',
+            'invoice_status.*' => 'string|in:'.implode(',', array_keys(Invoice::FILTERS + [Invoice::STATUS_DRAFT => Invoice::STATUS_DRAFT])),
+            'invoice_currency' => 'nullable|string|size:3',
+        ]);
         $params['item'] = $customer;
         $params['countries'] = Countries::names();
-        $params['invoices'] = QueryBuilder::for(Invoice::class)
-            ->allowedFilters(['status'])
+        $invoiceFilters = array_filter([
+            'date_from' => request('invoice_date_from'),
+            'date_to' => request('invoice_date_to'),
+            'status' => request('invoice_status', []),
+            'currency' => request('invoice_currency'),
+        ]);
+        $params['invoices'] = $invoiceFilterService->apply(Invoice::query(), $invoiceFilters)
             ->where(function ($query) {
-                if (! request()->has('filter.status')) {
+                if (! request()->has('invoice_status')) {
                     $query->where('status', '!=', 'hidden');
                 }
             })
@@ -98,6 +115,8 @@ class CustomerController extends AbstractCrudController
             ->orderBy('id', 'desc')
             ->paginate(20, ['*'], 'invoices')
             ->appends(request()->query());
+        $params['invoiceFilters'] = $invoiceFilters;
+        $params['invoiceCurrencies'] = $customer->invoices()->whereNotNull('currency')->distinct()->orderBy('currency')->pluck('currency');
         $params['services'] = QueryBuilder::for(Service::class)
             ->allowedFilters(['status'])
             ->where(function ($query) {
@@ -128,6 +147,23 @@ class CustomerController extends AbstractCrudController
         $params['invoices_list'] = $customer->invoices()->orderBy('id', 'desc')->get();
 
         return $this->showView($params);
+    }
+
+    public function exportInvoices(ExportInvoiceRequest $request, Customer $customer, InvoiceFilterService $invoiceFilterService)
+    {
+        abort_unless(staff_has_permission('admin.export_invoices'), 403);
+        $filters = $request->safe()->only(['date_from', 'date_to', 'status', 'currency']);
+        $invoices = $invoiceFilterService->apply(
+            Invoice::query()->where('customer_id', $customer->id),
+            $filters
+        )->orderBy('created_at')->get();
+        if ($invoices->isEmpty()) {
+            return back()->with('error', __('global.no_results'));
+        }
+
+        $path = InvoiceExporterService::exportInvoices($invoices, $request->validated('format'));
+
+        return response()->download($path)->deleteFileAfterSend(true);
     }
 
     private function getCheckedFilters()
@@ -194,6 +230,21 @@ class CustomerController extends AbstractCrudController
         $customer->update($data);
 
         return $this->updateRedirect($customer);
+    }
+
+    public function updateFiscalProfile(Request $request, Customer $customer, FiscalProfileService $service)
+    {
+        $this->checkPermission('update', $customer);
+        try {
+            $service->update($customer, $request->all());
+        } catch (ValidationException $exception) {
+            return redirect()->route('admin.customers.show', ['customer' => $customer, 'tab' => 'einvoicing'])
+                ->withErrors($exception->errors())
+                ->withInput();
+        }
+
+        return redirect()->route('admin.customers.show', ['customer' => $customer, 'tab' => 'einvoicing'])
+            ->with('success', __('einvoicing.profile.saved'));
     }
 
     public function autologin(Customer $customer)

@@ -50,7 +50,12 @@ trait ServerTypeTrait
                 $message = sprintf('No server type %s found for service %d', $this->type, $this->id);
             } else {
                 $result = $server->createAccount($this);
-                if ($result->success) {
+                if ($result->success && $this->type === 'domain' && ($this->data['operation'] ?? 'register') === 'transfer' && ($this->data['registrar_status'] ?? null) === 'transfer_pending') {
+                    $this->status = self::STATUS_PENDING;
+                    $this->delivery_errors = null;
+                    $success = true;
+                    $message = $result->message ?? 'Domain transfer submitted';
+                } elseif ($result->success) {
                     $this->status = self::STATUS_ACTIVE;
                     $this->delivery_errors = null;
                     event(new ServiceDelivered($this, $result));
@@ -121,6 +126,7 @@ trait ServerTypeTrait
             if ($server != null) {
                 $result = $server->expireAccount($this);
                 if ($result->success) {
+                    $this->detachMetadata('disable_expiration');
                     $this->status = self::STATUS_EXPIRED;
                     if ($this->invoice_id != null && $this->invoice) {
                         $this->invoice->cancel();
@@ -137,6 +143,7 @@ trait ServerTypeTrait
                 }
             } else {
                 $result = new ServiceStateChangeDTO($this, true, 'Server '.$this->id.' expired');
+                $this->detachMetadata('disable_expiration');
                 $this->status = self::STATUS_EXPIRED;
 
                 if ($this->invoice_id != null) {
@@ -152,6 +159,7 @@ trait ServerTypeTrait
         } catch (ExternalApiException|\Exception $e) {
 
             if ($force) {
+                $this->detachMetadata('disable_expiration');
                 $this->status = self::STATUS_EXPIRED;
                 $this->save();
                 event(new ServiceExpired($this));
@@ -175,6 +183,7 @@ trait ServerTypeTrait
                 $result = $server->suspendAccount($this);
                 if ($result->success) {
                     $result = new ServiceStateChangeDTO($this, true, 'Server suspended');
+                    $this->detachMetadata('disable_suspension');
                     $this->status = self::STATUS_SUSPENDED;
                     $this->suspended_at = now();
                     $this->suspend_reason = $reason;
@@ -187,6 +196,7 @@ trait ServerTypeTrait
                 }
             } else {
                 $result = new ServiceStateChangeDTO($this, true, 'Server '.$this->id.' suspended');
+                $this->detachMetadata('disable_suspension');
                 $this->status = self::STATUS_SUSPENDED;
                 $this->suspended_at = now();
                 $this->save();

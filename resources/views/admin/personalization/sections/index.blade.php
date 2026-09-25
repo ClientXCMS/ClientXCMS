@@ -58,10 +58,10 @@
 
                                                             <div class="grow ms-6">
                                                                 <h3
-                                                                    class="text-sm font-semibold text-indigo-600 dark:text-indigo-600">
+                                                                    class="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
                                                                     {{ $item['title'] }}
                                                                 </h3>
-                                                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-500">
+                                                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                                                     {{ __('personalization.sections.pages.description', ['name' => $item['title']]) }}
                                                                 </p>
                                                             </div>
@@ -107,14 +107,14 @@
                                         @endif
 
                                         <div class="flex flex-wrap">
-                                            <ul class="w-full flex flex-col gap-2"
+                                            <ul class="hs-accordion-group w-full flex flex-col gap-2"
                                                 data-button="#saveButton-{{ $uuid }}"
                                                 data-url="{{ route('admin.personalization.sections.sort') }}"
                                                 is="sort-list">
                                                 @foreach ($active_page['sections'] as $section)
                                                     <li class="hs-accordion bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-slate-900 dark:border-slate-700 dark:shadow-slate-700/70 sortable-item"
                                                         id="{{ $section->id }}">
-                                                        <div class="hs-accordion-toggle flex items-center justify-between p-4 cursor-pointer"
+                                                        <div class="flex items-center justify-between p-4"
                                                             id="hs-basic-heading-{{ $section->id }}">
                                                             <div
                                                                 class="flex items-center gap-2 text-gray-800 dark:text-gray-200 font-medium">
@@ -137,27 +137,31 @@
                                                                     </button>
                                                                 @endif
 
-                                                                <a class="py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-gray-700 dark:text-gray-400 dark:hover:text-white dark:focus:ring-offset-gray-800 p-3"
-                                                                    href="{{ route($routePath . '.show', ['section' => $section]) }}">
-                                                                    {{ __('global.edit') }}
-                                                                </a>
+                                                                @if ($section->isModifiable())
+                                                                    <a class="py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-gray-700 dark:text-gray-400 dark:hover:text-white dark:focus:ring-offset-gray-800 p-3"
+                                                                        href="{{ route($routePath . '.show', ['section' => $section]) }}">
+                                                                        {{ __('global.edit') }}
+                                                                        <span class="sr-only">{{ __('personalization.sections.edit_of', ['name' => $section->formattedName()]) }}</span>
+                                                                    </a>
+                                                                @else
+                                                                    <button type="button" disabled aria-disabled="true"
+                                                                        title="{{ __('personalization.sections.premium_locked') }}"
+                                                                        class="py-1 px-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-gray-100 text-gray-400 shadow-sm align-middle cursor-not-allowed text-sm dark:bg-slate-800 dark:border-gray-700 dark:text-gray-600">
+                                                                        {{ __('global.edit') }}
+                                                                    </button>
+                                                                @endif
                                                                 <div class="hs-dropdown relative inline-flex">
                                                                     <button
                                                                         id="hs-dropdown-custom-icon-trigger-{{ $section->id }}"
                                                                         type="button"
                                                                         class="hs-dropdown-toggle flex justify-center items-center size-9 text-sm font-semibold rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:p-3 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800 p-3"
                                                                         aria-haspopup="menu" aria-expanded="false"
-                                                                        aria-label="Dropdown">
+                                                                        aria-label="{{ __('personalization.sections.more_actions_for', ['name' => $section->formattedName()]) }}">
                                                                         <i class="bi bi-three-dots"></i>
                                                                     </button>
                                                                     <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-60 bg-white shadow-md rounded-lg p-1 space-y-0.5 mt-2 dark:bg-neutral-800 dark:border dark:border-neutral-700 z-50"
                                                                         role="menu" aria-orientation="vertical"
                                                                         aria-labelledby="hs-dropdown-custom-icon-trigger-{{ $section->id }}">
-                                                                        <a class="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700"
-                                                                            href="{{ route($routePath . '.show', ['section' => $section]) }}"
-                                                                            {{ !$section->isModifiable() ? 'disabled="true"' : '' }}>
-                                                                            {{ __('global.edit') }}
-                                                                        </a>
                                                                         <form method="POST"
                                                                             action="{{ route($routePath . '.clone', ['section' => $section]) }}">
                                                                             @csrf
@@ -186,10 +190,13 @@
                                                                     </div>
                                                                 </div>
 
-                                                                <button
+                                                                <button type="button"
                                                                     class="hs-accordion-toggle p-2 text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200"
-                                                                    aria-controls="hs-basic-collapse-{{ $section->id }}">
+                                                                    aria-expanded="false"
+                                                                    aria-controls="hs-basic-collapse-{{ $section->id }}"
+                                                                    aria-label="{{ __('personalization.sections.toggle_preview_for', ['name' => $section->formattedName()]) }}">
                                                                     <svg class="hs-accordion-active:hidden block size-4"
+                                                                        aria-hidden="true"
                                                                         xmlns="http://www.w3.org/2000/svg" width="24"
                                                                         height="24" viewBox="0 0 24 24" fill="none"
                                                                         stroke="currentColor" stroke-width="2"
@@ -197,6 +204,7 @@
                                                                         <path d="m6 9 6 6 6-6" />
                                                                     </svg>
                                                                     <svg class="hs-accordion-active:block hidden size-4"
+                                                                        aria-hidden="true"
                                                                         xmlns="http://www.w3.org/2000/svg" width="24"
                                                                         height="24" viewBox="0 0 24 24" fill="none"
                                                                         stroke="currentColor" stroke-width="2"
@@ -235,7 +243,10 @@
                                                         class="flex items-center justify-between py-2 px-4 dark:border-neutral-700 rounded-lg mb-2">
                                                         <div
                                                             class="group relative flex flex-col h-full bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-slate-900 dark:border-slate-700 dark:shadow-slate-700/70 w-full">
-                                                            <div class="absolute top-3 right-3 z-10">
+                                                            <div class="flex items-center justify-between gap-2 py-3 px-4 border-b border-gray-200 dark:border-slate-700">
+                                                                <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                                                    {{ $section->formattedName() }}
+                                                                </span>
                                                                 <form method="POST"
                                                                     action="{{ route($routePath . '.clone_section', ['section' => $section->uuid]) }}?active_page={{ $uuid }}">
                                                                     @csrf

@@ -18,58 +18,82 @@
 ?>
 
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ darkmode_html_class() }}">
 <head>
     {{-- ... --}}
     <title>@yield('title') {{ translated_setting('seo_site_title') }}</title>
     @yield('styles')
     @vite('resources/themes/default/js/app.js')
     @vite('resources/themes/default/css/app.scss')
+    @include('shared.theme-color-vars')
+@include('shared.a11y-styles')
     {!! app('seo')->head('client', $meta_append ?? null) !!}
     {!! app('seo')->favicon('client') !!}
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
-<body class="bg-gray-50  {{is_darkmode() ? 'dark' : '' }}">
+<body class="bg-gray-50">
     {!! method_exists(app('seo'), 'header') ? app('seo')->header() : '' !!}
 <div class="dark:bg-gray-900 min-h-screen">
     <main id="content" role="main">
         <div class="overflow-hidden">
 
             <header class="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full py-2.5 sm:py-4 bg-white border-b border-gray-200 text-sm py-3 sm:py-0 dark:bg-gray-800 dark:border-gray-700 print:hidden">
-                <nav class="max-w-7xl flex basis-full items-center mx-auto px-4 sm:px-6 lg:px-8" aria-label="Global">
-                    <div class="me-5 md:me-8">
+                <nav class="max-w-7xl flex min-w-0 basis-full items-center mx-auto px-4 sm:px-6 lg:px-8" aria-label="Global">
+                    <div class="min-w-0 flex-1 me-3 sm:me-5 md:me-8">
                         @if (setting('theme_header_logo', false))
-                            <a class="flex-none text-xl font-semibold dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/" aria-label="{{ setting('app_name') }}">
-                                <img class="mx-auto h-10 w-auto" src="{{ setting('app_logo_text', asset('images/logo.png')) }}" alt="{{ setting('app_name') }}">
+                            <a class="block text-xl font-semibold dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/" aria-label="{{ setting('app_name') }}">
+                                <img class="mx-auto h-10 w-auto max-w-full" src="{{ setting('app_logo_text', asset('images/logo.png')) }}" alt="{{ setting('app_name') }}">
                             </a>
                         @else
-                            <a class="flex-none text-xl font-semibold dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/" aria-label="{{ setting('app_name') }}">{{ setting('app_name') }}</a>
+                            <a class="block truncate text-base font-semibold sm:text-xl dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/" aria-label="{{ setting('app_name') }}">{{ setting('app_name') }}</a>
                         @endif
                     </div>
-                    <div class="hs-overlay hs-overlay-open:translate-x-0 -translate-x-full fixed top-0 start-0 transition-all duration-300 transform h-full max-w-xs w-full z-[60] bg-white border-e basis-full grow sm:order-2 sm:static sm:block sm:h-auto sm:max-w-none sm:w-auto sm:border-r-transparent sm:transition-none sm:translate-x-0 sm:z-40 sm:basis-auto dark:bg-gray-800 dark:border-r-gray-700 sm:dark:border-r-transparent sm:block" tabindex="-1">
-                        <div class="flex flex-col gap-y-4 gap-x-0 mt-5 sm:flex-row sm:items-center sm:justify-end sm:gap-y-0 sm:mt-0 sm:ps-7">
+                    <div id="mobile-menu" class="hs-overlay hs-overlay-open:translate-x-0 translate-x-full hidden fixed top-0 end-0 transition-all duration-300 transform h-full w-full z-[60] overflow-y-auto bg-white border-s basis-full grow sm:order-2 sm:static sm:block sm:h-auto sm:w-auto sm:overflow-visible sm:border-s-transparent sm:transition-none sm:translate-x-0 sm:z-40 sm:basis-auto dark:bg-gray-800 dark:border-s-gray-700 sm:dark:border-s-transparent" tabindex="-1">
+                        <div class="flex items-center justify-between border-b px-4 py-3 sm:hidden dark:border-gray-700">
+                            <span class="truncate font-semibold text-gray-800 dark:text-white">{{ setting('app_name') }}</span>
+                            <button type="button" class="btn-icon2 size-11 sm:size-9" data-hs-overlay="#mobile-menu" aria-label="{{ __('a11y.close_menu') }}">
+                                <svg class="flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            </button>
+                        </div>
+                        <div class="flex flex-col gap-y-1 gap-x-0 mt-2 px-2 sm:flex-row sm:items-center sm:justify-end sm:gap-y-0 sm:mt-0 sm:px-0 sm:ps-7">
                             @foreach (app('theme')->getFrontLinks() as $link)
-                                <a class="font-medium sm:px-2 mr-3 {{ is_subroute($link) ? 'text-indigo-500 hover:text-indigo-400 dark:text-indigo-400 dark:hover:text-indigo-500' : 'text-gray-500 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-500' }}" href="{{ $link->trans('url') }}">
+                                <a class="flex min-h-11 items-center rounded-lg px-3 font-medium hover:bg-gray-100 sm:min-h-0 sm:px-2 sm:mr-3 sm:hover:bg-transparent dark:hover:bg-gray-700 sm:dark:hover:bg-transparent {{ is_subroute($link) ? 'text-primary hover:text-primary-dark dark:text-primary dark:hover:text-primary' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}" href="{{ $link->trans('url') }}">
                                     <i class="{{ $link->trans('icon') }}  mr-1"></i> {{ $link->trans('name') }}
                                     @if (isset($link->badge))
-                                        <span class="inline ms-1 font-medium text-xs bg-indigo-600 text-white py-1 px-2 rounded full">{{ $link->trans('badge') }}</span>
+                                        <span class="inline ms-1 font-medium text-xs bg-primary text-white py-1 px-2 rounded full">{{ $link->trans('badge') }}</span>
                                     @endif
                                 </a>
                             @endforeach
                         </div>
+                        <div class="mt-2 border-t px-2 pt-2 sm:hidden dark:border-gray-700">
+                            @foreach(\App\Http\Navigation\ClientNavigationMenu::getItems() as $item)
+                                <a class="flex min-h-11 items-center gap-x-3.5 rounded-lg px-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 {{ is_subroute(route($item['route'])) && $item['route'] != 'front.client.index' ? 'text-primary dark:text-primary' : 'text-gray-800 dark:text-gray-300' }}" href="{{ route($item['route']) }}">
+                                    <i class="{{ $item['icon'] }}"></i> {{ $item['name'] }}
+                                </a>
+                            @endforeach
+                        </div>
+                        @auth('web')
+                            <div class="mt-2 border-t px-2 pt-2 pb-4 sm:hidden dark:border-gray-700">
+                                <p class="px-3 pb-1 text-xs text-gray-500 dark:text-gray-400">{{ __('auth.signed_in_as') }}</p>
+                                <p class="truncate px-3 pb-2 text-sm font-medium text-gray-800 dark:text-gray-300">{{ auth('web')->user()->email }}</p>
+                                <button type="submit" form="logout-form" class="flex min-h-11 w-full items-center gap-x-3.5 rounded-lg px-3 text-sm text-gray-800 hover:bg-red-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                                    <svg class="flex-shrink-0 w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3H6a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h4M16 17l5-5-5-5M19.8 12H9"/></svg>
+                                    {{ __('client.logout') }}
+                                </button>
+                            </div>
+                        @endauth
                     </div>
 
-                    <div class="flex items-center justify-end ms-auto sm:justify-between sm:gap-x-3 sm:order-3">
+                    <div class="flex flex-none items-center justify-end ms-auto sm:justify-between sm:gap-x-3 sm:order-3">
                         <div class="sm:hidden">
-                            <button type="button" class="hs-collapse-toggle size-9 flex justify-center items-center text-sm font-semibold rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700" data-hs-collapse="#navbar-menu" aria-controls="navbar-menu" aria-label="Toggle navigation">
-                                <svg class="hs-collapse-open:hidden flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
-                                <svg class="hs-collapse-open:block hidden flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            <button type="button" class="size-11 sm:size-9 flex justify-center items-center text-sm font-semibold rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700" data-hs-overlay="#mobile-menu" aria-controls="mobile-menu" aria-label="{{ __('a11y.open_menu') }}">
+                                <svg class="flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
                             </button>
                         </div>
 
-                        <div class="flex flex-row items-center justify-end gap-2">
+                        <div class="flex flex-row items-center justify-end gap-1 sm:gap-2">
                             @include('shared.layouts.iconright')
                         </div>
                     </div>
@@ -85,21 +109,12 @@
         <div class="max-w-7xl snap-x w-full flex items-center overflow-x-auto px-4 sm:px-6 lg:px-8 pb-4 md:pb-0 mx-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-slate-700 dark:[&::-webkit-scrollbar-thumb]:bg-gray-700 dark:bg-gray-700">
             @foreach(\App\Http\Navigation\ClientNavigationMenu::getItems() as $item)
                 <div class="snap-center shrink-0 pe-5 sm:pe-8 sm:last:pe-0">
-                    <a class="inline-flex items-center gap-x-2 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600 {{ is_subroute(route($item['route'])) && $item['route'] != 'front.client.index' ? 'text-indigo-600 dark:text-indigo-600 hover:text-indigo-600 dark:hover:text-indigo-600' : '' }}" href="{{ route($item['route'])  }}"> <i class="{{ $item['icon'] }}"></i> {{ $item['name'] }}</a>
+                    <a class="inline-flex items-center gap-x-2 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600 {{ is_subroute(route($item['route'])) && $item['route'] != 'front.client.index' ? 'text-primary dark:text-primary hover:text-primary dark:hover:text-primary' : '' }}" href="{{ route($item['route'])  }}"> <i class="{{ $item['icon'] }}"></i> {{ $item['name'] }}</a>
                 </div>
             @endforeach
         </div>
     </nav>
 
-        <div id="navbar-menu" class="dark:bg-gray-800 dark:border-gray-700 hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow" tabindex="-1">
-            <div class="mx-auto flex flex-col gap-y-4 gap-x-0 my-5 ml-3 sm:flex-row sm:items-center sm:gap-y-0 sm:gap-x-7 sm:mt-0 sm:ps-7">
-                @foreach (app('theme')->getFrontLinks() as $link => $data)
-                    <a class="font-medium sm:px-2 mr-3 {{ is_subroute($link) ? 'text-indigo-500 hover:text-indigo-400 dark:text-indigo-400 dark:hover:text-indigo-500' : 'text-gray-500 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-500' }}" href="{{ $link }}">
-                        <i class="{{ $data['icon'] }} mr-1"></i> {{ $data['name'] }}
-                    </a>
-                @endforeach
-            </div>
-        </div>
     <!-- End Nav -->
         @yield('content')
 </main>

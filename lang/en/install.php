@@ -50,18 +50,6 @@ return [
             'description' => 'Sales department',
         ],
     ],
-    'billing' => [
-        'name' => 'Billing',
-        'description' => 'Billing department',
-    ],
-    'technical' => [
-        'name' => 'Technical',
-        'description' => 'Technical department',
-    ],
-    'sales' => [
-        'name' => 'Sales',
-        'description' => 'Sales department',
-    ],
     'security_questions' => [
         'pet_name' => 'What is the name of your first pet?',
         'birth_city' => 'In which city were you born?',

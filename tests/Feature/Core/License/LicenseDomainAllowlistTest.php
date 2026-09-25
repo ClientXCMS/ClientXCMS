@@ -48,8 +48,8 @@ class LicenseDomainAllowlistTest extends TestCase
 
     public function test_legit_subdomain_is_accepted(): void
     {
-        $this->withCtxDomain('https://staging.clientxcms.com', function () {
-            $this->assertSame('https://staging.clientxcms.com', LicenseGateway::getDomain());
+        $this->withCtxDomain('https://staging-web.clientxcms.com', function () {
+            $this->assertSame('https://staging-web.clientxcms.com', LicenseGateway::getDomain());
         });
     }
 

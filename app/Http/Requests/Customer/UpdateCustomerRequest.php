@@ -69,13 +69,17 @@ class UpdateCustomerRequest extends FormRequest
 
         // Use AccountEditService as base for common customer fields
         $baseRules = AccountEditService::rules(
-            $this->country ?? 'FR',
+            $this->country ?? $customer?->country ?? 'FR',
             email: true,
             password: false,
             except: $customer?->id
         );
 
         // Merge with admin-specific rules
+        $baseRules = \Illuminate\Support\Arr::except($baseRules, [
+            'address', 'address2', 'city', 'zipcode', 'region', 'country', 'company_name', 'billing_details',
+        ]);
+
         return array_merge($baseRules, [
             'verified' => ['nullable', 'boolean'],
             'balance' => ['numeric', 'min:0', 'max:999999'],

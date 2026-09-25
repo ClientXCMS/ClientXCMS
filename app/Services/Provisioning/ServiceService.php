@@ -91,6 +91,9 @@ class ServiceService
                 throw new WrongPaymentException('Service not found while locking for renewal');
             }
             $service->refresh();
+            if ($service->type === \App\Contracts\Store\ProductTypeInterface::DOMAIN && ! $service->hasBilling($billing)) {
+                throw new WrongPaymentException('Domain renewal period is not configured for this TLD and currency');
+            }
 
             $existingInvoice = self::findReusablePendingInvoice($service, $billing);
             if ($existingInvoice !== null) {

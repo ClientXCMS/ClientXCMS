@@ -128,7 +128,7 @@ class ServiceRenewals extends Model
         foreach ($rows as $row) {
             $row->status = self::STATUS_CANCELLED;
             $row->save();
-            $row->delete(); // soft delete — releases the pending_lock_key
+            $row->delete(); // soft delete - releases the pending_lock_key
         }
 
         return $rows->count();

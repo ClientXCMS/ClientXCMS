@@ -25,10 +25,12 @@
     @yield('styles')
     @vite('resources/themes/default/js/app.js')
     @vite('resources/themes/default/css/app.scss')
+    @include('shared.theme-color-vars')
+@include('shared.a11y-styles')
     {!! app('seo')->head() !!}
     {!! app('seo')->favicon() !!}
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body class="dark:bg-slate-900 bg-gray-100 flex h-full items-center py-16">
 <main class="w-full {{ in_array(Route::current()->getName(), ['register', 'socialauth.finish']) ? 'max-w-6xl' : 'max-w-md' }} mx-auto p-6">

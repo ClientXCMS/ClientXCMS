@@ -9,7 +9,7 @@
             <label for="invoice_url" class="block text-sm font-medium mt-2">{{ __($translatePrefix.'show.external_id') }}</label>
             <div class="flex rounded-lg shadow-sm mt-2">
                 <input type="text" readonly class="input-text" value="{{ $invoice->external_id }}">
-                <a href="{{ $paymentDetailsUrl }}" target="_blank" class="w-[2.875rem] h-[2.875rem] flex-shrink-0 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-e-md border border-transparent bg-blue-600 text-white hover:bg-blue-700">
+                <a href="{{ $paymentDetailsUrl }}" target="_blank" class="btn-addon">
                     <i class="bi bi-arrows-angle-expand"></i>
                 </a>
             </div>

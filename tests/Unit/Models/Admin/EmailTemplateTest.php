@@ -36,7 +36,7 @@ class EmailTemplateTest extends TestCase
         /** @var Customer $customer */
         $customer = Customer::factory()->create();
 
-        // Make sure the seeded "custom" template has a button text — fallback
+        // Make sure the seeded "custom" template has a button text - fallback
         // to an explicit update so the test is independent of seeder content.
         EmailTemplate::where('name', 'custom')->update(['button_text' => 'See it']);
 

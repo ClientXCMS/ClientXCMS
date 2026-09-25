@@ -19,7 +19,6 @@
 
 namespace App\Http\Requests\Helpdesk;
 
-use App\Rules\NoScriptOrPhpTags;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ReplyTicketRequest extends FormRequest
@@ -50,7 +49,6 @@ class ReplyTicketRequest extends FormRequest
                 'file',
                 'mimes:'.$allowedMimes,
                 'max:'.$maxFileSize,
-                new NoScriptOrPhpTags,
             ],
         ];
     }

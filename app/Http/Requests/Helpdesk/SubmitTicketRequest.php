@@ -20,7 +20,6 @@
 namespace App\Http\Requests\Helpdesk;
 
 use App\Rules\CustomerIsRelatedWith;
-use App\Rules\NoScriptOrPhpTags;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SubmitTicketRequest extends FormRequest
@@ -56,7 +55,6 @@ class SubmitTicketRequest extends FormRequest
                 'file',
                 'mimes:'.$allowedMimes,
                 'max:'.$maxFileSize,
-                new NoScriptOrPhpTags,
             ],
         ];
     }

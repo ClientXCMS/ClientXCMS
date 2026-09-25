@@ -34,6 +34,7 @@ trait InvoiceStateTrait
 {
     public function cancel(bool $clearBasket = true)
     {
+        $wasIssued = $this->issued_at !== null;
         if ($this->status === self::STATUS_CANCELLED) {
             return;
         }
@@ -44,12 +45,15 @@ trait InvoiceStateTrait
         });
         $this->clearServiceAssociation();
         $this->clearBasket($clearBasket);
-        $this->generatePdf(true);
+        if (! $wasIssued) {
+            $this->generatePdf(true);
+        }
         event(new InvoiceCancelled($this));
     }
 
     public function complete(bool $clearBasket = true)
     {
+        $wasIssued = $this->issued_at !== null;
         if ($this->status === self::STATUS_PAID) {
             return;
         }
@@ -82,12 +86,16 @@ trait InvoiceStateTrait
         });
 
         $this->clearBasket($clearBasket);
-        $this->generatePdf(true);
+        $this->issue();
+        if (! $wasIssued) {
+            $this->generatePdf(true);
+        }
         event(new InvoiceCompleted($this));
     }
 
     public function refund(bool $clearBasket = true)
     {
+        $wasIssued = $this->issued_at !== null;
         if ($this->status === self::STATUS_REFUNDED) {
             return;
         }
@@ -98,12 +106,15 @@ trait InvoiceStateTrait
             $item->refund();
         });
         $this->clearBasket($clearBasket);
-        $this->generatePdf(true);
+        if (! $wasIssued) {
+            $this->generatePdf(true);
+        }
         event(new InvoiceRefunded($this));
     }
 
     public function fail(bool $clearBasket = true)
     {
+        $wasIssued = $this->issued_at !== null;
         if ($this->status === self::STATUS_FAILED) {
             return;
         }
@@ -114,7 +125,9 @@ trait InvoiceStateTrait
             $item->cancel();
         });
         $this->clearBasket($clearBasket);
-        $this->generatePdf(true);
+        if (! $wasIssued) {
+            $this->generatePdf(true);
+        }
         event(new InvoiceFailed($this));
     }
 

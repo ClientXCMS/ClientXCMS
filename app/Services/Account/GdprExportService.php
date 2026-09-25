@@ -23,6 +23,7 @@ use App\Models\Account\Customer;
 use App\Models\Account\CustomerAccountInvitation;
 use App\Models\Billing\Subscription;
 use App\Models\Billing\Upgrade;
+use App\Models\Store\Basket\Basket;
 use App\Models\Store\CouponUsage;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
@@ -30,6 +31,17 @@ use ZipArchive;
 class GdprExportService
 {
     public const STORAGE_DIR = 'gdpr';
+
+    private const METADATA_EXCLUDED_KEYS = [
+        '2fa_secret',
+        '2fa_recovery_codes',
+        '2fa_email_code',
+        '2fa_sms_code',
+        'autologin_key',
+    ];
+
+    // Catch-all for the keys extensions add: a value named like a credential never goes in the archive.
+    private const METADATA_EXCLUDED_PATTERNS = ['secret', 'password', 'token', 'code', 'key'];
 
     public function buildArchive(Customer $customer): string
     {
@@ -48,7 +60,7 @@ class GdprExportService
         }
 
         $zip->addFromString('manifest.json', $this->encode([
-            'export_version' => 2,
+            'export_version' => 3,
             'generated_at' => now()->toIso8601String(),
             'app' => config('app.name'),
             'customer_id' => $customer->id,
@@ -57,6 +69,7 @@ class GdprExportService
                 'profile.json', 'invoices.json', 'credit_notes.json', 'services.json',
                 'subscriptions.json', 'upgrades.json', 'tickets.json', 'emails.json',
                 'account_accesses.json', 'coupon_usages.json', 'api_tokens.json',
+                'passkeys.json', 'baskets.json', 'metadata.json',
             ],
         ]));
 
@@ -71,8 +84,11 @@ class GdprExportService
         $zip->addFromString('account_accesses.json', $this->encode($this->accountAccesses($customer)));
         $zip->addFromString('coupon_usages.json', $this->encode($this->couponUsages($customer)));
         $zip->addFromString('api_tokens.json', $this->encode($this->apiTokens($customer)));
+        $zip->addFromString('passkeys.json', $this->encode($this->passkeys($customer)));
+        $zip->addFromString('baskets.json', $this->encode($this->baskets($customer)));
+        $zip->addFromString('metadata.json', $this->encode($this->metadata($customer)));
 
-        // Attach each invoice's PDF — generated on demand if missing.
+        // Attach each invoice's PDF - generated on demand if missing.
         foreach ($customer->invoices ?? [] as $invoice) {
             try {
                 $pdfBytes = $invoice->invoiceOutput();
@@ -326,6 +342,55 @@ class GdprExportService
             'created_at' => $t->created_at,
             'last_used_at' => $t->last_used_at,
         ])->all();
+    }
+
+    private function passkeys(Customer $c): array
+    {
+        return $c->passkeys()->get()->map(fn ($passkey) => [
+            'id' => $passkey->id,
+            'name' => $passkey->name,
+            'last_used_at' => $passkey->last_used_at,
+            'created_at' => $passkey->created_at,
+        ])->all();
+    }
+
+    private function baskets(Customer $c): array
+    {
+        return Basket::where('user_id', (string) $c->id)->with('rows')->get()->map(fn ($basket) => [
+            'id' => $basket->id,
+            'uuid' => $basket->uuid,
+            'ip_address' => $basket->ip_address,
+            'completed_at' => $basket->completed_at,
+            'created_at' => $basket->created_at,
+            'rows' => $basket->rows->map(fn ($row) => [
+                'id' => $row->id,
+                'product_id' => $row->product_id,
+                'quantity' => $row->quantity,
+                'billing' => $row->billing,
+            ])->all(),
+        ])->all();
+    }
+
+    private function metadata(Customer $c): array
+    {
+        return collect($c->getCachedMetadata())
+            ->reject(fn ($value, $key) => $this->isCredential((string) $key))
+            ->all();
+    }
+
+    private function isCredential(string $key): bool
+    {
+        if (in_array($key, self::METADATA_EXCLUDED_KEYS, true)) {
+            return true;
+        }
+
+        foreach (self::METADATA_EXCLUDED_PATTERNS as $pattern) {
+            if (str_contains(strtolower($key), $pattern)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function encode(array $data): string

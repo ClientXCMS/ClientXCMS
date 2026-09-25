@@ -20,7 +20,6 @@
 namespace App\Console\Commands\Purge;
 
 use App\Models\Account\Customer;
-use App\Models\ActionLog;
 use App\Notifications\Account\AccountPurgeReminder;
 use App\Services\Account\AccountDeletionService;
 use Illuminate\Console\Command;
@@ -28,6 +27,8 @@ use Illuminate\Support\Carbon;
 
 class PurgeInactiveAccountsCommand extends Command
 {
+    private const REASON = 'gdpr_inactive';
+
     protected $signature = 'purge:inactive-accounts {--dry-run}';
 
     protected $description = 'Delete GDPR-eligible inactive customer accounts (storage limitation)';
@@ -36,7 +37,7 @@ class PurgeInactiveAccountsCommand extends Command
     {
         $days = (int) setting('gdpr_purge_inactive_days', 0);
         if ($days <= 0) {
-            $this->info('gdpr_purge_inactive_days is disabled — nothing to do.');
+            $this->info('gdpr_purge_inactive_days is disabled - nothing to do.');
 
             return self::SUCCESS;
         }
@@ -110,15 +111,8 @@ class PurgeInactiveAccountsCommand extends Command
             return;
         }
 
-        $payload = [
-            'reason' => 'gdpr_inactive',
-            'email' => $customer->email,
-            'last_login' => optional($customer->last_login)->toIso8601String(),
-        ];
-
         try {
-            $deleter->delete($customer, true);
-            ActionLog::log(ActionLog::ACCOUNT_DELETED, Customer::class, $customer->id, null, null, $payload);
+            $deleter->delete($customer, true, self::REASON);
         } catch (\Throwable $e) {
             logger()->error('gdpr.purge.delete_failed', [
                 'customer_id' => $customer->id,

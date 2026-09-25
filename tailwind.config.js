@@ -1,23 +1,10 @@
-import fs from 'fs';
-const file = 'storage/app/theme.json';
-let primaryColors = {};
-if (fs.existsSync(file)) {
-    primaryColors = JSON.parse(fs.readFileSync(file, 'utf8'));
-} else {
-    primaryColors = {
-        '50': '#f0f5ff',
-        '100': '#e5edff',
-        '200': '#cddbfe',
-        '300': '#b4c6fc',
-        '400': '#8da2fb',
-        '500': '#6875f5',
-        '600': '#2fa159',
-        '700': '#1d7a48',
-        '800': '#16663c',
-        '900': '#0c3f2e',
-    };
-}
 const defaultTheme = require("tailwindcss/defaultTheme");
+
+// Colors read from resources/views/shared/theme-color-vars.blade.php at request time, not baked at build.
+const primaryColorVar = (stop) => `rgb(var(--color-primary-${stop}) / <alpha-value>)`;
+const primaryScale = Object.fromEntries(
+    ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900'].map((stop) => [stop, primaryColorVar(stop)])
+);
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -60,6 +47,13 @@ export default {
     ],
     theme: {
         extend: {
+            colors: {
+                primary: {
+                    light: primaryColorVar('100'),
+                    DEFAULT: primaryColorVar('600'),
+                    dark: primaryColorVar('700'),
+                },
+            },
 
             fontFamily: {
                 sans: [
@@ -219,7 +213,7 @@ export default {
             cyan: colors.cyan,
             sky: colors.sky,
             blue: colors.blue,
-            indigo: primaryColors,
+            indigo: primaryScale,
             violet: colors.violet,
             purple: colors.purple,
             fuchsia: colors.fuchsia,

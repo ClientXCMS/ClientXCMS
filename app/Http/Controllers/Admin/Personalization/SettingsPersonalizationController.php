@@ -19,12 +19,12 @@
 
 namespace App\Http\Controllers\Admin\Personalization;
 
-use App\Exceptions\LicenseInvalidException;
 use App\Http\Controllers\Concerns\ManagesSettingUploads;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Permission;
 use App\Models\Admin\Setting;
 use App\Models\Personalization\MenuLink;
+use App\Services\Content\SafeHtml;
 use App\Theme\ThemeManager;
 use Illuminate\Http\Request;
 
@@ -117,17 +117,19 @@ class SettingsPersonalizationController extends Controller
         ];
     }
 
-    public function storeBottomMenu(Request $request)
+    public function storeBottomMenu(Request $request, SafeHtml $safeHtml)
     {
         staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
         $this->validate($request, [
-            'theme_footer_description' => ['required', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags],
-            'theme_footer_topheberg' => ['nullable', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags],
+            'theme_footer_description' => ['required', 'string', 'max:1000'],
+            'theme_footer_topheberg' => ['nullable', 'string', 'max:1000'],
         ]);
-        Setting::updateSettings([
+        // Both are rendered without escaping by the themes, so they are cleaned
+        // here rather than guarded by a list of things to forbid.
+        Setting::updateSettings($safeHtml->sanitizeKeys([
             'theme_footer_description' => $request->get('theme_footer_description'),
             'theme_footer_topheberg' => $request->get('theme_footer_topheberg'),
-        ]);
+        ], ['theme_footer_description', 'theme_footer_topheberg']));
 
         return redirect()->back();
     }
@@ -241,7 +243,7 @@ class SettingsPersonalizationController extends Controller
             '400' => $request->get('theme_secondary'),
             '500' => '#6875f5',
             '600' => $request->get('theme_primary'),
-            '700' => $request->get('theme_primary'),
+            '700' => $this->darkenHex($request->get('theme_primary'), 0.15),
             '800' => '#42389d',
             '900' => '#362f78',
         ];
@@ -249,12 +251,16 @@ class SettingsPersonalizationController extends Controller
         Setting::updateSettings([
             'theme_switch_mode' => $request->get('theme_switch_mode'),
         ]);
-        try {
-            app('license')->restartNPM();
-        } catch (LicenseInvalidException $e) {
-            \Session::flash('error', 'Error in restart NPM : '.$e->getMessage());
-        }
 
+        // No Tailwind rebuild needed: colors resolve at request time via shared.theme-color-vars.
         return redirect()->back()->with('success', __('personalization.config.success'));
+    }
+
+    private function darkenHex(string $hex, float $percent): string
+    {
+        [$r, $g, $b] = sscanf($hex, '#%02x%02x%02x');
+        $darken = fn (int $channel) => (int) max(0, round($channel * (1 - $percent)));
+
+        return sprintf('#%02x%02x%02x', $darken($r), $darken($g), $darken($b));
     }
 }

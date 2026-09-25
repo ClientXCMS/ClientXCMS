@@ -20,7 +20,6 @@
 namespace App\DTO\Core\Extensions;
 
 use App\Models\Personalization\Section;
-use File;
 
 class ThemeSectionDTO
 {
@@ -39,6 +38,7 @@ class ThemeSectionDTO
         $api = (new Section(['uuid' => $section->uuid]))->api();
         $api['path'] = $section->path;
         $api['uuid'] = $section->uuid;
+        $api['id'] = $section->id;
 
         return new self($api);
     }
@@ -67,14 +67,22 @@ class ThemeSectionDTO
         return $this->json['thumbnail'] ?? 'https://via.placeholder.com/1000x250';
     }
 
+    public function formattedName(): string
+    {
+        return \Str::headline($this->json['name'] ?? $this->uuid);
+    }
+
     public function render(bool $cache = true): string
     {
         $path = $this->json['path'];
+        $key = $this->json['id'] ?? null;
         try {
-            if ($cache && app()->isProduction()) {
+            // Keyed by section, not by file: two sections may share one theme
+            // file and differ only by their configuration.
+            if ($cache && $key !== null && app()->isProduction()) {
                 $cache = app('theme')->getSetting()['sections_html'] ?? collect();
-                if ($cache->has($path)) {
-                    return $cache->get($path);
+                if ($cache->has($key)) {
+                    return $cache->get($key);
                 }
             }
             if (! view()->exists($path)) {
@@ -107,17 +115,6 @@ class ThemeSectionDTO
 
             return '';
         }
-    }
-
-    public function getContent(): string
-    {
-        $path = $this->json['path'];
-        $content = File::get(app('view')->getFinder()->find($path));
-        if (! $this->isProtected()) {
-            return sanitize_content($content);
-        }
-
-        return $content;
     }
 
     public function isDefault(): bool

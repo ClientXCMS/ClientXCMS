@@ -37,7 +37,7 @@
                         </p>
                     </div>
                 </div>
-                <div class="border rounded-lg overflow-hidden dark:border-gray-700">
+                <div class="border rounded-lg overflow-x-auto dark:border-gray-700" tabindex="0">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead>
                         <tr>
@@ -169,22 +169,26 @@
                 </div>
                 @endif
 
-                @if (collect($service->pricingAvailable())->count() > 1)
+                @if (collect($service->pricingAvailable($service->currency))->count() > 1)
                 <form method="POST" action="{{ route('front.services.billing', ['service' => $service]) }}">
                     @csrf
 
                     <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mt-2 mb-2">
                         {{ __('client.services.managerenew') }}
                     </h2>
-                        <ul class="flex flex-col sm:flex-row w-full">
-                            @foreach(collect($service->pricingAvailable()) as $pricing)
+                        <ul class="{{ $service->type === 'domain' ? 'grid grid-cols-1 sm:grid-cols-3 gap-3 w-full' : 'flex flex-col sm:flex-row w-full' }}">
+                            @foreach(collect($service->pricingAvailable($service->currency)) as $pricing)
                                 <li class="inline-flex items-center gap-x-2.5 py-3 px-4 text-sm font-medium bg-white border text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg sm:-ms-px sm:mt-0 sm:first:rounded-se-none sm:first:rounded-es-lg sm:last:rounded-es-none sm:last:rounded-se-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white">
                                     <div class="relative flex items-start w-full">
                                         <div class="flex items-center h-5">
                                             <input id="months-{{ $pricing->recurring }}" @if($service->billing == $pricing->recurring) checked="checked" @endif name="billing" value="{{ $pricing->recurring }}" type="radio" class="border-gray-200 rounded-full disabled:opacity-50 dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800">
                                         </div>
                                         <label for="months-{{ $pricing->recurring }}" class="ms-3 block w-full text-sm text-gray-600 dark:text-gray-500">
-                                            {{ $pricing->recurring()['months'] == 0.5 ? 1 : $pricing->recurring()['months'] }} {{ $pricing->recurring()['months'] == 0.5 ? __('global.week') : __('global.month') }} - {{ $pricing->pricingMessage(false) }}
+                                            @if ($service->type === 'domain')
+                                                {{ (int) ($pricing->recurring()['months'] / 12) }} {{ (int) $pricing->recurring()['months'] === 12 ? __('recurring.year') : __('recurring.years') }}
+                                            @else
+                                                {{ $pricing->recurring()['months'] == 0.5 ? 1 : $pricing->recurring()['months'] }} {{ $pricing->recurring()['months'] == 0.5 ? __('global.week') : __('global.month') }}
+                                            @endif - {{ $pricing->pricingMessage(false) }}
                                         </label>
                                     </div>
                                 </li>
@@ -242,7 +246,7 @@
                     @endif
                 <div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-800">
                     <div class="p-4 md:p-5 flex gap-x-4">
-                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-indigo-100 rounded-lg dark:bg-gray-800">
+                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-primary-light rounded-lg dark:bg-gray-800">
                             <svg class="flex-shrink-0 w-5 h-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
                         </div>
                         <div class="grow">
@@ -265,7 +269,7 @@
                 @if ($service->server_id != null)
                 <div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-800 mt-2">
                     <div class="p-4 md:p-5 flex gap-x-4">
-                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-indigo-100 rounded-lg dark:bg-gray-800">
+                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-primary-light rounded-lg dark:bg-gray-800">
                             <svg class="flex-shrink-0 w-5 h-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
                         </div>
 
@@ -288,7 +292,7 @@
 
                     <div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-800 mt-2">
                         <div class="p-4 md:p-5 flex gap-x-4">
-                            <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-indigo-100 rounded-lg dark:bg-gray-800">
+                            <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-primary-light rounded-lg dark:bg-gray-800">
                                 <svg class="flex-shrink-0 w-5 h-5 text-gray-600 dark:text-gray-400"xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
                             </div>
 
@@ -310,7 +314,7 @@
 
                 <div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-800 mt-2">
                     <div class="p-4 md:p-5 flex gap-x-4">
-                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-indigo-100 rounded-lg dark:bg-gray-800">
+                        <div class="flex-shrink-0 flex justify-center items-center w-[46px] h-[46px] bg-primary-light rounded-lg dark:bg-gray-800">
                             <svg class="flex-shrink-0 w-5 h-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                         </div>
 

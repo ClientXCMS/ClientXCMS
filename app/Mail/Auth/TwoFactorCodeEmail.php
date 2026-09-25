@@ -31,9 +31,7 @@ class TwoFactorCodeEmail extends Notification implements ShouldQueue
             'expires_in' => 5,
             'customer' => $notifiable,
         ], $notifiable);
-        if ($this->guard === 'admin') {
-            $mail->metadata('disable_save', true);
-        }
+        $mail->metadata('disable_save', true);
 
         return $mail;
     }

@@ -72,6 +72,8 @@ class ProfileController extends \App\Http\Controllers\Controller
             'countries' => Countries::names(),
             'locales' => \App\Services\Core\LocaleService::getLocalesNames(),
             'providers' => $providers,
+            'passkeysEnabled' => (bool) setting('passkeys_enabled', false),
+            'passkeys' => setting('passkeys_enabled', false) ? $user->passkeys()->latest()->get() : collect(),
             'qrcode' => $qrcode,
             'code' => $request->session()->get('2fa_secret'),
             'ownedAccountAccesses' => $user->ownedAccountAccesses()->with(['subCustomer', 'services'])->orderBy('created_at', 'desc')->get(),

@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('/client')->name('front.')->group(function () {
     Route::prefix('/invoices')->name('invoices')->middleware(['auth'])->group(function () {
         Route::get('/', [InvoiceController::class, 'index'])->name('.index');
+        Route::post('/export', [InvoiceController::class, 'export'])->name('.export');
         Route::get('/{invoice}', [InvoiceController::class, 'show'])->name('.show');
         Route::get('/{invoice}/download', [InvoiceController::class, 'download'])->name('.download');
         Route::get('/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('.pdf');

@@ -28,7 +28,7 @@ class CancellationReasonController extends AbstractCrudController
 {
     protected string $model = CancellationReason::class;
 
-    protected string $viewPath = 'admin.provisioning.cancellation_reasons';
+    protected string $viewPath = 'admin.provisioning.cancellation-reasons';
 
     protected string $routePath = 'admin.cancellation_reasons';
 

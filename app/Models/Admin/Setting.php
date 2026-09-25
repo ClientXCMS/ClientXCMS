@@ -27,7 +27,6 @@ use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
-use Str;
 
 /**
  * @property int $id
@@ -69,6 +68,11 @@ class Setting extends Model
     public $encrypt = [
         'mail_smtp_username',
         'mail_smtp_password',
+        'captcha_secret_key',
+        'mfa_sms_ovh_application_secret',
+        'mfa_sms_ovh_consumer_key',
+        'mfa_sms_twilio_token',
+        'helpdesk_inbound_webhook_token',
     ];
 
     protected static array $ignoreKeys = [
@@ -124,15 +128,31 @@ class Setting extends Model
             return null;
         }
 
-        if (Str::is($this->encrypted, $this->name)) {
+        if ($this->isEncrypted($this->name)) {
             try {
                 return decrypt($value, false);
             } catch (DecryptException $e) {
+                // Values written before encryption was in place are still in clear: hand them back as-is.
                 return $value;
             }
         }
 
         return $value;
+    }
+
+    public function isEncrypted(?string $name): bool
+    {
+        return $name !== null && in_array($name, $this->encrypt, true);
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $setting): void {
+            // Encrypt here rather than in a mutator: the name is always known at save time, whatever order the attributes were filled in.
+            if ($setting->isDirty('value') && $setting->isEncrypted($setting->name) && $setting->attributes['value'] !== null) {
+                $setting->attributes['value'] = encrypt($setting->attributes['value'], false);
+            }
+        });
     }
 
     public static function getTranslationsForKey(string $key, ?string $default = null, ?string $locale = null)

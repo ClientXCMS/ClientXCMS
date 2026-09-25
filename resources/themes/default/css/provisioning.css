@@ -10,7 +10,7 @@
     @apply inline-flex items-center gap-x-3.5 py-3 px-4 text-sm font-medium border rounded-xl border-gray-200 text-gray-400 -mt-px
 }
 .provisioning-tab-disabled:hover {
-    @apply cursor-not-allowed text-indigo-600
+    @apply cursor-not-allowed text-primary
 }
 .provisioning-tab-disabled:focus {
     @apply z-10 outline-none ring-2 ring-gray-200
@@ -19,10 +19,10 @@
     @apply opacity-50 pointer-events-none
 }
 .provisioning-tab-active {
-    @apply inline-flex items-center gap-x-3.5 py-3 px-4 text-sm font-medium border border-gray-200 text-indigo-600 -mt-px
+    @apply inline-flex items-center gap-x-3.5 py-3 px-4 text-sm font-medium border border-gray-200 text-primary -mt-px
 }
 .provisioning-tab-active:focus {
-    @apply z-10 outline-none ring-2 ring-indigo-600
+    @apply z-10 outline-none ring-2 ring-primary
 }
 .provisioning-tab {
     @apply inline-flex items-center gap-x-3.5 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px
@@ -37,7 +37,7 @@
     @apply z-10 outline-none ring-2 ring-gray-200
 }
 .provisioning-tab:hover {
-    @apply text-indigo-600
+    @apply text-primary
 }
 /*
 DarkMode
@@ -56,14 +56,14 @@ DarkMode
     @apply outline-none ring-offset-gray-800 ring-1
 }
 .dark .provisioning-tab-disabled:hover {
-    @apply text-indigo-500
+    @apply text-primary
 }
 
 .dark .provisioning-tab {
     @apply bg-slate-900 border-gray-700 text-white
 }
 .dark .provisioning-tab:hover {
-    @apply text-indigo-600
+    @apply text-primary
 }
 .dark .provisioning-tab:focus {
     @apply outline-none ring-offset-gray-800 ring-1

@@ -27,6 +27,9 @@ Route::prefix('/store')->name('front.')->group(function () {
         Route::post('/domains/search', [\App\Http\Controllers\Front\DomainSearchController::class, 'search'])
             ->middleware('throttle:30,1')
             ->name('store.domains.search');
+        Route::post('/domains/check', [\App\Http\Controllers\Front\DomainSearchController::class, 'check'])
+            ->middleware('throttle:30,1')
+            ->name('store.domains.check');
     }
 
     Route::prefix('/basket')->name('store.basket.')->group(function () {

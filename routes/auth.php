@@ -18,6 +18,7 @@
  */
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\ConfirmPasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -26,7 +27,10 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\TwoFactorAuthenticationController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Middleware\EnsurePasskeysEnabled;
 use Illuminate\Support\Facades\Route;
+use Laravel\Passkeys\Http\Controllers\PasskeyConfirmationController;
+use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
 
 Route::get('/register', [RegisterController::class, 'showForm'])
     ->middleware('guest')
@@ -41,6 +45,16 @@ Route::post('/login', [AuthenticatedSessionController::class, 'store'])
 Route::get('/login', [LoginController::class, 'showForm'])
     ->middleware('guest')
     ->name('login');
+
+Route::middleware(EnsurePasskeysEnabled::class)->group(function () {
+    Route::get('/passkeys/login/options', [PasskeyLoginController::class, 'index'])->middleware(['guest:web', 'throttle:passkey-login'])->name('passkey.login-options');
+    Route::post('/passkeys/login', [PasskeyLoginController::class, 'store'])->middleware(['guest:web', 'throttle:passkey-login'])->name('passkey.login');
+    Route::get('/passkeys/confirm/options', [PasskeyConfirmationController::class, 'index'])->middleware(['auth:web', 'throttle:passkey-confirm'])->name('passkey.confirm-options');
+    Route::post('/passkeys/confirm', [PasskeyConfirmationController::class, 'store'])->middleware(['auth:web', 'throttle:passkey-confirm'])->name('passkey.confirm');
+});
+
+Route::get('/confirm-password', [ConfirmPasswordController::class, 'show'])->middleware('auth:web')->name('password.confirm');
+Route::post('/confirm-password', [ConfirmPasswordController::class, 'store'])->middleware(['auth:web', 'throttle:6,1'])->name('password.confirm.store');
 
 Route::get('/forgot-password', [PasswordResetLinkController::class, 'showForm'])
     ->middleware('guest')

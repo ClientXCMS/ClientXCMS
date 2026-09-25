@@ -55,6 +55,19 @@ class InvoiceObserver
         }
     }
 
+    public function updating(Invoice $invoice): void
+    {
+        if (! $invoice->getOriginal('issued_at')) {
+            return;
+        }
+
+        $allowed = ['status', 'paid_at', 'paymethod', 'payment_method_id', 'external_id', 'balance', 'updated_at'];
+        $forbidden = array_diff(array_keys($invoice->getDirty()), $allowed);
+        if ($forbidden !== []) {
+            throw new \LogicException('An issued invoice is immutable; create a credit note instead.');
+        }
+    }
+
     public function deleted(Invoice $invoice)
     {
         InvoiceLog::log($invoice, InvoiceLog::DELETE_INVOICE);
@@ -63,9 +76,18 @@ class InvoiceObserver
         }
     }
 
+    public function deleting(Invoice $invoice): void
+    {
+        if ($invoice->isElectronicallyLocked()) {
+            throw new \LogicException('An issued invoice cannot be deleted.');
+        }
+    }
+
     public function creating(Invoice $model)
     {
         $model->uuid = generate_uuid(Invoice::class);
-        $model->billing_address = $model->customer->generateBillingAddress();
+        if (empty($model->getAttributes()['billing_address'])) {
+            $model->billing_address = $model->customer->generateBillingAddress();
+        }
     }
 }

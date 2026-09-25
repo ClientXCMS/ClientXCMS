@@ -261,7 +261,7 @@ class InvoiceServiceTest extends TestCase
         $basketRow->refresh();
         $invoice = InvoiceService::createInvoiceFromBasket($basket, $gateway);
         $this->assertDatabaseCount('invoices', 1);
-        $this->assertDatabaseCount('invoice_items', 2);
+        $this->assertDatabaseCount('invoice_items', 1);
         $this->assertEquals($invoice->subtotal, 20); // 20
     }
 
@@ -430,10 +430,13 @@ class InvoiceServiceTest extends TestCase
         $gateway = $this->createGatewayModel();
         $invoice = InvoiceService::createInvoiceFromBasket($basket, $gateway);
         $service = $this->createServiceModel(auth()->user()->id, 'active');
-        InvoiceService::appendServiceOnExistingInvoice($service, $invoice);
         $this->assertDatabaseCount('invoices', 1);
-        $this->assertDatabaseCount('invoice_items', 2);
-        $this->assertEquals(36.0, (float) $invoice->total);
+        $this->assertDatabaseCount('invoice_items', 1);
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('An issued invoice is immutable; create a credit note instead.');
+
+        InvoiceService::appendServiceOnExistingInvoice($service, $invoice);
     }
 
     public function test_create_invoice_from_service()

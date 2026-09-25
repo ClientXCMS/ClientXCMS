@@ -41,13 +41,15 @@ class PurgeBasketCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $this->info('Purging unused basket records from the database...');
 
         $this->purgeBasket();
 
         $this->info('Basket records purged successfully.');
+
+        return self::SUCCESS;
     }
 
     private function purgeBasket()
@@ -56,14 +58,10 @@ class PurgeBasketCommand extends Command
         $this->info('Purging basket records in batches of '.$batchSize.'...');
         $limit = now()->subWeeks(2);
         $baskets = Basket::where('created_at', '<', $limit)->whereNull('completed_at')->whereNull('user_id')->get();
-        $emptyBasket = Basket::where('created_at', '<', $limit)->whereNull('completed_at')->whereNull('user_id')->whereNull('ip_address')->get();
-        $nb = $baskets->count() + $emptyBasket->count();
+        $nb = $baskets->count();
         $this->info('Found '.$nb.' basket records to purge.');
         foreach ($baskets as $basket) {
             $basket->items()->delete();
-            $basket->delete();
-        }
-        foreach ($emptyBasket as $basket) {
             $basket->delete();
         }
         $this->info('Purged '.$nb.' basket records.');

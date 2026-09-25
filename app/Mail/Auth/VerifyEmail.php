@@ -49,9 +49,12 @@ class VerifyEmail extends Notification implements ShouldQueue
     {
         $verificationUrl = $this->generateVerifyUrl($notifiable);
 
-        return EmailTemplate::getMailMessage('verify', $verificationUrl, [
+        $mail = EmailTemplate::getMailMessage('verify', $verificationUrl, [
             'customer' => $this->customer,
         ], $notifiable);
+        $mail->metadata('disable_save', true);
+
+        return $mail;
     }
 
     private function generateVerifyUrl(Customer $customer): string

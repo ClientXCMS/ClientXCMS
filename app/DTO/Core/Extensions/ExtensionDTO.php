@@ -20,6 +20,7 @@
 namespace App\DTO\Core\Extensions;
 
 use App\Core\License\LicenseCache;
+use App\Extensions\ExtensionType;
 use Illuminate\Contracts\Support\Arrayable;
 
 class ExtensionDTO implements Arrayable
@@ -48,14 +49,9 @@ class ExtensionDTO implements Arrayable
 
     public function extensionPath(): string
     {
-        if ($this->type == 'theme') {
-            return base_path('resources/themes/'.$this->uuid);
-        }
-        if ($this->type == 'email_template' || $this->type == 'invoice_template') {
-            return base_path('resources/views/vendor/notifications/'.$this->uuid.'.blade.php');
-        }
+        $type = ExtensionType::tryFromAny($this->type);
 
-        return base_path($this->type().'/'.$this->uuid);
+        return $type?->absolutePath($this->uuid) ?? base_path($this->type().'/'.$this->uuid);
     }
 
     public static function fromArray(array $module)
@@ -118,6 +114,26 @@ class ExtensionDTO implements Arrayable
         }
 
         return null;
+    }
+
+    /**
+     * Whether an "update available" badge should show. An unknown local
+     * version (installed but never registered locally) can never be proven
+     * up to date, so it defaults to flagging an update rather than staying
+     * silent about it - but null must never reach version_compare(), that's
+     * a deprecation warning on every render, not a comparison.
+     */
+    public function hasUpdateAvailable(): bool
+    {
+        if (! $this->isInstalled()) {
+            return false;
+        }
+        $latest = $this->getLatestVersion();
+        if ($latest === null) {
+            return false;
+        }
+
+        return $this->version === null || version_compare($this->version, $latest, '<');
     }
 
     public function type()

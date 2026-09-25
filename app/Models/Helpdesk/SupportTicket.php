@@ -19,6 +19,7 @@
 
 namespace App\Models\Helpdesk;
 
+use App\Contracts\Notifications\ProvidesMailData;
 use App\Events\Helpdesk\HelpdeskTicketAnsweredCustomer;
 use App\Events\Helpdesk\HelpdeskTicketAnsweredStaff;
 use App\Events\Helpdesk\HelpdeskTicketClosedEvent;
@@ -151,7 +152,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  *
  * @mixin \Eloquent
  */
-class SupportTicket extends Model
+class SupportTicket extends Model implements ProvidesMailData
 {
     use HasFactory, softDeletes;
 
@@ -243,6 +244,15 @@ class SupportTicket extends Model
     public function assignedTo()
     {
         return $this->belongsTo(Admin::class, 'assigned_to');
+    }
+
+    public function toMailData(?string $locale = null): array
+    {
+        return [
+            'subject' => $this->subject,
+            'customer' => ['full_name' => $this->customer?->full_name],
+            'department' => $this->department?->trans('name', null, $locale),
+        ];
     }
 
     public function department()

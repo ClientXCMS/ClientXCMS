@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('profile')->name('profile.')->group(function () {
             Route::get('/', [ProfileController::class, 'show'])->name('show');
             Route::put('/', [ProfileController::class, 'update'])->name('update');
+            Route::put('/fiscal', [ProfileController::class, 'updateFiscal'])->name('fiscal.update');
             Route::put('/password', [ProfileController::class, 'password'])->name('password');
             Route::get('/2fa/setup', [ProfileController::class, 'setup2fa'])->name('2fa.setup');
             Route::post('/2fa', [ProfileController::class, 'toggle2fa'])->name('2fa');

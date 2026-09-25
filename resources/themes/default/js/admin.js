@@ -109,6 +109,9 @@ document.querySelectorAll('.confirmation-popup').forEach(
             event.preventDefault();
             confirmation(element).then((result) => {
                 if (result.isConfirmed) {
+                    if (element.hasAttribute('data-cancel-delivery-label')) {
+                        element.querySelector('[name="cancel_invoice_item_delivery"]').value = result.value ? '1' : '0';
+                    }
                     element.submit();
                 }
             });
@@ -122,7 +125,9 @@ function confirmation(element) {
     const showCancelButton = element.getAttribute('data-show-cancel-button') ?? true;
     const cancelButtonText = element.getAttribute('data-cancel-button-text') ?? window.admin_config.cancel;
     const confirmButtonColor = element.getAttribute('data-confirm-button-color') ?? '#d33';
+    const deliveryLabel = element.getAttribute('data-cancel-delivery-label');
     return Swal.fire({
+        ...(deliveryLabel ? { input: 'checkbox', inputValue: 1, inputPlaceholder: deliveryLabel } : {}),
         text: text,
         icon: icon,
         confirmButtonText: confirmButtonText,

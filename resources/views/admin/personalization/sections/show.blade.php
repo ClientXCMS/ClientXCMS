@@ -20,135 +20,139 @@
 @extends('admin/layouts/admin')
 @section('title', __('personalization.sections.show.title'))
 @section('styles')
-<link rel="stylesheet" href="{{ Vite::asset('resources/global/css/monaco-editor.main.css') }}">
 @endsection
 @section('scripts')
-<script src="{{ Vite::asset('resources/global/js/admin/sections.js') }}" type="module"></script>
-<script>
-    window.sections = {
-        value: @json(old('content', $content)),
-        theme: {!! !is_darkmode(true) ? "'vs'" : "'vs-dark'" !!}
-    }
-</script>
 @endsection
 @section('content')
+@php
+$backUrl = route('admin.personalization.sections.index', $activePageKey ? ['active_page' => $activePageKey] : []);
+@endphp
 <div class="container mx-auto">
 
     @include('admin/shared/alerts')
-    <div class="flex flex-col">
-        <div class="-m-1.5 overflow-x-auto">
-            <div class="p-1.5 min-w-full inline-block align-middle">
 
-                @if ($item->isConfigurable())
-                <form id="section-config-form" method="POST" action="{{ route('admin.personalization.sections.config.update', ['section' => $section]) }}" enctype="multipart/form-data" class="mt-4">
-                    @method('PUT')
-                    @csrf
-
-                    <div class="card">
-                        <div class="card-heading">
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                                    {{ __('personalization.sections.config.title') }}
-                                </h2>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    {{ __('personalization.sections.config.subheading', ['name' => $section->uuid]) }}
-                                </p>
-                            </div>
-                            <div class="mt-4 flex items-center space-x-2 sm:mt-0">
-                                <button type="submit" class="btn btn-primary">
-                                    {{ __('admin.updatedetails') }}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="card-body">
-                            {!! $item->toDTO()->render() !!}
-                            @if(empty($fields))
-                            <div class="p-4 text-gray-500 dark:text-gray-400">
-                                {{ __('personalization.sections.config.no_fields') }}
-                            </div>
-                            @else
-                            <div class="grid gap-4">
-                                @foreach($fields as $field)
-                                @include('admin.personalization.sections.includes.field', ['field' => $field, 'values' => $values, 'locales' => $locales])
-                                @endforeach
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                </form>
-                @endif
-                <form method="POST" action="{{ route('admin.personalization.sections.update', ['section' => $item]) }}" id="section-form">
-                    @method('PUT')
-                    @csrf
-                    <div class="card">
-                        <div class="card-heading">
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                                    {{ __('personalization.sections.show.title') }}
-                                </h2>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    {{ __('personalization.sections.show.subheading') }}
-                                </p>
-                            </div>
-                            <div class="mt-4 flex items-center space-x-1 sm:mt-0">
-                                <button class="btn btn-primary">
-                                    {{ __('admin.updatedetails') }}
-                                </button>
-                                <a href="{{ route('admin.personalization.sections.index') }}" class="btn btn-secondary">
-                                    {{ __('global.back') }}
-                                </a>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="grid gap-4">
-                                @if (app()->isLocal())
-                                <div>
-                                    @include('admin/shared/input', [
-                                    'label' => 'UUID',
-                                    'name' => 'uuid',
-                                    'value' => $section->uuid,
-                                    'disabled' => true
-                                    ])
-                                </div>
-                                @endif
-                                <div>
-                                    @include('admin/shared/select', [
-                                    'label' => __('personalization.theme.themename'),
-                                    'name' => 'theme_uuid',
-                                    'value' => $item->theme_uuid,
-                                    'options' => $themes
-                                    ])
-                                </div>
-
-                                <div>
-                                    @include('admin/shared/select', [
-                                    'label' => __('personalization.sections.fields.url'),
-                                    'name' => 'url',
-                                    'value' => $item->url,
-                                    'options' => $pages
-                                    ])
-                                </div>
-                                @if (!$item->toDTO()->isProtected())
-                                <div>
-                                    <input type="hidden" name="content" value="{{ old('content', $content) }}">
-                                    <div id="monaco-editor" style="height: 400px;"></div>
-                                </div>
-                                @error('content')
-                                <div class="bg-red-100 dark:bg-red-900/30 p-4 rounded">
-                                    <p class="text-red-600 dark:text-red-400">
-                                        {{ $message }}
-                                    </p>
-                                </div>
-                                @enderror
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </form>
-
+    <div class="sticky top-0 z-30 -mx-4 mb-4 flex flex-col gap-3 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-gray-700 dark:bg-slate-900/95 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex min-w-0 items-center gap-3">
+            <a href="{{ $backUrl }}"
+                class="btn btn-secondary shrink-0"
+                aria-label="{{ __('personalization.sections.back_to_page') }}">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                <span class="hidden sm:inline">{{ __('global.back') }}</span>
+            </a>
+            <div class="min-w-0">
+                <h1 class="truncate text-lg font-semibold text-gray-800 dark:text-gray-200">
+                    {{ $section->formattedName() }}
+                </h1>
+                <p class="truncate text-xs text-gray-500 dark:text-gray-400">
+                    {{ __('personalization.sections.show.subheading') }}
+                </p>
             </div>
         </div>
+        @if ($item->isConfigurable())
+        <button type="submit" form="section-config-form" class="btn btn-primary shrink-0">
+            {{ __('admin.updatedetails') }}
+        </button>
+        @endif
+    </div>
+
+    <div class="mb-4 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-blue-900 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300" role="note">
+        <i class="bi bi-shield-lock mt-0.5 text-xl" aria-hidden="true"></i>
+        <div>
+            <p class="font-semibold">{{ __('personalization.sections.security_notice.title') }}</p>
+            <p class="mt-0.5 text-sm">{{ __('personalization.sections.security_notice.description') }}</p>
+        </div>
+    </div>
+
+    <div class="flex flex-col gap-4">
+
+        @if ($item->isConfigurable())
+        <form id="section-config-form" method="POST" action="{{ route('admin.personalization.sections.config.update', ['section' => $section]) }}" enctype="multipart/form-data">
+            @method('PUT')
+            @csrf
+
+            <div class="card">
+                <div class="card-heading">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                            {{ __('personalization.sections.config.title') }}
+                        </h2>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            {{ __('personalization.sections.config.subheading', ['name' => $section->formattedName()]) }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    {!! $item->toDTO()->render() !!}
+                    @if(empty($fields))
+                    <div class="p-4 text-gray-500 dark:text-gray-400">
+                        {{ __('personalization.sections.config.no_fields') }}
+                    </div>
+                    @else
+                    <div class="grid gap-4">
+                        @foreach($fields as $field)
+                        @include('admin.personalization.sections.includes.field', ['field' => $field, 'values' => $values, 'locales' => $locales])
+                        @endforeach
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </form>
+        @endif
+
+        <form method="POST" action="{{ route('admin.personalization.sections.update', ['section' => $item]) }}" id="section-form">
+            @method('PUT')
+            @csrf
+            <div class="card">
+                <div class="card-heading">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                            {{ __('personalization.sections.settings.title') }}
+                        </h2>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            {{ __('personalization.sections.settings.subheading') }}
+                        </p>
+                    </div>
+                    <div class="mt-4 flex items-center space-x-1 sm:mt-0">
+                        <button class="btn btn-primary">
+                            {{ __('admin.updatedetails') }}
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="grid gap-4">
+                        @if (app()->isLocal())
+                        <div>
+                            @include('admin/shared/input', [
+                            'label' => 'UUID',
+                            'name' => 'uuid',
+                            'value' => $section->uuid,
+                            'disabled' => true
+                            ])
+                        </div>
+                        @endif
+                        <div>
+                            @include('admin/shared/select', [
+                            'label' => __('personalization.theme.themename'),
+                            'name' => 'theme_uuid',
+                            'value' => $item->theme_uuid,
+                            'options' => $themes
+                            ])
+                        </div>
+
+                        <div>
+                            @include('admin/shared/select', [
+                            'label' => __('personalization.sections.fields.url'),
+                            'name' => 'url',
+                            'value' => $item->url,
+                            'options' => $pages
+                            ])
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
     </div>
 </div>
 @foreach($fields as $field)

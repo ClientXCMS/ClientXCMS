@@ -66,7 +66,7 @@ class GdprExportTest extends TestCase
         $service = new GdprExportService;
         $relative = $service->buildArchive($intruder);
 
-        // The route requires `signed`, so we sign the URL ourselves — this
+        // The route requires `signed`, so we sign the URL ourselves - this
         // simulates someone reusing an old signed URL after switching account.
         $url = \URL::temporarySignedRoute(
             'front.profile.export.download',

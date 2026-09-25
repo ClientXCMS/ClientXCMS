@@ -28,7 +28,7 @@
     {!! app('seo')->head() !!}
     {!! app('seo')->favicon() !!}
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body class="{{is_darkmode() ? 'dark' : '' }} flex flex-col h-full">
 
@@ -40,7 +40,7 @@
             {{ __('maintenance.in_maintenance_title') }}</h1>
         <p class="font-light text-gray-500 md:text-lg xl:text-xl dark:text-gray-400">{{ setting('maintenance_message') }}</p>
         @if (setting('maintenance_button_url'))
-        <a href="{{ setting('maintenance_button_url') }}" class="mt-4 py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-blue-600 text-indigo-600 hover:border-indigo-500 hover:text-indigo-500 disabled:opacity-50 disabled:pointer-events-none dark:border-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-400 dark:hover:border-indigo-400">
+        <a href="{{ setting('maintenance_button_url') }}" class="mt-4 py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-blue-600 text-primary hover:border-primary hover:text-primary disabled:opacity-50 disabled:pointer-events-none dark:border-primary dark:text-primary dark:hover:text-primary dark:hover:border-primary">
             <i class="{{ setting('maintenance_button_icon') }} flex-shrink-0"></i>
             {{ setting('maintenance_button_text') }}
         </a>

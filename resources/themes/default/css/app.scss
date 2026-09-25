@@ -5,14 +5,29 @@
 @import 'provisioning.css';
 @import 'bootstrap-icons/font/bootstrap-icons.min.css';
 @import 'flatpickr/dist/flatpickr.min.css';
+@layer base {
+    /* Build-time fallback, overridden per-request by shared.theme-color-vars once an admin saves a custom color. */
+    :root {
+        --color-primary-50: 240 245 255;
+        --color-primary-100: 229 237 255;
+        --color-primary-200: 205 219 254;
+        --color-primary-300: 180 198 252;
+        --color-primary-400: 141 162 251;
+        --color-primary-500: 104 117 245;
+        --color-primary-600: 39 133 73;
+        --color-primary-700: 29 122 72;
+        --color-primary-800: 22 102 60;
+        --color-primary-900: 12 63 46;
+    }
+}
+#mobile-menu {
+    --tab-accessibility-limited: false;
+}
 .input-text {
-    @apply py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:pointer-events-none;
+    @apply py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none;
 }
 .img-auth {
     border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
-}
-.text-primary {
-    @apply text-indigo-600;
 }
 .text-secondary {
     @apply text-gray-600;
@@ -22,9 +37,6 @@
 }
 .text-warning {
     @apply text-yellow-600;
-}
-.bg-primary {
-    @apply bg-indigo-600;
 }
 .card {
     @apply bg-white rounded-lg shadow-md p-6 mb-4 border-b border-gray-900/10
@@ -52,7 +64,7 @@
 }
 
 .gateway-selected {
-    @apply border-indigo-600 bg-indigo-100 text-indigo-600;
+    @apply border-primary bg-primary-light text-primary;
 }
 .dark .card {
     @apply bg-gray-800 text-white rounded-lg p-6 mb-4

@@ -8,5 +8,6 @@ class DomainAvailabilityDTO
         public string $domain,
         public bool $available,
         public ?string $message = null,
+        public bool $checked = true,
     ) {}
 }

@@ -67,14 +67,15 @@ class StoreServerRequest extends FormRequest
         return [
             'name' => ['string', 'max:255', Rule::unique('servers', 'name')->ignore($this->id)],
             'ip' => ['string', 'max:255', Rule::unique('servers', 'ip')->ignore($this->id)],
-            'port' => ['numeric', 'min:1', 'max:65535'],
+            'port' => [Rule::requiredIf($this->input('type') !== 'domain'), 'nullable', 'numeric', 'min:1', 'max:65535'],
             'username' => ['string'],
             'password' => ['string'],
             'status' => ['string', Rule::in(['active', 'hidden', 'unreferenced'])],
             'type' => ['string', Rule::in($types)],
             'hostname' => ['string', 'required'],
-            'address' => ['string', 'required'],
+            'address' => [Rule::requiredIf($this->input('type') !== 'domain'), 'nullable', 'string'],
             'maxaccounts' => ['numeric', 'min:0', 'nullable'],
+            'test_mode' => ['nullable'],
         ];
     }
 }

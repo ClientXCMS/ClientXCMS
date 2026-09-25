@@ -50,7 +50,22 @@ trait CanUse2FA
         Session::put('2fa_verified', true);
         $codes = $this->generateRecoveryCodes();
         $this->storeRecoveryCodes($codes);
-        $this->attachMetadata('2fa_secret', $secret);
+        $this->attachMetadata('2fa_secret', \Crypt::encryptString($secret));
+    }
+
+    public function twoFactorSecret(): ?string
+    {
+        $secret = $this->getMetadata('2fa_secret');
+        if (! $secret) {
+            return null;
+        }
+
+        try {
+            return \Crypt::decryptString($secret);
+        } catch (\Throwable $e) {
+            // Secret stored before encryption was in place: hand it back as-is, it gets encrypted by the migration.
+            return $secret;
+        }
     }
 
     public function twoFactorEmailOnNewIpEnabled(): bool
@@ -323,7 +338,7 @@ trait CanUse2FA
         if ($this->isValidSmsTwoFactorCode($code)) {
             return true;
         }
-        $secret = $this->getMetadata('2fa_secret');
+        $secret = $this->twoFactorSecret();
         if (! $secret) {
             return false;
         }
@@ -387,7 +402,7 @@ trait CanUse2FA
             $appName = config('app.name', 'ClientXCMS');
             \App\Services\Auth\SmsService::gateway()->send(
                 $phone,
-                sprintf('%s — code de connexion : %s (valide 5 min)', $appName, $code)
+                sprintf('%s - code de connexion : %s (valide 5 min)', $appName, $code)
             );
 
             $this->attachMetadata($dailyKey, (string) ($count + 1));
@@ -432,7 +447,7 @@ trait CanUse2FA
     public function verifyDeviceFactor(string $code): bool
     {
         $code = str_replace(' ', '', $code);
-        $secret = $this->getMetadata('2fa_secret');
+        $secret = $this->twoFactorSecret();
 
         if ($secret && (new Google2FA)->verifyKey($secret, $code)) {
             return true;

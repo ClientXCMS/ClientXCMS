@@ -23,10 +23,20 @@ use App\Models\Admin\Setting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\File;
 
 class LocaleService
 {
-    const DOWNLOAD_ENDPOINT = 'https://api.github.com/repos/ClientXCMS/ctx-translations/contents/';
+    /**
+     * Raw file hosting, not the REST API: the latter caps unauthenticated
+     * callers at 60 requests per hour and per IP, which a shared host burns
+     * through on its own, and it wraps every file in base64.
+     */
+    const DOWNLOAD_HOST = 'https://raw.githubusercontent.com/ClientXCMS/ctx-translations/';
+
+    const DOWNLOAD_DEFAULT_BRANCH = 'main';
+
+    const DOWNLOAD_TIMEOUT = 15;
 
     const DEFAULT_ENABLED_LOCALES = '["en_GB"]';
 
@@ -112,6 +122,40 @@ class LocaleService
         return redirect()->back();
     }
 
+    /**
+     * Prefers the ctx-translations branch matching this instance's own
+     * version. ctx-translations regenerates the per-module structure on its
+     * default branch too (not only the legacy single-file format kept there
+     * for pre-2.17 instances), so falling back to it when the version branch
+     * doesn't exist yet is safe: a key too new to be on the default branch
+     * simply renders as its raw key until the version branch is created or
+     * merged there, rather than failing the whole download.
+     */
+    public static function downloadBranch(): string
+    {
+        return Cache::remember('ctx_translations_branch', now()->addHour(), function () {
+            $versionBranch = 'v'.ctx_version();
+            $probe = \Http::timeout(self::DOWNLOAD_TIMEOUT)->get(self::DOWNLOAD_HOST."{$versionBranch}/locales.json");
+
+            return $probe->successful() ? $versionBranch : self::DOWNLOAD_DEFAULT_BRANCH;
+        });
+    }
+
+    /**
+     * Every module ctx-translations should have for a locale: fr is always
+     * present locally and defines the reference set, so a locale is
+     * downloaded module by module against that list, never against
+     * whatever the target locale happens to already have on disk.
+     */
+    protected static function referenceModules(): array
+    {
+        return collect(File::files(base_path('lang/fr')))
+            ->filter(fn ($file) => $file->getExtension() === 'php')
+            ->map(fn ($file) => $file->getFilenameWithoutExtension())
+            ->values()
+            ->all();
+    }
+
     public static function downloadFiles(string $locale)
     {
         $locales = collect(self::getLocales(false))->keys()->toArray();
@@ -119,13 +163,27 @@ class LocaleService
             throw new \Exception('The locale file could not be downloaded. The locale is not available.');
         }
         [$locale, $country] = explode('_', $locale);
-        $http = \Http::get(self::DOWNLOAD_ENDPOINT."/translations/{$locale}.json");
-        if ($http->status() !== 200) {
-            throw new \Exception('The locale file could not be downloaded. Status code: '.$http->status());
+
+        $branch = self::downloadBranch();
+        $tempDirectory = storage_path($locale);
+        File::ensureDirectoryExists($tempDirectory);
+
+        foreach (self::referenceModules() as $module) {
+            $http = \Http::timeout(self::DOWNLOAD_TIMEOUT)
+                ->get(self::DOWNLOAD_HOST."{$branch}/translations/{$locale}/{$module}.json");
+            if ($http->status() !== 200) {
+                File::deleteDirectory($tempDirectory);
+                throw new \Exception("The locale file could not be downloaded from {$branch}. Status code: {$http->status()}");
+            }
+            if (! self::isTranslationPayload($http->body())) {
+                File::deleteDirectory($tempDirectory);
+                throw new \Exception('The locale file could not be downloaded. The server did not return a translation file.');
+            }
+            File::put("{$tempDirectory}/{$module}.json", $http->body());
         }
-        \Storage::put("{$locale}.json", base64_decode($http->json()['content']));
-        \Artisan::call('translations:import-file', ['--path' => "app/{$locale}.json"]);
-        \Storage::delete("{$locale}.json");
+
+        \Artisan::call('translations:import-file', ['--path' => $locale, '--locale' => $locale, '--prune' => true]);
+        File::deleteDirectory($tempDirectory);
         \Cache::forget('locales');
 
         return back();
@@ -134,11 +192,13 @@ class LocaleService
     public static function getLocalesFromAPI()
     {
         return Cache::rememberForever('locales', function () {
-            $http = \Http::get(self::DOWNLOAD_ENDPOINT.'/locales.json');
-            if ($http->status() !== 200) {
+            try {
+                $http = \Http::timeout(self::DOWNLOAD_TIMEOUT)->get(self::DOWNLOAD_HOST.self::downloadBranch().'/locales.json');
+                $content = $http->status() === 200 && self::isTranslationPayload($http->body())
+                    ? json_decode($http->body(), true)
+                    : json_decode(self::getLocalesFromLocal(), true);
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
                 $content = json_decode(self::getLocalesFromLocal(), true);
-            } else {
-                $content = json_decode(base64_decode($http->json()['content']), true);
             }
 
             return collect($content)->mapWithKeys(function ($locale, $key) {
@@ -220,6 +280,15 @@ class LocaleService
     private static function getLocalesFromLocal()
     {
         return file_get_contents(resource_path('locales.json'));
+    }
+
+    /**
+     * A proxy or an error page answering 200 with HTML would otherwise be
+     * written to disk and only fail later, during the import.
+     */
+    private static function isTranslationPayload(string $body): bool
+    {
+        return json_decode($body, true) !== null && json_last_error() === JSON_ERROR_NONE;
     }
 
     public static function isValideLocale(string $locale)

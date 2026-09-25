@@ -49,6 +49,7 @@ class SettingsBillingController extends Controller
             'invoice_terms' => 'textarea',
         ];
         $tmpcountries = Countries::names();
+        $billingCountries = $tmpcountries;
         $countries = collect(TaxesService::arrayVatPercents())->filter(function ($item, $key) use ($tmpcountries) {
             return isset($tmpcountries[$key]);
         })->mapWithKeys(function ($item, $key) use ($tmpcountries) {
@@ -59,7 +60,7 @@ class SettingsBillingController extends Controller
             TaxesService::VAT_RATE_FIXED => __('billing.admin.settings.fields.rates.vat_rate_fixed'),
         ];
 
-        return view('admin/settings/billing/billing', compact('countries', 'billing_modes', 'options', 'currencies', 'keys', 'rates', 'options2'));
+        return view('admin/settings/billing/billing', compact('countries', 'billingCountries', 'billing_modes', 'options', 'currencies', 'keys', 'rates', 'options2'));
     }
 
     public function saveBilling(Request $request)
@@ -73,7 +74,7 @@ class SettingsBillingController extends Controller
             'store_vat_enabled' => 'in:true,false',
             'store_currency' => ['required'],
             'invoice_terms' => 'string|max:1000',
-            'app_address' => ['required', 'string', 'max:1000', new \App\Rules\NoScriptOrPhpTags],
+            'app_address' => ['required', 'string', 'max:1000'],
             'billing_invoice_prefix' => 'required|string|max:10',
             'billing_mode' => 'required|in:invoice,proforma',
             'remove_pending_invoice' => 'required|integer|min:0',
@@ -86,12 +87,31 @@ class SettingsBillingController extends Controller
             'allow_add_balance_to_invoices' => 'in:true,false',
             'store_enabled' => 'in:true,false',
             'store_redirect_url' => 'nullable|url',
+            'billing_legal_name' => ['required', 'string', 'max:255'],
+            'billing_siren' => ['required', 'regex:/^\d{9}$/'],
+            'billing_siret' => ['nullable', 'regex:/^\d{14}$/'],
+            'billing_vat_number' => ['nullable', 'string', 'max:32'],
+            'billing_operation_category' => ['required', 'in:goods,services,mixed'],
+            'billing_vat_on_debits' => ['in:true,false'],
+            'billing_address' => ['required', 'string', 'max:255'],
+            'billing_address2' => ['nullable', 'string', 'max:255'],
+            'billing_zipcode' => ['required', 'string', 'max:20'],
+            'billing_city' => ['required', 'string', 'max:100'],
+            'billing_country' => ['required', 'string', 'size:2', \Illuminate\Validation\Rule::in(array_keys(Countries::names()))],
+            'einvoicing_enabled' => ['in:true,false'],
+            'einvoicing_provider' => ['required', \Illuminate\Validation\Rule::in(collect(app(\App\Services\Billing\ElectronicProviderRegistry::class)->all())->filter(fn ($provider) => in_array('b2b', $provider->capabilities(), true))->keys()->all())],
+            'einvoicing_b2g_provider' => ['required', \Illuminate\Validation\Rule::in(collect(app(\App\Services\Billing\ElectronicProviderRegistry::class)->all())->filter(fn ($provider) => in_array('b2g', $provider->capabilities(), true))->keys()->all())],
+            'einvoicing_vat_regime' => ['required', 'in:real_normal_monthly,real_normal_quarterly,simplified,franchise_base'],
+            'einvoicing_timezone' => ['required', 'timezone'],
+            'einvoicing_activation_date' => ['nullable', 'date'],
         ]);
         $validated['store_enabled'] = $validated['store_enabled'] ?? 'false';
         $validated['store_vat_enabled'] = $validated['store_vat_enabled'] ?? 'false';
         $validated['allow_add_balance_to_invoices'] = $validated['allow_add_balance_to_invoices'] ?? 'false';
         $validated['checkout_customermustbeconfirmed'] = $validated['checkout_customermustbeconfirmed'] ?? 'false';
         $validated['add_setupfee_on_upgrade'] = $validated['add_setupfee_on_upgrade'] ?? 'false';
+        $validated['billing_vat_on_debits'] = $validated['billing_vat_on_debits'] ?? 'false';
+        $validated['einvoicing_enabled'] = $validated['einvoicing_enabled'] ?? 'false';
         if (\setting('billing_invoice_prefix') !== $validated['billing_invoice_prefix']) {
             Invoice::updateInvoicePrefix($validated['billing_invoice_prefix']);
         }

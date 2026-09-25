@@ -20,8 +20,10 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\DTO\Core\Extensions\ExtensionDTO;
+use App\Extensions\ExtensionType;
 use App\Models\ActionLog;
 use App\Models\Admin\Permission;
+use Illuminate\Validation\Rule;
 
 class SettingsExtensionController
 {
@@ -41,14 +43,12 @@ class SettingsExtensionController
         return view('admin.settings.extensions.index', ['groups' => $groups, 'tags' => app('extension')->fetch()['tags'] ?? []]);
     }
 
-    private const ALLOWED_TYPES = ['modules', 'addons', 'themes', 'email_templates', 'invoice_templates'];
-
     private function validateExtensionIdentifier(string $type, string $extension): void
     {
-        if (! in_array($type, self::ALLOWED_TYPES, true)) {
+        if (! in_array($type, ExtensionType::pluralValues(), true)) {
             abort(404);
         }
-        if (! preg_match('/^[a-zA-Z0-9_-]+$/', $extension)) {
+        if (! ExtensionType::isValidUuid($extension)) {
             abort(400, 'Invalid extension identifier');
         }
     }
@@ -155,7 +155,7 @@ class SettingsExtensionController
 
         $validated = $request->validate([
             'extensions' => 'required|array|min:1',
-            'extensions.*.type' => 'required|string|in:modules,addons,themes,email_templates,invoice_templates',
+            'extensions.*.type' => ['required', 'string', Rule::in(ExtensionType::pluralValues())],
             'extensions.*.uuid' => 'required|string|regex:/^[a-zA-Z0-9_-]+$/',
             'action' => 'required|string|in:enable,disable,install,update',
         ]);

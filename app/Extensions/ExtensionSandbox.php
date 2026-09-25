@@ -53,7 +53,7 @@ class ExtensionSandbox
 
         try {
             $manager->autoload($extension, $application, $composer);
-            // Successful boot — clear any previous failure flag.
+            // Successful boot - clear any previous failure flag.
             self::clearBootError($extension);
 
             return true;

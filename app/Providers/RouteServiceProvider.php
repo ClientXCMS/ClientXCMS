@@ -46,7 +46,10 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
-        Route::middleware(['api', 'auth:sanctum'])
+        RateLimiter::for('passkey-login', fn (Request $request) => Limit::perMinute(12)->by($request->ip()));
+        RateLimiter::for('passkey-confirm', fn (Request $request) => Limit::perMinute(6)->by(($request->user('web')?->getAuthIdentifier() ?? $request->ip()).'|'.$request->ip()));
+        RateLimiter::for('passkey-management', fn (Request $request) => Limit::perMinute(6)->by(($request->user('web')?->getAuthIdentifier() ?? $request->ip()).'|'.$request->ip()));
+        Route::middleware(['api', 'auth:sanctum', \App\Http\Middleware\AuthorizeApplicationApi::class])
             ->prefix('api/application')
             ->name('api.application.')
             ->group(base_path('routes/api-application.php'));
