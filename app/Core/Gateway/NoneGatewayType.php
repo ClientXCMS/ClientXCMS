@@ -48,6 +48,11 @@ class NoneGatewayType extends \App\Abstracts\AbstractGatewayType
 
     public function processPayment(Invoice $invoice, Gateway $gateway, Request $request, GatewayUriDTO $dto)
     {
+        if ($invoice->amountInMinorUnits() !== 0) {
+            logger()->warning('None gateway refused a non-zero invoice', ['invoice_id' => $invoice->id]);
+
+            return redirect()->route('front.invoices.show', $invoice)->with('error', __('store.checkout.wrong_payment'));
+        }
         $invoice->complete();
 
         return redirect()->route('front.invoices.show', $invoice);
