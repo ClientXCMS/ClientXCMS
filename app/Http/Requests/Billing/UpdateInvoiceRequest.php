@@ -136,7 +136,7 @@ class UpdateInvoiceRequest extends FormRequest
         $validatedData = $this->validated();
         if ($validatedData['status'] != $invoice->status) {
             if ($validatedData['status'] == Invoice::STATUS_PAID) {
-                $invoice->complete(false);
+                $invoice->complete(false, allowClosed: true);
             }
             if ($validatedData['status'] == Invoice::STATUS_CANCELLED) {
                 $invoice->cancel();
