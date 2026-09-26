@@ -137,7 +137,7 @@ class InvoiceController extends AbstractCrudController
                 $invoice->delete();
             }),
             new MassActionDTO('complete', __('admin.invoices.mass.complete'), function (Invoice $invoice) {
-                $invoice->complete(false);
+                $invoice->complete(false, allowClosed: true);
             }),
             new MassActionDTO('cancel', __('admin.invoices.mass.cancel'), function (Invoice $invoice) {
                 $invoice->cancel();
