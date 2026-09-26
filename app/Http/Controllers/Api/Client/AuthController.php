@@ -22,6 +22,8 @@ namespace App\Http\Controllers\Api\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Account\Customer;
 use App\Services\Account\AccountEditService;
+use App\Services\Auth\DummyPasswordHash;
+use App\Services\Auth\MfaConfig;
 use App\Services\Core\LocaleService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Events\Registered;
@@ -33,6 +35,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 use libphonenumber\PhoneNumberFormat as libPhoneNumberFormat;
 use Propaganistas\LaravelPhone\Exceptions\NumberParseException;
 use Propaganistas\LaravelPhone\PhoneNumber;
@@ -64,19 +67,20 @@ class AuthController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Login successful",
+     *         description="Full access token, or a pending token (valid only on the 2FA routes) when requires_2fa is true",
      *
      *         @OA\JsonContent(
      *
      *             @OA\Property(property="token", type="string"),
      *             @OA\Property(property="token_type", type="string", example="Bearer"),
      *             @OA\Property(property="requires_2fa", type="boolean"),
+     *             @OA\Property(property="second_factor", type="string", enum={"totp", "email", "totp_email"}, description="Present when requires_2fa is true"),
      *             @OA\Property(property="customer", type="object")
      *         )
      *     ),
      *
-     *     @OA\Response(response=401, description="Invalid credentials"),
-     *     @OA\Response(response=403, description="Account banned or disabled")
+     *     @OA\Response(response=422, description="Invalid credentials or banned account"),
+     *     @OA\Response(response=429, description="Too many attempts")
      * )
      */
     public function login(Request $request): JsonResponse
@@ -87,8 +91,9 @@ class AuthController extends Controller
         ]);
 
         $customer = Customer::where('email', strtolower($request->email))->first();
+        $passwordMatches = Hash::check($request->password, $customer?->password ?? DummyPasswordHash::get());
 
-        if (! $customer || ! Hash::check($request->password, $customer->password)) {
+        if (! $customer || ! $passwordMatches) {
             throw ValidationException::withMessages([
                 'email' => [__('auth.failed')],
             ]);
@@ -102,33 +107,17 @@ class AuthController extends Controller
             ]);
         }
 
-        // Check if 2FA is required
-        if ($customer->twoFactorEnabled()) {
-            // Create a temporary token for 2FA verification
-            $tempToken = $customer->createToken('2fa-pending', ['2fa:pending'], now()->addMinutes(5));
+        $needs = $customer->twoFactorRequirements('web', $request->ip());
+        if ($needs['totp']) {
+            return $this->pendingSecondFactorResponse($customer, ['2fa:pending'], $needs['email'] ? 'totp_email' : 'totp');
+        }
+        if ($needs['email']) {
+            $customer->sendTwoFactorEmailCode('web', $request->ip());
 
-            return response()->json([
-                'requires_2fa' => true,
-                'token' => $tempToken->plainTextToken,
-                'token_type' => 'Bearer',
-                'message' => __('auth.2fa.required'),
-            ]);
+            return $this->pendingSecondFactorResponse($customer, ['2fa:pending'], 'email');
         }
 
-        // Create full access token
-        $token = $customer->createToken('client-api', ['client-api']);
-
-        return response()->json([
-            'requires_2fa' => false,
-            'token' => $token->plainTextToken,
-            'token_type' => 'Bearer',
-            'customer' => [
-                'id' => $customer->id,
-                'email' => $customer->email,
-                'firstname' => $customer->firstname,
-                'lastname' => $customer->lastname,
-            ],
-        ]);
+        return $this->fullAccessResponse($customer, ['requires_2fa' => false]);
     }
 
     /**
@@ -150,59 +139,110 @@ class AuthController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="2FA verification successful",
+     *         description="Either a full access token, or a new pending token when the email code is still expected",
      *
      *         @OA\JsonContent(
+     *             oneOf={
      *
-     *             @OA\Property(property="token", type="string"),
-     *             @OA\Property(property="token_type", type="string", example="Bearer")
+     *                 @OA\Schema(
+     *
+     *                     @OA\Property(property="token", type="string"),
+     *                     @OA\Property(property="token_type", type="string", example="Bearer"),
+     *                     @OA\Property(property="customer", type="object")
+     *                 ),
+     *
+     *                 @OA\Schema(
+     *
+     *                     @OA\Property(property="requires_2fa", type="boolean", example=true),
+     *                     @OA\Property(property="second_factor", type="string", enum={"email"}),
+     *                     @OA\Property(property="token", type="string", description="Pending token, only valid on the 2FA routes"),
+     *                     @OA\Property(property="token_type", type="string", example="Bearer"),
+     *                     @OA\Property(property="message", type="string")
+     *                 )
+     *             }
      *         )
      *     ),
      *
-     *     @OA\Response(response=401, description="Invalid 2FA code")
+     *     @OA\Response(response=401, description="Not authenticated with a pending 2FA token"),
+     *     @OA\Response(response=403, description="Token is not a pending 2FA token"),
+     *     @OA\Response(response=422, description="Invalid 2FA code"),
+     *     @OA\Response(response=429, description="Too many attempts")
      * )
      */
     public function verify2fa(Request $request): JsonResponse
     {
+        if (! $this->hasPersonalAccessToken($request)) {
+            return response()->json(['error' => __('auth.unauthenticated')], 401);
+        }
+
         $request->validate([
             'code' => ['required', 'string', 'max:64', new \App\Rules\Valid2FACodeInput],
         ]);
 
         $customer = $request->user();
 
-        if (! $customer) {
+        $needs = $customer->twoFactorRequirements('web', $request->ip());
+        $pendingToken = $customer->currentAccessToken();
+
+        if ($needs['totp'] && ! $customer->tokenCan('2fa:totp-done')) {
+            $this->assertSecondFactor($customer->verifyDeviceFactor($request->code));
+            $pendingToken->delete();
+            if (! $needs['email']) {
+                return $this->fullAccessResponse($customer);
+            }
+            $customer->sendTwoFactorEmailCode('web', $request->ip());
+
+            return $this->pendingSecondFactorResponse($customer, ['2fa:pending', '2fa:totp-done'], 'email');
+        }
+
+        $this->assertSecondFactor($needs['email'] && $customer->isValidEmailTwoFactorCode(str_replace(' ', '', $request->code)));
+        $pendingToken->delete();
+
+        return $this->fullAccessResponse($customer);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/client/auth/2fa/email",
+     *     summary="Send the email verification code again",
+     *     tags={"Authentication"},
+     *     security={{"bearerAuth": {}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Code sent, or still valid from a previous request",
+     *
+     *         @OA\JsonContent(@OA\Property(property="message", type="string"))
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Not authenticated with a pending 2FA token"),
+     *     @OA\Response(response=403, description="Token is not a pending 2FA token"),
+     *     @OA\Response(response=409, description="No email code expected at this step", @OA\JsonContent(@OA\Property(property="error", type="string"))),
+     *     @OA\Response(response=429, description="Too many requests or email code on cooldown", @OA\JsonContent(@OA\Property(property="error", type="string")))
+     * )
+     */
+    public function sendTwoFactorEmailCode(Request $request): JsonResponse
+    {
+        if (! $this->hasPersonalAccessToken($request)) {
             return response()->json(['error' => __('auth.unauthenticated')], 401);
         }
 
-        // Unify with the web flow. Pre-fix:
-        //   - validate size:6 rejected every recovery code (26-char shape),
-        //     locking out anyone who lost their authenticator device
-        //   - verifyKey read $customer->two_factor_secret, a column that does
-        //     not exist in the schema, so even valid TOTPs threw
-        //   - in_array compare on recovery codes was not constant-time
-        // verifyDeviceFactor() consumes the metadata-stored secret + recovery
-        // codes with hash_equals and is the same code path the web /2fa POST
-        // already exercises.
-        if (! $customer->verifyDeviceFactor($request->code)) {
-            throw ValidationException::withMessages([
-                'code' => [__('auth.2fa.invalid')],
-            ]);
+        $customer = $request->user();
+        $needs = $customer->twoFactorRequirements('web', $request->ip());
+
+        if (! $needs['email'] || ($needs['totp'] && ! $customer->tokenCan('2fa:totp-done'))) {
+            return response()->json(['error' => __('auth.2fa.email_not_expected')], 409);
         }
 
-        // Revoke the temporary token and create a full access token
-        $request->user()->currentAccessToken()->delete();
-        $token = $customer->createToken('client-api', ['client-api']);
+        if ($customer->isEmailTwoFactorOnCooldown()) {
+            return response()->json(['error' => __('client.profile.2fa.cooldown_active', [
+                'minutes' => MfaConfig::emailCooldownMinutes(),
+            ])], 429);
+        }
 
-        return response()->json([
-            'token' => $token->plainTextToken,
-            'token_type' => 'Bearer',
-            'customer' => [
-                'id' => $customer->id,
-                'email' => $customer->email,
-                'firstname' => $customer->firstname,
-                'lastname' => $customer->lastname,
-            ],
-        ]);
+        $customer->sendTwoFactorEmailCode('web', $request->ip());
+
+        return response()->json(['message' => __('client.profile.2fa.email_sent')]);
     }
 
     /**
@@ -422,7 +462,7 @@ class AuthController extends Controller
 
         if ($status !== Password::PASSWORD_RESET) {
             throw ValidationException::withMessages([
-                'email' => [__($status)],
+                'email' => [__('passwords.token')],
             ]);
         }
 
@@ -455,6 +495,50 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => __('auth.logout.success'),
+        ]);
+    }
+
+    // A first-party session gets a TransientToken whose can() is always true, which would skip the TOTP step.
+    private function hasPersonalAccessToken(Request $request): bool
+    {
+        return $request->user()?->currentAccessToken() instanceof PersonalAccessToken;
+    }
+
+    private function assertSecondFactor(bool $valid): void
+    {
+        if (! $valid) {
+            throw ValidationException::withMessages([
+                'code' => [__('auth.2fa.invalid')],
+            ]);
+        }
+    }
+
+    private function pendingSecondFactorResponse(Customer $customer, array $abilities, string $secondFactor): JsonResponse
+    {
+        $token = $customer->createToken('2fa-pending', $abilities, now()->addMinutes(5));
+
+        return response()->json([
+            'requires_2fa' => true,
+            'second_factor' => $secondFactor,
+            'token' => $token->plainTextToken,
+            'token_type' => 'Bearer',
+            'message' => __('auth.2fa.required'),
+        ]);
+    }
+
+    private function fullAccessResponse(Customer $customer, array $extra = []): JsonResponse
+    {
+        $token = $customer->createToken('client-api', ['client-api']);
+
+        return response()->json($extra + [
+            'token' => $token->plainTextToken,
+            'token_type' => 'Bearer',
+            'customer' => [
+                'id' => $customer->id,
+                'email' => $customer->email,
+                'firstname' => $customer->firstname,
+                'lastname' => $customer->lastname,
+            ],
         ]);
     }
 
