@@ -105,6 +105,12 @@ class MollieType extends AbstractGatewayType
         $invoice->update(['external_id' => $payment->id]);
 
         if ($payment->isPaid()) {
+            $amountMinor = $this->toMinorUnits((string) ($payment->amount->value ?? ''));
+            if ($amountMinor === null || ! $invoice->matchesPayment($amountMinor, (string) ($payment->amount->currency ?? ''))) {
+                logger()->warning('Mollie payment does not settle the invoice', ['invoice_id' => $invoice->id]);
+
+                return response()->json(['success' => false, 'message' => 'Invoice left pending']);
+            }
             $invoice->complete();
 
             return response()->json(['success' => true, 'message' => 'Payment completed']);
@@ -136,6 +142,15 @@ class MollieType extends AbstractGatewayType
     public function configForm(array $context = [])
     {
         return view('admin.settings.store.gateways.mollie', $context);
+    }
+
+    private function toMinorUnits(string $value): ?int
+    {
+        if (preg_match('/^(\d+)\.(\d{2})$/', $value, $matches) !== 1) {
+            return null;
+        }
+
+        return (int) $matches[1] * 100 + (int) $matches[2];
     }
 
     private function initMollie(): void
