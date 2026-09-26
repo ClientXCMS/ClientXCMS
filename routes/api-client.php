@@ -52,9 +52,12 @@ Route::prefix('auth')->name('auth.')->middleware('throttle:10,1')->group(functio
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
-    Route::middleware('abilities:2fa:pending')
+    Route::middleware(['abilities:2fa:pending', 'throttle:6,1,api-2fa-verify'])
         ->post('/auth/2fa/verify', [AuthController::class, 'verify2fa'])
         ->name('auth.2fa.verify');
+    Route::middleware(['abilities:2fa:pending', 'throttle:3,1,api-2fa-email'])
+        ->post('/auth/2fa/email', [AuthController::class, 'sendTwoFactorEmailCode'])
+        ->name('auth.2fa.email');
 
     Route::middleware('abilities:client-api')->group(function () {
         // Profile

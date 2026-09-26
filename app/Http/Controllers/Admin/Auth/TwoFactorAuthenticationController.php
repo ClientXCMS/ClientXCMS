@@ -40,7 +40,7 @@ class TwoFactorAuthenticationController
             return redirect()->route('admin.login');
         }
 
-        $needs = $this->factorRequirements($user, $request->ip());
+        $needs = $user->twoFactorFactors('admin', $request->ip());
         $totpDone = $request->session()->get('2fa_totp_verified', false);
 
         if ($needs['totp'] && ! $totpDone) {
@@ -106,7 +106,7 @@ class TwoFactorAuthenticationController
         }
 
         $code = $request->input('2fa');
-        $needs = $this->factorRequirements($user, $request->ip());
+        $needs = $user->twoFactorFactors('admin', $request->ip());
         $totpDone = $request->session()->get('2fa_totp_verified', false);
 
         if ($needs['totp'] && ! $totpDone) {
@@ -138,18 +138,6 @@ class TwoFactorAuthenticationController
         }
 
         return $local[0].str_repeat('*', strlen($local) - 2).substr($local, -1).$domain;
-    }
-
-    private function factorRequirements($user, ?string $ip): array
-    {
-        $totpEnabled = $user->twoFactorEnabled();
-        $emailRequired = ($user->shouldForceTwoFactor('admin') && ! $totpEnabled)
-            || $user->requiresEmailTwoFactorForIp($ip);
-
-        return [
-            'totp' => $totpEnabled,
-            'email' => $emailRequired,
-        ];
     }
 
     private function handleDeviceStep(Request $request, $user, string $code, bool $emailWillFollow): RedirectResponse
