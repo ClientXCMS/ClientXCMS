@@ -21,6 +21,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
@@ -48,10 +49,36 @@ class Metadata extends Model
 {
     use HasFactory;
 
+    public const CREDENTIAL_KEYS = [
+        '2fa_secret',
+        '2fa_recovery_codes',
+        '2fa_email_code',
+        '2fa_sms_code',
+        'autologin_key',
+    ];
+
+    private const HIDDEN_PREFIXES = ['2fa_', 'social_', 'autologin_', 'signup_social'];
+
+    private const HIDDEN_FRAGMENTS = ['password', 'token', 'secret'];
+
     protected $fillable = [
         'model_type',
         'model_id',
         'key',
         'value',
     ];
+
+    public static function isHiddenFromSerialization(string $key): bool
+    {
+        $key = strtolower($key);
+
+        return in_array($key, self::CREDENTIAL_KEYS, true)
+            || Str::startsWith($key, self::HIDDEN_PREFIXES)
+            || Str::contains($key, self::HIDDEN_FRAGMENTS);
+    }
+
+    public function newCollection(array $models = []): MetadataCollection
+    {
+        return new MetadataCollection($models);
+    }
 }

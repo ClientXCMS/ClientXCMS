@@ -23,6 +23,7 @@ use App\Models\Account\Customer;
 use App\Models\Account\CustomerAccountInvitation;
 use App\Models\Billing\Subscription;
 use App\Models\Billing\Upgrade;
+use App\Models\Metadata;
 use App\Models\Store\Basket\Basket;
 use App\Models\Store\CouponUsage;
 use Illuminate\Support\Facades\Storage;
@@ -31,14 +32,6 @@ use ZipArchive;
 class GdprExportService
 {
     public const STORAGE_DIR = 'gdpr';
-
-    private const METADATA_EXCLUDED_KEYS = [
-        '2fa_secret',
-        '2fa_recovery_codes',
-        '2fa_email_code',
-        '2fa_sms_code',
-        'autologin_key',
-    ];
 
     // Catch-all for the keys extensions add: a value named like a credential never goes in the archive.
     private const METADATA_EXCLUDED_PATTERNS = ['secret', 'password', 'token', 'code', 'key'];
@@ -380,7 +373,7 @@ class GdprExportService
 
     private function isCredential(string $key): bool
     {
-        if (in_array($key, self::METADATA_EXCLUDED_KEYS, true)) {
+        if (in_array($key, Metadata::CREDENTIAL_KEYS, true)) {
             return true;
         }
 

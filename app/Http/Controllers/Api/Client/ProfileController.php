@@ -24,6 +24,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Account\Customer;
 use App\Models\ActionLog;
 use App\Rules\Valid2FACodeRule;
+use App\Services\Account\AccountDeletionException;
 use App\Services\Account\AccountDeletionService;
 use App\Services\Billing\FiscalProfileService;
 use Illuminate\Http\JsonResponse;
@@ -486,18 +487,21 @@ class ProfileController extends Controller
             'password' => ['required', 'current_password'],
         ]);
 
-        $customer = $request->user();
-        $deletionService = new AccountDeletionService;
-
         try {
-            $deletionService->delete($customer);
+            app(AccountDeletionService::class)->delete($request->user());
 
             return response()->json([
                 'message' => __('client.profile.delete.success'),
             ]);
-        } catch (\Exception $e) {
+        } catch (AccountDeletionException $e) {
             return response()->json([
                 'error' => $e->getMessage(),
+            ], 400);
+        } catch (\Exception $e) {
+            report($e);
+
+            return response()->json([
+                'error' => __('client.profile.delete.error'),
             ], 400);
         }
     }
