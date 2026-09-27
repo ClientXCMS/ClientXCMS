@@ -371,6 +371,17 @@ class Invoice extends Model implements ProvidesMailData, SupportRelateItemInterf
             $this->status == self::STATUS_FAILED;
     }
 
+    public function amountInMinorUnits(): int
+    {
+        return (int) round((float) $this->total * 100);
+    }
+
+    public function matchesPayment(int $amountMinor, string $currency): bool
+    {
+        return $amountMinor === $this->amountInMinorUnits()
+            && strcasecmp($currency, (string) $this->currency) === 0;
+    }
+
     public function canDelete()
     {
         if ($this->isElectronicallyLocked()) {

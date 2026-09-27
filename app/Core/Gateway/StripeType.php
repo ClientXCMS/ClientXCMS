@@ -41,6 +41,12 @@ class StripeType extends AbstractGatewayType
 
     const VERSION = '2023-10-16';
 
+    const CHECKOUT_EVENTS = [
+        'checkout.session.completed',
+        'checkout.session.async_payment_succeeded',
+        'checkout.session.async_payment_failed',
+    ];
+
     protected string $name = 'Stripe';
 
     protected string $uuid = self::UUID;
@@ -65,7 +71,7 @@ class StripeType extends AbstractGatewayType
                     'tax_rates' => $rate,
                     'price_data' => [
                         'currency' => $invoice->currency,
-                        'unit_amount' => (int) ($invoice->total * 100),
+                        'unit_amount' => $invoice->amountInMinorUnits(),
                         'product_data' => [
                             'name' => __('global.invoice').' #'.$invoice->id,
                         ],
@@ -104,7 +110,7 @@ class StripeType extends AbstractGatewayType
                 env('STRIPE_WEBHOOK_SECRET')
             );
             $this->initStripe();
-            if ($event->type == 'checkout.session.completed') {
+            if (in_array($event->type, self::CHECKOUT_EVENTS, true)) {
 
                 $object = $event->data->object;
                 $id = $object->metadata->invoice_id ?? 0;
@@ -118,6 +124,22 @@ class StripeType extends AbstractGatewayType
                 // wasteful PaymentIntent API call on every replay.
                 if ($invoice->status === Invoice::STATUS_PAID) {
                     return response()->json(['success' => 'Invoice already paid']);
+                }
+                if ($event->type === 'checkout.session.async_payment_failed') {
+                    if ($invoice->status !== Invoice::STATUS_PENDING) {
+                        logger()->warning('Stripe async payment failure ignored on a closed invoice', ['invoice_id' => $invoice->id]);
+
+                        return response()->json(['success' => false, 'message' => 'Invoice not pending']);
+                    }
+                    $invoice->fail();
+
+                    return response()->json(['success' => 'Invoice failed']);
+                }
+                // amount_subtotal excludes the exclusive tax Stripe adds on top of unit_amount, so it is the figure sent at session creation.
+                if ($object->payment_status !== 'paid' || ! $invoice->matchesPayment((int) $object->amount_subtotal, (string) $object->currency)) {
+                    logger()->warning('Stripe checkout session does not settle the invoice', ['invoice_id' => $invoice->id, 'event' => $event->type]);
+
+                    return response()->json(['success' => false, 'message' => 'Invoice left pending']);
                 }
                 $intent = \Stripe\PaymentIntent::retrieve($object->payment_intent);
 
@@ -320,7 +342,7 @@ class StripeType extends AbstractGatewayType
         }
         try {
             $intent = $this->stripe->paymentIntents->create([
-                'amount' => (int) ($invoice->total * 100),
+                'amount' => $invoice->amountInMinorUnits(),
                 'currency' => $invoice->currency,
                 'customer' => $customerId,
                 'description' => __('global.invoice').' #'.$invoice->id,
