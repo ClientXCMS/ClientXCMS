@@ -829,6 +829,7 @@ class InvoiceServiceTest extends TestCase
         $this->seed(EmailTemplateSeeder::class);
 
         $invoice = InvoiceService::createFreshInvoice($user->id, 'USD', 'Fresh invoice for product', []);
+        $invoice->update(['status' => Invoice::STATUS_PENDING]);
         $invoice->complete();
         $this->assertDatabaseHas('invoices', [
             'id' => $invoice->id,

@@ -51,33 +51,41 @@ trait InvoiceStateTrait
         event(new InvoiceCancelled($this));
     }
 
-    public function complete(bool $clearBasket = true)
+    public function complete(bool $clearBasket = true, bool $allowClosed = false)
     {
         $wasIssued = $this->issued_at !== null;
         if ($this->status === self::STATUS_PAID) {
             return;
         }
+        if (! $allowClosed && ! $this->canPay()) {
+            $this->logIgnoredPayment();
 
-        // Atomic state transition: a single SQL UPDATE WHERE status != 'paid'
-        // is the only way to ensure that two parallel webhooks (or a webhook
-        // racing the customer's manual return) cannot both run the side
-        // effects (event(InvoiceCompleted), service activation, balance
-        // deduction). affected_rows > 0 -> we are the thread that flipped it,
-        // we own the side effects. affected_rows = 0 -> someone else did.
+            return;
+        }
+
+        // Atomic conditional UPDATE: only the caller that flips the row runs the side effects, and a payment never reopens a closed invoice.
         $paidAt = now();
         $newInvoiceNumber = $this->invoice_number;
         if (InvoiceService::getBillingType() == InvoiceService::PRO_FORMA) {
             $date = $this->created_at->format('Y-m');
             $newInvoiceNumber = Invoice::generateInvoiceNumber($date, false);
         }
-        $affected = static::where('id', $this->id)
-            ->where('status', '!=', self::STATUS_PAID)
-            ->update([
-                'status' => self::STATUS_PAID,
-                'paid_at' => $paidAt,
-                'invoice_number' => $newInvoiceNumber,
-            ]);
+        $query = static::where('id', $this->id);
+        if ($allowClosed) {
+            $query->where('status', '!=', self::STATUS_PAID);
+        } else {
+            $query->whereIn('status', [self::STATUS_PENDING, self::STATUS_FAILED]);
+        }
+        $affected = $query->update([
+            'status' => self::STATUS_PAID,
+            'paid_at' => $paidAt,
+            'invoice_number' => $newInvoiceNumber,
+        ]);
         if ($affected === 0) {
+            if (! $allowClosed && static::whereKey($this->id)->value('status') !== self::STATUS_PAID) {
+                $this->logIgnoredPayment();
+            }
+
             return;
         }
         $this->refresh();
@@ -129,6 +137,11 @@ trait InvoiceStateTrait
             $this->generatePdf(true);
         }
         event(new InvoiceFailed($this));
+    }
+
+    private function logIgnoredPayment(): void
+    {
+        logger()->warning('Payment ignored on a closed invoice', ['invoice_id' => $this->id]);
     }
 
     private function clearBasket(bool $clearBasket = true)
