@@ -72,6 +72,15 @@ return [
     'subheading' => 'Entrez votre nouveau mot de passe pour récupérer votre compte.',
   ],
   'authentication' => 'Authentification',
+  'unauthenticated' => 'Authentification requise.',
+  'logout' => [
+    'success' => 'Vous avez bien été déconnecté.',
+  ],
+  '2fa' => [
+    'required' => 'Une vérification en deux étapes est requise pour terminer la connexion.',
+    'invalid' => 'Le code de vérification est invalide ou a expiré.',
+    'email_not_expected' => 'Aucun code par e-mail n\'est attendu à cette étape.',
+  ],
   'passkeys' => [
     'title' => 'Clés d’accès',
     'description' => 'Connectez-vous de manière sécurisée avec votre appareil ou votre gestionnaire de mots de passe.',

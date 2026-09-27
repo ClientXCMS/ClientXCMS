@@ -80,8 +80,29 @@ trait CanUse2FA
 
     public function shouldUseEmailTwoFactor(string $guard, ?string $ip = null): bool
     {
-        return ($this->shouldForceTwoFactor($guard) && ! $this->twoFactorEnabled())
-            || $this->requiresEmailTwoFactorForIp($ip);
+        return $this->twoFactorFactors($guard, $ip)['email'];
+    }
+
+    /** @return array{totp: bool, email: bool} */
+    public function twoFactorFactors(string $guard, ?string $ip): array
+    {
+        $totpEnabled = $this->twoFactorEnabled();
+
+        return [
+            'totp' => $totpEnabled,
+            'email' => ($this->shouldForceTwoFactor($guard) && ! $totpEnabled) || $this->requiresEmailTwoFactorForIp($ip),
+        ];
+    }
+
+    // Trusted IP waives every factor at sign-in; the step controllers read twoFactorFactors() once a challenge is open.
+    /** @return array{totp: bool, email: bool} */
+    public function twoFactorRequirements(string $guard, ?string $ip): array
+    {
+        if ($ip !== null && in_array($ip, array_column($this->twoFactorTrustedIps(), 'ip'), true)) {
+            return ['totp' => false, 'email' => false];
+        }
+
+        return $this->twoFactorFactors($guard, $ip);
     }
 
     /** @deprecated Use {@see MfaConfig::trustedDevicesMax()}. Kept for BC. */

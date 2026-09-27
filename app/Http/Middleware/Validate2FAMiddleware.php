@@ -58,15 +58,8 @@ class Validate2FAMiddleware
 
     private function requiresTwoFactorValidation(object $user, string $guard, ?string $ip): bool
     {
-        $trustedIps = array_column($user->twoFactorTrustedIps(), 'ip');
+        $needs = $user->twoFactorRequirements($guard, $ip);
 
-        if ($ip !== null && in_array($ip, $trustedIps, true)) {
-            return false;
-        }
-
-        return ! $user->twoFactorVerified()
-            && ($user->twoFactorEnabled()
-                || $user->shouldForceTwoFactor($guard)
-                || $user->requiresEmailTwoFactorForIp($ip));
+        return ($needs['totp'] || $needs['email']) && ! $user->twoFactorVerified();
     }
 }
