@@ -19,6 +19,7 @@
 
 namespace App\Http\Controllers\Api\Client;
 
+use App\Http\Controllers\Concerns\BoundsApiPageSize;
 use App\Http\Controllers\Controller;
 use App\Models\Provisioning\Service;
 use Illuminate\Http\JsonResponse;
@@ -32,6 +33,8 @@ use Illuminate\Http\Request;
  */
 class ServiceController extends Controller
 {
+    use BoundsApiPageSize;
+
     /**
      * @OA\Get(
      *     path="/client/services",
@@ -54,7 +57,7 @@ class ServiceController extends Controller
      *         description="Items per page",
      *         required=false,
      *
-     *         @OA\Schema(type="integer", default=10)
+     *         @OA\Schema(type="integer", default=10, minimum=1, maximum=100)
      *     ),
      *
      *     @OA\Response(
@@ -65,14 +68,14 @@ class ServiceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Service::where('customer_id', $request->user()->id)
+        $query = $request->user()->services()
             ->orderBy('created_at', 'desc');
 
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
 
-        $services = $query->paginate($request->input('per_page', 10));
+        $services = $query->paginate($this->boundedPageSize($request, 10));
 
         return response()->json([
             'data' => $services->map(fn ($service) => $this->formatService($service)),

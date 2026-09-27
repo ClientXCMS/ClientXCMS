@@ -20,6 +20,7 @@
 namespace App\Http\Controllers\Api\Client;
 
 use App\Exceptions\WrongPaymentException;
+use App\Http\Controllers\Concerns\BoundsApiPageSize;
 use App\Http\Controllers\Controller;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
@@ -36,6 +37,8 @@ use Illuminate\Http\Response;
  */
 class InvoiceController extends Controller
 {
+    use BoundsApiPageSize;
+
     /**
      * @OA\Get(
      *     path="/client/invoices",
@@ -58,7 +61,7 @@ class InvoiceController extends Controller
      *         description="Items per page",
      *         required=false,
      *
-     *         @OA\Schema(type="integer", default=10)
+     *         @OA\Schema(type="integer", default=10, minimum=1, maximum=100)
      *     ),
      *
      *     @OA\Response(
@@ -77,7 +80,7 @@ class InvoiceController extends Controller
             $query->where('status', $request->filter);
         }
 
-        $invoices = $query->paginate($request->input('per_page', 10));
+        $invoices = $query->paginate($this->boundedPageSize($request, 10));
 
         return response()->json([
             'data' => $invoices->map(fn ($invoice) => $this->formatInvoice($invoice)),

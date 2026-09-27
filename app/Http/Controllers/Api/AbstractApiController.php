@@ -19,12 +19,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\BoundsApiPageSize;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class AbstractApiController
 {
+    use BoundsApiPageSize;
+
     protected string $model;
 
     protected int $perPage = 25;
@@ -41,13 +44,8 @@ class AbstractApiController
             ->allowedFilters($this->filters)
             ->allowedSorts($this->sorts)
             ->allowedIncludes($this->relations)
-            ->paginate($this->getPerPage($request))
+            ->paginate($this->boundedPageSize($request, $this->perPage))
             ->appends(request()->query());
-    }
-
-    private function getPerPage(Request $request): int
-    {
-        return (int) $request->input('per_page', $this->perPage);
     }
 
     protected function queryShow($id): LengthAwarePaginator
@@ -57,7 +55,7 @@ class AbstractApiController
             ->allowedSorts($this->sorts)
             ->allowedIncludes($this->relations)
             ->where('id', $id)
-            ->paginate($this->getPerPage(request()))
+            ->paginate($this->boundedPageSize(request(), $this->perPage))
             ->appends(request()->query());
     }
 }

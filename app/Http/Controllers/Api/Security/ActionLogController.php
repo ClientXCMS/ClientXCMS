@@ -81,7 +81,7 @@ class ActionLogController extends AbstractApiController
      *         description="Number of items per page",
      *         required=false,
      *
-     *         @OA\Schema(type="integer", default=50)
+     *         @OA\Schema(type="integer", default=50, minimum=1, maximum=100)
      *     ),
      *
      *     @OA\Parameter(

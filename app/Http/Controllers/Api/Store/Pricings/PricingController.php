@@ -84,7 +84,7 @@ class PricingController extends AbstractApiController
      *         in="query",
      *         description="Number of results per page",
      *
-     *         @OA\Schema(type="integer", default=15)
+     *         @OA\Schema(type="integer", default=15, minimum=1, maximum=100)
      *     ),
      *
      *     @OA\Parameter(
