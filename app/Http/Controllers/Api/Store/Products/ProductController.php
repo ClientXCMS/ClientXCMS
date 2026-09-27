@@ -160,7 +160,7 @@ class ProductController extends AbstractApiController
      *          in="query",
      *          description="Number of items per page",
      *
-     *          @OA\Schema(type="integer", default=12)
+     *          @OA\Schema(type="integer", default=12, minimum=1, maximum=100)
      *      ),
      *
      *      @OA\Response(

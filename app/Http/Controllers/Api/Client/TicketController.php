@@ -19,6 +19,7 @@
 
 namespace App\Http\Controllers\Api\Client;
 
+use App\Http\Controllers\Concerns\BoundsApiPageSize;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Helpdesk\ReplyTicketRequest;
 use App\Http\Requests\Helpdesk\SubmitTicketRequest;
@@ -36,6 +37,8 @@ use Illuminate\Http\Response;
  */
 class TicketController extends Controller
 {
+    use BoundsApiPageSize;
+
     /**
      * @OA\Get(
      *     path="/client/tickets",
@@ -58,7 +61,7 @@ class TicketController extends Controller
      *         description="Items per page",
      *         required=false,
      *
-     *         @OA\Schema(type="integer", default=10)
+     *         @OA\Schema(type="integer", default=10, minimum=1, maximum=100)
      *     ),
      *
      *     @OA\Response(
@@ -78,7 +81,7 @@ class TicketController extends Controller
             $query->where('status', $request->filter);
         }
 
-        $tickets = $query->paginate($request->input('per_page', 10));
+        $tickets = $query->paginate($this->boundedPageSize($request, 10));
 
         return response()->json([
             'data' => $tickets->map(fn ($ticket) => [

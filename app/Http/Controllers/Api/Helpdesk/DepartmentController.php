@@ -75,7 +75,7 @@ class DepartmentController extends AbstractApiController
      *         description="Number of items per page",
      *         required=false,
      *
-     *         @OA\Schema(type="integer", default=10)
+     *         @OA\Schema(type="integer", default=10, minimum=1, maximum=100)
      *     ),
      *
      *     @OA\Parameter(

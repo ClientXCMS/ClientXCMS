@@ -60,6 +60,31 @@ class ServiceControllerTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
+    public function test_hidden_services_are_not_listed(): void
+    {
+        [$customer, $token] = $this->authenticatedCustomer();
+        $visible = $this->createServiceModel($customer->id, 'active');
+        $this->createServiceModel($customer->id, 'hidden');
+
+        $this->withHeaders($this->authHeaders($token))
+            ->getJson('/api/client/services')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $visible->id)
+            ->assertJsonPath('meta.total', 1);
+    }
+
+    public function test_hidden_services_are_not_listed_when_filtered_by_hidden_status(): void
+    {
+        [$customer, $token] = $this->authenticatedCustomer();
+        $this->createServiceModel($customer->id, 'hidden');
+
+        $this->withHeaders($this->authHeaders($token))
+            ->getJson('/api/client/services?status=hidden')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
     public function test_customer_cannot_see_other_customer_services(): void
     {
         [$customer, $token] = $this->authenticatedCustomer();
