@@ -3,7 +3,10 @@
 namespace Tests\Feature\Api\Client;
 
 use App\Models\Account\Customer;
+use App\Services\Account\AccountDeletionException;
+use App\Services\Account\AccountDeletionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Hash;
 use Tests\RefreshExtensionDatabase;
 use Tests\TestCase;
@@ -170,5 +173,39 @@ class ProfileControllerTest extends TestCase
             ->getJson('/api/client/profile/2fa/recovery-codes');
 
         $response->assertBadRequest();
+    }
+
+    public function test_delete_account_error_returns_a_generic_message_and_is_reported(): void
+    {
+        Exceptions::fake();
+        [$customer, $token] = $this->authenticatedCustomer();
+        $this->mock(AccountDeletionService::class)->shouldReceive('delete')->andThrow(new \RuntimeException('internal-database-detail'));
+
+        $response = $this->withHeaders($this->authHeaders($token))
+            ->deleteJson('/api/client/profile', ['password' => 'password']);
+
+        $response->assertStatus(400)->assertJsonPath('error', __('client.profile.delete.error'));
+        $this->assertStringNotContainsString('internal-database-detail', $response->getContent());
+        Exceptions::assertReported(\RuntimeException::class);
+    }
+
+    public function test_delete_account_blocking_reason_keeps_its_message(): void
+    {
+        [$customer, $token] = $this->authenticatedCustomer();
+        $this->mock(AccountDeletionService::class)->shouldReceive('delete')->andThrow(new AccountDeletionException(__('client.profile.delete.has_blocking_reasons')));
+
+        $response = $this->withHeaders($this->authHeaders($token))
+            ->deleteJson('/api/client/profile', ['password' => 'password']);
+
+        $response->assertStatus(400)->assertJsonPath('error', __('client.profile.delete.has_blocking_reasons'));
+    }
+
+    public function test_delete_account_without_password_stays_a_422(): void
+    {
+        [$customer, $token] = $this->authenticatedCustomer();
+
+        $response = $this->withHeaders($this->authHeaders($token))->deleteJson('/api/client/profile');
+
+        $response->assertStatus(422)->assertJsonValidationErrors('password');
     }
 }

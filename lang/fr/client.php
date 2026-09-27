@@ -87,6 +87,7 @@ return [
     'errors' => [
       'not_supported' => 'Ce moyen de paiement n\'est pas supporté',
       'not_found' => 'Ce moyen de paiement n\'a pas été trouvé',
+      'generic' => 'Une erreur est survenue avec ce moyen de paiement. Veuillez réessayer plus tard.',
     ],
   ],
   'services' => [
@@ -243,6 +244,7 @@ return [
       'must_confirm' => 'Vous devez confirmer la suppression.',
       '2fa_required' => 'Le code 2FA est requis.',
       'has_blocking_reasons' => 'Impossible de supprimer le compte : des raisons bloquantes existent.',
+      'error' => 'Une erreur est survenue lors de la suppression de votre compte. Veuillez réessayer plus tard.',
       'deleted_user_placeholder' => 'Utilisateur supprimé',
     ],
     'security' => [

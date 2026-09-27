@@ -25,6 +25,7 @@ use App\Services\Store\GatewayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\ValidationException;
 
 /**
  * @OA\Tag(
@@ -155,9 +156,13 @@ class PaymentMethodController extends Controller
             return response()->json([
                 'message' => __('client.payment-methods.success'),
             ]);
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
+            report($e);
+
             return response()->json([
-                'error' => $e->getMessage(),
+                'error' => __('client.payment-methods.errors.generic'),
             ], 400);
         }
     }
@@ -253,9 +258,13 @@ class PaymentMethodController extends Controller
             return response()->json([
                 'message' => __('client.payment-methods.deleted'),
             ]);
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
+            report($e);
+
             return response()->json([
-                'error' => $e->getMessage(),
+                'error' => __('client.payment-methods.errors.generic'),
             ], 400);
         }
     }

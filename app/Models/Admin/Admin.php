@@ -159,6 +159,13 @@ class Admin extends Authenticatable implements NotifiablePlaceholderInterface
         'security_answer',
     ];
 
+    protected $visible = [
+        'id',
+        'username',
+        'firstname',
+        'lastname',
+    ];
+
     protected $casts = [
         'email_verified_at' => 'datetime',
         'expires_at' => 'datetime',

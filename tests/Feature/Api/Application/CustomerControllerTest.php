@@ -245,4 +245,21 @@ class CustomerControllerTest extends TestCase
         $response->assertStatus(200);
         $this->assertEquals(0, $customer->fresh()->twoFactorEnabled());
     }
+
+    public function test_api_application_customer_metadata_include_hides_sensitive_keys(): void
+    {
+        $customer = Customer::factory()->create();
+        $customer->twoFactorEnable('JBSWY3DPEHPK3PXP');
+        $customer->attachMetadata('social_github_refresh_token', 'refresh-token-value');
+        $customer->attachMetadata('autologin_key', 'autologin-value');
+        $customer->attachMetadata('panel_username', 'panel-user');
+
+        $response = $this->performAction('GET', self::API_URL.'?include=metadata', [self::ABILITY_INDEX]);
+
+        $response->assertStatus(200);
+        $keys = collect($response->json('data'))->firstWhere('id', $customer->id)['metadata'];
+        $this->assertSame(['panel_username'], array_column($keys, 'key'));
+        $this->assertStringNotContainsString('refresh-token-value', $response->getContent());
+        $this->assertStringNotContainsString('autologin-value', $response->getContent());
+    }
 }
