@@ -115,20 +115,11 @@ class ServerControllerTest extends TestCase
 
     public function test_admin_server_update_without_credentials(): void
     {
-        $id = Server::create([
-            'name' => 'Test Server',
+        $id = $this->createServerWithCredentials();
+        $response = $this->performAdminAction('PUT', self::API_URL."/{$id}", [
+            'name' => 'Renamed Server',
             'address' => 'test.com',
             'hostname' => 'test.com',
-            'status' => 'active',
-            'username' => 'aa',
-            'password' => 'aa',
-            'type' => 'none',
-            'port' => 443,
-        ])->id;
-        $response = $this->performAdminAction('PUT', self::API_URL."/{$id}", [
-            'name' => 'Test Server',
-            'address' => 'test2.com',
-            'hostname' => 'test2.com',
             'status' => 'active',
             'type' => 'none',
             'username' => '',
@@ -138,9 +129,93 @@ class ServerControllerTest extends TestCase
         $response->assertStatus(302);
         $response->assertSessionHas('success');
         $server = Server::find($id);
+        $this->assertEquals('Renamed Server', $server->name);
         $this->assertEquals('aa', $server->username);
         $this->assertEquals('aa', $server->password);
-        // assertt does not change
+    }
+
+    public function test_admin_server_update_address_without_credentials_is_refused(): void
+    {
+        $id = $this->createServerWithCredentials();
+        $this->performAdminAction('GET', self::API_URL);
+
+        $response = $this->from(self::API_URL."/{$id}")->put(self::API_URL."/{$id}", [
+            'name' => 'Test Server',
+            'address' => 'test2.com',
+            'hostname' => 'test2.com',
+            'status' => 'active',
+            'type' => 'none',
+            'username' => '',
+            'password' => '',
+            'port' => 443,
+        ]);
+
+        $response->assertRedirect(self::API_URL."/{$id}");
+        $response->assertSessionHasErrors(['password' => __('provisioning.admin.servers.credentials_required')]);
+        $this->assertEquals('test.com', Server::find($id)->address);
+    }
+
+    public function test_admin_server_update_without_permission(): void
+    {
+        $id = $this->createServerWithCredentials();
+        $response = $this->performAdminAction('PUT', self::API_URL."/{$id}", [
+            'name' => 'Renamed Server',
+            'address' => 'test.com',
+            'hostname' => 'test.com',
+            'status' => 'active',
+            'type' => 'none',
+            'port' => 443,
+        ], ['admin.manage_products']);
+        $response->assertStatus(403);
+        $this->assertEquals('Test Server', Server::find($id)->name);
+    }
+
+    public function test_admin_server_address_change_without_permission_is_forbidden_whatever_the_stored_credentials(): void
+    {
+        $withCredentials = $this->createServerWithCredentials();
+        $withoutCredentials = $this->createServerWithCredentials('Bare Server', 'bare.test', '');
+        foreach ([$withCredentials, $withoutCredentials] as $id) {
+            $response = $this->performAdminAction('PUT', self::API_URL."/{$id}", [
+                'name' => 'Renamed Server',
+                'address' => 'elsewhere.test',
+                'hostname' => 'elsewhere.test',
+                'status' => 'active',
+                'type' => 'none',
+                'port' => 443,
+            ], ['admin.manage_products']);
+            $response->assertStatus(403);
+            $this->assertNotEquals('elsewhere.test', Server::find($id)->address);
+        }
+    }
+
+    public function test_admin_server_update_with_address_as_array_is_a_validation_error(): void
+    {
+        $id = $this->createServerWithCredentials();
+        $response = $this->performAdminAction('PUT', self::API_URL."/{$id}", [
+            'name' => 'Test Server',
+            'address' => ['elsewhere.test'],
+            'hostname' => 'test.com',
+            'status' => 'active',
+            'type' => 'none',
+            'port' => 443,
+        ]);
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['address']);
+        $this->assertEquals('test.com', Server::find($id)->address);
+    }
+
+    private function createServerWithCredentials(string $name = 'Test Server', string $address = 'test.com', string $secret = 'aa'): int
+    {
+        return Server::create([
+            'name' => $name,
+            'address' => $address,
+            'hostname' => $address,
+            'status' => 'active',
+            'username' => $secret,
+            'password' => $secret,
+            'type' => 'none',
+            'port' => 443,
+        ])->id;
     }
 
     public function test_admin_server_test_bad_parameters(): void
