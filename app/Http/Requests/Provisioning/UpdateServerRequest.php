@@ -19,8 +19,10 @@
 
 namespace App\Http\Requests\Provisioning;
 
+use App\Services\Provisioning\ServerConnectionTestPayload;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 /**
  * @OA\Schema(
@@ -47,6 +49,10 @@ class UpdateServerRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        if (auth('admin')->check()) {
+            return staff_has_permission(\App\Models\Admin\Permission::MANAGE_SERVERS);
+        }
+
         return true;
     }
 
@@ -75,6 +81,18 @@ class UpdateServerRequest extends FormRequest
             'address' => [Rule::requiredIf($this->input('type') !== 'domain'), 'nullable', 'string'],
             'maxaccounts' => ['numeric', 'min:0', 'nullable'],
             'test_mode' => ['nullable'],
+        ];
+    }
+
+    public function after(ServerConnectionTestPayload $payload): array
+    {
+        return [
+            function (Validator $validator) use ($payload) {
+                $input = $this->all();
+                if ($validator->errors()->isEmpty() && $payload->requiresCredentials($input, $this->route('server')) && ! $payload->hasCredentials($input)) {
+                    $validator->errors()->add('password', __('provisioning.admin.servers.credentials_required'));
+                }
+            },
         ];
     }
 }

@@ -23,3 +23,9 @@ passwordBtn.forEach((button) => {
         generate_password(button);
     });
 });
+document.addEventListener('toggle.hs.toggle-select', (e) => {
+    const input = document.getElementById(e.target.getAttribute('aria-controls') || '');
+    if (input) {
+        e.target.setAttribute('aria-pressed', input.type === 'text' ? 'true' : 'false');
+    }
+});

@@ -313,6 +313,7 @@ Merci de bien vouloir traiter ma demande d\'annulation.',
       'address' => 'Adresse IP',
       'port' => 'Port',
       'type' => 'Type de serveur',
+      'credentials_required' => 'Pour changer l\'adresse ou le nom d\'hôte de ce serveur, saisissez à nouveau l\'identifiant et le mot de passe : ceux enregistrés ne sont jamais envoyés vers une autre destination.',
       'show' => [
         'title' => 'Fiche serveur :name',
         'subheading' => 'Voici les informations liées à ce serveur créé le :date',

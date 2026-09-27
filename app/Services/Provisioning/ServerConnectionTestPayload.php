@@ -40,7 +40,7 @@ class ServerConnectionTestPayload
         // Stored credentials only ever travel to the stored host: borrowing them for an address the caller chose would leak them.
         $customTarget = $this->targetsAnotherHost($input, $server);
 
-        if ($customTarget && ! $this->hasCredentials($input)) {
+        if ($this->requiresCredentials($input, $server) && ! $this->hasCredentials($input)) {
             throw new CustomTargetRequiresCredentialsException;
         }
 
@@ -55,6 +55,11 @@ class ServerConnectionTestPayload
         return $input;
     }
 
+    public function requiresCredentials(array $input, Server $server): bool
+    {
+        return $this->targetsAnotherHost($input, $server) && $this->storesCredentials($server);
+    }
+
     private function targetsAnotherHost(array $input, Server $server): bool
     {
         foreach (['address', 'hostname'] as $field) {
@@ -66,7 +71,7 @@ class ServerConnectionTestPayload
         return false;
     }
 
-    private function hasCredentials(array $input): bool
+    public function hasCredentials(array $input): bool
     {
         foreach (self::CREDENTIALS as $field) {
             if (! $this->filled($input, $field)) {
@@ -75,6 +80,17 @@ class ServerConnectionTestPayload
         }
 
         return true;
+    }
+
+    private function storesCredentials(Server $server): bool
+    {
+        foreach (self::CREDENTIALS as $field) {
+            if (trim((string) $server->{$field}) !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function filled(array $input, string $field): bool

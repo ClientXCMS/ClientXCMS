@@ -31,21 +31,19 @@ function updateDomainFields() {
 }
 
 const text = button.innerText
-typeSelect.addEventListener("change", (e) => {
-    const selected = e.target.options[e.target.selectedIndex];
-    const currentLabel = labels[selected.value];
-    if (currentLabel){
-        document.querySelector("label[for^=\"username\"]").innerHTML = currentLabel[0];
-        document.querySelector("label[for^=\"password\"]").innerHTML = currentLabel[1];
+function updateCredentialLabels() {
+    const currentLabel = labels[typeSelect.value];
+    if (currentLabel) {
+        document.querySelector("label[for^=\"username\"]").textContent = currentLabel[0];
+        document.querySelector("label[for^=\"password\"]").textContent = currentLabel[1];
     }
+}
+
+typeSelect.addEventListener("change", () => {
+    updateCredentialLabels();
     updateDomainFields();
 })
-const selected = typeSelect.options[typeSelect.selectedIndex];
-const currentLabel = labels[selected.value];
-if (currentLabel){
-    document.querySelector("label[for^=\"username\"]").innerHTML = currentLabel[0];
-    document.querySelector("label[for^=\"password\"]").innerHTML = currentLabel[1];
-}
+updateCredentialLabels();
 updateDomainFields();
 
 button.addEventListener("click", (e) => {

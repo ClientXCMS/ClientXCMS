@@ -830,6 +830,7 @@ return [
   ],
   'create' => 'Créer',
   'blanktochange' => 'Laissez vide pour ne pas changer',
+  'toggle_password_visibility' => 'Afficher ou masquer le mot de passe',
   'blanktonolimit' => 'Laissez vide pour ne pas limiter',
   'updatedetails' => 'Mettre à jour les détails',
   'backtosite' => 'Retour au site',
