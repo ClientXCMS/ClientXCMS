@@ -100,7 +100,7 @@
                         </div>
 
                         <div class="flex flex-col">
-                            @include('admin/shared/password', ['name' => 'password', 'label' =>  $labels[$item->type][1] ?? __('global.password'), 'value' => old('password', $item->password), 'attributes' => ['autocomplete' => 'off']])
+                            @include('admin/shared/password', ['name' => 'password', 'label' => $labels[$item->type][1] ?? __('global.password'), 'attributes' => ['autocomplete' => 'new-password']])
                         </div>
                         <input type="hidden" name="id" value="{{ $item->id }}">
                     </div>

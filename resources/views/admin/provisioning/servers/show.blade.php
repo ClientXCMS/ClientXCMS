@@ -81,11 +81,12 @@
                             </div>
 
                             <div class="flex flex-col">
-                                @include('admin/shared/input', ['name' => 'username', 'label' => $labels[$item->type][0] ?? __('global.username'), 'value' => old('username', $item->username), 'help' => __('admin.blanktochange'), 'attributes' => ['autocomplete' => 'off']])
+                                @include('admin/shared/input', ['name' => 'username', 'id' => 'username', 'label' => $labels[$item->type][0] ?? __('global.username'), 'value' => $item->type === \App\Contracts\Store\ProductTypeInterface::DOMAIN ? old('username', $item->username) : old('username'), 'attributes' => ['autocomplete' => 'off', 'aria-describedby' => 'username-help']])
+                                <p id="username-help" class="text-sm text-gray-500 dark:text-gray-400 mt-2">{{ __('admin.blanktochange') }}</p>
                             </div>
 
                             <div class="flex flex-col">
-                                @include('admin/shared/password', ['name' => 'password', 'label' =>  $labels[$item->type][1] ?? __('global.password'), 'value' => old('password', $item->password), 'help' => __('admin.blanktochange'), 'attributes' => ['autocomplete' => 'off']])
+                                @include('admin/shared/password', ['name' => 'password', 'label' => $labels[$item->type][1] ?? __('global.password'), 'value' => $item->type === \App\Contracts\Store\ProductTypeInterface::DOMAIN ? $item->password : null, 'help' => __('admin.blanktochange'), 'attributes' => ['autocomplete' => 'new-password']])
                             </div>
                             <input type="hidden" name="id" value="{{ $item->id }}">
                         </div>

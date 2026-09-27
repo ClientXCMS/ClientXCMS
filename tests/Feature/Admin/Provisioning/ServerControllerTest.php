@@ -64,6 +64,47 @@ class ServerControllerTest extends TestCase
 
     }
 
+    public function test_admin_server_show_never_renders_stored_credentials(): void
+    {
+        $id = $this->createServerWithCredentials('Test Server', 'test.com', 'stored-secret-7QZ');
+
+        $response = $this->performAdminAction('GET', self::API_URL."/{$id}");
+
+        $response->assertStatus(200);
+        $response->assertDontSee('stored-secret-7QZ');
+        $response->assertSee(__('admin.blanktochange'));
+        $response->assertSee('autocomplete="new-password"', false);
+    }
+
+    public function test_admin_server_show_keeps_domain_env_key_names(): void
+    {
+        $id = Server::create([
+            'name' => 'Registrar',
+            'address' => 'registrar.test',
+            'hostname' => 'registrar.test',
+            'status' => 'active',
+            'username' => 'REGISTRAR_API_KEY_ENV',
+            'password' => 'REGISTRAR_SECRET_ENV',
+            'type' => 'domain',
+            'port' => 443,
+        ])->id;
+
+        $response = $this->performAdminAction('GET', self::API_URL."/{$id}");
+
+        $response->assertStatus(200);
+        $response->assertSee('REGISTRAR_API_KEY_ENV');
+        $response->assertSee('REGISTRAR_SECRET_ENV');
+    }
+
+    public function test_admin_server_show_without_permission(): void
+    {
+        $id = $this->createServerWithCredentials();
+
+        $response = $this->performAdminAction('GET', self::API_URL."/{$id}", [], ['admin.manage_products']);
+
+        $response->assertStatus(403);
+    }
+
     public function test_admin_server_update(): void
     {
         $id = Server::create([
