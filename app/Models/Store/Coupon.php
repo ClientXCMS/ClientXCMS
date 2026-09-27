@@ -222,16 +222,17 @@ class Coupon extends Model
 
             return false;
         }
-        if ($this->max_uses > 0 && $this->usages()->count() >= $this->max_uses) {
+        $basketInvoiceId = $basket->getMetadata('invoice') !== null ? (int) $basket->getMetadata('invoice') : null;
+        if ($this->max_uses > 0 && $this->reservedUses(null, $basketInvoiceId) >= $this->max_uses) {
             if ($flash) {
                 Session::flash('error', __('coupon.coupon_max_uses'));
             }
 
             return false;
         }
-        if ($this->max_uses_per_customer > 0 && $this->usages()->where('customer_id', $basket->user_id)->count() >= $this->max_uses_per_customer) {
+        if ($this->max_uses_per_customer > 0 && $basket->user_id !== null && $this->reservedUses($basket->user_id, $basketInvoiceId) >= $this->max_uses_per_customer) {
             if ($flash) {
-                Session::flash('error', __('coupon.coupon_max_use_per_customer'));
+                Session::flash('error', __('coupon.coupon_max_uses_per_customer'));
             }
 
             return false;
@@ -272,6 +273,22 @@ class Coupon extends Model
         }
 
         return true;
+    }
+
+    // Confirmed uses (counter column globally, usage rows per customer) plus open invoices already carrying the coupon.
+    public function reservedUses(?int $customerId = null, ?int $exceptInvoiceId = null): int
+    {
+        $confirmed = $customerId === null
+            ? (int) $this->getAttribute('usages')
+            : $this->usages()->where('customer_id', $customerId)->count();
+
+        $pending = Invoice::whereIn('status', [Invoice::STATUS_PENDING, Invoice::STATUS_FAILED])
+            ->when($customerId !== null, fn ($query) => $query->where('customer_id', $customerId))
+            ->when($exceptInvoiceId !== null, fn ($query) => $query->whereKeyNot($exceptInvoiceId))
+            ->whereHas('items', fn ($query) => $query->where('discount->id', $this->id))
+            ->count();
+
+        return $confirmed + $pending;
     }
 
     public function getPricingRecurring(string $recurring, string $type)

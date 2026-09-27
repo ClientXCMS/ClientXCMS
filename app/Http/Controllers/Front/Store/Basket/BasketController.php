@@ -263,7 +263,11 @@ class BasketController extends \App\Http\Controllers\Controller
             return redirect()->route('front.store.basket.checkout')->with('error', __('store.checkout.minimal_amount', ['amount' => formatted_price($gateway->minimal_amount)]));
         }
         AccountEditService::saveCurrentCustomer($request->validated());
+        $hadCoupon = $basket->coupon_id !== null;
         $invoice = InvoiceService::createInvoiceFromBasket($basket, $gateway);
+        if ($hadCoupon && $basket->coupon_id === null) {
+            return redirect()->route('front.invoices.show', $invoice)->with('warning', __('coupon.discount_removed_at_checkout'));
+        }
         try {
             if ($request->has('paymentmethod') && $request->paymentmethod != null) {
                 $source = auth('web')->user()->getSourceById($request->paymentmethod);

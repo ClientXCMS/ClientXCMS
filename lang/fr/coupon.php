@@ -18,6 +18,7 @@ return [
   'coupon_placeholder' => 'Entrez votre code de réduction',
   'coupon_applied' => 'Coupon appliqué',
   'coupon_removed' => 'Coupon supprimé',
+  'discount_removed_at_checkout' => 'Ce code de réduction n\'est plus disponible : votre commande a été créée sans la réduction. Vérifiez le nouveau montant avant de régler la facture.',
   'subtotal_without_coupon' => 'Sous-total sans coupon',
   'subtotal_with_coupon' => 'Sous-total avec coupon',
   'discount_price' => 'Réduction appliquée sur le prix',

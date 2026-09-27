@@ -37,11 +37,13 @@ use App\Models\Provisioning\Service;
 use App\Models\Provisioning\ServiceRenewals;
 use App\Models\Store\Basket\Basket;
 use App\Models\Store\Basket\BasketRow;
+use App\Models\Store\Coupon;
 use App\Models\Store\Product;
 use App\Services\Store\PricingService;
 use App\Services\Store\RecurringService;
 use App\Services\Store\TaxesService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class InvoiceService
 {
@@ -55,31 +57,34 @@ class InvoiceService
 
     public static function createInvoiceFromBasket(Basket $basket, Gateway $gateway): Invoice
     {
-        // Re-validate the coupon at checkout time. The customer applied the
-        // coupon at basket-time (Coupon::isValid), but between that moment
-        // and the actual invoice creation the coupon may have expired,
-        // reached its global cap, lost its first-order eligibility, or had
-        // its product allowlist tightened. Without this guard the invoice
-        // is created with the discount even though the coupon is no longer
-        // valid; a customer who notices the latency window can pin a stale
-        // 'first month free' coupon long after the campaign ended.
-        if ($basket->coupon_id !== null) {
-            $coupon = \App\Models\Store\Coupon::find($basket->coupon_id);
-            if ($coupon === null || ! $coupon->isValid($basket, false)) {
+        [$invoice, $created] = DB::transaction(function () use ($basket, $gateway) {
+            // The coupon lock must be the first read: InnoDB freezes the transaction snapshot at its first consistent read.
+            $coupon = $basket->coupon_id !== null ? Coupon::whereKey($basket->coupon_id)->lockForUpdate()->first() : null;
+            if ($basket->coupon_id !== null && ($coupon === null || ! $coupon->isValid($basket, false))) {
                 $basket->coupon_id = null;
                 $basket->save();
             }
+            $basket->refresh();
+
+            return self::saveInvoiceFromBasket($basket, $gateway);
+        });
+        if ($created) {
+            event(new InvoiceCreated($invoice));
         }
-        // On sauvegarde tout les champs de la table invoice sans les codes promotionnelle.
+
+        return $invoice;
+    }
+
+    private static function saveInvoiceFromBasket(Basket $basket, Gateway $gateway): array
+    {
         $currency = $basket->items->first()->currency;
-        // Si une facture est déjà liée au panier, on la met à jour
         if ($basket->getMetadata('invoice') != null) {
             $invoice = Invoice::find($basket->getMetadata('invoice'));
             if ($invoice != null) {
                 if ($invoice->isElectronicallyLocked()) {
                     $invoice->update(['paymethod' => $gateway->uuid]);
 
-                    return $invoice;
+                    return [$invoice, false];
                 }
                 $invoice->update([
                     'customer_id' => $basket->user_id,
@@ -96,9 +101,7 @@ class InvoiceService
                 $invoice->items()->delete();
                 self::createInvoiceItemsFromBasket($basket, $invoice);
 
-                event(new InvoiceCreated($invoice));
-
-                return $invoice;
+                return [$invoice, true];
             }
         }
         $days = setting('remove_pending_invoice', 0) != 0 ? setting('remove_pending_invoice') : 7;
@@ -118,9 +121,8 @@ class InvoiceService
         self::createInvoiceItemsFromBasket($basket, $invoice);
         $basket->attachMetadata('invoice', $invoice->id);
         $invoice->attachMetadata('basket', $basket->id);
-        event(new InvoiceCreated($invoice));
 
-        return $invoice;
+        return [$invoice, true];
     }
 
     public static function createServicesFromInvoiceItem(Invoice $invoice, InvoiceItem $item): array

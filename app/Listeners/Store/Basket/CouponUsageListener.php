@@ -24,80 +24,44 @@ use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceItem;
 use App\Models\Store\Coupon;
 use App\Models\Store\CouponUsage;
+use Illuminate\Support\Facades\DB;
 
 class CouponUsageListener
 {
     public function handle(InvoiceCompleted $event): void
     {
-        $couponsUsed = [];
         /** @var Invoice $invoice */
         $invoice = $event->invoice;
-        /** @var InvoiceItem $item */
-        foreach ($invoice->items as $item) {
-            $couponId = $item->couponId();
-            if ($couponId && ! in_array($couponId, $couponsUsed)) {
-                $couponsUsed[] = [$couponId, $this->getCouponAmount($invoice, $couponId)];
-            }
+        $couponIds = $invoice->items->map(fn (InvoiceItem $item) => $item->couponId())->filter()->unique();
+        foreach ($couponIds as $couponId) {
+            $this->recordUsage($invoice, (int) $couponId);
         }
-        if (empty($couponsUsed)) {
-            return;
-        }
-        foreach ($couponsUsed as [$couponId, $amount]) {
-            $coupon = Coupon::find($couponId);
-            if (! $coupon) {
-                continue;
+    }
+
+    private function recordUsage(Invoice $invoice, int $couponId): void
+    {
+        DB::transaction(function () use ($invoice, $couponId) {
+            $coupon = Coupon::whereKey($couponId)->lockForUpdate()->first();
+            if ($coupon === null) {
+                return;
             }
-            // Atomic enforcement of max_uses: a single SQL UPDATE WHERE
-            // (max_uses = 0 OR usages < max_uses) prevents the TOCTOU
-            // window between Coupon::isValid() at apply-time and the
-            // listener firing at complete-time. Two parallel completions
-            // that both passed isValid only get one increment; the
-            // second one sees affected_rows = 0 and skips the usage row
-            // (the discount on that invoice is preserved but the operator
-            // sees the warning in the log so they can audit / refund).
-            $updated = Coupon::where('id', $coupon->id)
-                ->where(function ($q) {
-                    $q->where('max_uses', 0)
-                        ->orWhereColumn('usages', '<', 'max_uses');
-                })
-                ->update(['usages' => \DB::raw('usages + 1')]);
-            if ($updated === 0) {
-                logger()->warning('Coupon::max_uses exceeded under race - usage not recorded', [
+            CouponUsage::insert([
+                'coupon_id' => $coupon->id,
+                'customer_id' => $invoice->customer_id,
+                'used_at' => now(),
+                'amount' => $this->getCouponAmount($invoice, $coupon->id),
+            ]);
+            Coupon::whereKey($coupon->id)->increment('usages');
+            // A paid discount is a fact: it is always counted, and only a confirmed overflow is reported.
+            $globalExceeded = $coupon->max_uses > 0 && (int) $coupon->getAttribute('usages') + 1 > $coupon->max_uses;
+            $customerExceeded = $coupon->max_uses_per_customer > 0 && $coupon->usages()->where('customer_id', $invoice->customer_id)->count() > $coupon->max_uses_per_customer;
+            if ($globalExceeded || $customerExceeded) {
+                logger()->warning('Coupon cap exceeded by a paid invoice', [
                     'coupon_id' => $coupon->id,
                     'invoice_id' => $invoice->id,
                 ]);
-
-                continue;
             }
-            // Per-customer cap enforced inside a transaction with a row
-            // lock on the coupon, so two parallel checkouts for the same
-            // customer cannot both insert past the limit.
-            \DB::transaction(function () use ($coupon, $invoice, $amount) {
-                $locked = Coupon::where('id', $coupon->id)->lockForUpdate()->first();
-                if ($locked->max_uses_per_customer > 0) {
-                    $existing = CouponUsage::where('coupon_id', $locked->id)
-                        ->where('customer_id', $invoice->customer_id)
-                        ->count();
-                    if ($existing >= $locked->max_uses_per_customer) {
-                        logger()->warning('Coupon::max_uses_per_customer exceeded under race - usage row skipped', [
-                            'coupon_id' => $locked->id,
-                            'customer_id' => $invoice->customer_id,
-                            'invoice_id' => $invoice->id,
-                        ]);
-                        // The global counter was incremented before this check: hand it back, since no usage row is recorded.
-                        Coupon::where('id', $locked->id)->update(['usages' => \DB::raw('GREATEST(usages - 1, 0)')]);
-
-                        return;
-                    }
-                }
-                CouponUsage::insert([
-                    'coupon_id' => $locked->id,
-                    'customer_id' => $invoice->customer_id,
-                    'used_at' => now(),
-                    'amount' => $amount,
-                ]);
-            });
-        }
+        });
     }
 
     private function getCouponAmount(Invoice $invoice, int $couponId = 0): float
