@@ -84,53 +84,54 @@ class PayPalMethodType extends AbstractGatewayType
         $currency = $request->input('mc_currency');
         $status = $request->input('payment_status');
         $caseType = $request->input('case_type');
-        $receiverEmail = Str::lower($request->input('receiver_email'));
+        $receiverEmail = Str::lower((string) $request->input('receiver_email'));
 
         if ($status === 'Canceled_Reversal' || $caseType !== null) {
-            return response()->noContent();
+            return response('', 200);
         }
-        $invoice = Invoice::find($request->input('custom'));
-        if ($invoice == null) {
-            return response()->noContent();
-        }
-        $invoice->update(['external_id' => $paymentId]);
-        if ($status === 'Reversed' || $status === 'Pending') {
-            if ($status === 'Reversed') {
-                $invoice->refund();
-            }
 
-            return response()->noContent();
+        $merchantEmail = Str::lower((string) env('PAYPAL_EMAIL'));
+        if ($merchantEmail === '' || $receiverEmail !== $merchantEmail) {
+            return $this->ignoreNotification('receiver mismatch', $paymentId);
+        }
+
+        $invoice = Invoice::find($request->input('custom'));
+        if ($invoice === null || $invoice->paymethod !== $gateway->uuid) {
+            return $this->ignoreNotification('unknown invoice', $paymentId);
+        }
+        if ($currency !== $invoice->currency) {
+            return $this->ignoreNotification('currency mismatch', $paymentId);
+        }
+
+        if ($status === 'Reversed') {
+            $parentTxnId = $request->input('parent_txn_id');
+            if ($parentTxnId === null || $parentTxnId !== $invoice->external_id) {
+                return $this->ignoreNotification('reversal of another transaction', $paymentId);
+            }
+            $invoice->refund();
+
+            return response('', 200);
         }
 
         if ($status !== 'Completed') {
-            return response()->json([
-                'success' => false,
-                'error' => 'Invalid payment status',
-            ]);
+            return response('', 200);
         }
 
-        if ($currency !== $invoice->currency || $amount < $invoice->total) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Invalid amount/currency',
-            ]);
-        }
-
-        $email = Str::lower(env('PAYPAL_EMAIL'));
-
-        if ($receiverEmail !== $email) {
-            logger()->warning("[PayPal] Invalid email for #{$paymentId}: expected {$email} but got {$receiverEmail}.");
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Invalid receiver email',
-            ]);
+        if ($amount < $invoice->total) {
+            return $this->ignoreNotification('amount mismatch', $paymentId);
         }
         $invoice->update(['external_id' => $paymentId, 'fees' => $request->input('mc_fee')]);
         $invoice->complete();
 
-        return response()->json(['success' => true, 'message' => 'Payment completed']);
+        return response('', 200);
 
+    }
+
+    private function ignoreNotification(string $reason, mixed $paymentId)
+    {
+        logger()->warning('[PayPal] IPN ignored: '.$reason, ['txn_id' => $paymentId]);
+
+        return response('', 200);
     }
 
     public function validate(): array
