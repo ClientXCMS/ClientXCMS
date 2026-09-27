@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\Client\ProfileController;
 use App\Http\Controllers\Api\Client\ServiceController;
 use App\Http\Controllers\Api\Client\TicketController;
 use App\Http\Controllers\Webhook\HelpdeskInboundEmailController;
+use App\Http\Middleware\AuthorizeClientApi;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -49,7 +50,7 @@ Route::prefix('auth')->name('auth.')->middleware('throttle:10,1')->group(functio
 });
 
 // Protected routes (auth required)
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', AuthorizeClientApi::class])->group(function () {
     // Auth
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
     Route::middleware('abilities:2fa:pending')

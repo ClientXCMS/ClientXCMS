@@ -21,10 +21,35 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class BannedMiddleware
 {
+    public const SUSPENDED_ALLOWED_ROUTES = [
+        'front.profile.index',
+        'front.client.index',
+        'front.support.index',
+        'front.support.show',
+        'front.support.create',
+        'front.support.store',
+        'front.support',
+        'front.support.download',
+        'front.tickets.index',
+        'front.support.reply',
+        'front.support.close',
+        'front.support.reopen',
+        'api.client.profile.show',
+        'api.client.auth.2fa.verify',
+        'api.client.auth.logout',
+        'api.client.tickets.*',
+    ];
+
+    public static function allowsSuspendedAccess(?string $routeName): bool
+    {
+        return $routeName !== null && Str::is(self::SUSPENDED_ALLOWED_ROUTES, $routeName);
+    }
+
     /**
      * Handle an incoming request.
      *
@@ -43,7 +68,7 @@ class BannedMiddleware
                 return redirect()->route('login')->with('error', __('client.alerts.account_blocked', ['reason' => $user->getMetadata('banned_reason')]));
             }
             if ($user->isSuspended()) {
-                if (! in_array($request->route()->getName(), $this->authorizedRoutes())) {
+                if (! self::allowsSuspendedAccess($request->route()->getName())) {
                     return redirect()->route('front.support.index')->with('warning', __('client.alerts.account_suspended', ['reason' => $user->getMetadata('suspended_reason')]));
                 }
                 session()->flash('warning', __('client.alerts.account_suspended', ['reason' => $user->getMetadata('suspended_reason')]));
@@ -55,19 +80,6 @@ class BannedMiddleware
 
     public function authorizedRoutes()
     {
-        return [
-            'front.profile.index',
-            'front.client.index',
-            'front.support.index',
-            'front.support.show',
-            'front.support.create',
-            'front.support.store',
-            'front.support',
-            'front.support.download',
-            'front.tickets.index',
-            'front.support.reply',
-            'front.support.close',
-            'front.support.reopen',
-        ];
+        return self::SUSPENDED_ALLOWED_ROUTES;
     }
 }
