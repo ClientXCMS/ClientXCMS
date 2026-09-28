@@ -21,6 +21,12 @@ class AuthorizeClientApi
 
         // A session principal carries a TransientToken that answers true to every ability, and it exists before the second factor is validated: this API is token only.
         if ($customer->currentAccessToken() instanceof TransientToken) {
+            if ($request->routeIs('api.client.auth.2fa.*')) {
+                $this->logRefusal($request, 'session_principal');
+
+                return response()->json(['error' => __('auth.unauthenticated')], 401);
+            }
+
             $this->deny($request, 'session_principal');
         }
 
@@ -37,6 +43,13 @@ class AuthorizeClientApi
 
     private function deny(Request $request, string $reason): never
     {
+        $this->logRefusal($request, $reason);
+
+        abort(403);
+    }
+
+    private function logRefusal(Request $request, string $reason): void
+    {
         $principal = $request->user();
 
         Log::warning('Client API request refused', [
@@ -47,7 +60,5 @@ class AuthorizeClientApi
             'principal' => $principal ? $principal::class : null,
             'principal_id' => $principal?->getAuthIdentifier(),
         ]);
-
-        abort(403);
     }
 }
