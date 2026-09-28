@@ -1,12 +1,28 @@
 
 function generate_password(button) {
-    const length = 12;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$@!%*?&";
-    let password = "";
-    const form = button.closest('form');
-    for (let i = 0, n = charset.length; i < length; ++i) {
-        password += charset.charAt(Math.floor(Math.random() * n));
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const numbers = "0123456789";
+    const symbols = "$@!%*?&";
+    const length = Number.parseInt(button.dataset.passwordLength || "12", 10);
+    const requiredSets = [lower];
+    if (button.dataset.passwordMixedCase === "true") requiredSets.push(upper);
+    if (button.dataset.passwordNumbers === "true") requiredSets.push(numbers);
+    if (button.dataset.passwordSymbols === "true") requiredSets.push(symbols);
+    const charset = lower + upper + numbers + symbols;
+    const randomIndex = (maximum) => {
+        const values = new Uint32Array(1);
+        crypto.getRandomValues(values);
+        return values[0] % maximum;
+    };
+    const characters = requiredSets.map((set) => set[randomIndex(set.length)]);
+    while (characters.length < length) characters.push(charset[randomIndex(charset.length)]);
+    for (let index = characters.length - 1; index > 0; index--) {
+        const target = randomIndex(index + 1);
+        [characters[index], characters[target]] = [characters[target], characters[index]];
     }
+    const password = characters.join("");
+    const form = button.closest('form');
     const inputs = form.querySelectorAll('.input-password');
     inputs.forEach((input) => {
         input.value = password;

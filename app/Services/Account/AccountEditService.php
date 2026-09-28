@@ -24,6 +24,7 @@ use App\Rules\PhoneRule;
 use App\Rules\ZipCode;
 use App\Services\Core\LocaleService;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class AccountEditService
 {
@@ -69,7 +70,7 @@ class AccountEditService
             ];
         }
         if ($password) {
-            $rules['password'] = ['required', 'string', 'min:8', 'confirmed'];
+            $rules['password'] = ['required', 'string', 'confirmed', Password::defaults()];
         }
 
         return $rules;

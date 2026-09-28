@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Core\Auth\PasswordPolicy;
+use App\Models\Admin\Setting;
 use App\Providers\AppServiceProvider;
 use Illuminate\Contracts\Validation\UncompromisedVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,6 +22,14 @@ class PasswordPolicyTest extends TestCase
         return Validator::make(
             ['password' => $password],
             ['password' => Password::defaults()]
+        )->fails();
+    }
+
+    private function vmFails(string $password, int $legacyMinimum = 6): bool
+    {
+        return Validator::make(
+            ['password' => $password],
+            ['password' => PasswordPolicy::vm($legacyMinimum)]
         )->fails();
     }
 
@@ -54,6 +64,43 @@ class PasswordPolicyTest extends TestCase
             $this->fails('correct horse battery staple'),
             'a passphrase without digits, symbols or upper case must be accepted'
         );
+    }
+
+    public function test_configured_levels_apply_to_accounts_and_vms(): void
+    {
+        Setting::updateSettings([PasswordPolicy::SETTING => PasswordPolicy::STANDARD]);
+        $this->assertTrue($this->fails('alllowercase1'));
+        $this->assertFalse($this->fails('MixedPassword1'));
+        $this->assertFalse($this->vmFails('MixedPassword1'));
+
+        Setting::updateSettings([PasswordPolicy::SETTING => PasswordPolicy::REINFORCED]);
+        $this->assertTrue($this->vmFails('MixedPassword12'));
+        $this->assertFalse($this->vmFails('MixedPassword1!'));
+
+        Setting::updateSettings([PasswordPolicy::SETTING => PasswordPolicy::STRICT]);
+        $this->assertTrue($this->vmFails('MixedPassword1!'));
+        $this->assertFalse($this->vmFails('LongMixedPassword1!'));
+    }
+
+    public function test_compatibility_level_requires_eight_characters(): void
+    {
+        Setting::updateSettings([PasswordPolicy::SETTING => PasswordPolicy::COMPATIBILITY]);
+        $this->assertTrue($this->vmFails('seven77'));
+        $this->assertFalse($this->vmFails('eight888'));
+    }
+
+    public function test_unknown_level_uses_historical_fallbacks(): void
+    {
+        Setting::updateSettings([PasswordPolicy::SETTING => 'unknown']);
+        $this->assertFalse($this->fails('twelvecharss'));
+        $this->assertFalse($this->vmFails('sixsix'));
+        $this->assertTrue($this->vmFails('short'));
+    }
+
+    public function test_generated_password_matches_the_selected_level(): void
+    {
+        Setting::updateSettings([PasswordPolicy::SETTING => PasswordPolicy::STRICT]);
+        $this->assertFalse($this->fails(PasswordPolicy::generate()));
     }
 
     public function test_a_breached_password_is_refused_in_production(): void

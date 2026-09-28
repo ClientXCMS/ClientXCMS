@@ -83,7 +83,7 @@ class InstallController extends Controller
             'email' => 'required|email|max:255',
             'firstname' => 'required|string|max:255',
             'lastname' => 'required|string|max:255',
-            'password' => 'required|string|min:8',
+            'password' => ['required', 'string', \Illuminate\Validation\Rules\Password::defaults()],
             'send_telemetry' => 'nullable',
         ]);
         $data['password'] = \Hash::make($data['password']);

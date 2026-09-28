@@ -83,7 +83,7 @@ class UpdateCustomerRequest extends FormRequest
         return array_merge($baseRules, [
             'verified' => ['nullable', 'boolean'],
             'balance' => ['numeric', 'min:0', 'max:999999'],
-            'password' => ['nullable', 'string', 'min:8', Rules\Password::defaults()],
+            'password' => ['nullable', 'string', Rules\Password::defaults()],
             'locale' => ['string', 'max:255', Rule::in(array_keys(LocaleService::getLocalesNames()))],
         ]);
     }

@@ -28,8 +28,8 @@ class RegistrationTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
 
         $this->assertAuthenticated();
@@ -55,8 +55,8 @@ class RegistrationTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
         $response->assertSessionHasErrors(['zipcode']);
         $this->assertGuest();
@@ -78,8 +78,8 @@ class RegistrationTest extends TestCase
             'city' => 'test',
             'phone' => '0176010380',
             'accept_tos' => 'on',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
         $this->assertAuthenticated();
     }
@@ -97,8 +97,8 @@ class RegistrationTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
         $response->assertSessionHasErrors(['accept_tos']);
         $this->assertGuest();
@@ -116,7 +116,7 @@ class RegistrationTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0323456789',
-            'password' => 'password',
+            'password' => 'ValidPassword123',
         ]);
         $customer->delete();
         $response = $this->post('/register', [
@@ -129,8 +129,8 @@ class RegistrationTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
         $this->assertAuthenticated();
     }
@@ -148,8 +148,8 @@ class RegistrationTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
         $response->assertSessionHas('error');
     }
@@ -168,8 +168,8 @@ class RegistrationTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
         $response->assertSessionHas('error');
     }
@@ -188,8 +188,8 @@ class RegistrationTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
         $this->assertAuthenticated();
         $response->assertRedirect('/client');
@@ -208,8 +208,8 @@ class RegistrationTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
         $response->assertSessionHasErrors(['email']);
         $this->assertGuest();
@@ -228,8 +228,8 @@ class RegistrationTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
         $this->assertAuthenticated();
         $response->assertRedirect('/client/onboarding');
@@ -247,8 +247,8 @@ class RegistrationTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
         $response->assertSessionHasErrors(['firstname']);
         $this->assertGuest();
@@ -266,8 +266,8 @@ class RegistrationTest extends TestCase
             'address' => '<script>alert("xss")</script>',
             'city' => 'test',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
         $response->assertSessionHasErrors(['address']);
         $this->assertGuest();
@@ -285,8 +285,8 @@ class RegistrationTest extends TestCase
             'address' => 'test',
             'city' => 'test',
             'phone' => '0176010380',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'ValidPassword123',
+            'password_confirmation' => 'ValidPassword123',
         ]);
         $this->assertAuthenticated();
         $response->assertRedirect('/client/onboarding');

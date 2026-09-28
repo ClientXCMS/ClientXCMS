@@ -19,6 +19,7 @@
 
 namespace App\Http\Requests\Customer;
 
+use App\Core\Auth\PasswordPolicy;
 use App\Services\Account\AccountEditService;
 use App\Services\Core\LocaleService;
 use Illuminate\Foundation\Http\FormRequest;
@@ -89,7 +90,7 @@ class StoreCustomerRequest extends FormRequest
         $data = $this->validated();
         if (! $this->filled('password')) {
             $data = array_merge($data, [
-                'password' => \Illuminate\Support\Str::random(10),
+                'password' => PasswordPolicy::generate(),
             ]);
         }
         $data = array_merge($data, [

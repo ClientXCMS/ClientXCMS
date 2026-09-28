@@ -680,6 +680,12 @@ return [
         'title' => 'Paramètres de sécurité',
         'description' => 'Configurez les options de sécurité, y compris les politiques de mot de passe, les restrictions d’accès et les options d’inscription',
         'auth' => 'Authentification',
+        'password_levels' => [
+          'compatibility' => 'Compatibilité — 8 caractères minimum',
+          'standard' => 'Standard — 12 caractères, majuscules, minuscules et chiffres',
+          'reinforced' => 'Renforcé — 14 caractères, majuscules, minuscules, chiffres et symboles',
+          'strict' => 'Strict — 16 caractères, majuscules, minuscules, chiffres et symboles',
+        ],
         'captcha' => [
           'title' => 'Captcha',
           'fields' => [
@@ -713,6 +719,8 @@ return [
           'gdrp_cookies_privacy_link' => 'Lien vers votre politique de confidentialité',
           'password_timeout' => 'Délai de vérification du mot de passe',
           'password_timeout_help' => 'En secondes',
+          'password_security_level' => 'Niveau de sécurité des mots de passe',
+          'password_security_level_help' => 'Cette politique s’applique aux comptes CLIENTXCMS et aux mots de passe des machines virtuelles.',
           'gdpr_purge_inactive_days' => 'Nombre de jours avant suppression des clients inactifs',
           'allow_registration' => 'Autoriser l\'inscription',
           'auto_confirm_registration' => 'Confirmation automatique de l\'inscription',

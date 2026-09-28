@@ -47,5 +47,5 @@
     <p class="text-sm text-gray-500 mt-2">{{ $help }}</p>
 @endif
 @if (isset($generate))
-    <button class="text-sm text-gray-500 mt-2 cursor-pointer generate-password-btn text-start" type="button">{{ __('global.password_generate') }}</button>
+    <button class="text-sm text-gray-500 mt-2 cursor-pointer generate-password-btn text-start" type="button" @foreach (\App\Core\Auth\PasswordPolicy::generatorAttributes() as $attribute => $attributeValue) {{ $attribute }}="{{ $attributeValue }}" @endforeach>{{ __('global.password_generate') }}</button>
 @endif

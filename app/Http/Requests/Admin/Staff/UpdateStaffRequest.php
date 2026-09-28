@@ -43,7 +43,7 @@ class UpdateStaffRequest extends FormRequest
             'firstname' => 'required|string|max:255',
             'lastname' => 'required|string|max:255',
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('admins', 'email')->ignore($this->id)],
-            'password' => 'nullable|string|min:8',
+            'password' => ['nullable', 'string', \Illuminate\Validation\Rules\Password::defaults()],
             'expires_at' => 'nullable|date',
             'username' => 'required|string|max:255',
             'signature' => 'nullable|string|max:255',

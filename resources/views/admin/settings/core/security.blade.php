@@ -224,6 +224,14 @@
 
             <h3 class="font-semibold uppercase text-gray-600 dark:text-gray-400 my-2">{{ __('admin.settings.core.security.auth') }}</h3>
 
+            @include('admin/shared/select', [
+                    'label' => __('admin.settings.core.security.fields.password_security_level'),
+                    'name' => 'password_security_level',
+                    'value' => setting('password_security_level', \App\Core\Auth\PasswordPolicy::STANDARD),
+                    'options' => $passwordSecurityLevels,
+                    'help' => __('admin.settings.core.security.fields.password_security_level_help')
+            ])
+
             @include('admin/shared/input', [
                     'label' => __('admin.settings.core.security.fields.password_timeout'),
                     'name' => 'password_timeout',

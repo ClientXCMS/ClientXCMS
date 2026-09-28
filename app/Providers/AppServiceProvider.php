@@ -20,6 +20,7 @@
 namespace App\Providers;
 
 use App\Core\Auth\MigratingHashManager;
+use App\Core\Auth\PasswordPolicy;
 use App\Core\License\LicenseGateway;
 use App\Services\Core\SeoService;
 use App\View\Components\BadgeStateComponant;
@@ -82,15 +83,11 @@ class AppServiceProvider extends ServiceProvider
         Carbon::setLocale(setting('app.locale', 'fr_FR'));
     }
 
-    // No composition rule on purpose: OWASP advises against it, length and breach checks are what count
+    // The historical fallback remains length-based; administrators may opt into composition levels.
     private function definePasswordRules(): void
     {
-        // bcrypt silently truncates past 72 bytes, so anything beyond does not count
-        Password::defaults(function () {
-            $rule = Password::min(12)->max(72);
-
-            return $this->app->isProduction() ? $rule->uncompromised() : $rule;
-        });
+        // Account passwords are bcrypt-bound. Hypervisor passwords use PasswordPolicy::vm().
+        Password::defaults(fn () => PasswordPolicy::account());
 
         // extend, not singleton: ValidationServiceProvider is deferred and would overwrite it
         $this->app->extend(UncompromisedVerifier::class, function ($verifier, $app) {

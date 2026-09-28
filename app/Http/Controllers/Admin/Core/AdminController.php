@@ -265,7 +265,7 @@ class AdminController extends AbstractCrudController
         $admin = auth('admin')->user();
         $rules = [
             'current_password' => ['required', 'current_password:admin'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
         ];
 
         if ($admin->hasSecurityQuestion()) {

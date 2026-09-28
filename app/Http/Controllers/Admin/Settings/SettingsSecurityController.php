@@ -20,6 +20,7 @@
 namespace App\Http\Controllers\Admin\Settings;
 
 use App\Core\Auth\MigratingHashManager;
+use App\Core\Auth\PasswordPolicy;
 use App\Helpers\EnvEditor;
 use App\Models\Admin\Permission;
 use App\Models\Admin\Setting;
@@ -44,8 +45,12 @@ class SettingsSecurityController
             'cloudflare' => 'Cloudflare turnstile',
         ];
         $smsDrivers = \App\Services\Auth\SmsService::availableDrivers();
+        $passwordSecurityLevels = array_combine(PasswordPolicy::LEVELS, array_map(
+            fn (string $level) => __("admin.settings.core.security.password_levels.{$level}"),
+            PasswordPolicy::LEVELS
+        ));
 
-        return view('admin.settings.core.security', compact('drivers', 'captcha', 'smsDrivers'));
+        return view('admin.settings.core.security', compact('drivers', 'captcha', 'smsDrivers', 'passwordSecurityLevels'));
     }
 
     public function storeSecurity(Request $request)
@@ -70,6 +75,7 @@ class SettingsSecurityController
             'passkeys_enabled' => 'nullable|string|in:true,false',
             'allow_plus_in_email' => 'nullable|string|in:true,false',
             'password_timeout' => 'nullable|integer',
+            PasswordPolicy::SETTING => ['required', 'string', Rule::in(PasswordPolicy::LEVELS)],
             'banned_emails' => 'nullable|string',
             'captcha_driver' => 'required|string',
             'admin_prefix' => 'required|string',
