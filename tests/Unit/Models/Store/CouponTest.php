@@ -15,10 +15,8 @@ class CouponTest extends TestCase
     public function test_coupon_max_usages()
     {
         $customer = $this->createCustomerModel();
-        $coupon = Coupon::factory()->create(['max_uses' => 1]);
+        $coupon = Coupon::factory()->create(['max_uses' => 1, 'usages' => 1]);
         $basket = $this->createBasketForCustomer($customer);
-
-        $coupon->usages()->create(['customer_id' => $basket->user_id, 'used_at' => now(), 'amount' => 10]);
 
         $this->assertFalse($coupon->isValid($basket));
         $this->assertEquals(Session::get('error'), __('coupon.coupon_max_uses'));
@@ -33,7 +31,7 @@ class CouponTest extends TestCase
         $coupon->usages()->create(['customer_id' => $customer->id, 'used_at' => now(), 'amount' => 10]);
 
         $this->assertFalse($coupon->isValid($basket));
-        $this->assertEquals(Session::get('error'), __('coupon.coupon_max_use_per_customer'));
+        $this->assertEquals(Session::get('error'), __('coupon.coupon_max_uses_per_customer'));
     }
 
     public function test_coupon_max_usages_per_customer_ignores_other_customers()

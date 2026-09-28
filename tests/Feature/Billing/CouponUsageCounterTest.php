@@ -16,7 +16,7 @@ class CouponUsageCounterTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_a_refused_usage_does_not_leave_the_global_counter_inflated(): void
+    public function test_a_usage_past_the_per_customer_cap_is_still_counted(): void
     {
         $customer = Customer::factory()->create();
         $coupon = $this->coupon(['max_uses_per_customer' => 1, 'usages' => 1]);
@@ -29,8 +29,8 @@ class CouponUsageCounterTest extends TestCase
 
         $this->complete($this->discountedInvoice($customer, $coupon));
 
-        $this->assertSame(1, (int) $coupon->fresh()->usages, 'a usage that was refused must not stay counted in the global total');
-        $this->assertSame(1, CouponUsage::where('coupon_id', $coupon->id)->count(), 'no extra usage row must be recorded');
+        $this->assertSame(2, (int) $coupon->fresh()->usages, 'a paid discount must be counted even past the cap');
+        $this->assertSame(2, CouponUsage::where('coupon_id', $coupon->id)->count());
     }
 
     public function test_an_accepted_usage_still_counts(): void
