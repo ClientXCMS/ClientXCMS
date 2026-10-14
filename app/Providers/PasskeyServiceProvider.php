@@ -16,11 +16,17 @@ class PasskeyServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        if (! class_exists(Passkeys::class)) {
+            return;
+        }
         Passkeys::ignoreRoutes();
     }
 
     public function boot(): void
     {
+        if (! class_exists(Passkeys::class)) {
+            return;
+        }
         Passkeys::useUserModel(Customer::class);
         Passkeys::authorizeLoginUsing(fn ($request, PasskeyUser $user): bool => setting('passkeys_enabled', false) && $user instanceof Customer && ! $user->isBanned() && ! $user->trashed()
         );
