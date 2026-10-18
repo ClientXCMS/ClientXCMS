@@ -61,7 +61,7 @@ class InvoiceObserver
             return;
         }
 
-        $allowed = ['status', 'paid_at', 'paymethod', 'payment_method_id', 'external_id', 'balance', 'updated_at'];
+        $allowed = ['status', 'paid_at', 'paymethod', 'payment_method_id', 'external_id', 'fees', 'balance', 'updated_at'];
         $forbidden = array_diff(array_keys($invoice->getDirty()), $allowed);
         if ($forbidden !== []) {
             throw new \LogicException('An issued invoice is immutable; create a credit note instead.');
