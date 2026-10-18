@@ -25,6 +25,7 @@
     <script src="{{ Vite::asset('resources/global/js/flatpickr.js') }}" type="module"></script>
 @endsection
 @section('content')
+    @php($gatekeeperEnabled = app('extension')->extensionIsEnabled('gatekeeper'))
     <div class="container mx-auto">
         @include('admin/shared/alerts')
         <div class="card mb-4">
@@ -177,6 +178,9 @@
                                             href="#" data-hs-overlay="#ban-overlay">
                                             <i class="bi bi-person-fill-slash"></i>{{ __($translatePrefix . '.show.ban') }}
                                         </a>
+                                    @endif
+                                    @if ($gatekeeperEnabled && staff_has_permission('admin.manage_gatekeeper'))
+                                        @include('gatekeeper_admin::customer.menu-item')
                                     @endif
                                     @if ($item->twoFactorEnabled())
                                         <button type="button" id="disabled2faButton"
@@ -333,6 +337,9 @@
                                     {{ __($translatePrefix . '.show.payment-methods') }}
                                 </span>
                             </button>
+                        @endif
+                        @if ($gatekeeperEnabled && staff_has_permission('admin.show_gatekeeper'))
+                            @include('gatekeeper_admin::customer.tab-button')
                         @endif
                         @if (staff_has_permission('admin.show_logs'))
                             <button type="button"
@@ -575,6 +582,12 @@
                     </div>
                 @endif
 
+                @if ($gatekeeperEnabled && staff_has_permission('admin.show_gatekeeper'))
+                    <div id="tabs-gatekeeper" class="hidden" role="tabpanel" aria-labelledby="tabs-gatekeeper-item">
+                        @include('gatekeeper_admin::customer.tab', ['customer' => $item])
+                    </div>
+                @endif
+
                 @if (staff_has_permission('admin.show_logs'))
                     <div id="tabs-logs" class="hidden" role="tabpanel" aria-labelledby="tabs-logs-item">
                         <div class="card">
@@ -646,6 +659,9 @@
                                     'label' => __('provisioning.admin.services.suspend.notify'),
                                 ])
                             </div>
+                            @if ($gatekeeperEnabled && staff_has_permission('admin.manage_gatekeeper'))
+                                @include('gatekeeper_admin::customer.ban-options', ['mode' => 'reactivate'])
+                            @endif
                             <button class="btn btn-success w-full mt-3"><i
                                     class="bi bi-person-check-fill mr-2"></i>{{ __($translatePrefix . '.show.reactivate') }}</button>
                         @endif
@@ -692,6 +708,9 @@
                                     'label' => __('provisioning.admin.services.suspend.notify'),
                                 ])
                             </div>
+                            @if ($gatekeeperEnabled && staff_has_permission('admin.manage_gatekeeper'))
+                                @include('gatekeeper_admin::customer.ban-options', ['mode' => 'ban'])
+                            @endif
                             <button class="btn btn-danger w-full mt-3"><i
                                     class="bi bi-person-fill-slash mr-2"></i>{{ __($translatePrefix . '.show.ban') }}</button>
                         @else
@@ -719,12 +738,18 @@
                                     'label' => __('provisioning.admin.services.suspend.notify'),
                                 ])
                             </div>
+                            @if ($gatekeeperEnabled && staff_has_permission('admin.manage_gatekeeper'))
+                                @include('gatekeeper_admin::customer.ban-options', ['mode' => 'reactivate'])
+                            @endif
                             <button class="btn btn-success w-full mt-3"><i
                                     class="bi bi-person-check-fill mr-2"></i>{{ __($translatePrefix . '.show.reactivate') }}</button>
                         @endif
                     </form>
                 </div>
             </div>
+        @endif
+        @if ($gatekeeperEnabled && staff_has_permission('admin.manage_gatekeeper'))
+            @include('gatekeeper_admin::customer.overlay', ['customer' => $item])
         @endif
         <form method="POST" action="{{ route($routePath . '.destroy', ['customer' => $item]) }}" id="deleteForm">
             @csrf

@@ -19,6 +19,7 @@
 
 namespace App\Http\Controllers\Api\Client;
 
+use App\Events\Core\Customer\CustomerRegistering;
 use App\Http\Controllers\Controller;
 use App\Models\Account\Customer;
 use App\Services\Account\AccountEditService;
@@ -314,6 +315,14 @@ class AuthController extends Controller
         if ($bannedEmails->contains($request->email) || $bannedEmails->contains(explode('@', $request->email)[1] ?? '')) {
             return response()->json([
                 'error' => __('auth.register.error_banned_email'),
+            ], 403);
+        }
+
+        $registering = new CustomerRegistering($request->except(['password', 'password_confirmation']), $request->ip());
+        event($registering);
+        if ($registering->isDenied()) {
+            return response()->json([
+                'error' => $registering->message(),
             ], 403);
         }
 

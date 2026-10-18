@@ -19,6 +19,9 @@
 
 namespace App\Models\Traits;
 
+use App\Events\Core\Customer\CustomerBanned;
+use App\Events\Core\Customer\CustomerReactivated;
+use App\Events\Core\Customer\CustomerSuspended;
 use App\Models\Admin\Admin;
 use App\Notifications\CustomerBlockMail;
 
@@ -69,6 +72,7 @@ trait CanBlocked
         } catch (\Exception $e) {
             \Session::flash('error', $e->getMessage());
         }
+        event(new CustomerBanned($this, $reason, $admin));
     }
 
     public function suspend(string $reason, bool $suspendServices = true, bool $notify = true, ?Admin $admin = null)
@@ -94,10 +98,12 @@ trait CanBlocked
         } catch (\Exception $e) {
             \Session::flash('error', $e->getMessage());
         }
+        event(new CustomerSuspended($this, $reason, $admin));
     }
 
     public function reactivate(bool $notify = true)
     {
+        $wasBanned = $this->isBanned();
         $this->detachMetadata('banned');
         $this->detachMetadata('banned_reason');
         $this->detachMetadata('banned_at');
@@ -117,6 +123,7 @@ trait CanBlocked
         } catch (\Exception $e) {
             \Session::flash('error', $e->getMessage());
         }
+        event(new CustomerReactivated($this, $wasBanned));
 
     }
 

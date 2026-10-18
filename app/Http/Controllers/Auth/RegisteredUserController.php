@@ -19,6 +19,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\Core\Customer\CustomerRegistering;
 use App\Http\Controllers\Controller;
 use App\Models\Account\Customer;
 use App\Models\ActionLog;
@@ -73,6 +74,12 @@ class RegisteredUserController extends Controller
         });
         if ($bannedEmails->contains($request->email) || $bannedEmails->contains(explode('@', $request->email)[1] ?? '')) {
             return back()->with('error', __('auth.register.error_banned_email'));
+        }
+        // Extensions (e.g. IP / country bans) can refuse the registration before the account exists.
+        $registering = new CustomerRegistering(collect($data)->except(['password', 'password_confirmation'])->all(), $request->ip());
+        event($registering);
+        if ($registering->isDenied()) {
+            return back()->withInput($request->except(['password', 'password_confirmation']))->with('error', $registering->message());
         }
         $user = Customer::create([
             'email' => strtolower($request->email),

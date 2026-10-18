@@ -22,6 +22,8 @@ namespace App\Http\Controllers\Admin\Security;
 use App\Http\Controllers\Admin\AbstractCrudController;
 use App\Models\ActionLog;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class ActionsLogController extends AbstractCrudController
@@ -59,6 +61,7 @@ class ActionsLogController extends AbstractCrudController
             'new_value' => 'New value',
             'staff_id' => 'Staff ID',
             'customer_id' => 'Customer ID',
+            'ip' => 'IP',
         ];
     }
 
@@ -72,7 +75,12 @@ class ActionsLogController extends AbstractCrudController
     protected function queryIndex(): LengthAwarePaginator
     {
         return QueryBuilder::for($this->model)
-            ->allowedFilters(array_merge(array_keys($this->getSearchFields()), [$this->filterField]))
+            ->allowedFilters(array_merge(
+                array_diff(array_keys($this->getSearchFields()), ['ip']),
+                [$this->filterField],
+                // IP lives in the JSON payload (login, failed login, registration logs)
+                [AllowedFilter::callback('ip', fn (Builder $query, $value) => $query->where('payload->ip', trim((string) $value)))],
+            ))
             ->allowedSorts($this->sorts)
             ->orderBy('created_at', 'desc')
             ->paginate($this->perPage)

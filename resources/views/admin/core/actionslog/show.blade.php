@@ -54,6 +54,16 @@
                         </div>
                         <div>
                             @include('admin/shared/textarea', ['name' => 'payload', 'label' => __($translatePrefix . '.payload'), 'value' => json_encode($item->payload)])
+                            @if (!empty($item->payload['ip']) && app('extension')->extensionIsEnabled('gatekeeper') && staff_has_permission('admin.manage_gatekeeper'))
+                                <div class="mt-2 flex gap-2">
+                                    <a class="btn btn-secondary text-sm" href="{{ route('admin.logs.index', ['filter' => ['ip' => $item->payload['ip']]]) }}">
+                                        <i class="bi bi-search mr-1"></i>{{ $item->payload['ip'] }}
+                                    </a>
+                                    <a class="btn btn-danger text-sm" href="{{ route('admin.gatekeeper.create', ['value' => $item->payload['ip'], 'customer_id' => $item->customer_id]) }}">
+                                        <i class="bi bi-shield-x mr-1"></i>{{ __('gatekeeper::lang.customer.ban_ips') }}
+                                    </a>
+                                </div>
+                            @endif
                         </div>
                     </div>
                     @if ($item->entries->count() > 0)
