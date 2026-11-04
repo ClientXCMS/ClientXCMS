@@ -51,27 +51,6 @@
         </div>
     </div>
     <h4 class="font-medium text-lg text-gray-800 dark:text-gray-200">{{ $product->name }}</h4>
-    @if ($pricing->isFree())
-
-        <span class="mt-5 font-bold text-5xl text-gray-800 dark:text-gray-200">
-        {{ __('global.free') }}
-      </span>
-
-    @elseif ($product->isPersonalized())
-        <span class="mt-5 font-bold text-5xl text-gray-800 dark:text-gray-200">
-        {{ __('store.product.personalized') }}
-        </span>
-        @else
-    <span class="mt-5 font-bold text-5xl text-gray-800 dark:text-gray-200">
-        {{ formatted_price((float) $pricing->price, $pricing->currency ?? currency()) }}
-        <span class="font-bold text-2xl -me-2">{{ is_tax_included() ? __('store.ttc') : '' }}</span>
-
-      </span>
-
-    @if ($pricing->hasSetup())
-        <p class="mt-2 text-sm text-gray-500">{{ $pricing->pricingMessage() }}</p>
-    @endif
-    @endif
     <ul class="mt-7 space-y-2.5 text-sm">
         {!!  $product->description !!}
     </ul>
