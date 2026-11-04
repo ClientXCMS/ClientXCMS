@@ -306,6 +306,7 @@ $popularExtensions = $allExtensions->filter(fn($ext) => isset($ext->api['tags'])
                 installed: '{{ __("extensions.settings.installed") }}',
                 success: '{{ __("extensions.bulk.success") }}',
                 error: '{{ __("extensions.settings.processing_error") }}',
+                moreDetails: '{{ __("extensions.settings.more_details") }}',
                 version: '{{ __("extensions.modal.version") }}',
                 author: '{{ __("extensions.modal.author") }}',
                 price: '{{ __("extensions.modal.price") }}',
