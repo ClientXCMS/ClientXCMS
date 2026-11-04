@@ -4,15 +4,17 @@ namespace App\Core\Domain;
 
 use App\Abstracts\AbstractDomainRegistrar;
 use App\Contracts\Domain\DomainDnsInitializationInterface;
+use App\Contracts\Domain\DomainTransferStatusInterface;
 use App\DTO\Domain\DomainAvailabilityDTO;
 use App\DTO\Domain\DomainInfoDTO;
+use App\DTO\Domain\DomainTransferStatusDTO;
 use App\DTO\Provisioning\ConnectionResponse;
 use App\DTO\Provisioning\ServiceStateChangeDTO;
 use App\Models\Provisioning\Service;
 use Carbon\Carbon;
 use GuzzleHttp\Psr7\Response;
 
-class FakeDomainRegistrar extends AbstractDomainRegistrar implements DomainDnsInitializationInterface
+class FakeDomainRegistrar extends AbstractDomainRegistrar implements DomainDnsInitializationInterface, DomainTransferStatusInterface
 {
     public function dnsCapabilities(\App\Models\Provisioning\Server $server): array
     {
@@ -84,6 +86,12 @@ class FakeDomainRegistrar extends AbstractDomainRegistrar implements DomainDnsIn
         $service->save();
 
         return new ServiceStateChangeDTO($service, true, 'Domain transfer submitted');
+    }
+
+    /** Simulated transfers complete on the first check so the whole flow can be exercised locally. */
+    public function transferStatus(Service $service): DomainTransferStatusDTO
+    {
+        return new DomainTransferStatusDTO(DomainTransferStatus::Completed);
     }
 
     public function register(Service $service): ServiceStateChangeDTO
