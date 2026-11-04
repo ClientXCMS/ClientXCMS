@@ -116,6 +116,20 @@ class SectionController extends AbstractCrudController
         ]);
     }
 
+    public function preview(Section $section)
+    {
+        staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);
+        abort_unless(view()->exists($section->path), 404);
+        // Rendered inside the theme layout and shown in an iframe so the admin
+        // sees the section with the theme CSS, not the admin one.
+        app('theme')->setCurrentRenderingSection($section);
+
+        return view($this->viewPath.'.preview', [
+            'section' => $section,
+            'html' => $section->toDTO()->render(false),
+        ]);
+    }
+
     public function destroy(Section $section)
     {
         staff_aborts_permission(Permission::MANAGE_PERSONALIZATION);

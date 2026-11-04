@@ -183,6 +183,7 @@ return [
         'edit_of' => 'Modifier la section :name',
         'more_actions_for' => 'Plus d\'actions pour la section :name',
         'toggle_preview_for' => 'Afficher ou masquer l\'aperçu de la section :name',
+        'preview_title' => 'Aperçu de la section :name',
         'premium_locked' => 'Cette section nécessite une extension premium non activée pour être modifiée.',
         'show' => [
             'title' => 'Modification d\'une section',
