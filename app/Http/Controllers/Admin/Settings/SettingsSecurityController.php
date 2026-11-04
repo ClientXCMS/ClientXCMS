@@ -21,7 +21,7 @@ namespace App\Http\Controllers\Admin\Settings;
 
 use App\Core\Auth\MigratingHashManager;
 use App\Core\Auth\PasswordPolicy;
-use App\Helpers\EnvEditor;
+use App\Core\Environment\RuntimeEnvironment;
 use App\Models\Admin\Permission;
 use App\Models\Admin\Setting;
 use Illuminate\Http\Request;
@@ -88,7 +88,7 @@ class SettingsSecurityController
 
         $data = $request->validate(array_merge($rules, $smsRules));
 
-        EnvEditor::updateEnv([
+        $pendingEnv = RuntimeEnvironment::put([
             'HASH_DRIVER' => $data['hash_driver'],
             'ADMIN_PREFIX' => $data['admin_prefix'],
         ]);
@@ -102,6 +102,8 @@ class SettingsSecurityController
         $data['allow_plus_in_email'] = $data['allow_plus_in_email'] ?? 'false';
         Setting::updateSettings($data);
 
-        return redirect()->back()->with('success', __('admin.settings.core.security.success'));
+        return redirect()->back()
+            ->with('success', __('admin.settings.core.security.success'))
+            ->with('warning', RuntimeEnvironment::pendingWarning($pendingEnv));
     }
 }

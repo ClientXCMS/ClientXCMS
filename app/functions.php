@@ -293,6 +293,15 @@ if (! function_exists('staff_has_permission')) {
         abort_if(! staff_has_permission($permission), 403);
     }
 }
+if (! function_exists('runtime_env')) {
+    /**
+     * Admin-editable environment value: settings table first, then .env.
+     */
+    function runtime_env(string $key, mixed $default = null): mixed
+    {
+        return \App\Core\Environment\RuntimeEnvironment::get($key, $default);
+    }
+}
 if (! function_exists('admin_prefix')) {
     function admin_prefix(?string $path = null): string
     {

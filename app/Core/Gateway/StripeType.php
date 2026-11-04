@@ -21,10 +21,10 @@ namespace App\Core\Gateway;
 
 use App\Abstracts\AbstractGatewayType;
 use App\Abstracts\PaymentMethodSourceDTO;
+use App\Core\Environment\RuntimeEnvironment;
 use App\DTO\Core\Gateway\GatewayPayInvoiceResultDTO;
 use App\DTO\Core\Gateway\GatewayUriDTO;
 use App\Exceptions\WrongPaymentException;
-use App\Helpers\EnvEditor;
 use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
@@ -100,14 +100,14 @@ class StripeType extends AbstractGatewayType
     public function notification(Gateway $gateway, Request $request)
     {
         $signature = $request->header('Stripe-Signature');
-        if (env('STRIPE_WEBHOOK_SECRET') == null) {
+        if (runtime_env('STRIPE_WEBHOOK_SECRET') == null) {
             return response()->json(['error' => 'Stripe webhook secret not found'], 400);
         }
         try {
             $event = \Stripe\Webhook::constructEvent(
                 $request->getContent(),
                 $signature,
-                env('STRIPE_WEBHOOK_SECRET')
+                runtime_env('STRIPE_WEBHOOK_SECRET')
             );
             $this->initStripe();
             if (in_array($event->type, self::CHECKOUT_EVENTS, true)) {
@@ -155,7 +155,7 @@ class StripeType extends AbstractGatewayType
 
     public function saveConfig(array $data)
     {
-        EnvEditor::updateEnv([
+        RuntimeEnvironment::put([
             'STRIPE_PRIVATE_KEY' => $data['private_key'],
             'STRIPE_PUBLIC_KEY' => $data['public_key'],
             'STRIPE_WEBHOOK_SECRET' => $data['webhook_secret'],
@@ -187,8 +187,8 @@ class StripeType extends AbstractGatewayType
     private function initStripe(): StripeClient
     {
         if ($this->stripe == null) {
-            $privateKey = env('STRIPE_PRIVATE_KEY');
-            $publicKey = env('STRIPE_PUBLIC_KEY');
+            $privateKey = runtime_env('STRIPE_PRIVATE_KEY');
+            $publicKey = runtime_env('STRIPE_PUBLIC_KEY');
             if ($privateKey == null || $publicKey == null) {
                 throw new WrongPaymentException('Stripe keys not found');
             }
@@ -231,7 +231,7 @@ class StripeType extends AbstractGatewayType
 
     private function getPaymentMethodTypes(): array
     {
-        return explode(',', env('STRIPE_PAYMENT_TYPES', 'card'));
+        return explode(',', runtime_env('STRIPE_PAYMENT_TYPES', 'card'));
     }
 
     private function getStripeRate(Customer $customer): ?string
@@ -261,7 +261,7 @@ class StripeType extends AbstractGatewayType
 
     public function sourceForm(): string
     {
-        return view('admin.settings.store.gateways.stripe-source', ['public' => env('STRIPE_PUBLIC_KEY')])->render();
+        return view('admin.settings.store.gateways.stripe-source', ['public' => runtime_env('STRIPE_PUBLIC_KEY')])->render();
     }
 
     public function addSource(Request $request): ?PaymentMethodSourceDTO

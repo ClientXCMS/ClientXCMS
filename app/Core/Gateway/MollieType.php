@@ -21,10 +21,10 @@ namespace App\Core\Gateway;
 
 use App\Abstracts\AbstractGatewayType;
 use App\Abstracts\PaymentMethodSourceDTO;
+use App\Core\Environment\RuntimeEnvironment;
 use App\DTO\Core\Gateway\GatewayPayInvoiceResultDTO;
 use App\DTO\Core\Gateway\GatewayUriDTO;
 use App\Exceptions\WrongPaymentException;
-use App\Helpers\EnvEditor;
 use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
@@ -133,7 +133,7 @@ class MollieType extends AbstractGatewayType
 
     public function saveConfig(array $data)
     {
-        EnvEditor::updateEnv([
+        RuntimeEnvironment::put([
             'MOLLIE_KEY' => $data['api_key'],
             'MOLLIE_TEST_MODE' => $data['test_mode'] === 'test' ? 'true' : 'false',
         ]);
@@ -155,7 +155,7 @@ class MollieType extends AbstractGatewayType
 
     private function initMollie(): void
     {
-        $apiKey = env('MOLLIE_KEY');
+        $apiKey = runtime_env('MOLLIE_KEY');
         if (! $apiKey) {
             throw new WrongPaymentException('Mollie API key not configured');
         }
@@ -322,7 +322,7 @@ class MollieType extends AbstractGatewayType
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
     {
         if ($invoice->external_id) {
-            $testMode = env('MOLLIE_TEST_MODE', 'true') === 'true';
+            $testMode = RuntimeEnvironment::flag('MOLLIE_TEST_MODE', true);
             $baseUrl = $testMode
                 ? 'https://my.mollie.com/dashboard/org_1/payments/'
                 : 'https://my.mollie.com/dashboard/payments/';

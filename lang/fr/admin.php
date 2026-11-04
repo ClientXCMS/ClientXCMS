@@ -631,6 +631,7 @@ return [
     'core' => [
       'title' => 'Paramètres généraux',
       'description' => 'Paramètres généraux de CLIENTXCMS (nom, adresse, logo, favicon, mail)',
+      'env_readonly' => 'Le fichier .env est en lecture seule : ces valeurs n\'ont pas été appliquées. Ajoutez-les manuellement puis exécutez « php artisan config:clear » :',
       'mail' => [
         'title' => 'Paramètres de messagerie',
         'description' => 'Définissez les configurations des notifications par e-mail et les paramètres de connexion du serveur d\'envoi SMTP ou d\'un fournisseur tier',

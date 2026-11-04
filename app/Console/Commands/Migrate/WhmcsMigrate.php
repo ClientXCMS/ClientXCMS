@@ -19,7 +19,7 @@
 
 namespace App\Console\Commands\Migrate;
 
-use App\Helpers\EnvEditor;
+use App\Core\Environment\RuntimeEnvironment;
 use App\Models\Account\Customer;
 use App\Models\Billing\Invoice;
 use App\Models\Billing\InvoiceItem;
@@ -195,7 +195,7 @@ class WhmcsMigrate extends Command
         }
         $clients = DB::connection('migrate')->table('tblclients')->get();
         $users = DB::connection('migrate')->table('tblusers')->get();
-        EnvEditor::updateEnv([
+        RuntimeEnvironment::put([
             'HASH_DRIVER' => 'bcrypt',
         ]);
         $this->info('Hash driver set to bcrypt');
