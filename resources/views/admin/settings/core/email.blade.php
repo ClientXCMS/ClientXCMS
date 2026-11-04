@@ -79,7 +79,7 @@
 
             <div class="relative flex items-start mr-3 mt-3">
                 <div class="flex items-center h-5 mt-1">
-                    <input id="hs-log-delete" name="mail_disable_mail" {{ env('MAIL_MAILER') == 'log' ? 'checked' : '' }} type="checkbox" class="border-gray-200 rounded text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"  data-hs-collapse="#hs-smtp" aria-describedby="hs-smtp-description">
+                    <input id="hs-log-delete" name="mail_disable_mail" {{ runtime_env('MAIL_MAILER') == 'log' ? 'checked' : '' }} type="checkbox" class="border-gray-200 rounded text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"  data-hs-collapse="#hs-smtp" aria-describedby="hs-smtp-description">
                 </div>
                 <label for="hs-log-delete" class="ms-3">
                     <span class="block text-sm font-semibold text-gray-800 dark:text-gray-300">{{ __('admin.settings.core.mail.disable_mail') }}</span>

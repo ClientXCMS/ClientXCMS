@@ -20,9 +20,9 @@
 namespace App\Core\Gateway;
 
 use App\Abstracts\AbstractGatewayType;
+use App\Core\Environment\RuntimeEnvironment;
 use App\DTO\Core\Gateway\GatewayUriDTO;
 use App\Exceptions\WrongPaymentException;
-use App\Helpers\EnvEditor;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
 use Illuminate\Http\Request;
@@ -56,7 +56,7 @@ class SquareType extends AbstractGatewayType
                             'amount' => (int) ($invoice->total * 100),
                             'currency' => strtoupper($invoice->currency),
                         ],
-                        'location_id' => env('SQUARE_LOCATION_ID'),
+                        'location_id' => runtime_env('SQUARE_LOCATION_ID'),
                     ],
                     'checkout_options' => [
                         'redirect_url' => $dto->returnUri,
@@ -123,7 +123,7 @@ class SquareType extends AbstractGatewayType
 
     public function saveConfig(array $data)
     {
-        EnvEditor::updateEnv([
+        RuntimeEnvironment::put([
             'SQUARE_ACCESS_TOKEN' => $data['access_token'],
             'SQUARE_LOCATION_ID' => $data['location_id'],
             'SQUARE_ENVIRONMENT' => $data['environment'],
@@ -138,14 +138,14 @@ class SquareType extends AbstractGatewayType
 
     private function getApiUrl(): string
     {
-        $environment = env('SQUARE_ENVIRONMENT', 'sandbox');
+        $environment = runtime_env('SQUARE_ENVIRONMENT', 'sandbox');
 
         return $environment === 'production' ? self::API_URL_PRODUCTION : self::API_URL_SANDBOX;
     }
 
     private function getHeaders(): array
     {
-        $accessToken = env('SQUARE_ACCESS_TOKEN');
+        $accessToken = runtime_env('SQUARE_ACCESS_TOKEN');
         if (! $accessToken) {
             throw new WrongPaymentException('Square access token not configured');
         }
@@ -160,7 +160,7 @@ class SquareType extends AbstractGatewayType
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
     {
         if ($invoice->external_id) {
-            $environment = env('SQUARE_ENVIRONMENT', 'sandbox');
+            $environment = runtime_env('SQUARE_ENVIRONMENT', 'sandbox');
             $baseUrl = $environment === 'production'
                 ? 'https://squareup.com/dashboard/sales/transactions/'
                 : 'https://squareupsandbox.com/dashboard/sales/transactions/';

@@ -21,10 +21,10 @@ namespace App\Core\Gateway;
 
 use App\Abstracts\AbstractGatewayType;
 use App\Abstracts\PaymentMethodSourceDTO;
+use App\Core\Environment\RuntimeEnvironment;
 use App\DTO\Core\Gateway\GatewayPayInvoiceResultDTO;
 use App\DTO\Core\Gateway\GatewayUriDTO;
 use App\Exceptions\WrongPaymentException;
-use App\Helpers\EnvEditor;
 use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
@@ -157,7 +157,7 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
         } catch (\Exception $e) {
             // throw new PaymentConfigException($e->getMessage());
         }
-        EnvEditor::updateEnv([
+        RuntimeEnvironment::put([
             'PAYPAL_CLIENT_ID' => $data['client_id'],
             'PAYPAL_CLIENT_SECRET' => $data['client_secret'],
             'PAYPAL_SANDBOX' => ! $live ? 'true' : 'false',
@@ -171,11 +171,11 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
 
     private function getClient()
     {
-        $clientId = env('PAYPAL_CLIENT_ID');
-        $clientSecret = env('PAYPAL_CLIENT_SECRET');
-        $sandbox = env('PAYPAL_SANDBOX');
+        $clientId = runtime_env('PAYPAL_CLIENT_ID');
+        $clientSecret = runtime_env('PAYPAL_CLIENT_SECRET');
+        $sandbox = RuntimeEnvironment::flag('PAYPAL_SANDBOX');
 
-        $mode = $sandbox == 'true' ? 'sandbox' : 'live';
+        $mode = $sandbox ? 'sandbox' : 'live';
 
         if ($clientId === null || $clientSecret === null) {
             throw new WrongPaymentException('PayPal client id or secret is not set.');
@@ -368,7 +368,7 @@ class PayPalExpressCheckoutType extends AbstractGatewayType
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
     {
         if ($invoice->external_id) {
-            $url = $_ENV['PAYPAL_SANDBOX'] == 'sandbox' ? 'https://www.sandbox.paypal.com/unifiedtransactions/details/payment/' : 'https://www.paypal.com/unifiedtransactions/details/payment/';
+            $url = RuntimeEnvironment::flag('PAYPAL_SANDBOX') ? 'https://www.sandbox.paypal.com/unifiedtransactions/details/payment/' : 'https://www.paypal.com/unifiedtransactions/details/payment/';
 
             return $url.$invoice->external_id;
         }

@@ -19,8 +19,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Core\Environment\RuntimeEnvironment;
 use App\Exceptions\LicenseInvalidException;
-use App\Helpers\EnvEditor;
 use App\Models\Admin\Admin;
 use App\Models\Admin\Role;
 use App\Models\Admin\Setting;
@@ -98,7 +98,7 @@ class InstallController extends Controller
         if ($data['send_telemetry']) {
             app(TelemetryService::class)->sendTelemetry();
         }
-        EnvEditor::updateEnv(['TELEMETRY_ENABLED' => $data['send_telemetry'] ? 'true' : 'false']);
+        RuntimeEnvironment::put(['TELEMETRY_ENABLED' => $data['send_telemetry'] ? 'true' : 'false']);
 
         return redirect()->to(route('install.summary'));
     }

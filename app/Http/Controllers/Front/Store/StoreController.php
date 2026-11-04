@@ -42,7 +42,7 @@ class StoreController extends Controller
 
     public function index()
     {
-        $groups = Group::getAvailable()->whereNull('parent_id')->orderBy('sort_order')->with('products')->get();
+        $groups = Group::getAvailable()->whereNull('parent_id')->orderBy('sort_order', 'DESC')->with('products')->get();
         $subtitle = trans('store.subtitle');
         $title = trans('store.title');
         $products = collect();
@@ -71,8 +71,9 @@ class StoreController extends Controller
             \Session::flash('info', __('store.product.noproduct'));
         }
         \View::share('meta_append', '<meta name="description" content="'.$subtitle.'">');
+        $currentGroup = $group;
 
-        return view('front.store.index', compact('group', 'groups', 'title', 'subtitle', 'products'));
+        return view('front.store.index', compact('group', 'groups', 'title', 'subtitle', 'products', 'currentGroup'));
     }
 
     public function subgroup($group, $subgroup)
@@ -90,8 +91,9 @@ class StoreController extends Controller
             \Session::flash('info', __('store.product.noproduct'));
         }
         \View::share('meta_append', '<meta name="description" content="'.$subtitle.'">');
+        $currentGroup = $subgroup;
 
-        return view('front.store.group', compact('group', 'title', 'subtitle', 'products', 'groups', 'subgroup'));
+        return view('front.store.group', compact('group', 'title', 'subtitle', 'products', 'groups', 'subgroup', 'currentGroup'));
     }
 
     private function checkGroup(Group $group)

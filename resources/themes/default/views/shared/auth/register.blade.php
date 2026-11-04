@@ -66,7 +66,7 @@
                     </div>
 
                     <div class="sm:col-span-3">
-                        @include("shared.password", ["name" => "password", "label" => __('global.password'), "generate" => true, "help" => __('admin.settings.core.security.fields.password_security_level_help')])
+                        @include("shared.password", ["name" => "password", "label" => __('global.password'), "generate" => true])
                     </div>
 
                     <div class="sm:col-span-3">

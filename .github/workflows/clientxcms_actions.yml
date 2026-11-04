@@ -175,9 +175,14 @@ jobs:
             ${{ env.SQL_ARTIFACT_NAME }}
 
   unit-test:
-    name: Unit testing
+    name: Unit testing (PHP ${{ matrix.php }})
     runs-on: ubuntu-latest
     if: github.event_name != 'release'
+    strategy:
+      fail-fast: false
+      matrix:
+        # 8.3 is the minimum supported version, 8.4 is validated ahead of the next minimum bump.
+        php: ['8.3', '8.4']
     services:
       mysql:
         image: mysql:8.0
@@ -202,14 +207,14 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: ${{ matrix.php }}
           extensions: json, zip, sodium, pcntl, bcmath, pdo_mysql
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
         with:
           path: /tmp/composer-cache
-          key: ${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          key: ${{ runner.os }}-php${{ matrix.php }}-${{ hashFiles('composer.lock') }}
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist

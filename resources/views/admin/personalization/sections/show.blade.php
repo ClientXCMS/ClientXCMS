@@ -22,6 +22,25 @@
 @section('styles')
 @endsection
 @section('scripts')
+<script>
+    // Same-origin iframe: its height follows the rendered section to avoid a nested scrollbar.
+    document.querySelectorAll('[data-section-preview]').forEach(function (frame) {
+        const fitToSection = function () {
+            const preview = frame.contentDocument && frame.contentDocument.getElementById('section-preview');
+            if (!preview) {
+                return;
+            }
+            // offsetHeight - clientHeight is the iframe border, which also takes height.
+            const resize = function () {
+                frame.style.height = (preview.scrollHeight + frame.offsetHeight - frame.clientHeight) + 'px';
+            };
+            resize();
+            new ResizeObserver(resize).observe(preview);
+        };
+        frame.addEventListener('load', fitToSection);
+        fitToSection();
+    });
+</script>
 @endsection
 @section('content')
 @php
@@ -83,7 +102,10 @@ $backUrl = route('admin.personalization.sections.index', $activePageKey ? ['acti
                 </div>
 
                 <div class="card-body">
-                    {!! $item->toDTO()->render() !!}
+                    <iframe src="{{ route('admin.personalization.sections.preview', $item) }}"
+                        title="{{ __('personalization.sections.preview_title', ['name' => $section->formattedName()]) }}"
+                        class="mb-4 h-96 w-full rounded-lg border border-gray-200 dark:border-gray-700"
+                        loading="lazy" data-section-preview></iframe>
                     @if(empty($fields))
                     <div class="p-4 text-gray-500 dark:text-gray-400">
                         {{ __('personalization.sections.config.no_fields') }}

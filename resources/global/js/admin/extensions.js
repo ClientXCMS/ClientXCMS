@@ -20,19 +20,40 @@ class ExtensionManager {
         this.toastContainer = document.getElementById('toast-container');
     }
 
-    showToast(message, type = 'success') {
+    showToast(message, type = 'success', details = null) {
         const toast = document.createElement('div');
         const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
         const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info-circle';
 
-        toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in`;
-        toast.innerHTML = `<i class="bi bi-${icon}"></i><span>${message}</span>`;
+        toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg animate-fade-in max-w-xl`;
+        const summary = document.createElement('div');
+        summary.className = 'flex items-center gap-2';
+
+        const iconElement = document.createElement('i');
+        iconElement.className = `bi bi-${icon}`;
+        const messageElement = document.createElement('span');
+        messageElement.textContent = message;
+        summary.append(iconElement, messageElement);
+        toast.appendChild(summary);
+
+        if (details) {
+            const disclosure = document.createElement('details');
+            disclosure.className = 'mt-2 pl-6';
+            const disclosureSummary = document.createElement('summary');
+            disclosureSummary.className = 'cursor-pointer text-sm font-semibold underline';
+            disclosureSummary.textContent = this.translations.moreDetails;
+            const detailsElement = document.createElement('pre');
+            detailsElement.className = 'mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded bg-black/20 p-3 text-xs';
+            detailsElement.textContent = details;
+            disclosure.append(disclosureSummary, detailsElement);
+            toast.appendChild(disclosure);
+        }
 
         this.toastContainer.appendChild(toast);
         setTimeout(() => {
             toast.classList.add('animate-fade-out');
             setTimeout(() => toast.remove(), 300);
-        }, 4000);
+        }, details ? 15000 : 4000);
     }
     initTabs() {
         const mainTabBtns = document.querySelectorAll('.main-tab-btn');
@@ -232,7 +253,14 @@ class ExtensionManager {
 
                 const data = await response.json();
 
-                if (data.success) {
+                const errors = data.results?.errors || [];
+                if (errors.length > 0) {
+                    const details = errors
+                        .filter(error => error.debug_details)
+                        .map(error => `${error.uuid}: ${error.debug_details}`)
+                        .join('\n');
+                    this.showToast(data.message || this.translations.error, 'error', details);
+                } else if (data.success) {
                     this.showToast(data.message || this.translations.success, 'success');
                     setTimeout(() => window.location.reload(), 1500);
                 } else {
@@ -296,7 +324,7 @@ class ExtensionManager {
                     this.showToast(data.message || data.success || this.translations.success, 'success');
                     setTimeout(() => window.location.reload(), 1500);
                 } else {
-                    this.showToast(data.error || data.message || this.translations.error, 'error');
+                    this.showToast(data.error || data.message || this.translations.error, 'error', data.debug_details);
                     btn.disabled = false;
                     btn.innerHTML = originalContent;
                 }

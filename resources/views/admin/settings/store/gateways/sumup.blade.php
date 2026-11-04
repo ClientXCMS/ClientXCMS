@@ -22,7 +22,7 @@
         @include('admin/shared/password', [
         'name' => 'api_key',
         'label' => __('admin.settings.store.gateways.fields.api_key'),
-        'value' => env('SUMUP_API_KEY'),
+        'value' => runtime_env('SUMUP_API_KEY'),
         'help' => __('admin.settings.store.gateways.sumup.api_key_help')
         ])
     </div>
@@ -30,7 +30,7 @@
         @include('admin/shared/input', [
         'name' => 'merchant_code',
         'label' => __('admin.settings.store.gateways.fields.merchant_code'),
-        'value' => env('SUMUP_MERCHANT_CODE'),
+        'value' => runtime_env('SUMUP_MERCHANT_CODE'),
         'help' => __('admin.settings.store.gateways.sumup.merchant_help')
         ])
     </div>

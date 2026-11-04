@@ -38,9 +38,13 @@ class Prerequisites
         'fileinfo',
         'gd',
         'zip',
+        'intl',
+        'dom',
+        'libxml',
+        'simplexml',
     ];
 
-    public const REQUIRED_PHP_VERSION = '8.1.0';
+    public const REQUIRED_PHP_VERSION = '8.3.0';
 
     public function __construct()
     {

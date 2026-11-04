@@ -19,9 +19,9 @@
 
 <div class="grid md:grid-cols-2 gap-4 grid-cols-1">
     <div>
-        @include('admin/shared/password', ['name' => 'public_key', 'label' => __('admin.settings.store.gateways.fields.client_id'), 'value' => env('STANCER_PUBLIC_KEY')])
+        @include('admin/shared/password', ['name' => 'public_key', 'label' => __('admin.settings.store.gateways.fields.client_id'), 'value' => runtime_env('STANCER_PUBLIC_KEY')])
     </div>
     <div>
-        @include('admin/shared/password', ['name' => 'private_key', 'label' => __('admin.settings.store.gateways.fields.client_secret'), 'value' => env('STANCER_SECRET_KEY')])
+        @include('admin/shared/password', ['name' => 'private_key', 'label' => __('admin.settings.store.gateways.fields.client_secret'), 'value' => runtime_env('STANCER_SECRET_KEY')])
     </div>
 </div>

@@ -45,6 +45,7 @@ Route::name('personalization.')->prefix('/personalization')->group(function () {
     Route::post('/sections/{section}/restore', [SectionController::class, 'restore'])->name('sections.restore');
     Route::post('/sections/{section}/clone-section', [SectionController::class, 'cloneSection'])->name('sections.clone_section');
     Route::put('/sections/{section}/config', [SectionController::class, 'updateConfig'])->name('sections.config.update');
+    Route::get('/sections/{section}/preview', [SectionController::class, 'preview'])->name('sections.preview');
 });
 Route::resource('email-templates', EmailTemplateController::class)->names('personalization.email_templates');
 Route::post('email-templates/config', [EmailTemplateController::class, 'config'])->name('personalization.email_templates.config');

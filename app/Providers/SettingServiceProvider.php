@@ -63,6 +63,7 @@ class SettingServiceProvider extends ServiceProvider
             $service->set($this->loadSettings());
             $service->setSavedSettings($this->loadSettings());
             $service->initTranslatedSettings();
+            \App\Core\Environment\RuntimeEnvironment::applyToConfig();
             // Ajout de valeur par default
             $service->setDefaultValue('app_name', config('app.name'));
             $service->setDefaultValue('app_url', config('app.url'));
@@ -87,17 +88,17 @@ class SettingServiceProvider extends ServiceProvider
             $service->setDefaultValue('allow_add_balance_to_invoices', true);
             $service->setDefaultValue('max_subscription_tries', 7);
             $service->setDefaultValue('app_default_locale', 'fr_FR');
-            $service->setDefaultValue('app_telemetry', env('TELEMETRY_ENABLED', 'true') == 'true');
+            $service->setDefaultValue('app_telemetry', runtime_env('TELEMETRY_ENABLED', 'true') == 'true');
             $service->setDefaultValue('mail_greeting', __('global.mail.greeting'));
             $service->setDefaultValue('mail_salutation', __('global.mail.salutation'));
-            $service->setDefaultValue('mail_fromaddress', env('MAIL_FROM_ADDRESS'));
-            $service->setDefaultValue('mail_fromname', env('MAIL_FROM_NAME'));
-            $service->setDefaultValue('mail_smtp_host', env('MAIL_HOST'));
-            $service->setDefaultValue('mail_smtp_port', env('MAIL_PORT', '587'));
-            $service->setDefaultValue('mail_smtp_username', env('MAIL_USERNAME'));
-            $service->setDefaultValue('mail_smtp_password', env('MAIL_PASSWORD'));
-            $service->setDefaultValue('mail_smtp_encryption', env('MAIL_ENCRYPTION'));
-            $service->setDefaultValue('mail_smtp_enable', env('MAIL_MAILER') == 'smtp');
+            $service->setDefaultValue('mail_fromaddress', runtime_env('MAIL_FROM_ADDRESS'));
+            $service->setDefaultValue('mail_fromname', runtime_env('MAIL_FROM_NAME'));
+            $service->setDefaultValue('mail_smtp_host', runtime_env('MAIL_HOST'));
+            $service->setDefaultValue('mail_smtp_port', runtime_env('MAIL_PORT', '587'));
+            $service->setDefaultValue('mail_smtp_username', runtime_env('MAIL_USERNAME'));
+            $service->setDefaultValue('mail_smtp_password', runtime_env('MAIL_PASSWORD'));
+            $service->setDefaultValue('mail_smtp_encryption', runtime_env('MAIL_ENCRYPTION'));
+            $service->setDefaultValue('mail_smtp_enable', runtime_env('MAIL_MAILER') == 'smtp');
             $service->setDefaultValue('mail_domain', config('app.url'));
             $service->setDefaultValue('theme_footer_description', config('app.name').' You can modify this text in the settings. Powered By CLIENTXCMS');
             $service->setDefaultValue('theme_home_enabled', true);

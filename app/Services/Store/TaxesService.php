@@ -85,8 +85,8 @@ class TaxesService
             return 0;
         }
         if ($iso == null) {
-            if (env('STORE_FIXED_VAT_RATE') != null && env('STORE_FIXED_VAT_RATE') != 0) {
-                return env('STORE_FIXED_VAT_RATE');
+            if (runtime_env('STORE_FIXED_VAT_RATE') != null && runtime_env('STORE_FIXED_VAT_RATE') != 0) {
+                return runtime_env('STORE_FIXED_VAT_RATE');
             }
             if (auth()->check()) {
                 $iso = auth()->user()->country;
@@ -97,7 +97,7 @@ class TaxesService
                     return 0;
                 }
             } else {
-                $iso = env('STORE_VAT_COUNTRY', 'FR');
+                $iso = runtime_env('STORE_VAT_COUNTRY', 'FR');
             }
         }
 

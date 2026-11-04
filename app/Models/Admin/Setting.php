@@ -142,7 +142,7 @@ class Setting extends Model
 
     public function isEncrypted(?string $name): bool
     {
-        return $name !== null && in_array($name, $this->encrypt, true);
+        return $name !== null && (in_array($name, $this->encrypt, true) || \App\Core\Environment\RuntimeEnvironment::isSecretSetting($name));
     }
 
     protected static function booted(): void

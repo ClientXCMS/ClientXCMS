@@ -61,6 +61,10 @@ class Kernel extends ConsoleKernel
             ->everyThreeHours()->sentryMonitor()
             ->name('services:renewals')
             ->sendOutputTo(storage_path('logs/services-renewals.log'));
+        $schedule->command('services:domain-transfers')
+            ->hourly()->sentryMonitor()
+            ->name('services:domain-transfers')
+            ->sendOutputTo(storage_path('logs/services-domain-transfers.log'));
         $schedule->command('clientxcms:helpdesk-close')
             ->daily()->at('12:00')->sentryMonitor()
             ->name('clientxcms:helpdesk-close')
