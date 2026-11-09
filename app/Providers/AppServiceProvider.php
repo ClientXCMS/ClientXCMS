@@ -37,7 +37,7 @@ use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
-    const VERSION = '2.17';
+    const VERSION = '2.17.1';
 
     // Laravel waits 30s by default, too long to keep a customer staring at a form
     const BREACH_CHECK_TIMEOUT = 5;
