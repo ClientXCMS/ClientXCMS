@@ -22,14 +22,14 @@
         @include('admin/shared/password', [
         'name' => 'api_key',
         'label' => __('admin.settings.store.gateways.fields.api_key'),
-        'value' => env('MOLLIE_KEY')
+        'value' => runtime_env('MOLLIE_KEY')
         ])
     </div>
     <div>
         @include('admin/shared/select', [
         'name' => 'test_mode',
         'label' => __('admin.settings.store.gateways.fields.sandbox'),
-        'value' => env('MOLLIE_TEST_MODE', 'true') === 'true' ? 'test' : 'live',
+        'value' => \App\Core\Environment\RuntimeEnvironment::flag('MOLLIE_TEST_MODE', true) ? 'test' : 'live',
         'options' => ['test' => 'Test', 'live' => 'Live']
         ])
     </div>

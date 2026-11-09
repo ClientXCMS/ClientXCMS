@@ -220,9 +220,7 @@
                                                             aria-labelledby="hs-basic-heading-{{ $section->id }}">
                                                             <div
                                                                 class="px-4 pb-4 border-t border-gray-200 dark:border-neutral-700 pt-4">
-                                                                <div class="container custom-scroll">
-                                                                    {!! $section->toDTO()->render() !!}
-                                                                </div>
+                                                                @include('admin.personalization.sections.includes.thumbnail', ['src' => $section->toDTO()->thumbnail(), 'class' => 'w-full rounded-lg border border-gray-200 dark:border-neutral-700'])
                                                             </div>
                                                         </div>
                                                     </li>
@@ -256,9 +254,7 @@
                                                                 </form>
                                                             </div>
 
-                                                            <div class="container custom-scroll">
-                                                                {!! $section->render() !!}
-                                                            </div>
+                                                            @include('admin.personalization.sections.includes.thumbnail', ['src' => $section->thumbnail(), 'class' => 'w-full rounded-b-xl'])
                                                         </div>
                                                     </li>
                                                 @endforeach

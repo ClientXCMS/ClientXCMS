@@ -56,15 +56,9 @@ trait ServerTypeTrait
                     $success = true;
                     $message = $result->message ?? 'Domain transfer submitted';
                 } elseif ($result->success) {
-                    $this->status = self::STATUS_ACTIVE;
-                    $this->delivery_errors = null;
-                    event(new ServiceDelivered($this, $result));
+                    $this->markDelivered($result);
                     $success = true;
                     $message = $result->message ?? 'Service delivered';
-                    ActionLog::log(ActionLog::SERVICE_DELIVERED, get_class($this), $this->id, auth('admin')->id(), null, ['message' => $message]);
-                    if ($this->product_id != null) {
-                        Product::removeStock($this->product_id);
-                    }
                 } else {
                     $this->delivery_errors = $result->message;
                     $message = $result->message;
@@ -80,6 +74,21 @@ trait ServerTypeTrait
 
         return new ServiceStateChangeDTO($this, $success, $message);
 
+    }
+
+    /**
+     * Shared by immediate delivery and asynchronous completions (domain transfers):
+     * the customer is notified and stock is consumed only once the service really exists.
+     */
+    public function markDelivered(ServiceStateChangeDTO $result): void
+    {
+        $this->status = self::STATUS_ACTIVE;
+        $this->delivery_errors = null;
+        event(new ServiceDelivered($this, $result));
+        ActionLog::log(ActionLog::SERVICE_DELIVERED, get_class($this), $this->id, auth('admin')->id(), null, ['message' => $result->message ?? 'Service delivered']);
+        if ($this->product_id != null) {
+            Product::removeStock($this->product_id);
+        }
     }
 
     public function renewConfigOption(InvoiceItem $invoiceItem)

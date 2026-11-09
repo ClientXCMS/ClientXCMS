@@ -19,7 +19,7 @@
 
 namespace App\Http\Controllers\Admin\Settings;
 
-use App\Helpers\EnvEditor;
+use App\Core\Environment\RuntimeEnvironment;
 use App\Http\Controllers\Concerns\ManagesSettingUploads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Settings\AppSettingsRequest;
@@ -93,7 +93,7 @@ class SettingsCoreController extends Controller
             ? 'log'
             : ($request->boolean('mail_smtp_enable') ? 'smtp' : 'sendmail');
 
-        EnvEditor::updateEnv([
+        $pendingEnv = RuntimeEnvironment::put([
             'MAIL_MAILER' => $mailer,
             'MAIL_FROM_ADDRESS' => $data['mail_from_address'],
             'MAIL_FROM_NAME' => $data['mail_from_name'],
@@ -106,7 +106,9 @@ class SettingsCoreController extends Controller
         ]);
         Setting::updateSettings($request->only('mail_greeting', 'mail_salutation'));
 
-        return redirect()->back()->with('success', __('admin.settings.core.mail.success'));
+        return redirect()->back()
+            ->with('success', __('admin.settings.core.mail.success'))
+            ->with('warning', RuntimeEnvironment::pendingWarning($pendingEnv));
     }
 
     public function testmail(Request $request)
@@ -148,7 +150,7 @@ class SettingsCoreController extends Controller
             ->map(fn ($field) => array_key_exists($field, $data) ? $data[$field] : \setting($field))
             ->filter()
             ->all());
-        EnvEditor::updateEnv([
+        $pendingEnv = RuntimeEnvironment::put([
             'APP_NAME' => $data['app_name'],
             'APP_ENV' => $data['app_env'] == 'production' ? 'production' : 'local',
             'APP_DEBUG' => $data['app_debug'] == 'true' ? 'true' : 'false',
@@ -157,6 +159,8 @@ class SettingsCoreController extends Controller
         unset($data['app_env'], $data['app_debug'], $data['app_telemetry']);
         Setting::updateSettings($data);
 
-        return redirect()->back()->with('success', __('admin.settings.core.app.success'));
+        return redirect()->back()
+            ->with('success', __('admin.settings.core.app.success'))
+            ->with('warning', RuntimeEnvironment::pendingWarning($pendingEnv));
     }
 }

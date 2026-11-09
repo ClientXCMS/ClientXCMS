@@ -20,8 +20,8 @@
 namespace App\Core\Gateway;
 
 use App\Abstracts\AbstractGatewayType;
+use App\Core\Environment\RuntimeEnvironment;
 use App\DTO\Core\Gateway\GatewayUriDTO;
-use App\Helpers\EnvEditor;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
 use Illuminate\Http\Request;
@@ -45,7 +45,7 @@ class PayPalMethodType extends AbstractGatewayType
         $attributes = [
             'cmd' => '_xclick',
             'charset' => 'utf-8',
-            'business' => env('PAYPAL_EMAIL'),
+            'business' => runtime_env('PAYPAL_EMAIL'),
             'amount' => $invoice->total,
             'currency_code' => strtoupper($invoice->currency),
             'item_name' => 'Invoice #'.$invoice->id,
@@ -90,7 +90,7 @@ class PayPalMethodType extends AbstractGatewayType
             return response('', 200);
         }
 
-        $merchantEmail = Str::lower((string) env('PAYPAL_EMAIL'));
+        $merchantEmail = Str::lower((string) runtime_env('PAYPAL_EMAIL'));
         if ($merchantEmail === '' || $receiverEmail !== $merchantEmail) {
             return $this->ignoreNotification('receiver mismatch', $paymentId);
         }
@@ -144,7 +144,7 @@ class PayPalMethodType extends AbstractGatewayType
 
     public function saveConfig(array $data)
     {
-        EnvEditor::updateEnv(['PAYPAL_EMAIL' => $data['paypal_email'], 'PAYPAL_SANDBOX' => $data['sandbox'] == 'sandbox' ? 'true' : 'false']);
+        RuntimeEnvironment::put(['PAYPAL_EMAIL' => $data['paypal_email'], 'PAYPAL_SANDBOX' => $data['sandbox'] == 'sandbox' ? 'true' : 'false']);
     }
 
     public function configForm(array $context = [])
@@ -154,18 +154,18 @@ class PayPalMethodType extends AbstractGatewayType
 
     private function getRedirectUri(): string
     {
-        return $_ENV['PAYPAL_SANDBOX'] == 'sandbox' ? 'https://www.sandbox.paypal.com/cgi-bin/webscr' : 'https://www.paypal.com/cgi-bin/webscr';
+        return RuntimeEnvironment::flag('PAYPAL_SANDBOX') ? 'https://www.sandbox.paypal.com/cgi-bin/webscr' : 'https://www.paypal.com/cgi-bin/webscr';
     }
 
     private function getIpn(): string
     {
-        return $_ENV['PAYPAL_SANDBOX'] == 'sandbox' ? 'https://ipnpb.sandbox.paypal.com/cgi-bin/webscr' : 'https://ipnpb.paypal.com/cgi-bin/webscr';
+        return RuntimeEnvironment::flag('PAYPAL_SANDBOX') ? 'https://ipnpb.sandbox.paypal.com/cgi-bin/webscr' : 'https://ipnpb.paypal.com/cgi-bin/webscr';
     }
 
     public function getPaymentDetailsUrl(Invoice $invoice): ?string
     {
         if ($invoice->external_id) {
-            $url = $_ENV['PAYPAL_SANDBOX'] == 'sandbox' ? 'https://www.sandbox.paypal.com/unifiedtransactions/details/payment/' : 'https://www.paypal.com/unifiedtransactions/details/payment/';
+            $url = RuntimeEnvironment::flag('PAYPAL_SANDBOX') ? 'https://www.sandbox.paypal.com/unifiedtransactions/details/payment/' : 'https://www.paypal.com/unifiedtransactions/details/payment/';
 
             return $url.$invoice->external_id;
         }

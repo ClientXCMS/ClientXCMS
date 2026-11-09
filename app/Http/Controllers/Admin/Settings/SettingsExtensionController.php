@@ -23,6 +23,7 @@ use App\DTO\Core\Extensions\ExtensionDTO;
 use App\Extensions\ExtensionType;
 use App\Models\ActionLog;
 use App\Models\Admin\Permission;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 
 class SettingsExtensionController
@@ -118,8 +119,10 @@ class SettingsExtensionController
         $this->validateExtensionIdentifier($type, $extension);
         try {
             app('extension')->update($type, $extension);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return $this->extensionUpdateErrorResponse($e);
         }
         ActionLog::log(ActionLog::EXTENSION_UPDATED, ExtensionDTO::class, $extension, auth('admin')->id(), null, ['type' => $type]);
 
@@ -205,8 +208,17 @@ class SettingsExtensionController
                         $results['success'][] = ['uuid' => $uuid, 'action' => $action === 'install' ? 'installed' : 'updated'];
                         break;
                 }
-            } catch (\Exception $e) {
-                $results['errors'][] = ['uuid' => $uuid, 'message' => $e->getMessage()];
+            } catch (\Throwable $e) {
+                report($e);
+                $isUpdateAction = in_array($action, ['install', 'update'], true);
+                $error = [
+                    'uuid' => $uuid,
+                    'message' => $isUpdateAction ? __('extensions.flash.update_failed') : $e->getMessage(),
+                ];
+                if ($isUpdateAction && config('app.debug')) {
+                    $error['debug_details'] = $e->getMessage();
+                }
+                $results['errors'][] = $error;
             }
         }
 
@@ -241,6 +253,16 @@ class SettingsExtensionController
         }
 
         return redirect()->back()->with('success', $message);
+    }
+
+    private function extensionUpdateErrorResponse(\Throwable $exception): JsonResponse
+    {
+        $payload = ['error' => __('extensions.flash.update_failed')];
+        if (config('app.debug')) {
+            $payload['debug_details'] = $exception->getMessage();
+        }
+
+        return response()->json($payload, 400);
     }
 
     private function respondWithError(string $message)

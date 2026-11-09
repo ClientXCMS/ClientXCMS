@@ -20,9 +20,9 @@
 namespace App\Core\Gateway;
 
 use App\Abstracts\AbstractGatewayType;
+use App\Core\Environment\RuntimeEnvironment;
 use App\DTO\Core\Gateway\GatewayUriDTO;
 use App\Exceptions\WrongPaymentException;
-use App\Helpers\EnvEditor;
 use App\Models\Account\Customer;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
@@ -45,12 +45,12 @@ class StancerType extends AbstractGatewayType
 
     public function createPayment(Invoice $invoice, Gateway $gateway, Request $request, GatewayUriDTO $dto)
     {
-        if (env('STANCER_SECRET_KEY') === null || env('STANCER_PUBLIC_KEY') === null) {
+        if (runtime_env('STANCER_SECRET_KEY') === null || runtime_env('STANCER_PUBLIC_KEY') === null) {
             throw new WrongPaymentException('Stancer gateway is not configured.');
         }
         Config::init([
-            'secret_key' => env('STANCER_SECRET_KEY'),
-            'public_key' => env('STANCER_PUBLIC_KEY'),
+            'secret_key' => runtime_env('STANCER_SECRET_KEY'),
+            'public_key' => runtime_env('STANCER_PUBLIC_KEY'),
         ]);
         $customer = $this->getCustomerStancer($invoice->customer);
         try {
@@ -99,12 +99,12 @@ class StancerType extends AbstractGatewayType
 
     public function processPayment(Invoice $invoice, Gateway $gateway, Request $request, GatewayUriDTO $dto)
     {
-        if (env('STANCER_SECRET_KEY') === null || env('STANCER_PUBLIC_KEY') === null) {
+        if (runtime_env('STANCER_SECRET_KEY') === null || runtime_env('STANCER_PUBLIC_KEY') === null) {
             throw new WrongPaymentException('Stancer gateway is not configured.');
         }
         Config::init([
-            'secret_key' => env('STANCER_SECRET_KEY'),
-            'public_key' => env('STANCER_PUBLIC_KEY'),
+            'secret_key' => runtime_env('STANCER_SECRET_KEY'),
+            'public_key' => runtime_env('STANCER_PUBLIC_KEY'),
         ]);
         $paymentId = $invoice->external_id;
 
@@ -137,7 +137,7 @@ class StancerType extends AbstractGatewayType
 
     public function saveConfig(array $data)
     {
-        EnvEditor::updateEnv([
+        RuntimeEnvironment::put([
             'STANCER_SECRET_KEY' => $data['private_key'],
             'STANCER_PUBLIC_KEY' => $data['public_key'],
         ]);
@@ -145,10 +145,10 @@ class StancerType extends AbstractGatewayType
 
     private function getEnvironmentFromKey(): string
     {
-        if (env('STANCER_SECRET_KEY') === null || env('STANCER_PUBLIC_KEY') === null) {
+        if (runtime_env('STANCER_SECRET_KEY') === null || runtime_env('STANCER_PUBLIC_KEY') === null) {
             throw new WrongPaymentException('Stancer gateway is not configured.');
         }
 
-        return str_starts_with(env('STANCER_SECRET_KEY'), 'stest_') ? 'test' : 'live';
+        return str_starts_with(runtime_env('STANCER_SECRET_KEY'), 'stest_') ? 'test' : 'live';
     }
 }

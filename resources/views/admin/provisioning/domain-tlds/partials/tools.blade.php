@@ -17,7 +17,7 @@
                 <select class="input-text" name="server_id" required>
                     <option value="">-</option>
                     @foreach($servers as $server)
-                    <option value="{{ $server->id }}" data-registrar="{{ $server->hostname }}">{{ $server->name }} - {{ $server->hasMetadata('test_mode') ? 'Sandbox' : 'Production' }}</option>
+                    <option value="{{ $server->id }}" data-registrar="{{ $server->hostname }}">{{ $server->name }} - {{ $server->isTestMode() ? 'Sandbox' : 'Production' }}</option>
                     @endforeach
                 </select>
             </label>

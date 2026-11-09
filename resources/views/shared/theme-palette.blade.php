@@ -46,4 +46,8 @@
     {!! $selector !!} { --tw-gradient-to: {{ $value }} var(--tw-gradient-to-position) !important; }
         @endif
     @endforeach
+    {{-- The remapped colors above use !important, so state variants forcing white text must win over them explicitly. --}}
+    .peer:checked ~ [class~="peer-checked:text-white"],
+    .group:hover [class~="group-hover:text-white"],
+    [class~="hover:text-white"]:hover { color: white !important; }
 </style>

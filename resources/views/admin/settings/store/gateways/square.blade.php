@@ -22,14 +22,14 @@
         @include('admin/shared/password', [
         'name' => 'access_token',
         'label' => __('admin.settings.store.gateways.fields.access_token'),
-        'value' => env('SQUARE_ACCESS_TOKEN')
+        'value' => runtime_env('SQUARE_ACCESS_TOKEN')
         ])
     </div>
     <div>
         @include('admin/shared/input', [
         'name' => 'location_id',
         'label' => __('admin.settings.store.gateways.fields.location_id'),
-        'value' => env('SQUARE_LOCATION_ID'),
+        'value' => runtime_env('SQUARE_LOCATION_ID'),
         'help' => __('admin.settings.store.gateways.square.location_help')
         ])
     </div>
@@ -40,7 +40,7 @@
         @include('admin/shared/select', [
         'name' => 'environment',
         'label' => __('admin.settings.store.gateways.fields.sandbox'),
-        'value' => env('SQUARE_ENVIRONMENT', 'sandbox'),
+        'value' => runtime_env('SQUARE_ENVIRONMENT', 'sandbox'),
         'options' => ['sandbox' => 'Sandbox', 'production' => 'Production']
         ])
     </div>
@@ -48,7 +48,7 @@
         @include('admin/shared/password', [
         'name' => 'webhook_signature_key',
         'label' => __('admin.settings.store.gateways.fields.webhook_secret'),
-        'value' => env('SQUARE_WEBHOOK_SIGNATURE_KEY'),
+        'value' => runtime_env('SQUARE_WEBHOOK_SIGNATURE_KEY'),
         'help' => __('admin.settings.store.gateways.square.webhook_help')
         ])
     </div>

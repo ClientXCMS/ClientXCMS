@@ -20,9 +20,9 @@
 namespace App\Core\Gateway;
 
 use App\Abstracts\AbstractGatewayType;
+use App\Core\Environment\RuntimeEnvironment;
 use App\DTO\Core\Gateway\GatewayUriDTO;
 use App\Exceptions\WrongPaymentException;
-use App\Helpers\EnvEditor;
 use App\Models\Billing\Gateway;
 use App\Models\Billing\Invoice;
 use Illuminate\Http\Request;
@@ -50,7 +50,7 @@ class SumUpType extends AbstractGatewayType
                     'checkout_reference' => 'INV-'.$invoice->id.'-'.uniqid(),
                     'amount' => (float) $invoice->total,
                     'currency' => strtoupper($invoice->currency),
-                    'merchant_code' => env('SUMUP_MERCHANT_CODE'),
+                    'merchant_code' => runtime_env('SUMUP_MERCHANT_CODE'),
                     'description' => __('global.invoice').' #'.$invoice->id,
                     'return_url' => $dto->returnUri,
                 ]);
@@ -114,7 +114,7 @@ class SumUpType extends AbstractGatewayType
 
     public function saveConfig(array $data)
     {
-        EnvEditor::updateEnv([
+        RuntimeEnvironment::put([
             'SUMUP_API_KEY' => $data['api_key'],
             'SUMUP_MERCHANT_CODE' => $data['merchant_code'],
         ]);
@@ -127,7 +127,7 @@ class SumUpType extends AbstractGatewayType
 
     private function getHeaders(): array
     {
-        $apiKey = env('SUMUP_API_KEY');
+        $apiKey = runtime_env('SUMUP_API_KEY');
         if (! $apiKey) {
             throw new WrongPaymentException('SumUp API key not configured');
         }

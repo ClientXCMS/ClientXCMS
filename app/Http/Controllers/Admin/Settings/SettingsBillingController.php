@@ -19,8 +19,8 @@
 
 namespace App\Http\Controllers\Admin\Settings;
 
+use App\Core\Environment\RuntimeEnvironment;
 use App\Helpers\Countries;
-use App\Helpers\EnvEditor;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Permission;
 use App\Models\Admin\Setting;
@@ -116,12 +116,12 @@ class SettingsBillingController extends Controller
             Invoice::updateInvoicePrefix($validated['billing_invoice_prefix']);
         }
         if (isset($validated['store_vat_rate']) && $validated['store_vat_rate'] == TaxesService::VAT_RATE_FIXED) {
-            EnvEditor::updateEnv([
+            RuntimeEnvironment::put([
                 'STORE_FIXED_VAT_RATE' => TaxesService::arrayVatPercents()[$validated['vat_default_country']],
                 'STORE_VAT_COUNTRY' => $validated['vat_default_country'],
             ]);
         } else {
-            EnvEditor::updateEnv([
+            RuntimeEnvironment::put([
                 'STORE_FIXED_VAT_RATE' => null,
                 'STORE_VAT_COUNTRY' => null,
             ]);

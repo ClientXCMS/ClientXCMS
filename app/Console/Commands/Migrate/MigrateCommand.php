@@ -19,7 +19,7 @@
 
 namespace App\Console\Commands\Migrate;
 
-use App\Helpers\EnvEditor;
+use App\Core\Environment\RuntimeEnvironment;
 use App\Models\Account\Customer;
 use App\Models\Billing\CustomItem;
 use App\Models\Billing\Invoice;
@@ -185,7 +185,7 @@ class MigrateCommand extends Command
         if ($all || $this->option('proxmox_ipam')) {
             $this->migrateProxmoxIPAM();
         }
-        EnvEditor::updateEnv([
+        RuntimeEnvironment::put([
             'HASH_DRIVER' => 'argon',
         ]);
         $this->info('Changing hash driver to argon2i...');

@@ -87,7 +87,7 @@
                 @include("admin/shared/select", [
                     "label" => __("admin.settings.core.security.fields.hash_driver"),
                     "name" => "hash_driver",
-                    "value" => env('HASH_DRIVER', 'bcrypt'),
+                    "value" => runtime_env('HASH_DRIVER', 'bcrypt'),
                     "options" => $drivers,
                     "help" => __("admin.settings.core.security.fields.hash_driver_help")
                 ])

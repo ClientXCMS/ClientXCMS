@@ -21,7 +21,7 @@ class DomainCatalogService
 
     public function connectionKey(Server $server): string
     {
-        return hash_hmac('sha256', json_encode([$server->id, $server->hostname, $server->username, $server->password, $server->ip, $server->hasMetadata('test_mode')]), (string) config('app.key'));
+        return hash_hmac('sha256', json_encode([$server->id, $server->hostname, $server->username, $server->password, $server->ip, $server->isTestMode()]), (string) config('app.key'));
     }
 
     /** @param array<int, string> $extensions */
@@ -46,7 +46,7 @@ class DomainCatalogService
             if ($cached) {
                 return $cached;
             }
-            $operation = DomainOperation::create(['kind' => 'catalog', 'admin_id' => $adminId, 'server_id' => $server->id, 'connection_key' => $key, 'payload' => ['rows' => [], 'extensions' => $extensions, 'offset' => 0, 'environment' => $server->hasMetadata('test_mode') ? 'sandbox' : 'production'], 'expires_at' => now()->addHour()]);
+            $operation = DomainOperation::create(['kind' => 'catalog', 'admin_id' => $adminId, 'server_id' => $server->id, 'connection_key' => $key, 'payload' => ['rows' => [], 'extensions' => $extensions, 'offset' => 0, 'environment' => $server->isTestMode() ? 'sandbox' : 'production'], 'expires_at' => now()->addHour()]);
             \App\Jobs\Domain\LoadDomainCatalog::dispatch($operation->id)->afterCommit();
 
             return $operation;
