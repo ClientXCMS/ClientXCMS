@@ -65,7 +65,7 @@ class AppServiceProvider extends ServiceProvider
             // si il n'y a pas d'admin connecté, on désactive le debug pour éviter de divulguer des informations sensibles
             if (! auth()->check() || ! auth('admin')->check() || ! auth('admin')->user()) {
                 config(['app.debug' => false]);
-                logger()->warning('APP_DEBUG was true in production environment - forced to false at boot. Operator must set APP_DEBUG=false explicitly in .env to silence this.');
+                //logger()->warning('APP_DEBUG was true in production environment - forced to false at boot. Operator must set APP_DEBUG=false explicitly in .env to silence this.');
             }
         }
 
