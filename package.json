@@ -43,6 +43,6 @@
         "quill": "^2.0.3",
         "sortablejs": "^1.15.2",
         "sweetalert2": "^11.22.2",
-        "tom-select": "^2.4.3"
+        "tom-select": "^2.7.0"
     }
 }
